@@ -1,0 +1,204 @@
+/* Tikka claim prototype. Values from the Tikka design system tokens. */
+.tk{position:relative;width:390px;height:844px;overflow:hidden;background:#1B1440;color:#F6F3FF;font-family:"Bricolage Grotesque",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.tk *{box-sizing:border-box}
+.tk-scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-bottom:124px;scrollbar-width:none}
+.tk-scroll::-webkit-scrollbar{display:none}
+
+/* top bar */
+.tk-top{display:flex;align-items:center;justify-content:space-between;height:60px;padding:0 20px}
+.tk-top img{height:22px;display:block}
+.tk-counter{display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 12px;border-radius:999px;background:#2A2160;font:400 11px/14px "Space Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:#F6F3FF}
+.tk-counter b{color:#F4B63F;font-weight:700}
+.tk-dot{width:8px;height:8px;border-radius:50%;background:#F4B63F;animation:tkPulse 1.6s ease-out infinite}
+@keyframes tkPulse{50%{opacity:.3}}
+
+/* stage */
+.tk-stage{position:relative;height:452px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.is-ready .tk-stage{touch-action:none;cursor:pointer}
+.tk-cardwrap{position:absolute;left:55px;top:24px;width:280px;height:392px;perspective:1200px}
+.tk-shadow{position:absolute;left:10px;right:10px;top:16px;bottom:0;border-radius:20px;box-shadow:0 26px 50px -14px rgba(0,0,0,.75)}
+.tk-glow,.tk-glow-rar{position:absolute;inset:0;border-radius:20px;opacity:0;pointer-events:none}
+.tk-glow{box-shadow:0 0 70px 16px rgba(246,243,255,.6)}
+.is-charging .tk-glow{animation:tkGlowW 1.3s ease-in forwards}
+.is-charging .tk-glow-rar{animation:tkGlowR 1.3s ease-in forwards}
+@keyframes tkGlowW{0%{opacity:0}60%{opacity:.9}100%{opacity:.25}}
+@keyframes tkGlowR{0%,55%{opacity:0}100%{opacity:1}}
+.is-flipped .tk-glow-rar{opacity:.55;transition:opacity .5s}
+.tk-tilt{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .25s cubic-bezier(.22,1,.36,1)}
+.tk-shake{position:absolute;inset:0;transform-style:preserve-3d}
+.is-charging .tk-shake{animation:tkTremble .11s linear infinite}
+@keyframes tkTremble{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(-1.5px,1px) rotate(-.8deg)}50%{transform:translate(1px,-1px) rotate(.6deg)}75%{transform:translate(1.5px,1px) rotate(-.4deg)}100%{transform:translate(0,0) rotate(0)}}
+.tk-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.65,0,.35,1)}
+.is-flipped .tk-inner{transform:rotateY(180deg)}
+.tk-rising{animation:tkRise .75s .45s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes tkRise{from{opacity:0;transform:translateY(90px) scale(.9)}to{opacity:1;transform:none}}
+
+/* card faces: the ticket, notches cut at 72% */
+.tk-face{position:absolute;inset:0;border-radius:20px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  -webkit-mask:radial-gradient(circle 12px at 0 72%,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 12px at 100% 72%,#0000 98%,#000) right/51% 100% no-repeat;
+  mask:radial-gradient(circle 12px at 0 72%,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 12px at 100% 72%,#0000 98%,#000) right/51% 100% no-repeat}
+.tk-front{color:#FFFFFF}
+.tk-back{transform:rotateY(180deg);background:#2A2160;color:#F6F3FF}
+.tk-cover{position:absolute;left:0;right:0;top:0;height:132px;overflow:hidden}
+.tk-blob{position:absolute;border-radius:50%}
+.tk-verified{position:absolute;right:14px;top:14px;display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px 0 6px;border-radius:999px;background:rgba(0,0,0,.3);font:600 11px/14px "Bricolage Grotesque",sans-serif;color:#FFFFFF}
+.tk-verified svg{width:14px;height:14px}
+.tk-logo{position:absolute;left:18px;top:100px;width:60px;height:60px;border-radius:50%;background:#FFFFFF;border:3px solid rgba(255,255,255,.9);display:grid;place-items:center;font:800 21px/1 "Bricolage Grotesque",sans-serif;letter-spacing:-.02em}
+.tk-info{position:absolute;left:18px;right:18px;top:168px}
+.tk-name{margin:0;font:800 23px/26px "Bricolage Grotesque",sans-serif;letter-spacing:-.02em}
+.tk-cat{font:500 12.5px/17px "Bricolage Grotesque",sans-serif;opacity:.9;margin-top:3px}
+.tk-rating{display:flex;align-items:center;gap:5px;font:600 12.5px/17px "Bricolage Grotesque",sans-serif;margin-top:8px}
+.tk-rating svg{width:13px;height:13px;color:#F4B63F}
+.tk-line{font:400 13px/18px "Bricolage Grotesque",sans-serif;margin-top:8px;opacity:.92}
+.tk-stub{position:absolute;left:0;right:0;top:72%;bottom:0;padding:14px 18px;display:flex;flex-direction:column;justify-content:center;gap:8px}
+.tk-front .tk-stub{background:rgba(0,0,0,.22)}
+.tk-perf{position:absolute;top:-1px;left:18px;right:18px;height:2px;background:repeating-linear-gradient(90deg,currentColor 0 6px,transparent 6px 11px);opacity:.55}
+.tk-serial{display:flex;justify-content:space-between;align-items:center;gap:8px;font:400 10.5px/14px "Space Mono",monospace;letter-spacing:.12em;text-transform:uppercase}
+.tk-serial img{height:14px;display:block}
+.tk-stub-cta{font:700 15px/20px "Bricolage Grotesque",sans-serif}
+
+/* finishes */
+.tk-holo{position:absolute;left:-50%;top:-50%;width:200%;height:200%;pointer-events:none;mix-blend-mode:color-dodge;opacity:.5;
+  background:repeating-linear-gradient(115deg,rgba(255,92,138,0) 0px,rgba(255,92,138,.45) 22px,rgba(244,182,63,.45) 44px,rgba(167,151,255,.45) 66px,rgba(71,199,184,.45) 88px,rgba(255,92,138,0) 110px);
+  animation:tkHolo 5s ease-in-out infinite alternate}
+@keyframes tkHolo{from{transform:translate(-14%,-9%)}to{transform:translate(14%,9%)}}
+.tk-foil{position:absolute;inset:-40% -60%;pointer-events:none;background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.32) 50%,transparent 58%);animation:tkShine 5.4s cubic-bezier(.22,1,.36,1) infinite}
+@keyframes tkShine{0%{transform:translateX(-60%)}45%,100%{transform:translateX(60%)}}
+
+/* back */
+.tk-back-body{position:absolute;left:18px;right:18px;top:18px;height:calc(72% - 18px);display:flex;flex-direction:column;padding-bottom:12px}
+.tk-rarity{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;height:26px;padding:0 11px 0 9px;border-radius:999px;font:600 12px/16px "Bricolage Grotesque",sans-serif;color:#17112F}
+.tk-pips{display:inline-flex;gap:3px}
+.tk-pip{width:7px;height:7px;border-radius:50%;border:1.5px solid #17112F}
+.tk-pip.on{background:#17112F}
+.tk-bigspark{width:76px;height:76px;margin:14px auto 0;display:block}
+.tk-got{font:800 25px/28px "Bricolage Grotesque",sans-serif;letter-spacing:-.02em;margin-top:auto}
+.tk-from{font:500 12px/16px "Bricolage Grotesque",sans-serif;color:#B3ABD6;margin-top:4px}
+.tk-issued{font:400 10px/14px "Space Mono",monospace;letter-spacing:.1em;text-transform:uppercase;margin-top:10px;padding-top:10px;border-top:1px solid rgba(246,243,255,.18);white-space:nowrap;overflow:hidden}
+.is-revealed .tk-issued span{display:inline-block;animation:tkPrint 1s .35s steps(30) both}
+@keyframes tkPrint{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.tk-back .tk-stub{color:#17112F}
+.tk-reward{font:800 21px/24px "Bricolage Grotesque",sans-serif;letter-spacing:-.02em}
+.tk-code{display:flex;justify-content:space-between;font:700 13px/18px "Space Mono",monospace;letter-spacing:.08em}
+
+/* the sealed wrapper */
+.tk-pack{position:absolute;left:45px;top:10px;width:300px;height:420px;padding:0;border:0;background:none;cursor:pointer;font:inherit;color:#F6F3FF;text-align:center;-webkit-tap-highlight-color:transparent}
+.tk-pack:focus-visible{outline:2px solid #F6F3FF;outline-offset:6px;border-radius:24px}
+.tk-pack-top{position:absolute;left:0;right:0;top:0;height:58px;background:#3E2BB0;border-radius:22px 22px 0 0;overflow:hidden}
+.tk-pack-body{position:absolute;left:0;right:0;top:58px;bottom:0;background:#3E2BB0;border-radius:0 0 22px 22px;overflow:hidden;border-top:2px dashed rgba(246,243,255,.6)}
+.tk-crimp{position:absolute;left:0;right:0;height:16px;background:repeating-linear-gradient(90deg,#33239A 0 3px,#4A37C8 3px 6px)}
+.tk-crimp-top{top:0}
+.tk-crimp-bottom{bottom:0}
+.tk-tear{position:absolute;right:16px;top:30px;display:flex;align-items:center;gap:6px;font:700 10px/12px "Space Mono",monospace;letter-spacing:.14em;color:#F6F3FF}
+.tk-tear svg{width:14px;height:14px}
+.tk-notch{position:absolute;right:-8px;top:51px;width:16px;height:16px;background:#1B1440;transform:rotate(45deg)}
+.tk-pack-spark{position:absolute;left:50%;top:22px;width:104px;height:104px;margin-left:-52px;color:#F4B63F}
+.tk-pack-word{position:absolute;left:50%;top:142px;width:128px;margin-left:-64px;display:block}
+.tk-pack-sub{position:absolute;left:28px;right:28px;top:200px;font:500 13px/18px "Bricolage Grotesque",sans-serif;color:#DCD6F5}
+.tk-seal{position:absolute;right:20px;top:86px;width:68px;height:68px;border-radius:50%;border:3px solid #F6F3FF;display:grid;place-items:center;transform:rotate(-10deg);box-shadow:0 6px 14px rgba(0,0,0,.3)}
+.tk-seal-in{width:52px;height:52px;border-radius:50%;border:1.5px dashed rgba(255,255,255,.7);display:grid;place-items:center;font:800 18px/1 "Bricolage Grotesque",sans-serif;color:#FFFFFF;letter-spacing:-.02em}
+.tk-limited{position:absolute;left:0;right:0;bottom:60px;font:400 10px/14px "Space Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:#DCD6F5}
+.tk-odds{position:absolute;left:12px;right:12px;bottom:32px;display:flex;justify-content:center;gap:12px;font:400 10px/14px "Space Mono",monospace;letter-spacing:.04em;text-transform:uppercase;color:#F6F3FF}
+.tk-odds span{display:inline-flex;align-items:center;gap:5px}
+.tk-odds i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.tk-pack.is-opening{pointer-events:none}
+.tk-pack.is-opening .tk-pack-top{animation:tkTearOff .55s cubic-bezier(.5,0,.75,0) forwards}
+.tk-pack.is-opening .tk-notch,.tk-pack.is-opening .tk-tear{opacity:0}
+.tk-pack.is-opening .tk-pack-body{animation:tkDrop .6s .38s cubic-bezier(.5,0,.75,0) forwards}
+@keyframes tkTearOff{to{transform:translate(-70px,-230px) rotate(-32deg);opacity:0}}
+@keyframes tkDrop{to{transform:translateY(620px)}}
+
+/* copy */
+.tk-copy{padding:0 28px;text-align:center}
+.tk-h{margin:0;font:800 24px/28px "Bricolage Grotesque",sans-serif;letter-spacing:-.02em}
+.tk-p{margin:8px 0 0;font:400 15px/22px "Bricolage Grotesque",sans-serif;color:#B3ABD6}
+
+/* business profile */
+.tk-section{padding:0 20px;margin-top:18px}
+.tk-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.tk-actions.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.tk-action{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:68px;border-radius:12px;background:#2A2160;color:#F6F3FF;border:0;font:600 12px/16px "Bricolage Grotesque",sans-serif;cursor:pointer;text-decoration:none}
+.tk-action svg{width:20px;height:20px}
+.tk-action:focus-visible,.tk-tab:focus-visible,.tk-holdbtn:focus-visible,.tk-btn:focus-visible{outline:2px solid #F6F3FF;outline-offset:2px}
+.tk-box{background:#2A2160;border-radius:12px;padding:16px}
+.tk-box-h{margin:0 0 12px;font:700 17px/22px "Bricolage Grotesque",sans-serif}
+.tk-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.tk-list li{display:flex;justify-content:space-between;align-items:center;gap:10px;font:400 15px/20px "Bricolage Grotesque",sans-serif}
+.tk-list b{font:700 13px/18px "Space Mono",monospace;color:#F4B63F;margin-right:6px}
+.tk-fine{margin:12px 0 0;font:500 12px/16px "Bricolage Grotesque",sans-serif;color:#B3ABD6}
+.tk-tabs{display:flex;border-bottom:1px solid #2E2852}
+.tk-tab{flex:1;height:44px;border:0;background:none;color:#B3ABD6;font:600 13px/18px "Bricolage Grotesque",sans-serif;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tk-tab.on{color:#F6F3FF;border-bottom-color:#A797FF}
+.tk-panel{padding-top:14px;display:grid;gap:12px}
+.tk-row{display:flex;justify-content:space-between;gap:12px;font:400 15px/22px "Bricolage Grotesque",sans-serif}
+.tk-row-k{color:#B3ABD6}
+.tk-about{margin:0;font:400 15px/22px "Bricolage Grotesque",sans-serif;color:#E4E0F7}
+.tk-review{background:#2A2160;border-radius:12px;padding:14px}
+.tk-review-top{display:flex;justify-content:space-between;align-items:center;font:600 14px/20px "Bricolage Grotesque",sans-serif}
+.tk-vtag{font:600 11px/14px "Bricolage Grotesque",sans-serif;color:#17112F;background:#C9C4E6;border-radius:6px;padding:3px 7px}
+.tk-review-text{margin:6px 0 0;font:400 14px/20px "Bricolage Grotesque",sans-serif;color:#E4E0F7}
+.tk-video{height:184px;border-radius:12px;background:#2A2160;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#B3ABD6;font:500 13px/18px "Bricolage Grotesque",sans-serif;text-align:center;padding:0 24px}
+.tk-play{width:56px;height:56px;border-radius:50%;background:#F6F3FF;color:#1B1440;display:grid;place-items:center}
+.tk-play svg{width:22px;height:22px}
+
+/* hold */
+.tk-hold{display:flex;flex-direction:column;align-items:center;gap:8px}
+.tk-holdbtn{position:relative;width:76px;height:76px;border-radius:50%;border:0;background:#2A2160;color:#F4B63F;display:grid;place-items:center;cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.tk-ring{position:absolute;inset:0;width:76px;height:76px;transform:rotate(-90deg)}
+.tk-ring-track{fill:none;stroke:#3A3170;stroke-width:4}
+.tk-ring-fill{fill:none;stroke:#F4B63F;stroke-width:4;stroke-linecap:round;stroke-dasharray:226.2;stroke-dashoffset:226.2}
+.is-charging .tk-ring-fill{animation:tkRing 1.3s linear forwards}
+@keyframes tkRing{to{stroke-dashoffset:0}}
+.tk-holdspark{width:28px;height:28px}
+.tk-hold-label{font:700 17px/22px "Bricolage Grotesque",sans-serif;margin-top:4px}
+.tk-hold-sub{margin:0;font:400 13px/18px "Bricolage Grotesque",sans-serif;color:#B3ABD6}
+
+/* revealed */
+.tk-redeem{position:relative;background:#FAF7F2;color:#17112F;border-radius:20px;padding:18px 20px}
+.tk-redeem-h{font:700 15px/20px "Bricolage Grotesque",sans-serif;color:#5E5873}
+.tk-redeem-code{font:700 30px/36px "Space Mono",monospace;letter-spacing:.08em;margin-top:4px}
+.tk-redeem-meta{font:600 15px/22px "Bricolage Grotesque",sans-serif;margin-top:2px}
+.tk-redeem-sent{display:flex;align-items:center;gap:6px;margin-top:12px;padding-top:12px;border-top:1px dashed #8C8399;font:500 13px/18px "Bricolage Grotesque",sans-serif;color:#0E7A5A}
+.tk-redeem-sent svg{width:16px;height:16px;flex:none}
+.tk-burst{position:absolute;left:195px;top:220px;width:0;height:0;pointer-events:none}
+.tk-ray{position:absolute;left:0;top:0;width:0;height:0}
+.tk-ray-in{position:absolute;left:-9px;top:-9px;width:18px;height:18px;opacity:0;animation:tkRay .95s .5s cubic-bezier(.22,1,.36,1) forwards}
+.tk-ray-in svg{width:18px;height:18px;display:block}
+@keyframes tkRay{0%{opacity:0;transform:translateY(0) scale(.2)}20%{opacity:1}100%{opacity:0;transform:translateY(-200px) scale(1)}}
+.tk-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+.tk-conf{position:absolute;top:-24px;width:8px;height:14px;border-radius:2px;opacity:0;animation-name:tkFall;animation-timing-function:cubic-bezier(.3,.6,.6,1);animation-fill-mode:forwards}
+@keyframes tkFall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(880px) rotate(720deg)}}
+
+/* bottom bar */
+.tk-cta{position:absolute;left:0;right:0;bottom:0;padding:14px 20px 26px;background:#1B1440;border-top:1px solid #2E2852;display:flex;flex-direction:column;align-items:center;gap:6px;z-index:4}
+.tk-btn{width:100%;height:54px;border-radius:999px;border:0;font:700 17px/24px "Bricolage Grotesque",sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;text-decoration:none}
+.tk-btn svg{width:20px;height:20px}
+.tk-btn-gold{background:#F4B63F;color:#17112F}
+.tk-btn-paper{background:#F6F3FF;color:#1B1440}
+.tk-btn-text{height:40px;background:none;color:#B3ABD6;font-size:14px;font-weight:600}
+.tk-cta-note{margin:0;font:500 12px/16px "Bricolage Grotesque",sans-serif;color:#B3ABD6}
+
+/* claim sheet + verifying */
+.tk-scrim{position:absolute;inset:0;background:rgba(12,9,28,.72);z-index:10}
+.tk-sheet{position:absolute;left:0;right:0;bottom:0;background:#FAF7F2;color:#17112F;border-radius:24px 24px 0 0;padding:12px 20px 26px;z-index:11;animation:tkSheet .35s cubic-bezier(.22,1,.36,1)}
+@keyframes tkSheet{from{transform:translateY(100%)}to{transform:none}}
+.tk-grab{width:40px;height:4px;border-radius:2px;background:#C9C1B4;margin:0 auto 16px}
+.tk-sheet-h{margin:0;font:800 24px/28px "Bricolage Grotesque",sans-serif;letter-spacing:-.02em}
+.tk-sheet-sub{margin:6px 0 16px;font:400 15px/22px "Bricolage Grotesque",sans-serif;color:#5E5873}
+.tk-field{display:grid;gap:6px;margin-bottom:12px}
+.tk-label{font:600 13px/18px "Bricolage Grotesque",sans-serif}
+.tk-input{width:100%;height:50px;border-radius:12px;border:1px solid #8C8399;background:#FFFFFF;padding:0 14px;font:400 16px/22px "Bricolage Grotesque",sans-serif;color:#17112F}
+.tk-input:focus{outline:2px solid #3E2BB0;outline-offset:1px}
+.tk-phone{display:flex;gap:8px}
+.tk-cc{flex:none;width:76px;height:50px;display:grid;place-items:center;border-radius:12px;background:#F1ECE4;font:600 16px/22px "Bricolage Grotesque",sans-serif}
+.tk-consent{margin:2px 0 14px;font:400 12px/17px "Bricolage Grotesque",sans-serif;color:#5E5873}
+.tk-sheet .tk-btn-text{color:#3E2BB0;margin-top:4px}
+.tk-sheet .tk-btn:focus-visible{outline-color:#3E2BB0}
+.tk-verify{position:absolute;inset:0;z-index:12;background:rgba(12,9,28,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:0 44px;text-align:center}
+.tk-spin{width:44px;height:44px;border-radius:50%;border:4px solid #3A3170;border-top-color:#F4B63F;animation:tkSpin .8s linear infinite}
+@keyframes tkSpin{to{transform:rotate(360deg)}}
+
+@media (prefers-reduced-motion: reduce){
+  .tk-holo,.tk-foil,.tk-dot,.is-charging .tk-shake,.tk-ray-in,.tk-conf{animation:none}
+  .tk-inner{transition:none}
+}

@@ -1,0 +1,84 @@
+<!-- @dsCard group="Card" height=420 subtitle="Front (press to flip), then a back at each rarity" -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>TikkaCard — preview</title></head>
+<body>
+<div class="tk-stage tk-row" style="padding:24px;gap:24px;min-height:420px;box-sizing:border-box">
+<div class="tk-card tk-card--rare tk-card--enter" id="demo" tabindex="0" role="button" aria-label="Glow Studio Tikka. 23 of 600 left. Press to flip.">
+  <div class="tk-card__inner">
+    <div class="tk-card__face tk-card__front">
+      <div class="tk-card__body">
+        <div class="tk-card__logo">GS</div>
+        <div class="tk-card__biz">Glow Studio</div>
+        <div class="tk-card__drop">December Glow drop · 600 Tikkas</div>
+      </div>
+      <div class="tk-card__stub">
+        <div class="tk-card__serial"><span>23 of 600 left</span><img src="/_blob/f7acd8b0aa9f5f299b01a5523608c2ca" alt="Tikka"></div>
+        <div class="tk-card__serial" style="margin-top:6px;opacity:.8"><span>No. 0578 / 600</span><span>Tap to flip</span></div>
+      </div>
+    </div>
+    <div class="tk-card__face tk-card__back">
+      <div class="tk-card__body">
+        <span class="tk-rarity tk-rarity--rare"><span class="tk-rarity__pips"><i class="on"></i><i class="on"></i><i class=""></i></span>Rare</span>
+        <div class="tk-card__got">You got a Tikka!</div>
+        <div class="tk-card__from">from Glow Studio · Lekki</div>
+      </div>
+      <div class="tk-card__stub">
+        <div class="tk-card__reward">20% off any service</div>
+        <div class="tk-card__code"><span>GS-7X4QP</span><span>Till 31 Dec</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="tk-card tk-card--legendary is-flipped" role="img" aria-label="You got Free facial session. Code GS-K9MWA.">
+  <div class="tk-card__inner">
+    <div class="tk-card__face tk-card__front"></div>
+    <div class="tk-card__face tk-card__back">
+      <div class="tk-card__body">
+        <span class="tk-rarity tk-rarity--legendary"><span class="tk-rarity__pips"><i class="on"></i><i class="on"></i><i class="on"></i></span>Legendary</span>
+        <div class="tk-card__got">You got a Tikka!</div>
+        <div class="tk-card__from">from Glow Studio · Lekki</div>
+      </div>
+      <div class="tk-card__stub">
+        <div class="tk-card__reward">Free facial session</div>
+        <div class="tk-card__code"><span>GS-K9MWA</span><span>Till 31 Dec</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="tk-card tk-card--rare is-flipped" role="img" aria-label="You got 20% off any service. Code GS-7X4QP.">
+  <div class="tk-card__inner">
+    <div class="tk-card__face tk-card__front"></div>
+    <div class="tk-card__face tk-card__back">
+      <div class="tk-card__body">
+        <span class="tk-rarity tk-rarity--rare"><span class="tk-rarity__pips"><i class="on"></i><i class="on"></i><i class=""></i></span>Rare</span>
+        <div class="tk-card__got">You got a Tikka!</div>
+        <div class="tk-card__from">from Glow Studio · Lekki</div>
+      </div>
+      <div class="tk-card__stub">
+        <div class="tk-card__reward">20% off any service</div>
+        <div class="tk-card__code"><span>GS-7X4QP</span><span>Till 31 Dec</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="tk-card tk-card--common is-flipped" role="img" aria-label="You got Priority booking. Code GS-RT6CE.">
+  <div class="tk-card__inner">
+    <div class="tk-card__face tk-card__front"></div>
+    <div class="tk-card__face tk-card__back">
+      <div class="tk-card__body">
+        <span class="tk-rarity"><span class="tk-rarity__pips"><i class="on"></i><i class=""></i><i class=""></i></span>Thank-you</span>
+        <div class="tk-card__got">Thank you for coming through</div>
+        <div class="tk-card__from">from Glow Studio · Lekki</div>
+      </div>
+      <div class="tk-card__stub">
+        <div class="tk-card__reward">Priority booking</div>
+        <div class="tk-card__code"><span>GS-RT6CE</span><span>Till 31 Dec</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>var d=document.getElementById('demo');function f(){d.classList.toggle('is-flipped')}d.addEventListener('click',f);d.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();f()}});</script>
+</body>
+</html>

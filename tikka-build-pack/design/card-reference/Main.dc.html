@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Claim your Tikka</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./claim.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Space+Mono:wght@400;700&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="tk {{ rootMods }}" style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; color: #F6F3FF;">
+<div class="tk-scroll">
+
+<div class="tk-top">
+<img src="/_blob/7f20ccc6cacf5086d53397bbf9772363" alt="Tikka">
+<sc-if value="{{ flipped }}" hint-placeholder-val="{{ false }}">
+<span class="tk-counter"><span>No. <b>0412</b> / 600</span></span>
+</sc-if>
+<sc-if value="{{ notFlipped }}" hint-placeholder-val="{{ true }}">
+<span class="tk-counter"><span class="tk-dot"></span><span><b>23</b> of 600 left</span></span>
+</sc-if>
+</div>
+
+<div class="tk-stage" onPointerDown="{{ stageDown }}" onPointerUp="{{ endHold }}" onPointerCancel="{{ endHold }}" onPointerLeave="{{ tiltReset }}" onPointerMove="{{ tiltMove }}" onContextMenu="{{ noMenu }}">
+
+<sc-if value="{{ showCard }}" hint-placeholder-val="{{ false }}">
+<div class="tk-cardwrap {{ cardMods }}">
+<div class="tk-shadow"></div>
+<div class="tk-glow"></div>
+<div class="tk-glow-rar" style="box-shadow: 0 0 90px 26px {{ rar.color }};"></div>
+<div class="tk-tilt" ref="{{ tiltRef }}">
+<div class="tk-shake">
+<div class="tk-inner">
+
+<div class="tk-face tk-front" style="background-color: {{ bizColor }};">
+<div class="tk-cover">
+<div class="tk-blob" style="width: 200px; height: 200px; right: -50px; top: -80px; background: rgba(255,255,255,0.14);"></div>
+<div class="tk-blob" style="width: 130px; height: 130px; left: -40px; top: 30px; background: rgba(0,0,0,0.16);"></div>
+<div class="tk-blob" style="width: 74px; height: 74px; left: 132px; top: 62px; background: rgba(255,255,255,0.22);"></div>
+<div class="tk-blob" style="width: 24px; height: 24px; right: 74px; top: 96px; background: rgba(255,255,255,0.5);"></div>
+</div>
+<span class="tk-verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>Verified</span>
+<div class="tk-logo" style="color: {{ bizColor }};">GS</div>
+<div class="tk-info">
+<h2 class="tk-name">Glow Studio</h2>
+<div class="tk-cat">Skin &amp; beauty studio · Lekki</div>
+<div class="tk-rating"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.2 1.3-6.6-4.9-4.6 6.6-.8z"></path></svg>4.8 · 126 Tikka reviews</div>
+<div class="tk-line">Facials, peels and glow-ups since 2019.</div>
+</div>
+<div class="tk-stub">
+<div class="tk-perf"></div>
+<sc-if value="{{ claimed }}" hint-placeholder-val="{{ false }}">
+<div class="tk-serial"><span>Claimed by {{ name }}</span><img src="/_blob/7f20ccc6cacf5086d53397bbf9772363" alt="Tikka"></div>
+<div class="tk-stub-cta">Hold to open</div>
+</sc-if>
+<sc-if value="{{ notClaimed }}" hint-placeholder-val="{{ true }}">
+<div class="tk-serial"><span>No. •••• / 600</span><img src="/_blob/7f20ccc6cacf5086d53397bbf9772363" alt="Tikka"></div>
+<div class="tk-stub-cta">Claim to see what's inside</div>
+</sc-if>
+</div>
+<sc-if value="{{ holo }}" hint-placeholder-val="{{ true }}"><div class="tk-holo"></div></sc-if>
+<sc-if value="{{ foil }}" hint-placeholder-val="{{ false }}"><div class="tk-foil"></div></sc-if>
+</div>
+
+<div class="tk-face tk-back">
+<div class="tk-back-body">
+<span class="tk-rarity" style="background-color: {{ rar.color }};"><span class="tk-pips"><sc-for list="{{ pips }}" as="p" hint-placeholder-count="3"><i class="{{ p.cls }}"></i></sc-for></span>{{ rar.label }}</span>
+<svg class="tk-bigspark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="color: {{ rar.color }};"><path d="M12 2c.6 4.6 2.4 7.6 10 10-7.6 2.4-9.4 5.4-10 10-.6-4.6-2.4-7.6-10-10 7.6-2.4 9.4-5.4 10-10z"></path></svg>
+<div class="tk-got">{{ rar.got }}</div>
+<div class="tk-from">from Glow Studio · Lekki</div>
+<div class="tk-issued"><span>Issued to {{ name }} · No. 0412 / 600</span></div>
+</div>
+<div class="tk-stub" style="background-color: {{ rar.color }};">
+<div class="tk-perf"></div>
+<div class="tk-reward">{{ rar.reward }}</div>
+<div class="tk-code"><span>{{ rar.code }}</span><span>Till 31 Dec</span></div>
+</div>
+<sc-if value="{{ backHolo }}" hint-placeholder-val="{{ false }}"><div class="tk-holo"></div></sc-if>
+</div>
+
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showPack }}" hint-placeholder-val="{{ true }}">
+<button class="tk-pack {{ packMods }}" type="button" onClick="{{ tear }}" aria-label="Tear open your Tikka from Glow Studio">
+<span class="tk-pack-top">
+<span class="tk-crimp tk-crimp-top"></span>
+<span class="tk-tear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 6-6 6 6 6"></path></svg>TEAR HERE</span>
+</span>
+<span class="tk-pack-body">
+<span class="tk-foil"></span>
+<svg class="tk-pack-spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.6 4.6 2.4 7.6 10 10-7.6 2.4-9.4 5.4-10 10-.6-4.6-2.4-7.6-10-10 7.6-2.4 9.4-5.4 10-10z"></path></svg>
+<img class="tk-pack-word" src="/_blob/100b16cbaf9bd39bf041d21de6d745e7" alt="">
+<span class="tk-pack-sub">Something good from Glow Studio is sealed inside.</span>
+<span class="tk-seal" style="background-color: {{ bizColor }};"><span class="tk-seal-in">GS</span></span>
+<span class="tk-limited">Limited drop · 600 Tikkas</span>
+<span class="tk-odds">
+<span><i style="background-color: #FF5C8A;"></i>10 legendary</span>
+<span><i style="background-color: #F4B63F;"></i>50 rare</span>
+<span><i style="background-color: #C9C4E6;"></i>540 thank-you</span>
+</span>
+<span class="tk-crimp tk-crimp-bottom"></span>
+</span>
+<span class="tk-notch"></span>
+</button>
+</sc-if>
+
+<sc-if value="{{ revealed }}" hint-placeholder-val="{{ false }}">
+<div class="tk-burst" aria-hidden="true">
+<sc-for list="{{ rays }}" as="r" hint-placeholder-count="8">
+<div class="tk-ray" style="transform: rotate({{ r.angle }});"><div class="tk-ray-in" style="animation-delay: {{ r.delay }};"><svg viewBox="0 0 24 24" fill="currentColor" style="color: {{ r.color }};"><path d="M12 2c.6 4.6 2.4 7.6 10 10-7.6 2.4-9.4 5.4-10 10-.6-4.6-2.4-7.6-10-10 7.6-2.4 9.4-5.4 10-10z"></path></svg></div></div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+
+<sc-if value="{{ showSealedCopy }}" hint-placeholder-val="{{ true }}">
+<div class="tk-copy">
+<h1 class="tk-h">A Tikka from Glow Studio</h1>
+<p class="tk-p">Tear it open to meet them. Every Tikka holds something, and you see yours after you claim.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ showProfile }}" hint-placeholder-val="{{ false }}">
+<div class="tk-section">
+<div class="tk-actions">
+<a class="tk-action" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.4-4A8 8 0 1 1 20 11.5z"></path></svg>Chat</a>
+<a class="tk-action" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg>Call</a>
+<a class="tk-action" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg>Directions</a>
+<a class="tk-action" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M8 3v4M16 3v4M4 10h16"></path></svg>Book</a>
+</div>
+</div>
+
+<div class="tk-section">
+<div class="tk-box">
+<h3 class="tk-box-h">What's in this drop</h3>
+<ul class="tk-list">
+<li><span><b>10×</b>Free signature facial</span><span class="tk-rarity" style="background-color: #FF5C8A;"><span class="tk-pips"><i class="tk-pip on"></i><i class="tk-pip on"></i><i class="tk-pip on"></i></span>Legendary</span></li>
+<li><span><b>50×</b>20% off any service</span><span class="tk-rarity" style="background-color: #F4B63F;"><span class="tk-pips"><i class="tk-pip on"></i><i class="tk-pip on"></i><i class="tk-pip"></i></span>Rare</span></li>
+<li><span><b>540×</b>Priority booking</span><span class="tk-rarity" style="background-color: #C9C4E6;"><span class="tk-pips"><i class="tk-pip on"></i><i class="tk-pip"></i><i class="tk-pip"></i></span>Thank-you</span></li>
+</ul>
+<p class="tk-fine">Every Tikka holds something. One per WhatsApp number.</p>
+</div>
+</div>
+
+<div class="tk-section">
+<div class="tk-tabs" role="tablist">
+<sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+<button class="{{ t.cls }}" type="button" role="tab" aria-selected="{{ t.selected }}" onClick="{{ t.pick }}">{{ t.label }}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{ tabOverview }}" hint-placeholder-val="{{ true }}">
+<div class="tk-panel">
+<p class="tk-about">Facials, peels and skin consultations in a calm studio. Walk-ins welcome before 4pm.</p>
+<div class="tk-row"><span class="tk-row-k">Open today</span><span>9am – 7pm</span></div>
+<div class="tk-row"><span class="tk-row-k">Area</span><span>Lekki Phase 1, Lagos</span></div>
+<div class="tk-row"><span class="tk-row-k">Prices</span><span>₦15,000 – ₦45,000</span></div>
+</div>
+</sc-if>
+<sc-if value="{{ tabServices }}" hint-placeholder-val="{{ false }}">
+<div class="tk-panel">
+<div class="tk-row"><span>Signature facial</span><span>₦25,000</span></div>
+<div class="tk-row"><span>Chemical peel</span><span>₦35,000</span></div>
+<div class="tk-row"><span>Brow lamination</span><span>₦15,000</span></div>
+<div class="tk-row"><span>Skin consultation</span><span>Free</span></div>
+</div>
+</sc-if>
+<sc-if value="{{ tabReviews }}" hint-placeholder-val="{{ false }}">
+<div class="tk-panel">
+<p class="tk-about">4.8 from 126 people who used their Tikka here. Only people who redeemed a Tikka can review.</p>
+<div class="tk-review"><div class="tk-review-top"><span>Kemi B.</span><span class="tk-vtag">Used a Tikka</span></div><p class="tk-review-text">Came in for the 20% off and booked again the same week. The facial was worth full price.</p></div>
+<div class="tk-review"><div class="tk-review-top"><span>Tunde A.</span><span class="tk-vtag">Used a Tikka</span></div><p class="tk-review-text">Quick, clean, and they remembered my name the second time.</p></div>
+</div>
+</sc-if>
+<sc-if value="{{ tabVideo }}" hint-placeholder-val="{{ false }}">
+<div class="tk-panel">
+<div class="tk-video"><span class="tk-play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"></path></svg></span>[The business's 30-second studio tour plays here]</div>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ showHold }}" hint-placeholder-val="{{ false }}">
+<div class="tk-hold">
+<button class="tk-holdbtn" type="button" aria-label="Hold to open your Tikka" onPointerDown="{{ startHold }}" onPointerUp="{{ endHold }}" onPointerLeave="{{ endHold }}" onPointerCancel="{{ endHold }}" onKeyDown="{{ keyHold }}" onKeyUp="{{ keyRelease }}" onContextMenu="{{ noMenu }}">
+<svg class="tk-ring" viewBox="0 0 76 76" aria-hidden="true"><circle class="tk-ring-track" cx="38" cy="38" r="36"></circle><circle class="tk-ring-fill" cx="38" cy="38" r="36"></circle></svg>
+<svg class="tk-holdspark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.6 4.6 2.4 7.6 10 10-7.6 2.4-9.4 5.4-10 10-.6-4.6-2.4-7.6-10-10 7.6-2.4 9.4-5.4 10-10z"></path></svg>
+</button>
+<div class="tk-hold-label">Hold to open</div>
+<p class="tk-hold-sub">Press and hold the card or the button.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ revealed }}" hint-placeholder-val="{{ false }}">
+<div class="tk-section">
+<div class="tk-redeem">
+<div class="tk-redeem-h">Show this at the counter</div>
+<div class="tk-redeem-code">{{ rar.code }}</div>
+<div class="tk-redeem-meta">{{ rar.reward }} · till Sun 31 Dec</div>
+<div class="tk-redeem-sent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>Also sent to your WhatsApp</div>
+</div>
+</div>
+<div class="tk-section">
+<div class="tk-actions three">
+<a class="tk-action" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg>Directions</a>
+<a class="tk-action" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M8 3v4M16 3v4M4 10h16"></path></svg>Book</a>
+<a class="tk-action" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.4-4A8 8 0 1 1 20 11.5z"></path></svg>Chat</a>
+</div>
+</div>
+</sc-if>
+
+</div>
+
+<sc-if value="{{ ctaTear }}" hint-placeholder-val="{{ true }}">
+<div class="tk-cta">
+<button class="tk-btn tk-btn-paper" type="button" onClick="{{ tear }}">Tear to open</button>
+</div>
+</sc-if>
+<sc-if value="{{ ctaClaim }}" hint-placeholder-val="{{ false }}">
+<div class="tk-cta">
+<button class="tk-btn tk-btn-gold" type="button" onClick="{{ openClaim }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.4-4A8 8 0 1 1 20 11.5z"></path></svg>Claim via WhatsApp</button>
+<p class="tk-cta-note">23 of 600 left · One per WhatsApp number</p>
+</div>
+</sc-if>
+<sc-if value="{{ ctaShare }}" hint-placeholder-val="{{ false }}">
+<div class="tk-cta">
+<button class="tk-btn tk-btn-gold" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"></path><path d="m7 8 5-5 5 5"></path><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"></path></svg>Share my Tikka</button>
+<button class="tk-btn tk-btn-text" type="button" onClick="{{ restart }}">Start again</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ showSheet }}" hint-placeholder-val="{{ false }}">
+<div class="tk-scrim" onClick="{{ closeClaim }}"></div>
+<form class="tk-sheet" onSubmit="{{ submitClaim }}">
+<div class="tk-grab"></div>
+<h2 class="tk-sheet-h">Claim your Tikka</h2>
+<p class="tk-sheet-sub">Your Tikka is saved to your WhatsApp, so you can show it at Glow Studio.</p>
+<div class="tk-field">
+<label class="tk-label" for="tk-name">First name</label>
+<input class="tk-input" id="tk-name" type="text" autocomplete="given-name" placeholder="Adaeze" onInput="{{ setName }}">
+</div>
+<div class="tk-field">
+<label class="tk-label" for="tk-wa">WhatsApp number</label>
+<div class="tk-phone"><span class="tk-cc">+234</span><input class="tk-input" id="tk-wa" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="803 000 0000"></div>
+</div>
+<p class="tk-consent">Glow Studio will be able to message you on WhatsApp about this drop.</p>
+<button class="tk-btn tk-btn-gold" type="submit">Continue on WhatsApp</button>
+<button class="tk-btn tk-btn-text" type="button" onClick="{{ closeClaim }}">Not now</button>
+</form>
+</sc-if>
+
+<sc-if value="{{ showVerify }}" hint-placeholder-val="{{ false }}">
+<div class="tk-verify" role="status">
+<div class="tk-spin"></div>
+<h2 class="tk-h" style="font-size: 22px; line-height: 26px;">Confirming on WhatsApp</h2>
+<p class="tk-p">Send the message WhatsApp opens with, then come straight back here.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ confettiOn }}" hint-placeholder-val="{{ false }}">
+<div class="tk-confetti" aria-hidden="true">
+<sc-for list="{{ confetti }}" as="c" hint-placeholder-count="26">
+<i class="tk-conf" style="left: {{ c.left }}; background-color: {{ c.color }}; animation-duration: {{ c.dur }}; animation-delay: {{ c.delay }};"></i>
+</sc-for>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"beat":{"editor":"enum","options":["sealed","front","claim","ready","holding","revealed"],"default":"sealed","section":"Prototype"},"outcome":{"editor":"enum","options":["common","rare","legendary"],"default":"rare","section":"Prototype"},"finish":{"editor":"enum","options":["matte","foil","holo"],"default":"holo","section":"Business card"},"bizColor":{"editor":"color","default":"#9C3B5C","options":["#9C3B5C","#0F5C4D","#1F3A93","#7A4A12"],"section":"Business card"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  state = { tab: 'overview', name: '', charging: false };
+  timers = [];
+  tiltEl = null;
+  holdT = null;
+  tiltRef = (el) => { this.tiltEl = el; };
+
+  later(fn, ms) { const t = setTimeout(fn, ms); this.timers.push(t); return t; }
+  clearAll() { this.timers.forEach(clearTimeout); this.timers = []; }
+  componentWillUnmount() { this.clearAll(); }
+  componentDidUpdate(prev) {
+    if (prev.beat !== this.props.beat) { this.clearAll(); this.setState({ beat: undefined, charging: false }); }
+  }
+  getBeat() { return this.state.beat || this.props.beat || 'sealed'; }
+  go(beat) { this.setState({ beat: beat }); }
+  buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+
+  tear = () => { if (this.getBeat() !== 'sealed') return; this.buzz(15); this.go('opening'); this.later(() => this.go('front'), 1250); };
+  openClaim = () => this.go('claim');
+  closeClaim = () => this.go('front');
+  submitClaim = (e) => { if (e && e.preventDefault) e.preventDefault(); this.go('verifying'); this.later(() => { this.go('ready'); this.buzz(20); }, 1700); };
+  setName = (e) => this.setState({ name: e.target.value });
+
+  startHold = (e) => {
+    if (this.getBeat() !== 'ready' || this.state.charging) return;
+    if (e && e.pointerType && e.preventDefault) e.preventDefault();
+    this.setState({ charging: true });
+    this.buzz(10);
+    this.holdT = this.later(() => this.reveal(), 1300);
+  };
+  endHold = () => {
+    if (this.getBeat() === 'ready' && this.state.charging) { clearTimeout(this.holdT); this.setState({ charging: false }); }
+  };
+  reveal = () => {
+    this.setState({ beat: 'flipping', charging: false });
+    this.buzz([30, 50, 80]);
+    this.later(() => this.go('revealed'), 700);
+  };
+  keyHold = (e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); this.startHold(); } };
+  keyRelease = (e) => { if (e.key === ' ' || e.key === 'Enter') this.endHold(); };
+  noMenu = (e) => { e.preventDefault(); };
+  stageDown = (e) => { if (this.getBeat() === 'ready') this.startHold(e); };
+  tiltMove = (e) => {
+    const el = this.tiltEl; if (!el) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    el.style.transform = 'rotateX(' + (-y * 14).toFixed(2) + 'deg) rotateY(' + (x * 16).toFixed(2) + 'deg)';
+  };
+  tiltReset = () => { if (this.tiltEl) this.tiltEl.style.transform = ''; this.endHold(); };
+  restart = () => {
+    this.clearAll();
+    if (this.tiltEl) this.tiltEl.style.transform = '';
+    this.setState({ beat: 'sealed', tab: 'overview', name: '', charging: false });
+  };
+
+  renderVals() {
+    const beat = this.getBeat();
+    const outcome = this.props.outcome || 'rare';
+    const finish = this.props.finish || 'holo';
+    const RAR = {
+      common: { label: 'Thank-you', n: 1, color: '#C9C4E6', got: 'Thank you for coming through', reward: 'Priority booking', code: 'GS-RT6CE' },
+      rare: { label: 'Rare', n: 2, color: '#F4B63F', got: 'You got a Tikka!', reward: '20% off any service', code: 'GS-7X4QP' },
+      legendary: { label: 'Legendary', n: 3, color: '#FF5C8A', got: 'You got a Tikka!', reward: 'Free signature facial', code: 'GS-K9MWA' }
+    };
+    const rar = RAR[outcome] || RAR.rare;
+    const charging = this.state.charging || beat === 'holding';
+    const flipped = beat === 'flipping' || beat === 'revealed';
+    const revealed = beat === 'revealed';
+    const holdBeat = beat === 'ready' || beat === 'holding';
+    const claimed = holdBeat || flipped;
+    const profileBeat = beat === 'front' || beat === 'claim' || beat === 'verifying';
+    const tab = this.state.tab;
+    const first = (this.state.name || '').trim().split(' ')[0];
+    const tabs = [['overview', 'Overview'], ['services', 'Services'], ['reviews', 'Reviews'], ['video', 'Video']].map((t) => ({
+      label: t[1], cls: tab === t[0] ? 'tk-tab on' : 'tk-tab', selected: tab === t[0] ? 'true' : 'false', pick: () => this.setState({ tab: t[0] })
+    }));
+    const rays = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ angle: (i * 45 + 22) + 'deg', delay: (0.5 + (i % 2) * 0.08) + 's', color: i % 2 ? '#F6F3FF' : rar.color }));
+    const palette = ['#F4B63F', '#FF5C8A', '#F6F3FF', '#A797FF'];
+    const confetti = Array.from({ length: 26 }, (_, i) => ({
+      left: ((i * 37 + 11) % 100) + '%', color: palette[i % 4], dur: (1.5 + (i % 5) * 0.18).toFixed(2) + 's', delay: (0.55 + (i % 7) * 0.07).toFixed(2) + 's'
+    }));
+    return {
+      rootMods: [charging ? 'is-charging' : '', flipped ? 'is-flipped' : '', revealed ? 'is-revealed' : '', holdBeat ? 'is-ready' : ''].join(' '),
+      flipped: flipped, notFlipped: !flipped,
+      showPack: beat === 'sealed' || beat === 'opening',
+      packMods: beat === 'opening' ? 'is-opening' : '',
+      showCard: beat !== 'sealed',
+      cardMods: beat === 'opening' ? 'tk-rising' : '',
+      showSealedCopy: beat === 'sealed' || beat === 'opening',
+      showProfile: profileBeat,
+      showHold: holdBeat,
+      revealed: revealed,
+      claimed: claimed, notClaimed: !claimed,
+      showSheet: beat === 'claim',
+      showVerify: beat === 'verifying',
+      ctaTear: beat === 'sealed',
+      ctaClaim: profileBeat,
+      ctaShare: revealed,
+      confettiOn: revealed && outcome === 'legendary',
+      holo: finish === 'holo', foil: finish === 'foil',
+      backHolo: outcome === 'legendary',
+      bizColor: this.props.bizColor || '#9C3B5C',
+      name: first || 'Adaeze',
+      rar: rar,
+      pips: [0, 1, 2].map((i) => ({ cls: i < rar.n ? 'tk-pip on' : 'tk-pip' })),
+      tabs: tabs,
+      tabOverview: tab === 'overview', tabServices: tab === 'services', tabReviews: tab === 'reviews', tabVideo: tab === 'video',
+      rays: rays, confetti: confetti,
+      tiltRef: this.tiltRef,
+      tear: this.tear, openClaim: this.openClaim, closeClaim: this.closeClaim, submitClaim: this.submitClaim, setName: this.setName,
+      startHold: this.startHold, endHold: this.endHold, keyHold: this.keyHold, keyRelease: this.keyRelease, noMenu: this.noMenu,
+      stageDown: this.stageDown, tiltMove: this.tiltMove, tiltReset: this.tiltReset, restart: this.restart
+    };
+  }
+}
+</script>
+</body>
+</html>
