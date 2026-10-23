@@ -92,6 +92,8 @@ Unique (phone, business_id, coalesce(drop_id, '00000000-0000-0000-0000-000000000
 
 **opt_outs** `phone, business_id null (null = all of Tikka), created_at`
 
+`notify_intents` expire after a day; the same visitor tapping twice gets the same code. All three tables are server-only (no policies); businesses and visitors get `notify_waiting(business, drop)`, a count of distinct numbers (a drop's subscribers plus the business's followers, minus opt-outs).
+
 **outbound_messages** (the queue)
 `id, phone, kind ('card'|'resend'|'reply'|'thanks'|'notify_confirm'|'expiry_reminder'|'owner_daily'|'drop_live'), template_name null, payload jsonb, priority smallint, status ('queued'|'sending'|'sent'|'failed'), attempts, wa_message_id, error, scheduled_for, sent_at, cost_estimate_usd numeric`
 
@@ -178,8 +180,8 @@ Not used for: business sign-in, or businesses messaging their leads (that's `wa.
 3. For each message: dedupe on `wa_message_id`; log to `wa_messages`; upsert `wa_contacts.last_inbound_at`.
 4. Route by content:
    - `TK-XXXXX` → `claim_card()` (§6) → enqueue the card (priority 1) or the matching reply.
-   - `NT-XXXXX` → `subscribe_notify()` → enqueue the confirmation.
-   - `STOP` / `STOP ALL` → write `opt_outs`, stop matching subscriptions, mark leads `opted_out` and clear `marketing_opt_in`, enqueue the confirmation.
+   - `NT-XXXXX` → `subscribe_notify()` → enqueue the confirmation. A drop that's open now gets its link instead; a drop that has ended becomes "their next drop". Subscribing again lifts that business's opt-out.
+   - `STOP` / `STOP ALL` → `handle_stop()`: write `opt_outs`, stop matching subscriptions, mark leads `opted_out` and clear `marketing_opt_in`, enqueue the confirmation. Plain STOP means the business they last heard about (their latest claim or subscription); with no history it stops everything. Claiming from a business again lifts that business's opt-out (STOP ALL stays).
    - Anything else → a short help reply (at most once per hour per phone).
 5. Respond 200 within a second; sending happens from the queue.
 
