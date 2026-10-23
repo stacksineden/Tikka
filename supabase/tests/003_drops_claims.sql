@@ -92,7 +92,8 @@ begin
   select * into cl from public.claims where id = r.claim_id;
   assert cl.code ~ '^CT-[ACDEFGHJKMNPQRTUVWXY34679]{5}$', 'code uses the business prefix: ' || cl.code;
   assert cl.view_token = r.view_token and length(r.view_token) = 24, 'view token is returned';
-  assert cl.expires_at = now() + interval '14 days', 'a Tikka lasts its validity from the claim';
+  assert cl.expires_at = private.last_day(now(), 14), 'a Tikka lasts to 23:59 WAT on its 14th day';
+  assert to_char(cl.expires_at at time zone 'Africa/Lagos', 'HH24:MI') = '23:59', 'the last day ends at 23:59 WAT';
   assert cl.is_new_lead and cl.source = 'qr', 'new lead from the poster';
   assert (select position from public.cards where id = cl.card_id) = 0, 'cards go out in deck order';
   assert (select status = 'claimed' and claim_id = cl.id from public.cards where id = cl.card_id), 'the card is marked claimed';
