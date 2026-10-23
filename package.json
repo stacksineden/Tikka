@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:db": "bash scripts/test-db.sh",
+    "test:concurrency": "jiti scripts/test-claim-concurrency.ts",
     "seed:templates": "jiti scripts/seed-templates.ts",
     "typecheck": "next typegen && tsc --noEmit"
   },
