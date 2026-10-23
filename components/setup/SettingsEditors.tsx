@@ -32,6 +32,7 @@ function toDraft(b: Business): Draft {
     hours: b.hours,
     services: b.services,
     hasVideo: b.hasVideo,
+    videoUrl: b.videoUrl,
     videoPosterUrl: b.videoPosterUrl,
     slug: b.slug,
     address: b.address ?? "",

@@ -15,7 +15,10 @@ import {
   type PrivateRow,
   type ServiceRow,
   type TeamRow,
+  mediaOf,
+  teamTo,
 } from "./business-map";
+import { isInline, toStored } from "./media-path";
 import type { Poster } from "./posters";
 import { createClient } from "./supabase/server";
 import type { Business } from "./types";
@@ -101,6 +104,7 @@ function check(error: { message: string; code?: string } | null, what: string) {
  * the business as stored, with the database's ids.
  */
 export async function saveBusinessDb(ownerId: string, next: Business): Promise<Business> {
+  if (mediaOf(next).some(isInline)) throw new BusinessSaveError("A photo didn't finish uploading. Add it again.");
   const sb = await createClient();
   let id = await ownedBusinessId(sb, ownerId);
   const prev = id ? await loadById(sb, id) : null;
@@ -140,8 +144,8 @@ export async function saveBusinessDb(ownerId: string, next: Business): Promise<B
     const { error } = await sb.rpc("save_services", { p_business: id, p_services: services });
     check(error, "your services");
   }
-  const team = (next.page?.team ?? []).map((t) => ({ name: t.name.trim(), role: t.role?.trim() || null, photo_path: t.photoUrl || null }));
-  const prevTeam = (prev?.page?.team ?? []).map((t) => ({ name: t.name, role: t.role ?? null, photo_path: t.photoUrl ?? null }));
+  const team = (next.page?.team ?? []).map(teamTo);
+  const prevTeam = (prev?.page?.team ?? []).map(teamTo);
   if (!same(prevTeam, team)) {
     const { error } = await sb.rpc("save_team", { p_business: id, p_team: team });
     check(error, "your team");
@@ -176,8 +180,8 @@ async function savePortfolioDb(sb: SupabaseClient, id: string, prev: Business["p
       const { error } = await sb.from("business_portfolio").insert({
         business_id: id,
         kind: p.kind ?? "photo",
-        image_path: p.url,
-        thumb_path: p.thumbUrl,
+        image_path: toStored(p.url),
+        thumb_path: toStored(p.thumbUrl),
         caption: p.caption?.trim() || null,
         duration_s: p.kind === "video" ? (p.seconds ?? 0) : null,
         position,

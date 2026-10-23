@@ -3,7 +3,7 @@
 import { Film, ImagePlus, Loader2, Play, Trash2 } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { addPhoto, addVideoAction, savePortfolio } from "@/app/app/actions";
-import { capturePoster, preparePortfolio, uploadMedia } from "@/lib/media-client";
+import { capturePoster, checkPlayable, preparePortfolio, uploadMedia, uploadPhoto } from "@/lib/media-client";
 import { PAGE_LIMITS, videoProblem } from "@/lib/page";
 import { PORTFOLIO_MAX } from "@/lib/slug";
 import type { PortfolioPhoto } from "@/lib/types";
@@ -42,9 +42,10 @@ export function PortfolioEditor({ initial }: { initial: PortfolioPhoto[] }) {
       const { video, seconds } = await readClip(file);
       const tooMuch = videoProblem(photos, seconds, file.size);
       if (tooMuch) throw new Error(tooMuch);
-      const thumbUrl = await capturePoster(video, Math.min(1, seconds / 2));
-      // Too big for a server action: the file goes straight to storage, then we save the link.
-      const saved = await addVideoAction({ url: await uploadMedia(file), thumbUrl, seconds });
+      await checkPlayable(file);
+      // Too big for a server action: the file and its frame go straight to storage, then we save the links.
+      const [url, thumbUrl] = await Promise.all([uploadMedia(file, "video"), capturePoster(video, Math.min(1, seconds / 2)).then((t) => uploadPhoto(t, "portfolio"))]);
+      const saved = await addVideoAction({ url, thumbUrl, seconds });
       if (!saved.ok) throw new Error(saved.error);
       setPhotos(saved.portfolio);
     } catch (e) {
@@ -65,7 +66,8 @@ export function PortfolioEditor({ initial }: { initial: PortfolioPhoto[] }) {
     for (const file of picked) {
       try {
         const prepared = await preparePortfolio(file);
-        const res = await addPhoto(prepared);
+        const [url, thumbUrl] = await Promise.all([uploadPhoto(prepared.url, "portfolio"), uploadPhoto(prepared.thumbUrl, "portfolio")]);
+        const res = await addPhoto({ url, thumbUrl });
         if (!res.ok) {
           setProblem(res.error);
           break;

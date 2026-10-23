@@ -2,6 +2,8 @@
 // background 1200×600 WebP, video ≤30 s and ≤20 MB with a poster frame captured here).
 
 import { LIMITS } from "./setup";
+import { browserClient } from "./supabase/client";
+import { HEVC_PROBLEM, videoCodec } from "./video-codec";
 
 function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -149,15 +151,39 @@ export async function prepareCropped(file: File, w: number, h: number): Promise<
   return cropTo(await loadImage(file), w, h);
 }
 
-/** Sends a prepared file to storage and returns its URL (DEMO: the in-memory media route). */
-export async function uploadMedia(file: Blob): Promise<string> {
+/** What a file is for: its folder in storage ({user}/{kind}/{file}). */
+export type MediaKind = "logo" | "background" | "video" | "video-poster" | "portfolio" | "hero" | "about" | "service" | "team";
+
+const EXT: Record<string, string> = { "image/webp": "webp", "image/png": "png", "image/jpeg": "jpg", "video/mp4": "mp4", "video/quicktime": "mov" };
+
+/**
+ * Sends a prepared file to storage and returns its address. Signed in: straight from the browser
+ * to Supabase Storage, into the person's own folder (the bucket's rules check it). DEMO (the demo
+ * business, no account): the in-memory media route.
+ */
+export async function uploadMedia(file: Blob, kind: MediaKind): Promise<string> {
+  const sb = browserClient();
+  const { data } = await sb.auth.getSession();
+  const user = data.session?.user;
+  if (user) {
+    const bucket = file.type.startsWith("video/") ? "videos" : "images";
+    const path = `${user.id}/${kind}/${crypto.randomUUID()}.${EXT[file.type] ?? "bin"}`;
+    const { error } = await sb.storage.from(bucket).upload(path, file, { contentType: file.type, cacheControl: "31536000" });
+    if (error) throw new Error(/size|large/i.test(error.message) ? "That file is too big. Try a smaller one." : "That upload didn't go through. Try again.");
+    return sb.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+  }
   const res = await fetch("/api/demo/media", { method: "POST", body: file, headers: { "Content-Type": file.type } });
   const r = (await res.json().catch(() => ({ ok: false }))) as { ok: boolean; url?: string; error?: string };
   if (!r.ok || !r.url) throw new Error(r.error ?? "That upload didn't go through. Try again.");
   return r.url;
 }
 
-/** A prepared photo (a WebP data URL) uploaded to storage. */
-export async function uploadPhoto(dataUrl: string): Promise<string> {
-  return uploadMedia(await (await fetch(dataUrl)).blob());
+/** A prepared photo (a WebP data URL from the helpers above) uploaded to storage. */
+export async function uploadPhoto(dataUrl: string, kind: MediaKind): Promise<string> {
+  return uploadMedia(await (await fetch(dataUrl)).blob(), kind);
+}
+
+/** Refuses HEVC ("High Efficiency" iPhone video): many Android phones can't play it. */
+export async function checkPlayable(file: File): Promise<void> {
+  if (videoCodec(new Uint8Array(await file.arrayBuffer())) === "hevc") throw new Error(HEVC_PROBLEM);
 }

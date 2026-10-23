@@ -4,7 +4,7 @@ import { Camera, Check, ChevronDown, ImageUp, Loader2, Plus, Trash2, X } from "l
 import { useEffect, useId, useRef, useState } from "react";
 import { checkPrefix, checkSlug } from "@/app/app/actions";
 import { checkBrandColor, normalizeHex, SWATCHES } from "@/lib/color";
-import { prepareCover, prepareLogo } from "@/lib/media-client";
+import { prepareCover, prepareLogo, uploadPhoto } from "@/lib/media-client";
 import { CATEGORIES, citiesFor, STATE_NAMES } from "@/lib/nigeria";
 import { ACTION_KINDS, actionMeta, formatNgPhone, LIMITS, type Errors } from "@/lib/setup";
 import type { ActionKind, Business, CardBackground, PatternId } from "@/lib/types";
@@ -267,7 +267,7 @@ export function LogoField({
     setBusy(true);
     setProblem(undefined);
     try {
-      onChange(await prepareLogo(file));
+      onChange(await uploadPhoto(await prepareLogo(file), "logo"));
     } catch (e) {
       setProblem((e as Error).message);
     } finally {
@@ -433,7 +433,7 @@ export function BackgroundField({
     setBusy(true);
     setProblem(undefined);
     try {
-      const url = await prepareCover(file);
+      const url = await uploadPhoto(await prepareCover(file), "background");
       setLastPhoto(url);
       onChange({ type: "photo", url });
     } catch (e) {

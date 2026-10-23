@@ -2,7 +2,7 @@
 
 import { Film, Loader2, Plus, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { capturePoster, readVideo } from "@/lib/media-client";
+import { capturePoster, checkPlayable, readVideo, uploadMedia, uploadPhoto } from "@/lib/media-client";
 import { DEFAULT_HOURS, LIMITS, type Errors } from "@/lib/setup";
 import type { Business, DayHours, OpeningHours } from "@/lib/types";
 import { FieldShell } from "./Fields";
@@ -189,7 +189,7 @@ export function VideoField({
 }: {
   hasVideo: boolean;
   posterUrl?: string;
-  onChange: (v: { hasVideo: boolean; videoPosterUrl?: string }) => void;
+  onChange: (v: { hasVideo: boolean; videoUrl?: string; videoPosterUrl?: string }) => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -203,10 +203,18 @@ export function VideoField({
     const v = videoRef.current;
     if (!v || duration === undefined) return;
     let live = true;
+    // The frame shows straight away; it uploads once the slider settles.
     const t = setTimeout(async () => {
       const poster = await capturePoster(v, frame);
-      if (live) onChange({ hasVideo: true, videoPosterUrl: poster });
-    }, 150);
+      if (!live) return;
+      onChange({ hasVideo: true, videoPosterUrl: poster });
+      try {
+        const url = await uploadPhoto(poster, "video-poster");
+        if (live) onChange({ hasVideo: true, videoPosterUrl: url });
+      } catch (e) {
+        if (live) setProblem((e as Error).message);
+      }
+    }, 500);
     return () => {
       live = false;
       clearTimeout(t);
@@ -221,6 +229,9 @@ export function VideoField({
     setProblem(undefined);
     try {
       const info = await readVideo(file);
+      await checkPlayable(file);
+      // Straight to storage (too big for a server action); the card saves its address.
+      onChange({ hasVideo: true, videoUrl: await uploadMedia(file, "video") });
       videoRef.current = info.video;
       const start = Math.min(1, info.duration / 2);
       setFrame(start);
@@ -268,7 +279,7 @@ export function VideoField({
               onClick={() => {
                 videoRef.current = null;
                 setDuration(undefined);
-                onChange({ hasVideo: false, videoPosterUrl: undefined });
+                onChange({ hasVideo: false, videoUrl: undefined, videoPosterUrl: undefined });
               }}
             >
               <Trash2 />

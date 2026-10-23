@@ -1,7 +1,9 @@
 // A business as the screens use it (lib/types.ts Business) ⇄ its rows in the database
 // (businesses, business_private, business_page, business_services, business_portfolio,
-// business_team, business_faqs). Pure, so the mapping is pinned by tests.
+// business_team, business_faqs). Files are stored as paths (lib/media-path.ts). Pure, so the
+// mapping is pinned by tests.
 
+import { fromStored, toStored } from "./media-path";
 import { initialsFrom } from "./setup";
 import type { Business, BusinessPage, CardBackground, PatternId, PortfolioPhoto, ServiceItem, TeamMember, FaqItem } from "./types";
 
@@ -92,13 +94,13 @@ const opt = <T>(v: T | null | undefined): T | undefined => (v === null || v === 
 
 export function backgroundFrom(type: BusinessRow["background_type"], value: string | null): CardBackground {
   if (type === "pattern" && value) return { type: "pattern", pattern: value as PatternId };
-  if (type === "photo" && value) return { type: "photo", url: value };
+  if (type === "photo" && value) return { type: "photo", url: fromStored(value)! };
   return { type: "color" };
 }
 
 export function backgroundTo(bg: CardBackground | undefined): Pick<BusinessRow, "background_type" | "background_value"> {
   if (bg?.type === "pattern") return { background_type: "pattern", background_value: bg.pattern };
-  if (bg?.type === "photo") return { background_type: "photo", background_value: bg.url };
+  if (bg?.type === "photo") return { background_type: "photo", background_value: toStored(bg.url) };
   return { background_type: "color", background_value: null };
 }
 
@@ -120,7 +122,7 @@ export function serviceFrom(r: ServiceRow): ServiceItem {
     price: r.price_kobo === null ? null : r.price_kobo / 100,
     priceKind: r.price_kind,
     duration: opt(r.duration),
-    imageUrl: opt(r.image_path),
+    imageUrl: fromStored(r.image_path),
   };
 }
 
@@ -135,7 +137,7 @@ export function serviceTo(s: ServiceItem) {
     price_kobo: priced ? Math.round(s.price! * 100) : null,
     price_kind: priced ? (s.priceKind ?? "fixed") : "ask",
     duration: s.duration?.trim() || null,
-    image_path: s.imageUrl || null,
+    image_path: toStored(s.imageUrl),
   };
 }
 
@@ -143,8 +145,8 @@ export function portfolioFrom(r: PortfolioRow): PortfolioPhoto {
   return {
     id: r.id,
     kind: r.kind,
-    url: r.image_path,
-    thumbUrl: r.thumb_path,
+    url: fromStored(r.image_path)!,
+    thumbUrl: fromStored(r.thumb_path)!,
     caption: opt(r.caption),
     seconds: r.duration_s === null ? undefined : Number(r.duration_s),
   };
@@ -153,13 +155,13 @@ export function portfolioFrom(r: PortfolioRow): PortfolioPhoto {
 export function pageFrom(p: PageRow | null, team: TeamRow[], faqs: FaqRow[]): BusinessPage | undefined {
   if (!p) return undefined;
   return {
-    heroImageUrl: opt(p.hero_image_path),
+    heroImageUrl: fromStored(p.hero_image_path),
     heroFocal: { x: Number(p.hero_focal_x), y: Number(p.hero_focal_y) },
     headline: opt(p.headline),
     subline: opt(p.subline),
-    aboutImageUrl: opt(p.about_image_path),
+    aboutImageUrl: fromStored(p.about_image_path),
     showTeam: p.show_team,
-    team: team.map((t): TeamMember => ({ id: t.id, name: t.name, role: opt(t.role), photoUrl: opt(t.photo_path) })),
+    team: team.map((t): TeamMember => ({ id: t.id, name: t.name, role: opt(t.role), photoUrl: fromStored(t.photo_path) })),
     showFaqs: p.show_faqs,
     faqs: faqs.map((f): FaqItem => ({ id: f.id, q: f.question, a: f.answer })),
     showText: p.show_text,
@@ -170,12 +172,12 @@ export function pageFrom(p: PageRow | null, team: TeamRow[], faqs: FaqRow[]): Bu
 
 export function pageTo(p: BusinessPage | undefined): Omit<PageRow, never> {
   return {
-    hero_image_path: p?.heroImageUrl || null,
+    hero_image_path: toStored(p?.heroImageUrl),
     hero_focal_x: p?.heroFocal?.x ?? 0.5,
     hero_focal_y: p?.heroFocal?.y ?? 0.5,
     headline: p?.headline?.trim() || null,
     subline: p?.subline?.trim() || null,
-    about_image_path: p?.aboutImageUrl || null,
+    about_image_path: toStored(p?.aboutImageUrl),
     show_team: !!p?.showTeam,
     show_faqs: !!p?.showFaqs,
     show_text: !!p?.showText,
@@ -205,7 +207,7 @@ export function businessFrom(
     brandColor: b.brand_color,
     onBrandColor: b.on_brand_color,
     codePrefix: b.code_prefix,
-    logoUrl: opt(b.logo_path),
+    logoUrl: fromStored(b.logo_path),
     background: backgroundFrom(b.background_type, b.background_value),
     tagline: opt(b.tagline),
     about: opt(b.about),
@@ -218,8 +220,8 @@ export function businessFrom(
     serveMode: b.serve_mode,
     page: pageFrom(page, team, faqs),
     hasVideo: !!b.video_path,
-    videoUrl: opt(b.video_path),
-    videoPosterUrl: opt(b.video_poster_path),
+    videoUrl: fromStored(b.video_path),
+    videoPosterUrl: fromStored(b.video_poster_path),
     address: opt(b.address),
     portfolio: portfolio.map(portfolioFrom),
     foundingMember: !!priv?.founding_member,
@@ -246,9 +248,9 @@ export function cardTo(b: Business) {
     brand_color: b.brandColor,
     on_brand_color: b.onBrandColor,
     ...backgroundTo(b.background),
-    logo_path: b.logoUrl || null,
-    video_path: b.videoUrl || null,
-    video_poster_path: b.videoPosterUrl || null,
+    logo_path: toStored(b.logoUrl),
+    video_path: toStored(b.videoUrl),
+    video_poster_path: toStored(b.videoPosterUrl),
     hours: b.hours ?? null,
     actions: b.actions ?? [],
     serve_mode: b.serveMode ?? "in_store",
@@ -257,4 +259,24 @@ export function cardTo(b: Business) {
 
 export function privateTo(b: Business) {
   return { owner_whatsapp: nigerianE164(b.ownerWhatsapp), daily_summary: b.dailySummary ?? true };
+}
+
+/** Teams and portfolio items as save_team() and the portfolio insert take them. */
+export function teamTo(t: TeamMember) {
+  return { name: t.name.trim(), role: t.role?.trim() || null, photo_path: toStored(t.photoUrl) };
+}
+
+/** Every file a business points at, to refuse photos pasted in as data instead of uploaded. */
+export function mediaOf(b: Business): (string | undefined)[] {
+  return [
+    b.logoUrl,
+    b.background.type === "photo" ? b.background.url : undefined,
+    b.videoUrl,
+    b.videoPosterUrl,
+    b.page?.heroImageUrl,
+    b.page?.aboutImageUrl,
+    ...b.services.map((x) => x.imageUrl),
+    ...(b.page?.team ?? []).map((x) => x.photoUrl),
+    ...b.portfolio.flatMap((x) => [x.url, x.thumbUrl]),
+  ];
 }

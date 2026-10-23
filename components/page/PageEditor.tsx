@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 import { savePageAction, saveServicesAction } from "@/app/app/actions";
 import { PortfolioEditor } from "@/components/setup/PortfolioEditor";
-import { prepareAbout, prepareCropped, prepareHero, uploadPhoto } from "@/lib/media-client";
+import { prepareAbout, prepareCropped, prepareHero, uploadPhoto, type MediaKind } from "@/lib/media-client";
 import { focalPosition, heroHeadline, heroLine, PAGE_LIMITS, priceText } from "@/lib/page";
 import type { Business, BusinessPage, FaqItem, ServeMode, ServiceItem, TeamMember } from "@/lib/types";
 
@@ -104,7 +104,19 @@ function SaveRow({ s, label = "Save" }: { s: ReturnType<typeof useSave>; label?:
 }
 
 /** Pick a photo, compress it in the browser, hand back a data URL. */
-function PhotoPick({ label, onPick, prepare, busyLabel = "Uploading…" }: { label: string; onPick: (url: string) => void; prepare: (f: File) => Promise<string>; busyLabel?: string }) {
+function PhotoPick({
+  label,
+  kind,
+  onPick,
+  prepare,
+  busyLabel = "Uploading…",
+}: {
+  label: string;
+  kind: MediaKind;
+  onPick: (url: string) => void;
+  prepare: (f: File) => Promise<string>;
+  busyLabel?: string;
+}) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string>();
@@ -131,7 +143,7 @@ function PhotoPick({ label, onPick, prepare, busyLabel = "Uploading…" }: { lab
           setProblem(undefined);
           try {
             // Compressed here, uploaded to storage, and only the link is saved.
-            onPick(await uploadPhoto(await prepare(f)));
+            onPick(await uploadPhoto(await prepare(f), kind));
           } catch (err) {
             setProblem((err as Error).message);
           } finally {
@@ -206,7 +218,7 @@ function HeroCard({ b }: { b: Business }) {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <PhotoPick label="Change photo" prepare={prepareHero} onPick={(u) => setHero(u)} />
+              <PhotoPick label="Change photo" kind="hero" prepare={prepareHero} onPick={(u) => setHero(u)} />
               <button type="button" className="btn btn-ghost min-h-11 px-3 text-label text-danger" onClick={() => setHero(undefined)}>
                 <Trash2 /> Remove
               </button>
@@ -215,7 +227,7 @@ function HeroCard({ b }: { b: Business }) {
         ) : (
           <div className="grid gap-2">
             <p className="text-body text-ink-muted">A wide, bright photo of your space or your best work. Your brand colour shows until you add one.</p>
-            <PhotoPick label="Add a hero photo" prepare={prepareHero} onPick={(u) => setHero(u)} />
+            <PhotoPick label="Add a hero photo" kind="hero" prepare={prepareHero} onPick={(u) => setHero(u)} />
           </div>
         )}
         <Field label="Headline" hint={`Leave empty to use: "${suggested.headline}"`} error={s.errors.headline}>
@@ -291,7 +303,7 @@ function AboutCard({ b }: { b: Business }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={img} alt="About photo" className="h-20 w-28 rounded-sm object-cover" />
           )}
-          <PhotoPick label={img ? "Change photo" : "Add a photo (optional)"} prepare={prepareAbout} onPick={(u) => (setImg(u), s.run(() => savePageAction({ aboutImageUrl: u })))} />
+          <PhotoPick label={img ? "Change photo" : "Add a photo (optional)"} kind="about" prepare={prepareAbout} onPick={(u) => (setImg(u), s.run(() => savePageAction({ aboutImageUrl: u })))} />
           {img && (
             <button type="button" className="btn btn-ghost min-h-11 px-3 text-label text-danger" onClick={() => (setImg(undefined), s.run(() => savePageAction({ aboutImageUrl: "" })))}>
               <Trash2 /> Remove
@@ -417,7 +429,7 @@ function ServicesCard({ b }: { b: Business }) {
                       />
                     </Field>
                     <div className="flex flex-wrap items-center gap-2">
-                      <PhotoPick label={x.imageUrl ? "Change photo" : "Add a photo"} prepare={(f) => prepareCropped(f, 800, 600)} onPick={(u) => patch(x.id!, { imageUrl: u })} />
+                      <PhotoPick label={x.imageUrl ? "Change photo" : "Add a photo"} kind="service" prepare={(f) => prepareCropped(f, 800, 600)} onPick={(u) => patch(x.id!, { imageUrl: u })} />
                       <button
                         type="button"
                         className="btn btn-ghost min-h-11 px-3 text-label text-danger"
@@ -472,7 +484,7 @@ function TeamCard({ page }: { page: BusinessPage }) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={t.photoUrl} alt="" className="size-14 rounded-pill object-cover" />
                   ) : (
-                    <PhotoPick label="Photo" prepare={(f) => prepareCropped(f, 600, 600)} onPick={(u) => patch(t.id, { photoUrl: u })} />
+                    <PhotoPick label="Photo" kind="team" prepare={(f) => prepareCropped(f, 600, 600)} onPick={(u) => patch(t.id, { photoUrl: u })} />
                   )}
                   <input className="input" aria-label="Name" placeholder="Name" value={t.name} maxLength={40} onChange={(e) => patch(t.id, { name: e.target.value })} />
                   <input className="input" aria-label="Role" placeholder="Role, e.g. Barber" value={t.role ?? ""} maxLength={40} onChange={(e) => patch(t.id, { role: e.target.value })} />

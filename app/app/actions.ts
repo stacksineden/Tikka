@@ -53,7 +53,7 @@ import type { CheckResult } from "@/lib/redeem";
 import type { BusinessPageInput } from "@/lib/page";
 import type { Business, OpeningHours, PortfolioPhoto, ServeMode, ServiceItem } from "@/lib/types";
 
-export type Extras = Partial<Pick<Business, "tagline" | "about" | "hours" | "services" | "hasVideo" | "videoPosterUrl" | "address" | "slug">>;
+export type Extras = Partial<Pick<Business, "tagline" | "about" | "hours" | "services" | "hasVideo" | "videoUrl" | "videoPosterUrl" | "address" | "slug">>;
 export type SaveResult = { ok: true } | { ok: false; errors: Errors };
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -143,7 +143,13 @@ export async function checkSlug(slug: string, city: string): Promise<{ available
 export async function addPhoto(photo: Omit<PortfolioPhoto, "id">): Promise<{ ok: true; portfolio: PortfolioPhoto[] } | { ok: false; error: string }> {
   const user = await getOwnerUser();
   if (!user || user.role !== "owner") return { ok: false, error: "Only the business owner can change the page." };
-  const portfolio = await addPortfolioPhoto(user, { ...photo, caption: photo.caption?.slice(0, 80) });
+  let portfolio: PortfolioPhoto[] | null;
+  try {
+    portfolio = await addPortfolioPhoto(user, { ...photo, caption: photo.caption?.slice(0, 80) });
+  } catch (e) {
+    if (e instanceof BusinessSaveError) return { ok: false, error: e.message };
+    throw e;
+  }
   if (!portfolio) return { ok: false, error: `Up to ${PORTFOLIO_MAX} photos.` };
   revalidatePath("/app", "layout");
   return { ok: true, portfolio };
