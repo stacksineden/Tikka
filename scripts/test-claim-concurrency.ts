@@ -4,6 +4,8 @@
 // Expected: exactly 100 cards out, none twice, exactly one legendary, one claim per number, and
 // everyone else told it's sold out. Codes made in SQL must pass lib/codes.ts.
 //
+// Then 10 queue runs at once take 200 card replies: each goes out once.
+//
 // Run: pnpm test:concurrency (needs .env.local with the Supabase URL and secret key, and the
 // Supabase CLI linked). It creates a throwaway business and deletes it afterwards.
 import { execFileSync } from "node:child_process";
@@ -35,7 +37,10 @@ async function rest<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 const phone = (n: number) => `+2349${String(n).padStart(9, "0")}`;
-const cleanup = () => sql(`delete from public.businesses where slug = '${SLUG}';`);
+const cleanup = () =>
+  sql(`delete from public.businesses where slug = '${SLUG}';
+       delete from public.wa_contacts where phone like '+2349%';
+       delete from public.wa_messages where phone like '+2349%';`);
 
 async function main() {
   cleanup();
@@ -102,6 +107,29 @@ async function main() {
   ];
 
   console.log(`${sends.length} claims in ${ms} ms: ${count("claimed")} claimed, ${count("sold_out")} sold out, ${count("duplicate")} repeats`);
+  for (const [name, ok] of checks) console.log(`${ok ? "✓" : "✗"} ${name}`);
+  if (checks.some(([, ok]) => !ok)) process.exitCode = 1;
+  await queueRace(drop.id);
+}
+
+// Two cron runs at once never send the same message: 10 runs take from 200 queued card replies.
+async function queueRace(dropId: string) {
+  sql(`
+    insert into public.wa_contacts (phone, last_inbound_at) select phone, now() from public.claims where drop_id = '${dropId}'
+    on conflict (phone) do update set last_inbound_at = now();
+    select public.enqueue_message(c.phone, 'card', '{}', d.business_id, c.id, 'race:' || c.id || ':' || g)
+    from public.claims c join public.drops d on d.id = c.drop_id, generate_series(1, 2) g where c.drop_id = '${dropId}';
+  `);
+  const runs = await Promise.all(
+    Array.from({ length: 10 }, () => rest<{ id: string }[]>("rpc/take_outbound", { method: "POST", body: JSON.stringify({ p_limit: 30 }) })),
+  );
+  const ids = runs.flat().map((m) => m.id);
+  const checks: [string, boolean][] = [
+    ["every queued message taken", ids.length === 200],
+    ["no message taken twice", new Set(ids).size === ids.length],
+    ["no run over its limit", runs.every((r) => r.length <= 30)],
+  ];
+  console.log(`10 queue runs at once took ${ids.length} messages`);
   for (const [name, ok] of checks) console.log(`${ok ? "✓" : "✗"} ${name}`);
   if (checks.some(([, ok]) => !ok)) process.exitCode = 1;
 }
