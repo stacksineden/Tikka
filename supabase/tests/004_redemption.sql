@@ -169,6 +169,7 @@ do $$ begin
 end $$;
 reset role;
 set local role anon;
+select set_config('request.jwt.claims', '', true);
 do $$ begin
   begin
     perform public.check_code((select v from t where k = 'biz'), (select code from codes where k = 'main2'));

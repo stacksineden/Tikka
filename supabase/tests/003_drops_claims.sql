@@ -205,6 +205,7 @@ end $$;
 -- Anonymous visitors: the published drop and what's in it, nothing else.
 reset role;
 set local role anon;
+select set_config('request.jwt.claims', '', true);
 do $$ begin
   assert (select count(*) from public.drops where id = (select v from t where k = 'main')) = 1, 'published drops are public';
   assert (select count(*) from public.rewards where drop_id = (select v from t where k = 'main')) = 3, 'what''s in the drop is public';

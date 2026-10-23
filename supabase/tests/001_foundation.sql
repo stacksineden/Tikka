@@ -88,6 +88,7 @@ end $$;
 -- ------------------------------------------------- an anonymous visitor
 reset role;
 set local role anon;
+select set_config('request.jwt.claims', '', true);
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 do $$ begin
   assert (select count(*) from public.businesses where slug = 'teststudio') = 1, 'anyone can open a business page';
@@ -99,6 +100,7 @@ reset role;
 -- A suspended business disappears for the public.
 update public.businesses set suspended = true where slug = 'teststudio';
 set local role anon;
+select set_config('request.jwt.claims', '', true);
 do $$ begin
   assert (select count(*) from public.businesses where slug = 'teststudio') = 0, 'suspended businesses are hidden';
 end $$;

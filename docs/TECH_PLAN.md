@@ -82,7 +82,7 @@ Partial unique index (drop_id, phone) **where kind = 'drop'** (one Tikka per num
 
 **reviews**
 `id, claim_id unique, business_id, drop_id, rating smallint (1–5), body varchar(140), display_name ('Adaeze O.'), status ('visible'|'reported'|'hidden'), created_at`
-Insert only through `submit_review()`; a trigger keeps `businesses.rating_avg` and `rating_count` up to date (visible reviews only).
+Insert only through `submit_review()`; a trigger keeps `businesses.rating_avg` and `rating_count` up to date (every review on show: visible or reported, not hidden).
 
 **notify_intents** `id, token unique ('NT-' + 5), business_id, drop_id null, visitor_id, created_at, expires_at`
 
@@ -131,7 +131,7 @@ Shares scale to any size (legendary 2%, rare 10%, thank-you the rest), rounded w
 `id, drop_id null, business_id, type ('view'|'unwrap'|'claim_tap'|'claim_continue'|'claim_completed'|'redeemed'|'reviewed'|'sold_out_view'|'notify_subscribed'|'followup_tap'|'poster_scan'), visitor_hash, source, poster_id null, first_name null (only for claim_completed, redeemed, reviewed), amount_kobo null, tier null, created_at`
 Indexes (drop_id, created_at), (business_id, created_at).
 
-**reports** `id, target_type ('drop'|'review'), target_id, reason, reporter (visitor_hash or business_id), status, created_at`
+**reports** `id, target_type ('drop'|'review'), target_id, reason, reporter_business_id null, reporter_visitor_hash null, status ('open'|'kept'|'hidden'), decided_at, decided_by, created_at`
 
 ## 4. Publishing a drop: the deck
 
@@ -248,7 +248,8 @@ One transaction:
 
 ## 9. Reviews
 - `submit_review(p_view_token, p_rating, p_body)` → allowed only if the claim is redeemed, redeemed within 30 days, and has no review. Stores `display_name` as first name + last initial (from the WhatsApp profile name if available, else first name). Inserts a `reviewed` event.
-- Business: `report_review(id, reason)` → `status = 'reported'` (still visible until admin decides) + a `reports` row.
+- Business: `report_review(id, reason)` (owners only; staff can't) → `status = 'reported'` (still visible until admin decides) + a `reports` row. Reporting again is a no-op.
+- Admin: `decide_review_report(id, hide)` → `hidden`, or back to `visible`; closes the open reports.
 - Public reads through `get_business_reviews(business, page)` (visible only).
 
 ## 10. Leads

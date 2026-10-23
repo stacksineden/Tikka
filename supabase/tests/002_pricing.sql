@@ -66,6 +66,7 @@ end $$;
 -- Anonymous visitors: prices yes, money no.
 reset role;
 set local role anon;
+select set_config('request.jwt.claims', '', true);
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 do $$ begin
   assert (select count(*) from public.drop_tiers) = 4, 'anyone reads the tiers';
