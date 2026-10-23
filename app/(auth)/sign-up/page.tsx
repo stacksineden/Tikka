@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { SignUpForm } from "@/components/auth/Forms";
 
 export const metadata: Metadata = { title: "Start free" };
@@ -12,7 +13,9 @@ export default function SignUpPage() {
         Set up your card and run your first drop today. Free to start.
       </p>
       <div className="mt-8">
-        <SignUpForm />
+        <Suspense>
+          <SignUpForm />
+        </Suspense>
       </div>
       <p className="text-body mt-8 text-ink-muted">
         Already have an account?{" "}

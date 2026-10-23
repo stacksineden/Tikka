@@ -23,7 +23,7 @@ Read these before building anything:
 
 We're building the screens before the database so the UI shows what the API needs to be. Until M1 lands:
 - Data comes from `lib/mock/*.json` through `lib/data.ts`. Pages only call `lib/data.ts`; swap its internals for Supabase RPCs later and keep the signatures. `DEMO_NOW` freezes "now" for the mock data.
-- Auth is a demo cookie (`lib/session.ts`, `app/(auth)/actions.ts`). Anything marked `DEMO` must go when Supabase Auth is wired.
+- Sign-in is real Supabase Auth (`lib/session.ts`, `lib/supabase/`, `app/(auth)/actions.ts`, `app/auth/callback`). Screens still read the demo store through `lib/data.ts`, keyed by the signed-in user's id. In development only, "Open the demo business" on the sign-in page opens the Glow Studio demo data without an account (`DEMO` in `lib/session.ts` and `proxy.ts`); it goes with the demo store.
 - Next.js 16: `proxy.ts` replaces middleware, and `cacheComponents` is on, so session reads go inside `<Suspense>`. Read `node_modules/next/dist/docs/` before using an unfamiliar API (see AGENTS.md).
 - Card visuals live in `components/tikka/` (ported from `design/card-reference/`). A `.tk-stage` or `.tk-solo` always carries `data-theme="light"` so the night stage stays the same indigo in both themes.
 

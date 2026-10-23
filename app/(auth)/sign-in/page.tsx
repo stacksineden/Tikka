@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { SignInForm } from "@/components/auth/Forms";
+import { demoAllowed } from "@/lib/session";
+import { openDemoBusiness } from "../actions";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -21,6 +23,15 @@ export default function SignInPage() {
           Create an account
         </Link>
       </p>
+      {/* DEMO (development only): the Glow Studio demo data has no real account behind it. */}
+      {demoAllowed && (
+        <form action={openDemoBusiness} className="mt-8 rounded-md border border-dashed border-line-strong p-4">
+          <p className="text-caption text-ink-muted">Development only: the demo business, without an account.</p>
+          <button type="submit" className="btn btn-secondary mt-3 w-full">
+            Open the demo business
+          </button>
+        </form>
+      )}
     </>
   );
 }

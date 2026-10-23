@@ -7,8 +7,9 @@ import { getInvite } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Join your team", robots: { index: false } };
 
-async function Invite({ params }: PageProps<"/invite/[token]">) {
+async function Invite({ params, searchParams }: PageProps<"/invite/[token]">) {
   const { token } = await params;
+  const wrongEmail = (await searchParams).error === "email";
   const invite = await getInvite(token);
   if (!invite) notFound();
   const b = invite.business;
@@ -27,6 +28,11 @@ async function Invite({ params }: PageProps<"/invite/[token]">) {
         <>
           <h1 className="text-heading mt-4">Join {b.name} on Tikka</h1>
           <p className="text-body mt-2 text-ink-muted">You&apos;ll redeem Tikka codes at the counter. That&apos;s all staff see: no customer numbers, no settings.</p>
+          {wrongEmail && (
+            <p role="alert" className="text-body mt-4 rounded-md bg-danger-soft p-3 text-danger">
+              This invite is for {invite.email}. Sign in with that email, or ask the owner to invite the email you use.
+            </p>
+          )}
           <div className="mt-8">
             <InviteForm token={token} email={invite.email} />
           </div>

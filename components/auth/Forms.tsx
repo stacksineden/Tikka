@@ -26,8 +26,17 @@ function GoogleButton({ intent, next }: { intent: "sign-in" | "sign-up"; next?: 
   );
 }
 
+/** Why they were sent back here: an expired email link, Google not switched on, or an invite for an account that exists. */
+const NOTICES: Record<string, string> = {
+  link: "That link has expired or was opened in a different browser. Sign in, or ask for a new link.",
+  google: "Google sign-in isn't available right now. Use your email and password.",
+  existing: "You already have a Tikka account. Sign in to join the team.",
+};
+
 export function SignInForm() {
-  const next = useSearchParams().get("next") ?? "";
+  const params = useSearchParams();
+  const next = params.get("next") ?? "";
+  const notice = NOTICES[params.get("error") ?? params.get("notice") ?? ""];
   const [state, action] = useActionState<FormState, FormData>(signIn, undefined);
   return (
     <div className="grid gap-5">
@@ -35,7 +44,7 @@ export function SignInForm() {
       <Divider />
       <form action={action} className="grid gap-4" noValidate>
         <input type="hidden" name="next" value={next} />
-        <FormError message={state?.error} />
+        <FormError message={state?.error ?? notice} />
         <Field
           label="Email"
           name="email"
@@ -60,13 +69,14 @@ export function SignInForm() {
 }
 
 export function SignUpForm() {
+  const notice = NOTICES[useSearchParams().get("error") ?? ""];
   const [state, action] = useActionState<FormState, FormData>(signUp, undefined);
   return (
     <div className="grid gap-5">
       <GoogleButton intent="sign-up" />
       <Divider />
       <form action={action} className="grid gap-4" noValidate>
-        <FormError message={state?.error} />
+        <FormError message={state?.error ?? notice} />
         <Field label="Your name" name="name" autoComplete="name" required defaultValue={state?.fields?.name} />
         <Field
           label="Work email"

@@ -1713,7 +1713,13 @@ export async function getInvite(token: string): Promise<InviteView | null> {
   return null;
 }
 
-/** Accepting adds the membership; the caller signs them in as staff of this business. */
+/** DEMO: the business a staff member redeems for (its owner's id), until Team uses business_members. */
+export function demoStaffOwner(userId: string): string | null {
+  for (const [ownerId, t] of teamStore) if (t.staff.some((m) => m.userId === userId)) return ownerId;
+  return null;
+}
+
+/** Accepting adds the membership; the caller is already signed in with the invited email. */
 export async function acceptInvite(token: string, name: string, userId: string): Promise<{ ownerId: string; email: string } | null> {
   for (const [ownerId, t] of teamStore) {
     const i = t.invites.find((x) => x.token === token);

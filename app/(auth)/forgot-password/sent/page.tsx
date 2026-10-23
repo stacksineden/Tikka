@@ -22,12 +22,8 @@ export default function ResetSentPage(props: PageProps<"/forgot-password/sent">)
         <Suspense fallback="your email">
           <Email searchParams={props.searchParams} />
         </Suspense>
-        , a reset link is on its way. It works for one hour.
+        , a reset link is on its way. Open it on this phone or computer; it works for one hour.
       </p>
-      {/* DEMO ONLY: stands in for the link in the reset email. */}
-      <Link href="/reset-password" className="btn btn-secondary mt-8 w-full">
-        Demo: open the reset link
-      </Link>
       <p className="text-body mt-8 text-ink-muted">
         <Link href="/sign-in" className="font-semibold text-brand hover:underline">
           Back to sign in
