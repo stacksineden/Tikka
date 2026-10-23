@@ -94,6 +94,8 @@ export function coveredBy(v: Pick<Voucher, "source">): string {
       return "Free (the drop you earned)";
     case "admin":
       return "Free (a drop from Tikka)";
+    case "paid":
+      return "Already paid for";
   }
 }
 

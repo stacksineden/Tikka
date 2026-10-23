@@ -881,6 +881,8 @@ function rewardFromLabel(d: Drop, label: string): ReportClaim["reward"] {
 async function feeOf(ownerId: string, d: Drop): Promise<DropFee> {
   const vouchersUsed = (voucherStore.get(ownerId) ?? []).find((v) => v.usedByDropId === d.id);
   if (d.paidWith === "voucher" || vouchersUsed) {
+    // Paid for earlier (it couldn't go out when the money arrived): that drop's price.
+    if (vouchersUsed?.source === "paid") return { kind: "paid", amountKobo: tierStore.find((t) => t.id === vouchersUsed.tierId)?.priceKobo ?? 0 };
     const kind = { signup: "free", pack: "pack", guarantee: "earned", admin: "gift" } as const;
     return { kind: kind[vouchersUsed?.source ?? "signup"] };
   }

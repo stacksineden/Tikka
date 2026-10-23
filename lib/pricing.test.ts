@@ -58,7 +58,7 @@ describe("quoteDrop", () => {
   });
 
   it("never says voucher", () => {
-    for (const s of ["signup", "pack", "guarantee", "admin"] as const) expect(coveredBy({ source: s }).toLowerCase()).not.toContain("voucher");
+    for (const s of ["signup", "pack", "guarantee", "admin", "paid"] as const) expect(coveredBy({ source: s }).toLowerCase()).not.toContain("voucher");
   });
 });
 

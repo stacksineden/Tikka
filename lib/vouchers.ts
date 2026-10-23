@@ -6,7 +6,8 @@
 import { count, dayMonthYear } from "./format";
 import type { DropPack, DropTier } from "./pricing";
 
-export type VoucherSource = "signup" | "pack" | "guarantee" | "admin";
+/** "paid": a drop paid for that couldn't go out when the money arrived (complete_payment). */
+export type VoucherSource = "signup" | "pack" | "guarantee" | "admin" | "paid";
 
 export interface Voucher {
   id: string;
