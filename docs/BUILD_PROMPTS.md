@@ -169,7 +169,7 @@ Done when: with 5 seeded businesses and drops the marketplace looks full and loa
 ## M10 · Landing page, admin and launch readiness
 
 ```
-- Landing page (PRD B1): looping real card hero, how it works ("A status disappears in 24 hours. A Tikka drop keeps working."), who it's for, the example results (labelled as an example), pricing (Start free · Pay per drop with tiers from drop_tiers, season packs from drop_packs and the guarantee line), FAQs, a strip of live marketplace drops, Start free.
+- Landing page (PRD B1): looping real card hero, how it works ("Posts scroll away. A Tikka drop keeps working."), who it's for, the example results (labelled as an example), pricing (Start free · Pay per drop with tiers from drop_tiers, season packs from drop_packs and the guarantee line), FAQs, a strip of live marketplace drops, Start free.
 - /admin (PRD C2, TECH_PLAN §16): businesses (verify, suspend, founding member), reports queue, marketplace pins and hides, platform numbers, WhatsApp spend, payments and revenue, grant vouchers, guarantee vouchers issued, edit tier, founding and pack prices.
 - Privacy policy and terms (PRD C1) linked from the claim sheet, footer and sign-up. Privacy policy and terms must be live before the first real claim; the claim sheet links to them for consent. The production build fails while they're still placeholders (scripts/check-legal.ts).
 - Landing page shows no made-up numbers: demo businesses (businesses.is_demo) are excluded from every public count, ticker and strip, and each block only shows above its threshold (PRD B1).

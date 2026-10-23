@@ -699,7 +699,7 @@ function StepSize({
     <>
       <section className="grid gap-2" aria-labelledby="aud-h">
         <h2 id="aud-h" className="text-title text-[17px]">
-          About how many people see your WhatsApp status or Instagram posts?
+          About how many people see what you post, on WhatsApp, Instagram or anywhere else?
         </h2>
         <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="aud-h">
           {AUDIENCE.map((a) => (

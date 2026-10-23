@@ -198,11 +198,11 @@ Plain language everywhere: one decision per screen, big buttons, no jargon.
   - Stats bar (Tikkas claimed, Businesses on Tikka, Drops live now, Recorded sales for businesses): at least 20 real businesses and 10 live drops.
   - Live ticker (no names): at least 1 real claim in the last 24 hours.
   - The stats bar and the marketplace strip use the same live-drop count.
-- **Problem line** (centred, muted): "Most people who see your status never come in, and you never find out who they were."
+- **Problem line** (centred, muted): "Most people who see your business never come in, and you never find out who they were."
 - **Three outcomes** (three columns on desktop, stacked on phones, icon + bold title + one line): **More people through your door.** "A reason to come in this week, not someday." · **A list you can follow up.** "Everyone who claimed, with their WhatsApp number, even if they didn't come." · **Know what your promo made you.** "Customers, sales and cost per customer, in naira."
-- **How it works:** title "One link. More people through your door.", subtitle "A status disappears in 24 hours. A Tikka drop keeps working." Four steps with their visuals:
+- **How it works:** title "One link. More people through your door.", subtitle "Posts scroll away. A Tikka drop keeps working." Four steps with their visuals:
   1. **Pick an offer.** "Ready-made for your business. Change the details and you're done in minutes." (the drop's tiers)
-  2. **Share one link.** "Your WhatsApp status, Instagram, or the QR at your counter." (an "Example" Glow Studio card, no rating line)
+  2. **Share one link.** "Your status, your Instagram bio, an ad, a flyer, or the QR at your counter." (an "Example" Glow Studio card, no rating line)
   3. **They claim on WhatsApp.** "You get their name and number the moment they claim."
   4. **They come in.** "Check their code at the counter and record what they spent." The preview shows what the real redeem screen shows and never a phone number: Valid, "Tunde A.", "20% off any service · Rare", "Till Sat 31 Oct", the New customer / Been here before toggle, "How much did they spend? (₦)" and Confirm.
   - Then a block "Then Tikka brings them back": "Ready-made offers for your business. Pick one and go." · "Tikka reminds them on WhatsApp before their Tikka runs out." · "When they come in, they get a reason to come back." · "See what each customer cost you."
@@ -267,7 +267,7 @@ Each drop: status (Draft, Scheduled, Live, Sold out, Ended), goal, dates, cards 
 - Template rules: Rare and Legendary need a purchase (minimum spend, or a free extra with a paid service) or are a taste of the main service; Thank-you always names a real small benefit; no free full main service with no purchase, except a Legendary limited to 2% or less.
 
 **Screen 3 · "How big, and for how long?"**
-- "About how many people see your WhatsApp status or Instagram posts?" Under 300 · 300–1,000 · 1,000–5,000 · More than 5,000 → a suggested size (about 1 Tikka per 3 viewers, rounded to a tier). After a past drop, suggest from its real numbers.
+- "About how many people see what you post, on WhatsApp, Instagram or anywhere else?" Under 300 · 300–1,000 · 1,000–5,000 · More than 5,000 → a suggested size (about 1 Tikka per 3 viewers, rounded to a tier). After a past drop, suggest from its real numbers.
 - **First drop:** "Free · your first drop · up to 200 (recommended)" is preselected; the paid sizes still show underneath with "With your audience, a bigger drop could fill." If the business pays for a bigger first drop, the free drop stays for later.
 - Size as big cards with the price: "Free · your first drop · up to 200", "Small · up to 300 · ₦5,000", "Medium · up to 1,000 · ₦10,000", "Large · up to 3,000 · ₦20,000"; "Covered by your season pack" when a voucher applies. "Exact number" for a custom size. Over 3,000: "Talk to us".
 - "Drop runs for": 7, 14 or 30 days (default 14).

@@ -49,7 +49,7 @@ export type Days = 7 | 14 | 30;
 export const DAY_CHOICES: Days[] = [7, 14, 30];
 
 export type AudienceBand = "under_300" | "300_1000" | "1000_5000" | "over_5000";
-/** "About how many people see your WhatsApp status or Instagram posts?" → about 1 Tikka per 3 viewers. */
+/** "About how many people see what you post, on WhatsApp, Instagram or anywhere else?" → about 1 Tikka per 3 viewers. */
 export const AUDIENCE: { id: AudienceBand; label: string; suggest: number }[] = [
   { id: "under_300", label: "Under 300", suggest: 100 },
   { id: "300_1000", label: "300–1,000", suggest: 300 },

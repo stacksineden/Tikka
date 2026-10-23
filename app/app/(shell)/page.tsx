@@ -107,7 +107,7 @@ function GettingStarted({ name, business }: { name: string; business: Business |
       done: false,
       current: cardDone,
     },
-    { title: "Share your link", body: "On your WhatsApp status, Instagram, or as a QR code at the counter.", done: false, current: false },
+    { title: "Share your link", body: "Wherever people see you: your status, Instagram bio, ads, or the QR at your counter.", done: false, current: false },
   ];
   return (
     <div className="mx-auto grid max-w-5xl gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">

@@ -86,7 +86,7 @@ export function ProblemLine() {
   return (
     <section className="bg-surface px-4 pt-14 sm:px-6 sm:pt-20">
       <p className="text-body-lg mx-auto max-w-2xl text-center text-ink-muted">
-        Most people who see your status never come in, and you never find out who they were.
+        Most people who see your business never come in, and you never find out who they were.
       </p>
     </section>
   );
@@ -196,7 +196,7 @@ const STEPS = [
   },
   {
     title: "Share one link.",
-    body: "Your WhatsApp status, Instagram, or the QR at your counter.",
+    body: "Your status, your Instagram bio, an ad, a flyer, or the QR at your counter.",
     Visual: StepVisualCard,
   },
   {
@@ -218,7 +218,7 @@ export function HowItWorks() {
         <div className="max-w-2xl">
           <Eyebrow>How it works</Eyebrow>
           <h2 className="mt-3 text-heading sm:text-display-lg">One link. More people through your door.</h2>
-          <p className="text-body-lg mt-4 text-ink-muted">A status disappears in 24 hours. A Tikka drop keeps working.</p>
+          <p className="text-body-lg mt-4 text-ink-muted">Posts scroll away. A Tikka drop keeps working.</p>
         </div>
         <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map(({ title, body, Visual }, i) => (
@@ -370,8 +370,8 @@ export function ExampleResults({ tiers }: { tiers: DropTier[] }) {
                 This drop brought in <span className="text-gold-text">{nairaShort(1_940_000)}</span>.
               </h2>
               <p className="text-body-lg mt-4 text-ink-muted">
-                A salon in Lekki runs a 600-Tikka drop for two weeks and shares the link on its WhatsApp status and
-                Instagram. Here&apos;s what that looks like on the drop dashboard.
+                A salon in Lekki runs a 600-Tikka drop for two weeks and shares the link in its Instagram bio, on its
+                status and with a QR at the counter. Here&apos;s what that looks like on the drop dashboard.
               </p>
               <p className="text-caption mt-4 text-ink-muted">
                 An illustration of how a drop works, not a promise of results.
@@ -548,7 +548,7 @@ function faqs(tiers: DropTier[], packs: DropPack[]): { id?: string; q: string; a
     {
       id: "faq-guarantee",
       q: "What if my drop doesn't bring customers?",
-      a: `If a paid drop brings fewer than ${list(thresholds)} through your door, your next drop of the same size is free. You just need to share it in at least 3 places, like your WhatsApp status, Instagram and the QR at your counter. Once per business.`,
+      a: `If a paid drop brings fewer than ${list(thresholds)} through your door, your next drop of the same size is free. You just need to share it in at least 3 places, like your Instagram bio, your status and the QR at your counter. Once per business.`,
     },
   ];
 }
