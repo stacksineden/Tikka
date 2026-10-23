@@ -1,0 +1,36 @@
+{
+  "drop_oct": {
+    "viewTotal": 3120,
+    "uniqueViews": 2380,
+    "tore": 1640,
+    "tapped": 820,
+    "continued": 640,
+    "followedUp": 41,
+    "newClaimers": 461,
+    "viewsAfterSellout": 0,
+    "bySource": {
+      "wa": { "views": 860, "claims": 212 },
+      "ig": { "views": 920, "claims": 168 },
+      "qr": { "views": 310, "claims": 96 },
+      "market": { "views": 190, "claims": 61 },
+      "web": { "views": 60, "claims": 12 },
+      "direct": { "views": 40, "claims": 28 }
+    }
+  },
+  "drop_sep": {
+    "viewTotal": 2710,
+    "uniqueViews": 1650,
+    "tore": 1100,
+    "tapped": 560,
+    "continued": 470,
+    "followedUp": 58,
+    "newClaimers": 318,
+    "viewsAfterSellout": 420,
+    "bySource": {
+      "wa": { "views": 600, "claims": 150 },
+      "ig": { "views": 700, "claims": 140 },
+      "qr": { "views": 200, "claims": 60 },
+      "market": { "views": 150, "claims": 50 }
+    }
+  }
+}

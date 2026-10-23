@@ -1,0 +1,169 @@
+import "server-only";
+
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { ImageResponse } from "next/og";
+import { count, place } from "./format";
+import { TOKENS } from "./tokens";
+import type { Business, PublicDrop } from "./types";
+
+// Drop artwork for @vercel/og (TECH_PLAN §15): the link preview (1200×630), the WhatsApp
+// status image (1080×1920) and the square post (1080×1080). One design, three layouts.
+
+const SPARK = "M12 2c.6 4.6 2.4 7.6 10 10-7.6 2.4-9.4 5.4-10 10-.6-4.6-2.4-7.6-10-10 7.6-2.4 9.4-5.4 10-10z";
+
+let fonts: Promise<{ name: string; data: ArrayBuffer; weight: 500 | 800; style: "normal" }[]> | undefined;
+
+/** Bricolage Grotesque from Google Fonts as TTF; falls back to the built-in font if offline. */
+function loadFonts() {
+  fonts ??= Promise.all(
+    ([500, 800] as const).map(async (weight) => {
+      const css = await fetch(`https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@${weight}`).then((r) => r.text());
+      const url = css.match(/src: url\((.+?)\) format\('(?:opentype|truetype)'\)/)?.[1];
+      if (!url) throw new Error("no ttf");
+      return { name: "Bricolage", data: await fetch(url).then((r) => r.arrayBuffer()), weight, style: "normal" as const };
+    }),
+  ).catch(() => []);
+  return fonts;
+}
+
+let wordmarkUri: Promise<string> | undefined;
+
+/** The wordmark as a data URI: the image renderer won't fetch from our own host. */
+function loadWordmark() {
+  wordmarkUri ??= readFile(join(process.cwd(), "public/brand/tikka-wordmark-reversed.svg")).then(
+    (svg) => `data:image/svg+xml;base64,${svg.toString("base64")}`,
+  );
+  return wordmarkUri;
+}
+
+const mono = { fontFamily: "monospace", letterSpacing: 3, textTransform: "uppercase" as const };
+
+/** The sealed wrapper with the business seal, drawn at `s` × the link-preview size. */
+function Wrapper({ b, drop, wordmark, s }: { b: Business; drop: PublicDrop; wordmark: string; s: number }) {
+  return (
+    <div style={{ position: "relative", display: "flex", flexDirection: "column", width: 340 * s, height: 476 * s, flexShrink: 0 }}>
+      <div style={{ display: "flex", height: 66 * s, background: TOKENS.brand, borderRadius: `${26 * s}px ${26 * s}px 0 0`, borderBottom: `${3 * s}px dashed ${TOKENS.onNight}` }} />
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", flex: 1, background: TOKENS.brand, borderRadius: `0 0 ${26 * s}px ${26 * s}px` }}>
+        <svg width={118 * s} height={118 * s} viewBox="0 0 24 24" style={{ marginTop: 26 * s }}>
+          <path d={SPARK} fill={TOKENS.gold} />
+        </svg>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={wordmark} width={146 * s} height={51 * s} alt="" style={{ marginTop: 22 * s }} />
+        <div style={{ display: "flex", marginTop: "auto", marginBottom: 34 * s, fontSize: 15 * s, color: TOKENS.onNightMuted, ...mono }}>
+          Limited drop · {count(drop.total)} Tikkas
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            right: 16 * s,
+            top: 40 * s,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 84 * s,
+            height: 84 * s,
+            borderRadius: 84 * s,
+            background: b.brandColor,
+            color: b.onBrandColor,
+            border: `${4 * s}px solid ${TOKENS.onNight}`,
+            fontSize: 28 * s,
+            fontWeight: 800,
+            transform: "rotate(-10deg)",
+          }}
+        >
+          {b.initials}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Contents({ drop, size, center = false }: { drop: PublicDrop; size: number; center?: boolean }) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: center ? "center" : "flex-start", gap: size * 1.4, fontSize: size, ...mono }}>
+      {(
+        [
+          [drop.contents.legendary, "legendary", TOKENS.rarityLegendary],
+          [drop.contents.rare, "rare", TOKENS.gold],
+          [drop.contents.thankYou, "thank-you", TOKENS.rarityCommon],
+        ] as const
+      )
+        .filter(([n]) => n > 0)
+        .map(([n, label, color]) => (
+          <div key={label} style={{ display: "flex", alignItems: "center", gap: size * 0.55 }}>
+            <div style={{ width: size * 0.8, height: size * 0.8, borderRadius: size, background: color }} />
+            {count(n)} {label}
+          </div>
+        ))}
+    </div>
+  );
+}
+
+export type Layout = "preview" | "status" | "square";
+const SIZES: Record<Layout, { width: number; height: number }> = {
+  preview: { width: 1200, height: 630 },
+  status: { width: 1080, height: 1920 },
+  square: { width: 1080, height: 1080 },
+};
+
+export async function dropImage(b: Business, drop: PublicDrop, layout: Layout, link: string, download?: string): Promise<ImageResponse> {
+  const [wordmark, loadedFonts] = await Promise.all([loadWordmark(), loadFonts()]);
+  const label = drop.status === "scheduled" ? "Coming soon" : "Limited drop";
+  const base = { width: "100%", height: "100%", display: "flex", background: TOKENS.night, color: TOKENS.onNight, fontFamily: "Bricolage" } as const;
+
+  const art =
+    layout === "preview" ? (
+      <div style={{ ...base, alignItems: "center", padding: "0 90px", gap: 80 }}>
+        <Wrapper b={b} drop={drop} wordmark={wordmark} s={1} />
+        <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+          <div style={{ display: "flex", fontSize: 20, color: TOKENS.gold, ...mono }}>{label}</div>
+          <div style={{ display: "flex", fontSize: 66, fontWeight: 800, lineHeight: 1.05, letterSpacing: -2, marginTop: 18 }}>A Tikka from {b.name}</div>
+          <div style={{ display: "flex", fontSize: 28, fontWeight: 500, color: TOKENS.onNightMuted, marginTop: 18 }}>
+            {b.category} · {place(b.area, b.city)}
+          </div>
+          <div style={{ display: "flex", marginTop: 40 }}>
+            <Contents drop={drop} size={18} />
+          </div>
+          <div style={{ display: "flex", fontSize: 26, fontWeight: 500, marginTop: 40 }}>Tear it open. Every Tikka holds something.</div>
+        </div>
+      </div>
+    ) : (
+      // Status and square: stacked and centred, with the link written out (images can't hold a tap).
+      <div style={{ ...base, flexDirection: "column", alignItems: "center", justifyContent: "center", padding: layout === "status" ? "120px 80px" : "70px 80px", textAlign: "center" }}>
+        <div style={{ display: "flex", fontSize: layout === "status" ? 30 : 24, color: TOKENS.gold, ...mono }}>{label}</div>
+        <div style={{ display: "flex", fontSize: layout === "status" ? 92 : 64, fontWeight: 800, lineHeight: 1.04, letterSpacing: -2, marginTop: 24, justifyContent: "center" }}>
+          A Tikka from {b.name}
+        </div>
+        <div style={{ display: "flex", marginTop: layout === "status" ? 70 : 36 }}>
+          <Wrapper b={b} drop={drop} wordmark={wordmark} s={layout === "status" ? 1.75 : 1.02} />
+        </div>
+        <div style={{ display: "flex", marginTop: layout === "status" ? 70 : 34 }}>
+          <Contents drop={drop} size={layout === "status" ? 28 : 20} center />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            marginTop: layout === "status" ? 80 : 34,
+            padding: layout === "status" ? "26px 44px" : "18px 32px",
+            borderRadius: 999,
+            background: TOKENS.gold,
+            color: TOKENS.night,
+            fontSize: layout === "status" ? 40 : 30,
+            fontWeight: 800,
+          }}
+        >
+          {link}
+        </div>
+      </div>
+    );
+
+  return new ImageResponse(art, {
+    ...SIZES[layout],
+    fonts: loadedFonts,
+    headers: {
+      "Cache-Control": "public, max-age=300, s-maxage=300",
+      ...(download ? { "Content-Disposition": `attachment; filename="${download}"` } : {}),
+    },
+  });
+}

@@ -1,0 +1,6 @@
+[
+  { "id": "free", "label": "First drop", "maxCards": 200, "priceKobo": 0, "foundingPriceKobo": 0, "guaranteeMinRedemptions": null, "sort": 0 },
+  { "id": "small", "label": "Small drop", "maxCards": 300, "priceKobo": 500000, "foundingPriceKobo": 500000, "guaranteeMinRedemptions": 5, "sort": 1 },
+  { "id": "medium", "label": "Medium drop", "maxCards": 1000, "priceKobo": 1000000, "foundingPriceKobo": 1000000, "guaranteeMinRedemptions": 10, "sort": 2 },
+  { "id": "large", "label": "Large drop", "maxCards": 3000, "priceKobo": 2000000, "foundingPriceKobo": 2000000, "guaranteeMinRedemptions": 20, "sort": 3 }
+]

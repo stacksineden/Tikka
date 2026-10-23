@@ -1,0 +1,219 @@
+{
+  "id": "biz_glow",
+  "slug": "glowstudio",
+  "name": "Glow Studio",
+  "initials": "GS",
+  "category": "Beauty",
+  "area": "Lekki",
+  "city": "Lagos",
+  "state": "Lagos",
+  "brandColor": "#9C3B5C",
+  "onBrandColor": "#FFFFFF",
+  "codePrefix": "GS",
+  "logoUrl": "/mock/glow-studio-logo.svg",
+  "background": {
+    "type": "color"
+  },
+  "tagline": "Facials, peels and glow-ups since 2019.",
+  "about": "Glow Studio is a calm skin studio in Lekki Phase 1. Since 2019 we have done facials, peels and brow work for busy Lagos skin: sun, heat, makeup and long days. Every visit starts with a short skin check, so you only pay for what your skin needs. Walk-ins are welcome before 4pm.",
+  "hours": {
+    "weekdays": {
+      "open": true,
+      "from": "09:00",
+      "to": "19:00"
+    },
+    "saturday": {
+      "open": true,
+      "from": "10:00",
+      "to": "18:00"
+    },
+    "sunday": {
+      "open": false,
+      "from": "12:00",
+      "to": "17:00"
+    }
+  },
+  "verified": true,
+  "rating": 4.8,
+  "reviewCount": 126,
+  "actions": [
+    {
+      "kind": "whatsapp",
+      "value": "+2348030000000"
+    },
+    {
+      "kind": "call",
+      "value": "+2348030000000"
+    },
+    {
+      "kind": "directions",
+      "value": "Admiralty Way, Lekki Phase 1"
+    },
+    {
+      "kind": "book",
+      "value": "https://glowstudio.ng/book"
+    }
+  ],
+  "services": [
+    {
+      "id": "sv1",
+      "group": "Facials",
+      "name": "Signature facial",
+      "price": 25000,
+      "priceKind": "fixed",
+      "duration": "60 min",
+      "description": "Deep cleanse, gentle exfoliation, extraction and a mask for your skin type.",
+      "imageUrl": "/mock/glow/service-facial.webp"
+    },
+    {
+      "id": "sv2",
+      "group": "Facials",
+      "name": "Hydrating glow facial",
+      "price": 30000,
+      "priceKind": "fixed",
+      "duration": "75 min",
+      "description": "For dull or dry skin: hydration layers and a cooling mask.",
+      "imageUrl": "/mock/glow/service-hydrating.webp"
+    },
+    {
+      "id": "sv3",
+      "group": "Peels",
+      "name": "Chemical peel",
+      "price": 35000,
+      "priceKind": "from",
+      "duration": "45 min",
+      "description": "For dark spots and uneven tone. Strength chosen after your skin check.",
+      "imageUrl": "/mock/glow/service-peel.webp"
+    },
+    {
+      "id": "sv4",
+      "group": "Brows and lashes",
+      "name": "Brow lamination",
+      "price": 15000,
+      "priceKind": "fixed",
+      "duration": "40 min",
+      "description": "Fuller, brushed-up brows that last about six weeks.",
+      "imageUrl": "/mock/glow/service-brows.webp"
+    },
+    {
+      "id": "sv5",
+      "group": "Brows and lashes",
+      "name": "Lash lift and tint",
+      "price": 18000,
+      "priceKind": "fixed",
+      "duration": "50 min",
+      "description": "Lifted, darker lashes without extensions."
+    },
+    {
+      "id": "sv6",
+      "group": "Facials",
+      "name": "Skin consultation",
+      "price": null,
+      "priceKind": "ask",
+      "duration": "20 min",
+      "description": "A one-to-one skin check and a routine you can follow at home."
+    }
+  ],
+  "hasVideo": false,
+  "address": "14 Admiralty Way, Lekki Phase 1, Lagos",
+  "portfolio": [
+    {
+      "id": "pf1",
+      "kind": "photo",
+      "url": "/mock/glow/portfolio-1.webp",
+      "thumbUrl": "/mock/glow/portfolio-1.webp",
+      "caption": "Before and after: chemical peel, 3 sessions"
+    },
+    {
+      "id": "pf2",
+      "kind": "photo",
+      "url": "/mock/glow/portfolio-2.webp",
+      "thumbUrl": "/mock/glow/portfolio-2.webp",
+      "caption": "Our treatment room"
+    },
+    {
+      "id": "pf3",
+      "kind": "photo",
+      "url": "/mock/glow/portfolio-3.webp",
+      "thumbUrl": "/mock/glow/portfolio-3.webp",
+      "caption": "Signature facial"
+    },
+    {
+      "id": "pf4",
+      "kind": "photo",
+      "url": "/mock/glow/portfolio-4.webp",
+      "thumbUrl": "/mock/glow/portfolio-4.webp",
+      "caption": "Brow lamination"
+    },
+    {
+      "id": "pf5",
+      "kind": "photo",
+      "url": "/mock/glow/portfolio-5.webp",
+      "thumbUrl": "/mock/glow/portfolio-5.webp",
+      "caption": "The studio, Lekki Phase 1"
+    },
+    {
+      "id": "pf6",
+      "kind": "photo",
+      "url": "/mock/glow/portfolio-6.webp",
+      "thumbUrl": "/mock/glow/portfolio-6.webp",
+      "caption": "Hydrating glow facial"
+    }
+  ],
+  "foundingMember": true,
+  "guaranteeUsed": false,
+  "isDemo": true,
+  "serveMode": "in_store",
+  "page": {
+    "heroImageUrl": "/mock/glow/hero.webp",
+    "heroFocal": {
+      "x": 0.62,
+      "y": 0.4
+    },
+    "headline": "Skin that glows, in the middle of Lagos",
+    "subline": "Facials, peels and brows in Lekki Phase 1",
+    "aboutImageUrl": "/mock/glow/about.webp",
+    "showTeam": true,
+    "team": [
+      {
+        "id": "tm1",
+        "name": "Funmi Adeyemi",
+        "role": "Founder and skin therapist",
+        "photoUrl": "/mock/glow/team-funmi.webp"
+      },
+      {
+        "id": "tm2",
+        "name": "Ada Nwosu",
+        "role": "Facial therapist",
+        "photoUrl": "/mock/glow/team-ada.webp"
+      },
+      {
+        "id": "tm3",
+        "name": "Tolu Bakare",
+        "role": "Brow and lash artist",
+        "photoUrl": "/mock/glow/team-tolu.webp"
+      }
+    ],
+    "showFaqs": true,
+    "faqs": [
+      {
+        "id": "fq1",
+        "q": "Do I need to book?",
+        "a": "Booking is best, especially on Saturdays. Walk-ins are welcome before 4pm on weekdays."
+      },
+      {
+        "id": "fq2",
+        "q": "Is a chemical peel safe for dark skin?",
+        "a": "Yes, when it is chosen for your skin. We start with a skin check and use peels made for melanin-rich skin."
+      },
+      {
+        "id": "fq3",
+        "q": "How do I use my Tikka?",
+        "a": "Show the code on your Tikka at the counter before you pay. Staff check it and take it off your bill."
+      }
+    ],
+    "showText": true,
+    "textTitle": "Our promise",
+    "textBody": "Clean tools for every client, products we would use ourselves, and no upselling. If a treatment is not right for your skin, we will tell you."
+  }
+}

@@ -1,0 +1,2012 @@
+[
+  {
+    "ownerId": "seed_fadekings",
+    "business": {
+      "id": "biz_fadekings",
+      "slug": "fadekings",
+      "name": "Fade Kings",
+      "initials": "FK",
+      "category": "Beauty",
+      "area": "Ikeja",
+      "city": "Lagos",
+      "state": "Lagos",
+      "brandColor": "#2B2B2B",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "FK",
+      "background": {
+        "type": "pattern",
+        "pattern": "stripes"
+      },
+      "tagline": "Sharp fades, hot towel finish.",
+      "about": "A barbershop for clean cuts and beard work. Walk in or book ahead.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.7,
+      "reviewCount": 88,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110001"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110001"
+        },
+        {
+          "kind": "directions",
+          "value": "Ikeja, Lagos"
+        }
+      ],
+      "services": [
+        {
+          "name": "Haircut",
+          "price": 5000
+        },
+        {
+          "name": "Cut and beard",
+          "price": 8000
+        },
+        {
+          "name": "Kids cut",
+          "price": 3500
+        }
+      ],
+      "hasVideo": false,
+      "address": "Ikeja, Lagos",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_halloween-fades",
+        "slug": "halloween-fades",
+        "name": "Halloween Fades",
+        "status": "live",
+        "total": 400,
+        "claimed": 304,
+        "redeemed": 120,
+        "revenue": 610000,
+        "startsAt": "2026-10-18T09:00:00+01:00",
+        "endsAt": "2026-10-27T19:00:00+01:00",
+        "finish": "holo",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free cut and beard",
+            "count": 8
+          },
+          {
+            "tier": "rare",
+            "type": "percent_off",
+            "label": "30% off any cut",
+            "count": 40
+          },
+          {
+            "tier": "thank_you",
+            "type": "perk",
+            "label": "Skip the queue",
+            "count": 352
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-18T09:00:00+01:00",
+        "tierId": "medium",
+        "tierMaxCards": 1000,
+        "paymentStatus": "paid",
+        "claimsLastHour": 14,
+        "claims24h": 61
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_ironyard",
+    "business": {
+      "id": "biz_ironyard",
+      "slug": "ironyard",
+      "name": "Iron Yard Gym",
+      "initials": "IY",
+      "category": "Fitness",
+      "area": "Wuse 2",
+      "city": "Abuja",
+      "state": "FCT",
+      "brandColor": "#0F5C4D",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "IY",
+      "background": {
+        "type": "pattern",
+        "pattern": "grid"
+      },
+      "tagline": "Lift heavy. Train smart.",
+      "about": "Strength and conditioning gym with coached sessions every morning.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.6,
+      "reviewCount": 51,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110002"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110002"
+        },
+        {
+          "kind": "directions",
+          "value": "Wuse 2, Abuja"
+        }
+      ],
+      "services": [
+        {
+          "name": "Day pass",
+          "price": 4000
+        },
+        {
+          "name": "Monthly membership",
+          "price": 35000
+        },
+        {
+          "name": "Personal training",
+          "price": 15000
+        }
+      ],
+      "hasVideo": false,
+      "address": "Wuse 2, Abuja",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_october-strong",
+        "slug": "october-strong",
+        "name": "October Strong",
+        "status": "live",
+        "total": 300,
+        "claimed": 112,
+        "redeemed": 28,
+        "revenue": 0,
+        "startsAt": "2026-10-15T06:00:00+01:00",
+        "endsAt": "2026-10-25T20:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free month of membership",
+            "count": 5
+          },
+          {
+            "tier": "rare",
+            "type": "free_item",
+            "label": "Free personal training session",
+            "count": 30
+          },
+          {
+            "tier": "thank_you",
+            "type": "perk",
+            "label": "Free day pass",
+            "count": 265
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-15T06:00:00+01:00",
+        "tierId": "small",
+        "tierMaxCards": 300,
+        "paymentStatus": "paid",
+        "claimsLastHour": 6,
+        "claims24h": 24
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_mamaputdeluxe",
+    "business": {
+      "id": "biz_mamaputdeluxe",
+      "slug": "mamaputdeluxe",
+      "name": "Mama Put Deluxe",
+      "initials": "MP",
+      "category": "Food & drinks",
+      "area": "Bodija",
+      "city": "Ibadan",
+      "state": "Oyo",
+      "brandColor": "#7A4A12",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "MD",
+      "background": {
+        "type": "color"
+      },
+      "tagline": "Amala, ewedu and the best gbegiri in Ibadan.",
+      "about": "Home-style Nigerian food, cooked fresh every morning.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.8,
+      "reviewCount": 203,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110003"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110003"
+        },
+        {
+          "kind": "directions",
+          "value": "Bodija, Ibadan"
+        }
+      ],
+      "services": [
+        {
+          "name": "Amala and ewedu",
+          "price": 2500
+        },
+        {
+          "name": "Ofada rice",
+          "price": 3000
+        },
+        {
+          "name": "Assorted meat",
+          "price": 1500
+        }
+      ],
+      "hasVideo": false,
+      "address": "Bodija, Ibadan",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_weekend-plates",
+        "slug": "weekend-plates",
+        "name": "Weekend Plates",
+        "status": "live",
+        "total": 1000,
+        "claimed": 588,
+        "redeemed": 147,
+        "revenue": 0,
+        "startsAt": "2026-10-14T10:00:00+01:00",
+        "endsAt": "2026-10-21T22:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free family platter",
+            "count": 20
+          },
+          {
+            "tier": "rare",
+            "type": "naira_off",
+            "label": "₦1,000 off any plate",
+            "count": 100
+          },
+          {
+            "tier": "thank_you",
+            "type": "free_item",
+            "label": "Free zobo",
+            "count": 880
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-14T10:00:00+01:00",
+        "tierId": "medium",
+        "tierMaxCards": 1000,
+        "paymentStatus": "paid",
+        "claimsLastHour": 31,
+        "claims24h": 140
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_calmspa",
+    "business": {
+      "id": "biz_calmspa",
+      "slug": "calmspa",
+      "name": "Calm Spa",
+      "initials": "CS",
+      "category": "Wellness",
+      "area": "GRA",
+      "city": "Port Harcourt",
+      "state": "Rivers",
+      "brandColor": "#1F3A93",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "CA",
+      "background": {
+        "type": "pattern",
+        "pattern": "dots"
+      },
+      "tagline": "Massage, steam and quiet.",
+      "about": "A day spa for massages, facials and steam rooms.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.9,
+      "reviewCount": 64,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110004"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110004"
+        },
+        {
+          "kind": "directions",
+          "value": "GRA, Port Harcourt"
+        }
+      ],
+      "services": [
+        {
+          "name": "Swedish massage",
+          "price": 25000
+        },
+        {
+          "name": "Steam and scrub",
+          "price": 18000
+        }
+      ],
+      "hasVideo": false,
+      "address": "GRA, Port Harcourt",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_first-calm",
+        "slug": "first-calm",
+        "name": "First Calm",
+        "status": "scheduled",
+        "total": 250,
+        "claimed": 0,
+        "redeemed": 0,
+        "revenue": 0,
+        "startsAt": "2026-10-24T09:00:00+01:00",
+        "endsAt": "2026-11-07T20:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free 60-minute massage",
+            "count": 5
+          },
+          {
+            "tier": "rare",
+            "type": "percent_off",
+            "label": "25% off any treatment",
+            "count": 25
+          },
+          {
+            "tier": "thank_you",
+            "type": "perk",
+            "label": "Free herbal tea and steam",
+            "count": 220
+          }
+        ],
+        "notifyWaiting": 37,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-20T12:00:00+01:00",
+        "tierId": "small",
+        "tierMaxCards": 300,
+        "paymentStatus": "paid",
+        "claimsLastHour": 0,
+        "claims24h": 0
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_brightminds",
+    "business": {
+      "id": "biz_brightminds",
+      "slug": "brightminds",
+      "name": "Bright Minds Tutors",
+      "initials": "BM",
+      "category": "Education",
+      "area": "Independence Layout",
+      "city": "Enugu",
+      "state": "Enugu",
+      "brandColor": "#5B2A86",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "BT",
+      "background": {
+        "type": "color"
+      },
+      "tagline": "WAEC, JAMB and after-school maths.",
+      "about": "Small-group tutoring for secondary school students.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.7,
+      "reviewCount": 38,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110005"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110005"
+        },
+        {
+          "kind": "directions",
+          "value": "Independence Layout, Enugu"
+        }
+      ],
+      "services": [
+        {
+          "name": "JAMB prep (month)",
+          "price": 20000
+        },
+        {
+          "name": "Maths lesson",
+          "price": 5000
+        }
+      ],
+      "hasVideo": false,
+      "address": "Independence Layout, Enugu",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_exam-ready",
+        "slug": "exam-ready",
+        "name": "Exam Ready",
+        "status": "live",
+        "total": 150,
+        "claimed": 79,
+        "redeemed": 19,
+        "revenue": 0,
+        "startsAt": "2026-10-19T08:00:00+01:00",
+        "endsAt": "2026-11-02T18:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free month of JAMB prep",
+            "count": 3
+          },
+          {
+            "tier": "rare",
+            "type": "percent_off",
+            "label": "20% off any course",
+            "count": 15
+          },
+          {
+            "tier": "thank_you",
+            "type": "perk",
+            "label": "Free mock exam",
+            "count": 132
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-19T08:00:00+01:00",
+        "tierId": "small",
+        "tierMaxCards": 300,
+        "paymentStatus": "paid",
+        "claimsLastHour": 2,
+        "claims24h": 19
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_kiekiecafe",
+    "business": {
+      "id": "biz_kiekiecafe",
+      "slug": "kiekiecafe",
+      "name": "Kiekie Café",
+      "initials": "KC",
+      "category": "Food & drinks",
+      "area": "Yaba",
+      "city": "Lagos",
+      "state": "Lagos",
+      "brandColor": "#B4372F",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "KK",
+      "background": {
+        "type": "pattern",
+        "pattern": "sparks"
+      },
+      "tagline": "Small-batch coffee and big pastries.",
+      "about": "Coffee shop and bakery near the University of Lagos.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.6,
+      "reviewCount": 112,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110006"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110006"
+        },
+        {
+          "kind": "directions",
+          "value": "Yaba, Lagos"
+        }
+      ],
+      "services": [
+        {
+          "name": "Flat white",
+          "price": 3500
+        },
+        {
+          "name": "Croissant",
+          "price": 2000
+        },
+        {
+          "name": "Iced latte",
+          "price": 4000
+        }
+      ],
+      "hasVideo": false,
+      "address": "Yaba, Lagos",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_morning-rush",
+        "slug": "morning-rush",
+        "name": "Morning Rush",
+        "status": "live",
+        "total": 500,
+        "claimed": 141,
+        "redeemed": 35,
+        "revenue": 0,
+        "startsAt": "2026-10-19T07:00:00+01:00",
+        "endsAt": "2026-10-30T18:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free coffee for a week",
+            "count": 10
+          },
+          {
+            "tier": "rare",
+            "type": "free_item",
+            "label": "Free pastry with any drink",
+            "count": 50
+          },
+          {
+            "tier": "thank_you",
+            "type": "naira_off",
+            "label": "₦500 off your next coffee",
+            "count": 440
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-19T07:00:00+01:00",
+        "tierId": "medium",
+        "tierMaxCards": 1000,
+        "paymentStatus": "paid",
+        "claimsLastHour": 19,
+        "claims24h": 88
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_adireandco",
+    "business": {
+      "id": "biz_adireandco",
+      "slug": "adireandco",
+      "name": "Adire & Co",
+      "initials": "AC",
+      "category": "Fashion",
+      "area": "Victoria Island",
+      "city": "Lagos",
+      "state": "Lagos",
+      "brandColor": "#1E6F8C",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "AD",
+      "background": {
+        "type": "pattern",
+        "pattern": "dots"
+      },
+      "tagline": "Hand-dyed adire, made in Abeokuta.",
+      "about": "Ready-to-wear and custom adire pieces.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.8,
+      "reviewCount": 47,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110007"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110007"
+        },
+        {
+          "kind": "directions",
+          "value": "Victoria Island, Lagos"
+        }
+      ],
+      "services": [
+        {
+          "name": "Adire shirt",
+          "price": 28000
+        },
+        {
+          "name": "Custom fitting",
+          "price": 10000
+        }
+      ],
+      "hasVideo": false,
+      "address": "Victoria Island, Lagos",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_indigo-week",
+        "slug": "indigo-week",
+        "name": "Indigo Week",
+        "status": "live",
+        "total": 300,
+        "claimed": 233,
+        "redeemed": 58,
+        "revenue": 0,
+        "startsAt": "2026-10-16T10:00:00+01:00",
+        "endsAt": "2026-10-22T20:00:00+01:00",
+        "finish": "holo",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free adire shirt",
+            "count": 6
+          },
+          {
+            "tier": "rare",
+            "type": "percent_off",
+            "label": "25% off any piece",
+            "count": 30
+          },
+          {
+            "tier": "thank_you",
+            "type": "perk",
+            "label": "Free tailoring on your next order",
+            "count": 264
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-16T10:00:00+01:00",
+        "tierId": "small",
+        "tierMaxCards": 300,
+        "paymentStatus": "paid",
+        "claimsLastHour": 8,
+        "claims24h": 47
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_lagosfit",
+    "business": {
+      "id": "biz_lagosfit",
+      "slug": "lagosfit",
+      "name": "LagosFit Studio",
+      "initials": "LF",
+      "category": "Fitness",
+      "area": "Lekki",
+      "city": "Lagos",
+      "state": "Lagos",
+      "brandColor": "#9C3B5C",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "LS",
+      "background": {
+        "type": "pattern",
+        "pattern": "grid"
+      },
+      "tagline": "HIIT, spin and yoga by the lagoon.",
+      "about": "Group classes all day, every day.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.7,
+      "reviewCount": 93,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110008"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110008"
+        },
+        {
+          "kind": "directions",
+          "value": "Lekki, Lagos"
+        }
+      ],
+      "services": [
+        {
+          "name": "Drop-in class",
+          "price": 6000
+        },
+        {
+          "name": "10-class pack",
+          "price": 50000
+        }
+      ],
+      "hasVideo": false,
+      "address": "Lekki, Lagos",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_move-more",
+        "slug": "move-more",
+        "name": "Move More",
+        "status": "live",
+        "total": 600,
+        "claimed": 96,
+        "redeemed": 24,
+        "revenue": 0,
+        "startsAt": "2026-10-20T06:00:00+01:00",
+        "endsAt": "2026-11-09T20:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free month unlimited",
+            "count": 12
+          },
+          {
+            "tier": "rare",
+            "type": "free_item",
+            "label": "Free class pack of 5",
+            "count": 60
+          },
+          {
+            "tier": "thank_you",
+            "type": "perk",
+            "label": "Free first class",
+            "count": 528
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-20T06:00:00+01:00",
+        "tierId": "medium",
+        "tierMaxCards": 1000,
+        "paymentStatus": "paid",
+        "claimsLastHour": 11,
+        "claims24h": 96
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_smilecare",
+    "business": {
+      "id": "biz_smilecare",
+      "slug": "smilecare",
+      "name": "SmileCare Dental",
+      "initials": "SD",
+      "category": "Health",
+      "area": "Surulere",
+      "city": "Lagos",
+      "state": "Lagos",
+      "brandColor": "#1F3A93",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "SC",
+      "background": {
+        "type": "color"
+      },
+      "tagline": "Gentle dentists. No long waits.",
+      "about": "Check-ups, cleaning and whitening.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.9,
+      "reviewCount": 71,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110009"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110009"
+        },
+        {
+          "kind": "directions",
+          "value": "Surulere, Lagos"
+        }
+      ],
+      "services": [
+        {
+          "name": "Check-up and clean",
+          "price": 15000
+        },
+        {
+          "name": "Whitening",
+          "price": 60000
+        }
+      ],
+      "hasVideo": false,
+      "address": "Surulere, Lagos",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_bright-smiles",
+        "slug": "bright-smiles",
+        "name": "Bright Smiles",
+        "status": "scheduled",
+        "total": 200,
+        "claimed": 0,
+        "redeemed": 0,
+        "revenue": 0,
+        "startsAt": "2026-10-26T09:00:00+01:00",
+        "endsAt": "2026-11-15T17:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free whitening",
+            "count": 4
+          },
+          {
+            "tier": "rare",
+            "type": "percent_off",
+            "label": "30% off a clean",
+            "count": 20
+          },
+          {
+            "tier": "thank_you",
+            "type": "perk",
+            "label": "Free dental check-up",
+            "count": 176
+          }
+        ],
+        "notifyWaiting": 58,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-21T08:00:00+01:00",
+        "tierId": "small",
+        "tierMaxCards": 300,
+        "paymentStatus": "paid",
+        "claimsLastHour": 0,
+        "claims24h": 0
+      },
+      {
+        "id": "drop_summer-smiles",
+        "slug": "summer-smiles",
+        "name": "Summer Smiles",
+        "status": "ended",
+        "total": 200,
+        "claimed": 200,
+        "redeemed": 88,
+        "revenue": 1320000,
+        "startsAt": "2026-08-01T09:00:00+01:00",
+        "endsAt": "2026-08-31T17:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free whitening",
+            "count": 4
+          },
+          {
+            "tier": "rare",
+            "type": "percent_off",
+            "label": "30% off a clean",
+            "count": 20
+          },
+          {
+            "tier": "thank_you",
+            "type": "perk",
+            "label": "Free dental check-up",
+            "count": 176
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-08-01T09:00:00+01:00",
+        "tierId": "small",
+        "tierMaxCards": 300,
+        "paymentStatus": "paid",
+        "claimsLastHour": 0,
+        "claims24h": 0
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_suyaspot",
+    "business": {
+      "id": "biz_suyaspot",
+      "slug": "suyaspot",
+      "name": "Suya Spot",
+      "initials": "SU",
+      "category": "Food & drinks",
+      "area": "Garki",
+      "city": "Abuja",
+      "state": "FCT",
+      "brandColor": "#B4372F",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "SS",
+      "background": {
+        "type": "pattern",
+        "pattern": "stripes"
+      },
+      "tagline": "Suya, kilishi and cold drinks till late.",
+      "about": "Grill spot open every evening from 5pm.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.7,
+      "reviewCount": 156,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110010"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110010"
+        },
+        {
+          "kind": "directions",
+          "value": "Garki, Abuja"
+        }
+      ],
+      "services": [
+        {
+          "name": "Beef suya",
+          "price": 3000
+        },
+        {
+          "name": "Chicken suya",
+          "price": 3500
+        },
+        {
+          "name": "Kilishi pack",
+          "price": 5000
+        }
+      ],
+      "hasVideo": false,
+      "address": "Garki, Abuja",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_late-night-suya",
+        "slug": "late-night-suya",
+        "name": "Late Night Suya",
+        "status": "live",
+        "total": 800,
+        "claimed": 401,
+        "redeemed": 100,
+        "revenue": 0,
+        "startsAt": "2026-10-17T17:00:00+01:00",
+        "endsAt": "2026-10-28T23:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free suya platter for four",
+            "count": 16
+          },
+          {
+            "tier": "rare",
+            "type": "naira_off",
+            "label": "₦1,500 off any order",
+            "count": 80
+          },
+          {
+            "tier": "thank_you",
+            "type": "free_item",
+            "label": "Free cold drink",
+            "count": 704
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-17T17:00:00+01:00",
+        "tierId": "medium",
+        "tierMaxCards": 1000,
+        "paymentStatus": "paid",
+        "claimsLastHour": 24,
+        "claims24h": 132
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_glamhub",
+    "business": {
+      "id": "biz_glamhub",
+      "slug": "glamhub",
+      "name": "Glam Hub Abuja",
+      "initials": "GH",
+      "category": "Beauty",
+      "area": "Maitama",
+      "city": "Abuja",
+      "state": "FCT",
+      "brandColor": "#5B2A86",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "GA",
+      "background": {
+        "type": "pattern",
+        "pattern": "sparks"
+      },
+      "tagline": "Lashes, brows and nails.",
+      "about": "Beauty bar for lash extensions, brows and nail art.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.8,
+      "reviewCount": 84,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110011"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110011"
+        },
+        {
+          "kind": "directions",
+          "value": "Maitama, Abuja"
+        }
+      ],
+      "services": [
+        {
+          "name": "Lash extensions",
+          "price": 20000
+        },
+        {
+          "name": "Gel nails",
+          "price": 12000
+        }
+      ],
+      "hasVideo": false,
+      "address": "Maitama, Abuja",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_glow-up-abuja",
+        "slug": "glow-up-abuja",
+        "name": "Glow Up Abuja",
+        "status": "scheduled",
+        "total": 300,
+        "claimed": 0,
+        "redeemed": 0,
+        "revenue": 0,
+        "startsAt": "2026-10-25T10:00:00+01:00",
+        "endsAt": "2026-11-10T19:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free lash set",
+            "count": 6
+          },
+          {
+            "tier": "rare",
+            "type": "percent_off",
+            "label": "25% off any service",
+            "count": 30
+          },
+          {
+            "tier": "thank_you",
+            "type": "perk",
+            "label": "Free nail art on one hand",
+            "count": 264
+          }
+        ],
+        "notifyWaiting": 22,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-21T07:30:00+01:00",
+        "tierId": "small",
+        "tierMaxCards": 300,
+        "paymentStatus": "paid",
+        "claimsLastHour": 0,
+        "claims24h": 0
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_riverstable",
+    "business": {
+      "id": "biz_riverstable",
+      "slug": "riverstable",
+      "name": "Rivers Table",
+      "initials": "RT",
+      "category": "Food & drinks",
+      "area": "Old GRA",
+      "city": "Port Harcourt",
+      "state": "Rivers",
+      "brandColor": "#0F5C4D",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "RV",
+      "background": {
+        "type": "color"
+      },
+      "tagline": "Native soup and seafood, done right.",
+      "about": "Seafood okra, bole and fish, cooked to order.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.7,
+      "reviewCount": 77,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110012"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110012"
+        },
+        {
+          "kind": "directions",
+          "value": "Old GRA, Port Harcourt"
+        }
+      ],
+      "services": [
+        {
+          "name": "Bole and fish",
+          "price": 6000
+        },
+        {
+          "name": "Seafood okra",
+          "price": 9000
+        }
+      ],
+      "hasVideo": false,
+      "address": "Old GRA, Port Harcourt",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_seafood-season",
+        "slug": "seafood-season",
+        "name": "Seafood Season",
+        "status": "live",
+        "total": 400,
+        "claimed": 128,
+        "redeemed": 32,
+        "revenue": 0,
+        "startsAt": "2026-10-18T12:00:00+01:00",
+        "endsAt": "2026-10-29T22:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free seafood platter",
+            "count": 8
+          },
+          {
+            "tier": "rare",
+            "type": "percent_off",
+            "label": "20% off your bill",
+            "count": 40
+          },
+          {
+            "tier": "thank_you",
+            "type": "free_item",
+            "label": "Free chilled zobo",
+            "count": 352
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-18T12:00:00+01:00",
+        "tierId": "medium",
+        "tierMaxCards": 1000,
+        "paymentStatus": "paid",
+        "claimsLastHour": 7,
+        "claims24h": 41
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_phfitness",
+    "business": {
+      "id": "biz_phfitness",
+      "slug": "phfitness",
+      "name": "Garden City Fitness",
+      "initials": "GC",
+      "category": "Fitness",
+      "area": "Trans Amadi",
+      "city": "Port Harcourt",
+      "state": "Rivers",
+      "brandColor": "#2B2B2B",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "GF",
+      "background": {
+        "type": "pattern",
+        "pattern": "grid"
+      },
+      "tagline": "Boxing, HIIT and weights.",
+      "about": "Open 5am to 10pm, seven days a week.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.5,
+      "reviewCount": 40,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110013"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110013"
+        },
+        {
+          "kind": "directions",
+          "value": "Trans Amadi, Port Harcourt"
+        }
+      ],
+      "services": [
+        {
+          "name": "Monthly membership",
+          "price": 30000
+        },
+        {
+          "name": "Boxing class",
+          "price": 5000
+        }
+      ],
+      "hasVideo": false,
+      "address": "Trans Amadi, Port Harcourt",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_fight-night",
+        "slug": "fight-night",
+        "name": "Fight Night",
+        "status": "live",
+        "total": 250,
+        "claimed": 61,
+        "redeemed": 15,
+        "revenue": 0,
+        "startsAt": "2026-10-20T05:00:00+01:00",
+        "endsAt": "2026-11-05T22:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free month of boxing",
+            "count": 5
+          },
+          {
+            "tier": "rare",
+            "type": "free_item",
+            "label": "Free boxing class",
+            "count": 25
+          },
+          {
+            "tier": "thank_you",
+            "type": "perk",
+            "label": "Free gym day pass",
+            "count": 220
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-20T05:00:00+01:00",
+        "tierId": "small",
+        "tierMaxCards": 300,
+        "paymentStatus": "paid",
+        "claimsLastHour": 5,
+        "claims24h": 61
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_ibadanthreads",
+    "business": {
+      "id": "biz_ibadanthreads",
+      "slug": "ibadanthreads",
+      "name": "Ibadan Threads",
+      "initials": "IT",
+      "category": "Fashion",
+      "area": "Ring Road",
+      "city": "Ibadan",
+      "state": "Oyo",
+      "brandColor": "#9C3B5C",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "IB",
+      "background": {
+        "type": "color"
+      },
+      "tagline": "Ankara and aso-oke, tailored fast.",
+      "about": "Tailoring in a week, alterations same day.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.6,
+      "reviewCount": 59,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110014"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110014"
+        },
+        {
+          "kind": "directions",
+          "value": "Ring Road, Ibadan"
+        }
+      ],
+      "services": [
+        {
+          "name": "Ankara outfit",
+          "price": 25000
+        },
+        {
+          "name": "Alterations",
+          "price": 3000
+        }
+      ],
+      "hasVideo": false,
+      "address": "Ring Road, Ibadan",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_aso-oke-days",
+        "slug": "aso-oke-days",
+        "name": "Aso-Oke Days",
+        "status": "live",
+        "total": 300,
+        "claimed": 152,
+        "redeemed": 38,
+        "revenue": 0,
+        "startsAt": "2026-10-17T09:00:00+01:00",
+        "endsAt": "2026-10-31T19:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free tailored outfit",
+            "count": 6
+          },
+          {
+            "tier": "rare",
+            "type": "percent_off",
+            "label": "20% off any outfit",
+            "count": 30
+          },
+          {
+            "tier": "thank_you",
+            "type": "perk",
+            "label": "Free alteration",
+            "count": 264
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-17T09:00:00+01:00",
+        "tierId": "small",
+        "tierMaxCards": 300,
+        "paymentStatus": "paid",
+        "claimsLastHour": 9,
+        "claims24h": 38
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_kanobeauty",
+    "business": {
+      "id": "biz_kanobeauty",
+      "slug": "kanobeauty",
+      "name": "Sahara Beauty",
+      "initials": "SB",
+      "category": "Beauty",
+      "area": "Nassarawa GRA",
+      "city": "Kano",
+      "state": "Kano",
+      "brandColor": "#7A4A12",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "SH",
+      "background": {
+        "type": "pattern",
+        "pattern": "sparks"
+      },
+      "tagline": "Henna, braids and skincare.",
+      "about": "Henna art and braiding, women's-only studio.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.8,
+      "reviewCount": 66,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110015"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110015"
+        },
+        {
+          "kind": "directions",
+          "value": "Nassarawa GRA, Kano"
+        }
+      ],
+      "services": [
+        {
+          "name": "Henna (both hands)",
+          "price": 8000
+        },
+        {
+          "name": "Knotless braids",
+          "price": 25000
+        }
+      ],
+      "hasVideo": false,
+      "address": "Nassarawa GRA, Kano",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_henna-week",
+        "slug": "henna-week",
+        "name": "Henna Week",
+        "status": "live",
+        "total": 200,
+        "claimed": 58,
+        "redeemed": 14,
+        "revenue": 0,
+        "startsAt": "2026-10-20T10:00:00+01:00",
+        "endsAt": "2026-11-03T18:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free full henna",
+            "count": 4
+          },
+          {
+            "tier": "rare",
+            "type": "percent_off",
+            "label": "25% off braids",
+            "count": 20
+          },
+          {
+            "tier": "thank_you",
+            "type": "perk",
+            "label": "Free henna on one hand",
+            "count": 176
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-20T10:00:00+01:00",
+        "tierId": "small",
+        "tierMaxCards": 300,
+        "paymentStatus": "paid",
+        "claimsLastHour": 4,
+        "claims24h": 58
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_nightmarket",
+    "business": {
+      "id": "biz_nightmarket",
+      "slug": "nightmarket",
+      "name": "Lekki Night Market",
+      "initials": "NM",
+      "category": "Events",
+      "area": "Lekki Phase 1",
+      "city": "Lagos",
+      "state": "Lagos",
+      "brandColor": "#5B2A86",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "NK",
+      "background": {
+        "type": "pattern",
+        "pattern": "sparks"
+      },
+      "tagline": "Food, music and makers, every last Friday.",
+      "about": "An evening market with 60 stalls, live music and a kids' corner.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.7,
+      "reviewCount": 132,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110016"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110016"
+        },
+        {
+          "kind": "directions",
+          "value": "Lekki Phase 1, Lagos"
+        }
+      ],
+      "services": [
+        {
+          "name": "Entry",
+          "price": 2000
+        },
+        {
+          "name": "VIP table",
+          "price": 30000
+        }
+      ],
+      "hasVideo": false,
+      "address": "Lekki Phase 1, Lagos",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_october-night",
+        "slug": "october-night",
+        "name": "October Night Market",
+        "status": "scheduled",
+        "total": 300,
+        "claimed": 0,
+        "redeemed": 0,
+        "revenue": 0,
+        "startsAt": "2026-10-30T17:00:00+01:00",
+        "endsAt": "2026-10-31T23:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free VIP table for four",
+            "count": 6
+          },
+          {
+            "tier": "rare",
+            "type": "free_item",
+            "label": "Free entry for two",
+            "count": 30
+          },
+          {
+            "tier": "thank_you",
+            "type": "free_item",
+            "label": "Free drink token",
+            "count": 264
+          }
+        ],
+        "notifyWaiting": 91,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-21T06:00:00+01:00",
+        "tierId": "small",
+        "tierMaxCards": 300,
+        "paymentStatus": "paid",
+        "claimsLastHour": 0,
+        "claims24h": 0
+      }
+    ]
+  },
+  {
+    "ownerId": "seed_sparkle",
+    "business": {
+      "id": "biz_sparklelaundry",
+      "slug": "sparklelaundry",
+      "name": "Sparkle Laundry",
+      "initials": "SL",
+      "category": "Services",
+      "area": "Ajah",
+      "city": "Lagos",
+      "state": "Lagos",
+      "brandColor": "#1E6F8C",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "SP",
+      "background": {
+        "type": "color"
+      },
+      "tagline": "Wash, dry, fold. Pickup in Ajah and Lekki.",
+      "about": "Laundry and dry cleaning with free pickup over ₦10,000.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "10:00",
+          "to": "18:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.5,
+      "reviewCount": 58,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110017"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110017"
+        },
+        {
+          "kind": "directions",
+          "value": "Ajah, Lagos"
+        }
+      ],
+      "services": [
+        {
+          "name": "Wash and fold (per kg)",
+          "price": 1500
+        },
+        {
+          "name": "Suit dry clean",
+          "price": 5000
+        }
+      ],
+      "hasVideo": false,
+      "address": "Ajah, Lagos",
+      "portfolio": [],
+      "foundingMember": false,
+      "guaranteeUsed": false,
+      "isDemo": true
+    },
+    "drops": [
+      {
+        "id": "drop_clean-start",
+        "slug": "clean-start",
+        "name": "Clean Start",
+        "status": "live",
+        "total": 300,
+        "claimed": 42,
+        "redeemed": 10,
+        "revenue": 0,
+        "startsAt": "2026-10-21T07:00:00+01:00",
+        "endsAt": "2026-11-04T19:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free month of laundry",
+            "count": 6
+          },
+          {
+            "tier": "rare",
+            "type": "percent_off",
+            "label": "30% off your next order",
+            "count": 30
+          },
+          {
+            "tier": "thank_you",
+            "type": "perk",
+            "label": "Free pickup",
+            "count": 264
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-21T07:00:00+01:00",
+        "tierId": "small",
+        "tierMaxCards": 300,
+        "paymentStatus": "paid",
+        "claimsLastHour": 12,
+        "claims24h": 42
+      }
+    ]
+  }
+]

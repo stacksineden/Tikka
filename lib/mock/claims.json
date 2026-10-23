@@ -1,0 +1,157 @@
+[
+  {
+    "token": "demo-adaeze",
+    "dropId": "drop_oct",
+    "ownerId": "user_demo",
+    "card": {
+      "token": "demo-adaeze",
+      "tier": "rare",
+      "reward": "20% off any service",
+      "code": "GS-7X4QX",
+      "serial": "0412",
+      "total": 600,
+      "claimer": "Adaeze",
+      "expiresAt": "2026-10-31T21:00:00+01:00"
+    },
+    "lastInitial": "O",
+    "claimedAt": "2026-10-20T10:42:00+01:00",
+    "revealedAt": "2026-10-20T10:42:00+01:00",
+    "redeemedAt": "2026-10-20T13:05:00+01:00",
+    "billKobo": 2500000,
+    "redeemedBy": "user_demo"
+  },
+  {
+    "token": "demo-tunde",
+    "dropId": "drop_oct",
+    "ownerId": "user_demo",
+    "card": {
+      "token": "demo-tunde",
+      "tier": "rare",
+      "reward": "Free brow tint",
+      "code": "GS-T9RWR",
+      "serial": "0388",
+      "total": 600,
+      "claimer": "Tunde",
+      "expiresAt": "2026-10-31T21:00:00+01:00",
+      "action": "Follow @glowstudio on Instagram",
+      "instruction": "Follow @glowstudio on Instagram and show it at the counter"
+    },
+    "lastInitial": "A",
+    "claimedAt": "2026-10-20T10:31:00+01:00",
+    "revealedAt": "2026-10-20T10:31:00+01:00"
+  },
+  {
+    "token": "demo-kemi",
+    "dropId": "drop_oct",
+    "ownerId": "user_demo",
+    "card": {
+      "token": "demo-kemi",
+      "tier": "legendary",
+      "reward": "Free signature facial",
+      "code": "GS-K9MW7",
+      "serial": "0087",
+      "total": 600,
+      "claimer": "Kemi",
+      "expiresAt": "2026-10-31T21:00:00+01:00"
+    },
+    "lastInitial": "B",
+    "claimedAt": "2026-10-20T09:58:00+01:00",
+    "revealedAt": "2026-10-20T09:58:00+01:00"
+  },
+  {
+    "token": "demo-chioma",
+    "dropId": "drop_oct",
+    "ownerId": "user_demo",
+    "card": {
+      "token": "demo-chioma",
+      "tier": "thank_you",
+      "reward": "Priority booking",
+      "code": "GS-RT6CJ",
+      "serial": "0533",
+      "total": 600,
+      "claimer": "Chioma",
+      "expiresAt": "2026-10-31T21:00:00+01:00"
+    },
+    "lastInitial": "E",
+    "claimedAt": "2026-10-20T09:40:00+01:00",
+    "revealedAt": "2026-10-20T09:40:00+01:00"
+  },
+  {
+    "token": "demo-ifeoma",
+    "dropId": "drop_oct",
+    "ownerId": "user_demo",
+    "card": {
+      "token": "demo-ifeoma",
+      "tier": "thank_you",
+      "reward": "Priority booking",
+      "code": "GS-PH3DA",
+      "serial": "0219",
+      "total": 600,
+      "claimer": "Ifeoma",
+      "expiresAt": "2026-10-31T21:00:00+01:00"
+    },
+    "lastInitial": "N",
+    "claimedAt": "2026-10-19T18:12:00+01:00",
+    "revealedAt": "2026-10-19T18:12:00+01:00",
+    "redeemedAt": "2026-10-19T18:40:00+01:00",
+    "billKobo": 3500000,
+    "redeemedBy": "user_demo"
+  },
+  {
+    "token": "demo-bola",
+    "dropId": "drop_oct",
+    "ownerId": "user_demo",
+    "card": {
+      "token": "demo-bola",
+      "tier": "thank_you",
+      "reward": "Priority booking",
+      "code": "GS-M7QAG",
+      "serial": "0301",
+      "total": 600,
+      "claimer": "Bola",
+      "expiresAt": "2026-10-31T21:00:00+01:00"
+    },
+    "lastInitial": "S",
+    "claimedAt": "2026-10-19T16:05:00+01:00",
+    "revealedAt": "2026-10-19T16:05:00+01:00"
+  },
+  {
+    "token": "demo-funke",
+    "dropId": "drop_oct",
+    "ownerId": "user_demo",
+    "card": {
+      "token": "demo-funke",
+      "tier": "rare",
+      "reward": "20% off any service",
+      "code": "GS-VC4NR",
+      "serial": "0145",
+      "total": 600,
+      "claimer": "Funke",
+      "expiresAt": "2026-10-31T21:00:00+01:00"
+    },
+    "lastInitial": "A",
+    "claimedAt": "2026-10-19T11:20:00+01:00",
+    "revealedAt": "2026-10-19T11:20:00+01:00",
+    "redeemedAt": "2026-10-19T12:02:00+01:00",
+    "billKobo": 2000000,
+    "redeemedBy": "user_demo"
+  },
+  {
+    "token": "demo-yemi",
+    "dropId": "drop_sep",
+    "ownerId": "user_demo",
+    "card": {
+      "token": "demo-yemi",
+      "tier": "rare",
+      "reward": "15% off any service",
+      "code": "GS-D6YEC",
+      "serial": "0077",
+      "total": 400,
+      "claimer": "Yemi",
+      "expiresAt": "2026-09-30T21:00:00+01:00"
+    },
+    "lastInitial": "K",
+    "claimedAt": "2026-09-12T15:30:00+01:00",
+    "revealedAt": "2026-09-12T15:30:00+01:00"
+  }
+]

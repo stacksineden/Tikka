@@ -1,0 +1,271 @@
+/* The business page (PRD A5): an editorial one-page site. Huge uppercase type, square corners,
+   thin rules, photos that ease in and words that rise as you scroll. Only transform and opacity
+   animate; prefers-reduced-motion turns all of it off. Colours are tokens, plus the business's
+   own brand colour passed in as --biz / --on-biz. */
+
+.biz {
+  --biz-rule: color-mix(in srgb, var(--ink) 14%, transparent);
+  --biz-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  background: var(--surface-raised);
+  color: var(--ink);
+  /* The ticker and giant type never make the page scroll sideways. */
+  overflow-x: clip;
+}
+
+/* Display type: tight, heavy, uppercase. */
+.biz-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.045em;
+  line-height: 0.88;
+}
+
+/* "[ ABOUT US ]": the small bracketed label set inside big headings. */
+.biz-tag {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 0.35em;
+  padding: 0.5em 0.85em;
+  font: 600 clamp(9px, 0.9vw, 12px) / 1 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.biz-tag::before,
+.biz-tag::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0.55em;
+  border: 1.5px solid currentColor;
+}
+.biz-tag::before {
+  left: 0;
+  border-right: 0;
+}
+.biz-tag::after {
+  right: 0;
+  border-left: 0;
+}
+
+/* Underlined text links ("Book an appointment", "Read more"). */
+.biz-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 1.5px;
+}
+
+.biz-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 22px;
+  font: 600 15px/1 var(--font-sans);
+  border-radius: 0;
+  transition: opacity 0.2s;
+}
+.biz-btn:hover {
+  opacity: 0.88;
+}
+.biz-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------------------------------------------------------------- hero */
+
+/* The backdrop behind the inset hero: the same photo, blurred and dimmed. Static (no
+   animation), so the blur is painted once. */
+.biz-backdrop-img {
+  filter: blur(48px) saturate(1.15);
+  transform: scale(1.25);
+}
+.biz-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--night) 28%, transparent);
+}
+.biz-hero-frame {
+  box-shadow: 0 30px 80px -20px color-mix(in srgb, var(--night) 55%, transparent);
+  animation: biz-frame 1.2s var(--biz-ease) both;
+}
+@keyframes biz-frame {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+.biz-hero-img {
+  animation: biz-settle 1.8s var(--biz-ease) both;
+}
+@keyframes biz-settle {
+  from {
+    transform: scale(1.08);
+  }
+}
+
+/* Words rise into place: each sits in a clipped box (.w) and its inner span (.wi) slides up. */
+.biz .w {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.06em;
+  margin-bottom: -0.06em;
+}
+.biz .wi {
+  display: inline-block;
+  transition: transform 0.9s var(--biz-ease);
+  transition-delay: calc(var(--i, 0) * 45ms);
+}
+.biz-hero-title .wi {
+  animation: biz-rise 1s var(--biz-ease) both;
+  animation-delay: calc(200ms + var(--i, 0) * 70ms);
+}
+@keyframes biz-rise {
+  from {
+    transform: translateY(105%);
+  }
+}
+.biz-fade-in {
+  animation: biz-fade 0.9s var(--biz-ease) 0.6s both;
+}
+@keyframes biz-fade {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+/* -------------------------------------------------- reveal on scroll */
+/* Hidden only once the page knows it can reveal them (.biz-reveal-on is set by a tiny inline
+   script), so nothing stays invisible without JavaScript. */
+.biz-reveal-on [data-reveal="words"]:not(.is-in) .wi {
+  transform: translateY(105%);
+}
+.biz-reveal-on [data-reveal="up"] {
+  transition:
+    opacity 0.9s var(--biz-ease),
+    transform 0.9s var(--biz-ease);
+  transition-delay: calc(var(--i, 0) * 80ms);
+}
+.biz-reveal-on [data-reveal="up"]:not(.is-in) {
+  opacity: 0;
+  transform: translateY(32px);
+}
+.biz-reveal-on [data-reveal="img"] {
+  overflow: hidden;
+}
+.biz-reveal-on [data-reveal="img"] > img {
+  transition:
+    transform 1.4s var(--biz-ease),
+    opacity 1s var(--biz-ease);
+}
+.biz-reveal-on [data-reveal="img"]:not(.is-in) > img {
+  opacity: 0;
+  transform: scale(1.12);
+}
+
+/* --------------------------------------------------------- the band */
+
+.biz-marquee {
+  display: flex;
+  width: max-content;
+  animation: biz-marquee 28s linear infinite;
+}
+@keyframes biz-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ------------------------------------------------------------ services */
+
+.biz-cat {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--biz-rule);
+  transition: color 0.4s var(--biz-ease);
+}
+.biz-cat > img {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.1);
+  transition:
+    opacity 0.5s var(--biz-ease),
+    transform 0.8s var(--biz-ease);
+}
+.biz-cat::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(to top, color-mix(in srgb, var(--night) 70%, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.5s var(--biz-ease);
+}
+.biz-cat[aria-selected="true"],
+.biz-cat:hover {
+  color: var(--on-night);
+}
+.biz-cat[aria-selected="true"] > img,
+.biz-cat[aria-selected="true"]::after,
+.biz-cat:hover > img,
+.biz-cat:hover::after {
+  opacity: 1;
+  transform: none;
+}
+/* No photo for the group: the brand colour fills it instead. */
+.biz-cat[data-plain][aria-selected="true"],
+.biz-cat[data-plain]:hover {
+  background: var(--biz);
+  color: var(--on-biz);
+}
+.biz-cat[data-plain]::after {
+  display: none;
+}
+
+.biz-card-img > img {
+  transition: transform 0.9s var(--biz-ease);
+}
+.biz-card:hover .biz-card-img > img {
+  transform: scale(1.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .biz-hero-img,
+  .biz-hero-frame,
+  .biz-hero-title .wi,
+  .biz-fade-in,
+  .biz-marquee {
+    animation: none;
+  }
+  .biz .wi,
+  .biz-reveal-on [data-reveal] {
+    transition: none;
+  }
+  .biz-reveal-on [data-reveal="words"]:not(.is-in) .wi,
+  .biz-reveal-on [data-reveal="up"]:not(.is-in),
+  .biz-reveal-on [data-reveal="img"]:not(.is-in) > img {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -1,0 +1,139 @@
+[
+  {
+    "id": "drop_oct",
+    "slug": "october-glow",
+    "name": "October Glow",
+    "status": "live",
+    "total": 600,
+    "claimed": 577,
+    "redeemed": 76,
+    "revenue": 1940000,
+    "startsAt": "2026-10-14T09:00:00+01:00",
+    "endsAt": "2026-10-31T21:00:00+01:00",
+    "finish": "holo",
+    "goal": "new_customers",
+    "validityDays": 14,
+    "bounceBack": {
+      "reward": "10% off your next visit",
+      "validityDays": 30
+    },
+    "notifyWaiting": 0,
+    "rewards": [
+      {
+        "tier": "legendary",
+        "type": "free_item",
+        "label": "Free signature facial",
+        "count": 10
+      },
+      {
+        "tier": "rare",
+        "type": "percent_off",
+        "label": "20% off any service",
+        "count": 30
+      },
+      {
+        "tier": "rare",
+        "type": "action",
+        "label": "Free brow tint",
+        "action": "Follow @glowstudio on Instagram",
+        "count": 20
+      },
+      {
+        "tier": "thank_you",
+        "type": "perk",
+        "label": "Priority booking",
+        "count": 540
+      }
+    ],
+    "tierId": "medium",
+    "tierMaxCards": 1000,
+    "paymentStatus": "paid",
+    "claimsLastHour": 9,
+    "claims24h": 58,
+    "publishedAt": "2026-10-14T09:00:00+01:00",
+    "showOnMarketplace": true
+  },
+  {
+    "id": "drop_nov",
+    "slug": "november-glow",
+    "name": "November Glow",
+    "status": "scheduled",
+    "total": 800,
+    "claimed": 0,
+    "redeemed": 0,
+    "revenue": 0,
+    "startsAt": "2026-11-07T09:00:00+01:00",
+    "endsAt": "2026-11-30T21:00:00+01:00",
+    "finish": "foil",
+    "notifyWaiting": 142,
+    "rewards": [
+      {
+        "tier": "legendary",
+        "type": "free_item",
+        "label": "Free chemical peel",
+        "count": 16
+      },
+      {
+        "tier": "rare",
+        "type": "naira_off",
+        "label": "₦10,000 off any service",
+        "count": 80
+      },
+      {
+        "tier": "thank_you",
+        "type": "perk",
+        "label": "Free skin consultation",
+        "count": 704
+      }
+    ],
+    "tierId": "medium",
+    "tierMaxCards": 1000,
+    "paymentStatus": "paid",
+    "claimsLastHour": 0,
+    "claims24h": 0,
+    "publishedAt": "2026-10-15T09:00:00+01:00",
+    "showOnMarketplace": true
+  },
+  {
+    "id": "drop_sep",
+    "slug": "september-reset",
+    "name": "September Reset",
+    "status": "ended",
+    "total": 400,
+    "claimed": 400,
+    "redeemed": 61,
+    "revenue": 1215000,
+    "startsAt": "2026-09-05T09:00:00+01:00",
+    "endsAt": "2026-09-30T21:00:00+01:00",
+    "finish": "matte",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "type": "free_item",
+        "label": "Free signature facial",
+        "count": 8
+      },
+      {
+        "tier": "rare",
+        "type": "percent_off",
+        "label": "15% off any service",
+        "count": 40
+      },
+      {
+        "tier": "thank_you",
+        "type": "perk",
+        "label": "Priority booking",
+        "count": 352
+      }
+    ],
+    "tierId": "medium",
+    "tierMaxCards": 1000,
+    "paymentStatus": "paid",
+    "claimsLastHour": 0,
+    "claims24h": 0,
+    "publishedAt": "2026-09-05T09:00:00+01:00",
+    "showOnMarketplace": true,
+    "validityDays": 30,
+    "goal": "bring_back"
+  }
+]

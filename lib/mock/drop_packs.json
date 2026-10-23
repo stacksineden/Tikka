@@ -1,0 +1,4 @@
+[
+  { "id": "small3", "tierId": "small", "drops": 3, "priceKobo": 1200000, "active": true },
+  { "id": "medium3", "tierId": "medium", "drops": 3, "priceKobo": 2500000, "active": true }
+]

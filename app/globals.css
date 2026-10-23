@@ -1,0 +1,429 @@
+@import "tailwindcss";
+@import "../design/tokens.css" layer(base);
+
+/* next/font hands us hashed family names; point the token font vars at them. */
+:root {
+  --font-display: var(--font-bricolage), system-ui, sans-serif;
+  --font-sans: var(--font-bricolage), system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+}
+
+/* Only Tikka tokens exist as colours. No default palette, no stray hex. */
+@theme inline {
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-on-brand: var(--on-brand);
+  --color-night: var(--night);
+  --color-night-raised: var(--night-raised);
+  --color-on-night: var(--on-night);
+  --color-on-night-muted: var(--on-night-muted);
+  --color-gold: var(--gold);
+  --color-on-gold: var(--on-gold);
+  --color-gold-text: var(--gold-text);
+  --color-gold-soft: var(--gold-soft);
+  --color-rarity-common: var(--rarity-common);
+  --color-rarity-rare: var(--rarity-rare);
+  --color-rarity-legendary: var(--rarity-legendary);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-on-success: var(--on-success);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-on-danger: var(--on-danger);
+
+  --font-sans: var(--font-bricolage), system-ui, sans-serif;
+  --font-display: var(--font-bricolage), system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-card: 20px;
+  --radius-pill: 999px;
+
+  --ease-settle: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-flip: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Type scale from design/tokens.css, as layered utilities so breakpoints work. */
+  --text-display-xl: 56px;
+  --text-display-xl--line-height: 56px;
+  --text-display-xl--font-weight: 800;
+  --text-display-xl--letter-spacing: -0.03em;
+  --text-display-lg: 40px;
+  --text-display-lg--line-height: 44px;
+  --text-display-lg--font-weight: 800;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-heading: 28px;
+  --text-heading--line-height: 32px;
+  --text-heading--font-weight: 700;
+  --text-heading--letter-spacing: -0.01em;
+  --text-title: 20px;
+  --text-title--line-height: 26px;
+  --text-title--font-weight: 700;
+  --text-body-lg: 17px;
+  --text-body-lg--line-height: 26px;
+  --text-body: 15px;
+  --text-body--line-height: 22px;
+  --text-label: 13px;
+  --text-label--line-height: 18px;
+  --text-label--font-weight: 600;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-caption--font-weight: 500;
+  --text-code-lg: 28px;
+  --text-code-lg--line-height: 32px;
+  --text-code-lg--font-weight: 700;
+  --text-code-lg--letter-spacing: 0.08em;
+  --text-code: 14px;
+  --text-code--line-height: 20px;
+  --text-code--font-weight: 700;
+  --text-code--letter-spacing: 0.06em;
+  --text-serial: 11px;
+  --text-serial--line-height: 14px;
+  --text-serial--letter-spacing: 0.12em;
+}
+
+@utility shadow-raised {
+  box-shadow: var(--shadow-raised);
+}
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--surface);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-optical-sizing: auto;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  .stage :focus-visible {
+    outline-color: var(--on-night);
+  }
+  button:not(:disabled),
+  [role="button"] {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  /* Buttons: design/components/Button */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    background: var(--brand);
+    color: var(--on-brand);
+    font: 600 15px/20px var(--font-sans);
+    white-space: nowrap;
+    text-decoration: none;
+    transition:
+      transform var(--dur-quick) var(--ease-out),
+      background-color var(--dur-quick) var(--ease-out);
+  }
+  .btn:hover {
+    background: color-mix(in srgb, var(--brand) 88%, var(--ink));
+  }
+  .btn:active {
+    transform: scale(0.98);
+  }
+  .btn svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+  }
+  .btn-lg {
+    min-height: 52px;
+    padding: 0 var(--space-6);
+    font-size: 17px;
+  }
+  .btn-secondary {
+    background: var(--surface-raised);
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .btn-secondary:hover {
+    background: var(--surface-sunken);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--brand);
+  }
+  .btn-ghost:hover {
+    background: var(--brand-soft);
+  }
+  .btn-paper {
+    background: var(--on-night);
+    color: var(--night);
+  }
+  .btn-paper:hover {
+    background: color-mix(in srgb, var(--on-night) 88%, var(--night));
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .input {
+    width: 100%;
+    height: 48px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--line-strong);
+    background: var(--surface-raised);
+    color: var(--ink);
+    padding: 0 var(--space-4);
+    font: 400 16px/22px var(--font-sans);
+  }
+  .input::placeholder {
+    color: var(--ink-muted);
+    opacity: 0.7;
+  }
+  .input:focus {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
+  .input[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+
+  /* Rarity badge: design/components/RarityBadge */
+  .rarity {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 24px;
+    padding: 0 10px 0 8px;
+    border-radius: var(--radius-pill);
+    font: 600 12px/16px var(--font-sans);
+    color: var(--on-gold);
+    background: var(--rarity-common);
+    white-space: nowrap;
+  }
+  .rarity--rare {
+    background: var(--rarity-rare);
+  }
+  .rarity--legendary {
+    background: var(--rarity-legendary);
+  }
+  .rarity__pips {
+    display: inline-flex;
+    gap: 3px;
+  }
+  .rarity__pips i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    box-sizing: border-box;
+  }
+  .rarity__pips i.on {
+    background: currentColor;
+  }
+
+  /* Tags: design/components/LeadRow */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    height: 22px;
+    padding: 0 8px;
+    border-radius: var(--radius-sm);
+    font: 600 12px/16px var(--font-sans);
+    white-space: nowrap;
+  }
+  .tag svg {
+    width: 13px;
+    height: 13px;
+  }
+  .tag--redeemed {
+    background: var(--success-soft);
+    color: var(--success);
+  }
+  .tag--new {
+    background: var(--gold-soft);
+    color: var(--gold-text);
+  }
+
+  /* Counter: design/components/DropCounter */
+  .counter {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 28px;
+    padding: 0 12px;
+    border-radius: var(--radius-pill);
+    background: var(--night-raised);
+    color: var(--on-night);
+    font: 400 11px/14px var(--font-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .counter b {
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .counter__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: tk-pulse 1.6s var(--ease-out) infinite;
+  }
+  .counter--low {
+    background: var(--gold);
+    color: var(--on-gold);
+  }
+  .counter--low b {
+    color: var(--on-gold);
+  }
+  .counter--low .counter__dot {
+    background: var(--on-gold);
+  }
+}
+
+@keyframes tk-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .counter__dot {
+    animation: none;
+  }
+}
+
+/* Theme-following logo (components/site/Logo.tsx). */
+.logo-on-dark {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .logo-on-light {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .logo-on-dark {
+    display: block;
+  }
+}
+[data-theme="dark"] .logo-on-light {
+  display: none;
+}
+[data-theme="dark"] .logo-on-dark {
+  display: block;
+}
+
+/* Bottom sheet (components/dashboard/Nav.tsx MoreSheet): native <dialog>, slides up. */
+dialog.sheet {
+  max-height: 100dvh;
+  inset: auto 0 0 0;
+}
+dialog.sheet::backdrop {
+  background: color-mix(in srgb, var(--night) 60%, transparent);
+}
+dialog.sheet[open] > div {
+  animation: sheet-up 280ms var(--ease-out);
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  dialog.sheet[open] > div {
+    animation: none;
+  }
+}
+
+/* Landing page live feed: each new line fades up (components/landing/LiveStats.tsx). */
+.live-feed-in {
+  animation: live-feed-in 400ms var(--ease-out);
+}
+@keyframes live-feed-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-feed-in {
+    animation: none;
+  }
+}
+
+/* Marketplace ticker: the list is rendered twice and slides left forever (transform only). */
+.ticker {
+  display: flex;
+  width: max-content;
+  animation: ticker 60s linear infinite;
+}
+.ticker:hover {
+  animation-play-state: paused;
+}
+@keyframes ticker {
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker {
+    animation: none;
+  }
+}
+
+/* Poster print kit (app/app/posters/[id]/print): scaled to the screen, printed at 100%. */
+.print-stage {
+  display: grid;
+  justify-items: center;
+  padding: 16px;
+}
+.print-fit .print-sheet {
+  zoom: var(--fit, 1);
+  box-shadow: var(--shadow-raised);
+}
+@media print {
+  .print-hide {
+    display: none !important;
+  }
+  html,
+  body,
+  .print-stage {
+    background: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .print-fit .print-sheet {
+    zoom: 1;
+    box-shadow: none;
+  }
+  .print-sheet {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

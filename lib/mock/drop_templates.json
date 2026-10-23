@@ -1,0 +1,1708 @@
+[
+  {
+    "id": "beauty-new-1",
+    "category": "beauty_hair",
+    "goal": "new_customers",
+    "name": "First visit treat",
+    "why": "A sure discount gets first-timers in; a free style gets people talking.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free wash & style",
+        "minSpend": null,
+        "requiresPurchase": false
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "naira_off",
+        "value": 3000,
+        "what": "any service",
+        "minSpend": 10000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 10,
+        "what": "any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "beauty-new-2",
+    "category": "beauty_hair",
+    "goal": "new_customers",
+    "name": "Try us for less",
+    "why": "Simple percentages everyone understands, with a big one worth sharing.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "percent_off",
+        "value": 50,
+        "what": "any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 25,
+        "what": "any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 10,
+        "what": "any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "naira_off",
+      "value": 2000,
+      "what": "your next visit",
+      "minSpend": 8000,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 2
+  },
+  {
+    "id": "beauty-new-3",
+    "category": "beauty_hair",
+    "goal": "new_customers",
+    "name": "Free extra on your first visit",
+    "why": "People pay for the service they came for and leave with more than they expected.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free pedicure with any service over ₦15,000",
+        "minSpend": 15000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "free_item",
+        "value": null,
+        "what": "Free deep-conditioning treatment with any styling",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free hair wash or nail polish with any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 3
+  },
+  {
+    "id": "beauty-back-1",
+    "category": "beauty_hair",
+    "goal": "bring_back",
+    "name": "We miss you",
+    "why": "Reminds past clients you're here, with a treat for everyone who comes.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "perk",
+        "value": null,
+        "what": "A second service free (up to ₦10,000) with any service over ₦10,000",
+        "minSpend": 10000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 20,
+        "what": "any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "naira_off",
+        "value": 1000,
+        "what": "any service",
+        "minSpend": 5000,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "beauty-back-2",
+    "category": "beauty_hair",
+    "goal": "bring_back",
+    "name": "Loyal client treat",
+    "why": "Rewards your regulars and nudges them towards a bigger booking.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "percent_off",
+        "value": 40,
+        "what": "any service",
+        "minSpend": 20000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "free_item",
+        "value": null,
+        "what": "Free deep-conditioning treatment with any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free 10-minute add-on (scalp massage or polish change) with any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 2
+  },
+  {
+    "id": "beauty-back-3",
+    "category": "beauty_hair",
+    "goal": "bring_back",
+    "name": "Bring a friend",
+    "why": "Every returning client brings someone new with them.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free service for your friend (up to ₦10,000) when you book any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 25,
+        "what": "for you and a friend",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 10,
+        "what": "when you come with a friend",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "naira_off",
+      "value": 2000,
+      "what": "your next visit",
+      "minSpend": 8000,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 3
+  },
+  {
+    "id": "beauty-quiet-1",
+    "category": "beauty_hair",
+    "goal": "quiet_days",
+    "name": "Midweek glow",
+    "why": "Fills your slowest days with people who'd otherwise come at the weekend.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free wash & style",
+        "minSpend": null,
+        "requiresPurchase": false
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 30,
+        "what": "any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 15,
+        "what": "any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": [
+      1,
+      2,
+      3
+    ],
+    "sort": 1
+  },
+  {
+    "id": "beauty-quiet-2",
+    "category": "beauty_hair",
+    "goal": "quiet_days",
+    "name": "Quiet-day pamper",
+    "why": "An extra on slow days costs you little and fills empty chairs.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free manicure with any service over ₦15,000",
+        "minSpend": 15000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "naira_off",
+        "value": 5000,
+        "what": "any service",
+        "minSpend": 20000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free hair wash or nail polish with any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "sort": 2
+  },
+  {
+    "id": "beauty-quiet-3",
+    "category": "beauty_hair",
+    "goal": "quiet_days",
+    "name": "Weekday special",
+    "why": "A straight discount, only on the days you need it.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "percent_off",
+        "value": 50,
+        "what": "any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 20,
+        "what": "any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 10,
+        "what": "any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": [
+      2,
+      3,
+      4
+    ],
+    "sort": 3
+  },
+  {
+    "id": "spa-new-1",
+    "category": "spa_wellness",
+    "goal": "new_customers",
+    "name": "First massage",
+    "why": "A free massage gets attention; everyone else gets a reason to book.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free 60-minute massage",
+        "minSpend": null,
+        "requiresPurchase": false
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 30,
+        "what": "any massage",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free 10-minute foot or head massage with any treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "spa-new-2",
+    "category": "spa_wellness",
+    "goal": "new_customers",
+    "name": "Try a facial",
+    "why": "Brings in massage clients and introduces them to another treatment.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free facial with any massage",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "naira_off",
+        "value": 5000,
+        "what": "any treatment",
+        "minSpend": 20000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 10,
+        "what": "any treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 2
+  },
+  {
+    "id": "spa-new-3",
+    "category": "spa_wellness",
+    "goal": "new_customers",
+    "name": "Spa day for less",
+    "why": "Makes your bigger packages feel within reach for first-timers.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "percent_off",
+        "value": 50,
+        "what": "any spa package",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "free_item",
+        "value": null,
+        "what": "Free steam or sauna session with any treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 10,
+        "what": "any treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "naira_off",
+      "value": 3000,
+      "what": "your next visit",
+      "minSpend": 15000,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 3
+  },
+  {
+    "id": "spa-back-1",
+    "category": "spa_wellness",
+    "goal": "bring_back",
+    "name": "Welcome back",
+    "why": "A thank-you to past clients that gets them booking again.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free 30-minute massage with any treatment over ₦20,000",
+        "minSpend": 20000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 20,
+        "what": "any treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "naira_off",
+        "value": 2000,
+        "what": "any treatment",
+        "minSpend": 10000,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "spa-back-2",
+    "category": "spa_wellness",
+    "goal": "bring_back",
+    "name": "Couples treat",
+    "why": "Each returning client brings a partner or friend.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "perk",
+        "value": null,
+        "what": "Second massage free when you book a couples massage",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 25,
+        "what": "a couples massage",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free aromatherapy upgrade with any massage",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 2
+  },
+  {
+    "id": "spa-back-3",
+    "category": "spa_wellness",
+    "goal": "bring_back",
+    "name": "Package taster",
+    "why": "Turns one-off visitors into regulars with a package.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "percent_off",
+        "value": 40,
+        "what": "any 3-session package",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "free_item",
+        "value": null,
+        "what": "Free body scrub with any massage",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 10,
+        "what": "any treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 3
+  },
+  {
+    "id": "spa-quiet-1",
+    "category": "spa_wellness",
+    "goal": "quiet_days",
+    "name": "Midweek unwind",
+    "why": "Midweek is quiet for spas; this fills it.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free 60-minute massage",
+        "minSpend": null,
+        "requiresPurchase": false
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 30,
+        "what": "any treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 15,
+        "what": "any treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": [
+      1,
+      2,
+      3
+    ],
+    "sort": 1
+  },
+  {
+    "id": "spa-quiet-2",
+    "category": "spa_wellness",
+    "goal": "quiet_days",
+    "name": "Quiet-day upgrade",
+    "why": "Longer treatments on slow days cost you little and feel generous.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free upgrade from 60 to 90 minutes on any massage",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "free_item",
+        "value": null,
+        "what": "Free foot massage with any treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free steam session with any treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "sort": 2
+  },
+  {
+    "id": "spa-quiet-3",
+    "category": "spa_wellness",
+    "goal": "quiet_days",
+    "name": "Weekday express",
+    "why": "Short visits that fit around work, on your quietest days.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free express facial with any massage",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "naira_off",
+        "value": 4000,
+        "what": "any treatment",
+        "minSpend": 15000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 10,
+        "what": "any treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": [
+      2,
+      3,
+      4
+    ],
+    "sort": 3
+  },
+  {
+    "id": "fitness-new-1",
+    "category": "fitness",
+    "goal": "new_customers",
+    "name": "Try us out",
+    "why": "A free day lets people feel the place; a free month is worth sharing.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free 1-month membership",
+        "minSpend": null,
+        "requiresPurchase": false
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 50,
+        "what": "your first month",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free day pass",
+        "minSpend": null,
+        "requiresPurchase": false
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 15,
+      "what": "any monthly plan",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "fitness-back-1",
+    "category": "fitness",
+    "goal": "bring_back",
+    "name": "Come back strong",
+    "why": "Gets lapsed members back with a reason to sign up again.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "perk",
+        "value": null,
+        "what": "2 months for the price of 1",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "free_item",
+        "value": null,
+        "what": "Free personal training session with any monthly plan",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "naira_off",
+        "value": 2000,
+        "what": "any plan",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next plan",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "fitness-quiet-1",
+    "category": "fitness",
+    "goal": "quiet_days",
+    "name": "Off-peak training",
+    "why": "Brings people in when the floor is empty.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free personal training session",
+        "minSpend": null,
+        "requiresPurchase": false
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 30,
+        "what": "any class pack",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free class for a friend when you book a class",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next plan",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": [
+      5,
+      6,
+      7
+    ],
+    "sort": 1
+  },
+  {
+    "id": "food-new-1",
+    "category": "food_drinks",
+    "goal": "new_customers",
+    "name": "First taste",
+    "why": "Everyone gets something off their first order; a free meal gets shared.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free meal for two, up to ₦15,000",
+        "minSpend": null,
+        "requiresPurchase": false
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "free_item",
+        "value": null,
+        "what": "Free drink with any meal",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 10,
+        "what": "your order",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "naira_off",
+      "value": 1000,
+      "what": "your next order",
+      "minSpend": 5000,
+      "validityDays": 30
+    },
+    "validityDays": 7,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "food-back-1",
+    "category": "food_drinks",
+    "goal": "bring_back",
+    "name": "Your table's waiting",
+    "why": "A treat with the meal brings regulars back sooner.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "percent_off",
+        "value": 50,
+        "what": "your bill (up to ₦10,000)",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "free_item",
+        "value": null,
+        "what": "Free dessert with any meal over ₦8,000",
+        "minSpend": 8000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free soft drink with any meal",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "naira_off",
+      "value": 1000,
+      "what": "your next order",
+      "minSpend": 5000,
+      "validityDays": 30
+    },
+    "validityDays": 7,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "food-quiet-1",
+    "category": "food_drinks",
+    "goal": "quiet_days",
+    "name": "Slow-day feast",
+    "why": "Fills tables on the days the kitchen is quiet.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "perk",
+        "value": null,
+        "what": "Second meal free (up to ₦8,000) with any meal",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 25,
+        "what": "your bill",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free side with any main",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "naira_off",
+      "value": 1000,
+      "what": "your next order",
+      "minSpend": 5000,
+      "validityDays": 30
+    },
+    "validityDays": 7,
+    "validWeekdays": [
+      1,
+      2,
+      3
+    ],
+    "sort": 1
+  },
+  {
+    "id": "fashion-new-1",
+    "category": "fashion",
+    "goal": "new_customers",
+    "name": "First outfit",
+    "why": "A useful extra on every first purchase; a big saving on a bigger order.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "naira_off",
+        "value": 20000,
+        "what": "orders",
+        "minSpend": 50000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 20,
+        "what": "any item",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free alterations on any purchase",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next purchase",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "fashion-back-1",
+    "category": "fashion",
+    "goal": "bring_back",
+    "name": "New season, old friends",
+    "why": "Brings past buyers back to see what's new.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free accessory (up to ₦10,000) with any outfit over ₦30,000",
+        "minSpend": 30000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 15,
+        "what": "any item",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "naira_off",
+        "value": 2000,
+        "what": "orders",
+        "minSpend": 10000,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next purchase",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "fashion-quiet-1",
+    "category": "fashion",
+    "goal": "quiet_days",
+    "name": "Midweek style",
+    "why": "Gets shoppers in on your slow days.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "percent_off",
+        "value": 40,
+        "what": "any one item",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "free_item",
+        "value": null,
+        "what": "Free styling session with any purchase",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 10,
+        "what": "any item",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next purchase",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": [
+      1,
+      2,
+      3
+    ],
+    "sort": 1
+  },
+  {
+    "id": "health-new-1",
+    "category": "health_clinics",
+    "goal": "new_customers",
+    "name": "First check-up",
+    "why": "A quick free check gets people through the door who keep putting it off.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free full check-up",
+        "minSpend": null,
+        "requiresPurchase": false
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 30,
+        "what": "any test or treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free blood pressure and sugar check",
+        "minSpend": null,
+        "requiresPurchase": false
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "health-back-1",
+    "category": "health_clinics",
+    "goal": "bring_back",
+    "name": "Time for your check-up",
+    "why": "Reminds past patients to come back before something goes wrong.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free follow-up consultation with any treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 20,
+        "what": "any test or treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "naira_off",
+        "value": 2000,
+        "what": "any service",
+        "minSpend": 10000,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "health-quiet-1",
+    "category": "health_clinics",
+    "goal": "quiet_days",
+    "name": "Midweek health day",
+    "why": "Fills quieter clinic days with planned visits.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "percent_off",
+        "value": 50,
+        "what": "any check-up package",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "free_item",
+        "value": null,
+        "what": "Free eye test with any treatment",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 10,
+        "what": "any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next visit",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": [
+      2,
+      3,
+      4
+    ],
+    "sort": 1
+  },
+  {
+    "id": "education-new-1",
+    "category": "education",
+    "goal": "new_customers",
+    "name": "Try a class",
+    "why": "A free class lets parents and students see how you teach.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free first month of lessons",
+        "minSpend": null,
+        "requiresPurchase": false
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 30,
+        "what": "your first month",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free trial class",
+        "minSpend": null,
+        "requiresPurchase": false
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next month",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "education-back-1",
+    "category": "education",
+    "goal": "bring_back",
+    "name": "Back to class",
+    "why": "Brings past students back for the next term or level.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "percent_off",
+        "value": 50,
+        "what": "your next term",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "free_item",
+        "value": null,
+        "what": "Free extra class with any monthly plan",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "naira_off",
+        "value": 3000,
+        "what": "any course",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next month",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "education-quiet-1",
+    "category": "education",
+    "goal": "quiet_days",
+    "name": "Weekday classes",
+    "why": "Fills the class slots that usually sit empty.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free one-on-one session",
+        "minSpend": null,
+        "requiresPurchase": false
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 25,
+        "what": "any class pack",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 10,
+        "what": "any class",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next month",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": [
+      1,
+      2,
+      3
+    ],
+    "sort": 1
+  },
+  {
+    "id": "services-new-1",
+    "category": "other_services",
+    "goal": "new_customers",
+    "name": "First job on us (almost)",
+    "why": "A sure discount on the first order; a free job for a very few gets people talking.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free service up to ₦10,000",
+        "minSpend": null,
+        "requiresPurchase": false
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 20,
+        "what": "any service",
+        "minSpend": 10000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "percent_off",
+        "value": 10,
+        "what": "your first order",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next order",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "services-back-1",
+    "category": "other_services",
+    "goal": "bring_back",
+    "name": "Good to see you again",
+    "why": "Brings past customers back for their next job.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "naira_off",
+        "value": 10000,
+        "what": "any job",
+        "minSpend": 30000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 15,
+        "what": "any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free pickup or delivery with any order",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next order",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "services-quiet-1",
+    "category": "other_services",
+    "goal": "quiet_days",
+    "name": "Slow-day savings",
+    "why": "Moves work onto the days you have time for it.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "percent_off",
+        "value": 50,
+        "what": "any service (up to ₦15,000)",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 25,
+        "what": "any service",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free pickup or delivery with any order",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next order",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": [
+      1,
+      2,
+      3
+    ],
+    "sort": 1
+  }
+]
