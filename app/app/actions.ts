@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import {
   BusinessSaveError,
+  completeDbPayment,
+  DropSaveError,
+  isDbId,
+  publishInDb,
   addPortfolioPhoto,
   addPortfolioVideo,
   addPoster,
@@ -188,8 +192,12 @@ export async function saveDrop(draft: DropDraft): Promise<DropResult> {
   const user = await getOwnerUser();
   if (!user || user.role !== "owner") return { ok: false, errors: { form: "Only the business owner can create drops." } };
   if (!(await getBusiness(user))) return { ok: false, errors: { form: "Set up your card before creating a drop." } };
-  const id = await saveDropDraft(user, withThankYouFilled(draft));
-  return { ok: true, id };
+  try {
+    return { ok: true, id: await saveDropDraft(user, withThankYouFilled(draft)) };
+  } catch (e) {
+    if (e instanceof DropSaveError) return { ok: false, errors: { form: e.message } };
+    throw e;
+  }
 }
 
 export type PublishResult =
@@ -221,6 +229,20 @@ export async function publishDrop(draft: DropDraft): Promise<PublishResult> {
   if (problem) return { ok: false, errors: { form: problem } };
   const quote = await quoteForBusiness(user, filled.total);
   if (quote.kind === "contact") return { ok: false, errors: { total: `For drops over ${quote.maxSelfServe.toLocaleString("en-NG")} Tikkas, talk to us.` } };
+  // Real accounts: the database prices it again and publishes or opens the payment (rule 11).
+  if (isDbId(user.id)) {
+    try {
+      const r = await publishInDb(filled);
+      revalidatePath("/app", "layout");
+      if (r.kind === "published") return { ok: true, id: r.id, published: true };
+      if (r.kind === "payment") return { ok: true, id: r.id, published: false, paymentId: r.paymentId };
+      if (r.kind === "contact") return { ok: false, errors: { total: `For drops over ${r.max.toLocaleString("en-NG")} Tikkas, talk to us.` } };
+      return { ok: false, errors: { form: PUBLISH_PROBLEMS[r.problem] ?? "We couldn't publish this drop. Check it and try again." } };
+    } catch (e) {
+      if (e instanceof DropSaveError) return { ok: false, errors: { form: e.message } };
+      throw e;
+    }
+  }
   if (quote.kind === "voucher") {
     const id = await publishWithVoucher(user, filled, quote.voucher, now);
     revalidatePath("/app", "layout");
@@ -231,6 +253,17 @@ export async function publishDrop(draft: DropDraft): Promise<PublishResult> {
   return { ok: true, id: dropId, published: false, paymentId: payment.id };
 }
 
+/** What publish_drop() says when it refuses, for the rare case the checks above didn't catch it first (a second tab). */
+const PUBLISH_PROBLEMS: Record<string, string> = {
+  rewards_dont_add_up: "Your Tikkas don't add up to the total. Check the numbers for each tier.",
+  already_published: "This drop is already published.",
+  live_exists: "You already have a live drop. Schedule this one to start after it ends, or end the live one first.",
+  overlaps_live: "Your live drop is still running then. Start this one on or after its last day.",
+  scheduled_exists: "You already have a drop scheduled. Publish this one after that drop starts.",
+  ended: "This drop's end date has passed. Pick new dates.",
+  too_long: "A drop can run for up to 30 days.",
+};
+
 /**
  * DEMO ONLY: stands in for Paystack's webhook (charge.success) until M7. It passes the payment's own
  * amount to complete_drop_payment, exactly as the verified webhook will.
@@ -240,6 +273,14 @@ export async function completeTestPayment(paymentId: string): Promise<{ ok: bool
   if (!user) return { ok: false, error: "Only the business owner can pay for drops." };
   const payment = await getPayment(user, paymentId);
   if (!payment) return { ok: false, error: "We couldn't find that payment." };
+  if (isDbId(user.id)) {
+    // DEMO ONLY, development only: what the verified Paystack webhook will call, with the payment's own amount.
+    if (process.env.NODE_ENV === "production") return { ok: false, error: "Test payments are off." };
+    const r = await completeDbPayment(payment.reference, payment.amountKobo);
+    if (r.failed) return { ok: false, error: "The amount didn't match, so nothing was published." };
+    revalidatePath("/app", "layout");
+    return { ok: true, next: afterPayment(payment) };
+  }
   const result = await completeOwnerPayment(user, payment.reference, payment.amountKobo, new Date());
   if (result.effect === "failed") return { ok: false, error: "The amount didn't match, so nothing was published." };
   revalidatePath("/app", "layout");
@@ -408,7 +449,10 @@ export async function pollPayment(paymentId: string, verify: boolean): Promise<P
   if (payment.status === "pending" && verify && paystackConfigured()) {
     try {
       const v = await verifyTransaction(payment.reference);
-      if (v.status === "success") await completeOwnerPayment(user, payment.reference, v.amountKobo, new Date());
+      if (v.status === "success") {
+        if (isDbId(user.id)) await completeDbPayment(payment.reference, v.amountKobo);
+        else await completeOwnerPayment(user, payment.reference, v.amountKobo, new Date());
+      }
     } catch {}
     payment = await getPayment(user, paymentId);
     if (!payment) return null;

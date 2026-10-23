@@ -4,6 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
+import { dbAddTikkas, dbBuyPack, dbCompletePayment, dbDeleteDraft, dbDrops, dbEndEarly, dbExtend, dbPayment, dbPayments, dbPublish, dbSaveDraft, dbVouchers, DropSaveError, type DbPublishResult } from "./drop-db";
 import { BusinessSaveError, dbAddPoster, dbPosterByCode, dbPosters, dbSavePosterHook, dbTaken, isDbId, loadBusiness, loadBusinessBySlug, saveBusinessDb } from "./business-db";
 
 // Dummy data until Supabase is wired up (M1). Every function here becomes an RPC/view call;
@@ -160,7 +161,7 @@ async function putBusiness(ownerId: string, next: Business): Promise<Business> {
   return normalize(next);
 }
 
-export { BusinessSaveError };
+export { BusinessSaveError, isDbId };
 
 /** The public business page's data (usetikka.com/[slug]). Real version: get_business_page(slug). */
 export async function getBusinessBySlug(slug: string): Promise<{ business: Business; ownerId: string } | null> {
@@ -319,6 +320,7 @@ const voucherStore: Map<string, Voucher[]> = ((globalThis as { __tikkaVouchers?:
 
 export async function getVouchers(user: Pick<SessionUser, "id">): Promise<Voucher[]> {
   await connection();
+  if (isDbId(user.id)) return dbVouchers();
   return voucherStore.get(user.id) ?? [];
 }
 
@@ -437,6 +439,10 @@ async function requestNow(): Promise<Date> {
 
 export async function getDrops(user: Pick<SessionUser, "id">, at?: Date): Promise<Drop[]> {
   const now = at ?? (await requestNow());
+  if (isDbId(user.id)) {
+    const list = (await dbDrops(now, mockToDraft)).map((x) => x.drop);
+    return list.sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || b.startsAt.localeCompare(a.startsAt));
+  }
   const mine = storedFor(user).map((s) => toDrop(s, now));
   const demo = mockDropsOf(user.id);
   const all = [...mine, ...demo].map(withDemoClaims);
@@ -501,6 +507,7 @@ export async function getDrop(
   at?: Date,
 ): Promise<{ drop: Drop; draft: DropDraft } | null> {
   const now = at ?? (await requestNow());
+  if (isDbId(user.id)) return (await dbDrops(now, mockToDraft)).find((x) => x.drop.id === id) ?? null;
   const s = storedFor(user).find((x) => x.id === id);
   if (s) return { drop: withDemoClaims(toDrop(s, now)), draft: { ...s.draft, id: s.id } };
   const m = mockDropsOf(user.id).find((x) => x.id === id);
@@ -509,6 +516,7 @@ export async function getDrop(
 
 /** Saves a draft (creating it on first save). Returns its id. */
 export async function saveDropDraft(user: Pick<SessionUser, "id">, draft: DropDraft): Promise<string> {
+  if (isDbId(user.id)) return dbSaveDraft(draft, new Date());
   const list = [...storedFor(user)];
   const i = draft.id ? list.findIndex((x) => x.id === draft.id && !x.publishedAt) : -1;
   if (i >= 0) {
@@ -557,6 +565,13 @@ export async function publishProblem(user: Pick<SessionUser, "id">, draft: DropD
   return publishWindowProblem(drops, { id: draft.id, startsAt }, now);
 }
 
+/** publish_drop for real accounts: the database prices it and publishes (covered) or opens a payment (paid). */
+export async function publishInDb(draft: DropDraft): Promise<DbPublishResult> {
+  return dbPublish(draft, new Date());
+}
+
+export { DropSaveError };
+
 /** publish_drop, covered path: use the drop-without-paying and publish now (one transaction). */
 export async function publishWithVoucher(user: Pick<SessionUser, "id">, draft: DropDraft, voucher: Voucher, now: Date): Promise<string> {
   const tier = (await getDropTiers()).find((t) => t.id === voucher.tierId)!;
@@ -580,11 +595,13 @@ function paymentsFor(ownerId: string): Payment[] {
 
 export async function getPayments(user: Pick<SessionUser, "id">): Promise<Payment[]> {
   await connection();
+  if (isDbId(user.id)) return dbPayments();
   return [...paymentsFor(user.id)].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function getPayment(user: Pick<SessionUser, "id">, id: string): Promise<Payment | null> {
   await connection();
+  if (isDbId(user.id)) return dbPayment(id);
   return paymentsFor(user.id).find((p) => p.id === id) ?? null;
 }
 
@@ -608,6 +625,14 @@ export async function startDropPayment(user: Pick<SessionUser, "id">, draft: Dro
 /** buy_pack: a pending payment for a season pack, at the pack's price (founding prices don't apply). */
 export async function buyPack(user: Pick<SessionUser, "id" | "role">, packId: string): Promise<{ ok: true; payment: Payment } | { ok: false; error: string }> {
   if (user.role !== "owner") return { ok: false, error: "Only the owner can buy season packs." };
+  if (isDbId(user.id)) {
+    try {
+      return { ok: true, payment: await dbBuyPack(packId) };
+    } catch (e) {
+      if (e instanceof DropSaveError) return { ok: false, error: e.message };
+      throw e;
+    }
+  }
   const pack = (await getDropPacks()).find((p) => p.id === packId);
   if (!pack) return { ok: false, error: "That season pack isn't available." };
   return { ok: true, payment: newPayment(user.id, { kind: "pack", packId: pack.id, toTier: pack.tierId, amountKobo: pack.priceKobo }) };
@@ -617,6 +642,12 @@ export async function buyPack(user: Pick<SessionUser, "id" | "role">, packId: st
  * complete_payment: idempotent. A paid drop publishes; an upgrade raises the drop's tier and
  * appends its extra Tikkas; a season pack creates its drops.
  */
+/** complete_payment for real accounts (Paystack's webhook, the verify fallback, the test button). */
+export async function completeDbPayment(reference: string, amountKobo: number): Promise<{ failed: boolean }> {
+  const r = await dbCompletePayment(reference, amountKobo);
+  return { failed: r.kind === "failed" };
+}
+
 export async function completeOwnerPayment(user: Pick<SessionUser, "id">, reference: string, amountKobo: number, now: Date) {
   const { payments, result } = completePayment(paymentsFor(user.id), reference, amountKobo, now);
   paymentStore.set(user.id, payments);
@@ -636,6 +667,11 @@ export async function completeOwnerPayment(user: Pick<SessionUser, "id">, refere
 export async function completePaymentByReference(reference: string, amountKobo: number) {
   for (const [ownerId, list] of paymentStore) {
     if (list.some((p) => p.reference === reference)) return completeOwnerPayment({ id: ownerId }, reference, amountKobo, new Date());
+  }
+  // A real account's payment: complete_payment() in the database (idempotent, checks the amount).
+  if (/^tk_[0-9a-f]{24}$/.test(reference)) {
+    const r = await dbCompletePayment(reference, amountKobo);
+    if (r.kind === "failed") return { effect: "failed" as const };
   }
   return { effect: "none" as const, reason: "unknown" as const };
 }
@@ -663,6 +699,19 @@ export type AddTikkasResult =
  */
 export async function addTikkas(user: Pick<SessionUser, "id" | "role">, dropId: string, extra: number): Promise<AddTikkasResult> {
   if (user.role !== "owner") return { ok: false, error: "Only the owner can add Tikkas." };
+  if (isDbId(user.id)) {
+    if (!Number.isInteger(extra) || extra < 10) return { ok: false, error: "Add at least 10 Tikkas." };
+    try {
+      const r = await dbAddTikkas(dropId, extra);
+      if (r.kind === "added") return { ok: true, kind: "added", extra };
+      if (r.kind === "payment") return { ok: true, kind: "payment", paymentId: r.paymentId };
+      if (r.kind === "contact") return { ok: false, error: `For drops over ${r.max.toLocaleString("en-NG")} Tikkas, talk to us.` };
+      return { ok: false, error: "This drop isn't running, so you can't add Tikkas." };
+    } catch (e) {
+      if (e instanceof DropSaveError) return { ok: false, error: e.message };
+      throw e;
+    }
+  }
   const found = await getDrop(user, dropId);
   if (!found || found.drop.status === "draft") return { ok: false, error: "We couldn't find that drop." };
   const { drop } = found;
@@ -1050,6 +1099,7 @@ export async function adminSavePack(id: string, priceKobo: number, active: boole
 }
 
 export async function deleteDropDraft(user: Pick<SessionUser, "id">, id: string): Promise<void> {
+  if (isDbId(user.id)) return dbDeleteDraft(id);
   dropStore.set(
     user.id,
     storedFor(user).filter((x) => x.id !== id || x.publishedAt),
@@ -1952,6 +2002,10 @@ export type DropChangeResult = { ok: true } | { ok: false; error: string };
 /** Extend the end date: later than now and the current end, at most 30 days after it started. */
 export async function extendDrop(user: Pick<SessionUser, "id" | "role">, dropId: string, endsAtIso: string): Promise<DropChangeResult> {
   if (user.role !== "owner") return { ok: false, error: "Only the owner can change a drop." };
+  if (isDbId(user.id)) {
+    const problem = await dbExtend(dropId, endsAtIso);
+    return problem ? { ok: false, error: problem } : { ok: true };
+  }
   const found = await getDrop(user, dropId);
   if (!found || found.drop.status === "draft") return { ok: false, error: "We couldn't find that drop." };
   const { drop } = found;
@@ -1971,6 +2025,10 @@ export async function endDropEarly(user: Pick<SessionUser, "id" | "role">, dropI
   if (user.role !== "owner") return { ok: false, error: "Only the owner can change a drop." };
   const found = await getDrop(user, dropId);
   if (!found || found.drop.status === "draft" || found.drop.status === "ended") return { ok: false, error: "This drop isn't running." };
+  if (isDbId(user.id)) {
+    await dbEndEarly(dropId);
+    return { ok: true };
+  }
   changeStore.set(dropId, { ...changeStore.get(dropId), endedEarlyAt: new Date().toISOString() });
   return { ok: true };
 }

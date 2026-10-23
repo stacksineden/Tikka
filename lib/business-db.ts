@@ -46,7 +46,8 @@ export class BusinessSaveError extends Error {
   }
 }
 
-async function ownedBusinessId(sb: SupabaseClient, ownerId: string): Promise<string | null> {
+/** The business this person owns, if any. */
+export async function ownedBusinessId(sb: SupabaseClient, ownerId: string): Promise<string | null> {
   const { data } = await sb.from("business_members").select("business_id").eq("user_id", ownerId).eq("role", "owner").maybeSingle();
   return data?.business_id ?? null;
 }
