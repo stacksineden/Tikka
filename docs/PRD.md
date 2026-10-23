@@ -284,7 +284,7 @@ Each drop: status (Draft, Scheduled, Live, Sold out, Ended), goal, dates, cards 
   - Legendary above 10% → "This could cost you a lot." Fix: reduce.
 - The price, and for paid sizes the guarantee: "If this drop brings fewer than 10 customers, your next one is free."
 - One button: **"Publish free"**, **"Publish with your season pack"** or **"Pay ₦10,000 and publish"** (owner only). Paid drops go to Paystack and stay a draft until the payment completes.
-- After publishing: the drop link, QR, channel links, status and square images, and "Your drop is on the marketplace".
+- After publishing: the drop link, the counter poster ("Your counter poster now opens this drop", a preview, Print, and one tap to put this drop's best reward on it, offered only when no other drop is live), the status and square images, a small "QR for this drop only (for flyers)" link, channel links, and "Your drop is on the marketplace". No poster to create per drop.
 
 | Size | Up to | Price | Guarantee (confirmed redemptions) |
 | --- | --- | --- | --- |

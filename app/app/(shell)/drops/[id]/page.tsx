@@ -5,16 +5,18 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AddTikkas } from "@/components/drops/AddTikkas";
 import { ChannelLink } from "@/components/drops/ChannelLink";
+import { PosterNudge } from "@/components/drops/PosterNudge";
 import { DropActions } from "@/components/drops/DropActions";
 import { LiveFeed } from "@/components/drops/LiveFeed";
 import { ShareKit } from "@/components/drops/ShareKit";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
 import { rate } from "@/lib/dashboard";
 import { ResultsCard } from "@/components/drops/ResultsCard";
-import { getBusiness, getDrop, getDropDashboard, getDropFeed, getDropReport, getDropTiers } from "@/lib/data";
+import { getBusiness, getDrop, getDropDashboard, getDropFeed, getDropReport, getDropTiers, getDrops, getPosters } from "@/lib/data";
 import { LIMITS } from "@/lib/drop";
 import { clockTime, count, nairaShort, percent, shortDate, timeLeft } from "@/lib/format";
 import { SOURCE_LABEL } from "@/lib/leads";
+import { rewardHook } from "@/lib/posters";
 import { qrSvg, SITE } from "@/lib/qr";
 import { getOwnerUser } from "@/lib/session";
 import type { Source } from "@/lib/types";
@@ -47,13 +49,15 @@ async function Dashboard({ params, searchParams }: { params: PageProps<"/app/dro
   const user = await getOwnerUser();
   if (!user) redirect("/app/redeem");
   const [{ id }, sp] = await Promise.all([params, searchParams]);
-  const [business, found, stats, feed, tiers, report] = await Promise.all([
+  const [business, found, stats, feed, tiers, report, posters, allDrops] = await Promise.all([
     getBusiness(user),
     getDrop(user, id),
     getDropDashboard(user, id),
     getDropFeed(user, id),
     getDropTiers(),
     getDropReport(user, id),
+    getPosters(user),
+    getDrops(user),
   ]);
   if (!business || !found) notFound();
   const { drop } = found;
@@ -61,7 +65,17 @@ async function Dashboard({ params, searchParams }: { params: PageProps<"/app/dro
   if (!stats) notFound();
 
   const url = `${SITE}/d/${business.slug}/${drop.slug}`;
-  const [qr, ...channelQrs] = await Promise.all([qrSvg(`${url}?c=qr`), ...CHANNELS.map((ch) => qrSvg(`${url}?c=${ch.c}`))]);
+  // The counter poster (every business has one): it opens whatever drop is live.
+  const poster = posters[0];
+  const [qr, posterQr, ...channelQrs] = await Promise.all([
+    qrSvg(`${url}?c=qr`),
+    poster ? qrSvg(`${SITE}/q/${poster.code}`) : Promise.resolve(""),
+    ...CHANNELS.map((ch) => qrSvg(`${url}?c=${ch.c}`)),
+  ]);
+  // Its line can carry this drop's best reward, but not while another drop is live: the poster
+  // opens that one until this one starts.
+  const otherLive = allDrops.some((d) => d.id !== drop.id && d.status === "live");
+  const bestReward = otherLive ? undefined : (drop.rewards.find((r) => r.tier === "legendary")?.label ?? drop.rewards[0]?.label);
   const now = new Date();
   const justPublished = sp.published === "1";
   const added = Number(sp.added) || 0;
@@ -259,6 +273,17 @@ async function Dashboard({ params, searchParams }: { params: PageProps<"/app/dro
                   title={`${business.name}: ${drop.name}`}
                   fileName={drop.slug}
                   images={{ status: `/api/og/status?${imgQuery}`, square: `/api/og/square?${imgQuery}` }}
+                  poster={
+                    poster && (
+                      <PosterNudge
+                        b={business}
+                        poster={poster}
+                        qr={posterQr}
+                        suggestion={rewardHook(bestReward)}
+                        opensAt={drop.status === "scheduled" ? drop.startsAt : undefined}
+                      />
+                    )
+                  }
                 />
               </div>
               {drop.showOnMarketplace !== false && (

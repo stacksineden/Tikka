@@ -1,7 +1,7 @@
 "use client";
 
-import { Check, Copy, Download, Share2 } from "lucide-react";
-import { useState, useSyncExternalStore } from "react";
+import { Check, Copy, Download, QrCode, Share2 } from "lucide-react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
 
 function useCopy() {
   const [copied, setCopied] = useState<string | null>(null);
@@ -17,19 +17,26 @@ function useCopy() {
 
 const noop = () => () => {};
 
-/** Link, native share, QR, and the WhatsApp status and square images. Per-channel links live in "By source". */
+/**
+ * Link, native share, the counter poster, and the WhatsApp status and square images. The QR for
+ * this drop alone is a small link (it stops working when the drop ends). Per-channel links live in
+ * "By source".
+ */
 export function ShareKit({
   url,
   qrSvg,
   title,
   fileName,
   images,
+  poster,
 }: {
   url: string;
   qrSvg: string;
   title: string;
   fileName: string;
   images: { status: string; square: string };
+  /** The business's permanent counter poster (PosterNudge): what to print, instead of this drop's QR. */
+  poster?: ReactNode;
 }) {
   const { copied, copy } = useCopy();
   const canShare = useSyncExternalStore(noop, () => typeof navigator.share === "function", () => false);
@@ -78,21 +85,9 @@ export function ShareKit({
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-[auto_1fr] sm:items-start">
-        <div className="grid justify-items-center gap-2">
-          <div
-            className="size-44 rounded-md bg-surface-raised p-2 ring-1 ring-line [&_svg]:size-full"
-            role="img"
-            aria-label={`QR code for ${title}`}
-            dangerouslySetInnerHTML={{ __html: qrSvg }}
-          />
-          <button type="button" className="btn btn-secondary min-h-10 px-3 text-label" onClick={downloadPng}>
-            <Download />
-            Download QR (PNG)
-          </button>
-          <p className="text-caption max-w-44 text-center text-ink-muted">Print it for the counter, the door or flyers.</p>
-        </div>
+      {poster}
 
+      <div className="grid gap-4">
         <div className="grid gap-2">
           <h3 className="text-label">Images to post</h3>
           <p className="text-caption -mt-1 text-ink-muted">Your drop, ready for a WhatsApp status or an Instagram post. Put the link in the caption.</p>
@@ -114,6 +109,14 @@ export function ShareKit({
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="grid gap-0.5 border-t border-line pt-3">
+        <button type="button" className="text-label inline-flex min-h-11 items-center gap-2 justify-self-start text-brand hover:underline" onClick={downloadPng}>
+          <QrCode size={18} aria-hidden="true" />
+          QR for this drop only (for flyers)
+        </button>
+        <p className="text-caption text-ink-muted">It stops working when this drop ends. For your counter or door, print your poster instead.</p>
       </div>
     </div>
   );
