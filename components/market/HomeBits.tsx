@@ -6,6 +6,7 @@ import { Spark } from "@/components/tikka/glyphs";
 import { clockTime, count, place, shortDate, timeAgo } from "@/lib/format";
 import { categorySlug, type MarketClaim, type MarketStats } from "@/lib/market";
 import type { MarketDrop, MarketPin } from "@/lib/types";
+import { Carousel } from "./Carousel";
 import { Countdown } from "./Countdown";
 import { NotifyMe } from "./NotifyMe";
 
@@ -65,11 +66,11 @@ export function Ticker({ claims, now }: { claims: MarketClaim[]; now: Date }) {
 
 export function Featured({ items, now }: { items: { pin: MarketPin; d: MarketDrop }[]; now: Date }) {
   return (
-    <ul className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:scroll-px-0 sm:px-0" aria-label="Featured drops">
-      {items.map(({ pin, d }) => {
+    <Carousel count={items.length} label="Featured drops">
+      {items.map(({ pin, d }, i) => {
         const live = d.status === "live";
         return (
-          <li key={d.id} className="w-[88%] shrink-0 snap-start sm:w-[calc(50%-6px)] lg:w-[calc(50%-6px)]">
+          <li key={d.id} aria-roledescription="slide" aria-label={`${i + 1} of ${items.length}`} className="w-[88%] shrink-0 snap-start sm:w-[calc(50%-6px)] lg:w-[calc(50%-6px)]">
             <article className="relative h-full overflow-hidden rounded-[24px] text-on-night" style={{ background: d.brandColor }}>
               <div className="absolute -right-16 -top-16 size-56 rounded-pill bg-[rgba(255,255,255,.12)]" aria-hidden="true" />
               <div className="absolute -bottom-20 -left-10 size-48 rounded-pill bg-[rgba(0,0,0,.18)]" aria-hidden="true" />
@@ -142,7 +143,7 @@ export function Featured({ items, now }: { items: { pin: MarketPin; d: MarketDro
           </li>
         );
       })}
-    </ul>
+    </Carousel>
   );
 }
 
@@ -313,7 +314,7 @@ export function TopBusinesses({ items }: { items: ReturnType<typeof import("@/li
 
 export function JustClaimed({ claims, now }: { claims: MarketClaim[]; now: Date }) {
   return (
-    <ol className="grid gap-1" aria-label="Just claimed">
+    <ol className="grid grid-cols-[minmax(0,1fr)] gap-1" aria-label="Just claimed">
       {claims.slice(0, 6).map((c) => (
         <li key={c.id} className="flex items-center gap-3 rounded-md px-1 py-2">
           <RarityBadge tier={c.tier} />

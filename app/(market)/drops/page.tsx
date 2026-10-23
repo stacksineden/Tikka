@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 
 function Panel({ title, icon, children, action }: { title: string; icon: React.ReactNode; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <section className="rounded-[20px] border border-line bg-surface-raised p-4">
+    <section className="min-w-0 rounded-[20px] border border-line bg-surface-raised p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="text-title flex items-center gap-2 text-[17px]">
           {icon}
@@ -159,7 +159,7 @@ async function Home({ searchParams }: { searchParams: PageProps<"/drops">["searc
             </section>
           </div>
 
-          <aside className="grid min-w-0 gap-4" aria-label="Around the marketplace">
+          <aside className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4" aria-label="Around the marketplace">
             <Panel title="Just claimed" icon={<Activity size={18} className="text-success" aria-hidden="true" />} action={<span className="counter__dot" aria-hidden="true" />}>
               <JustClaimed claims={claims} now={now} />
             </Panel>
