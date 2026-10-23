@@ -93,7 +93,7 @@ export function PortfolioEditor({ initial }: { initial: PortfolioPhoto[] }) {
         Up to {PORTFOLIO_MAX} photos and videos of your work, space or products ({PAGE_LIMITS.videos} videos at most, {PAGE_LIMITS.videoSeconds} seconds each). People tap to see them full
         screen. {photos.length} of {PORTFOLIO_MAX}.
       </p>
-      {photos.length > 0 && (
+      {(photos.length > 0 || room > 0) && (
         <ul className="grid gap-3 sm:grid-cols-2">
           {photos.map((p, i) => (
             <li key={p.id} className="flex gap-3 rounded-md border border-line p-2">
@@ -127,21 +127,36 @@ export function PortfolioEditor({ initial }: { initial: PortfolioPhoto[] }) {
               </div>
             </li>
           ))}
+          {/* Always the next tile in the list, so it's clear more can go in (up to the limit). */}
+          {room > 0 && (
+            <li>
+              <button
+                type="button"
+                onClick={() => input.current?.click()}
+                disabled={busy > 0}
+                className="flex min-h-24 w-full items-center gap-3 rounded-md border-2 border-dashed border-line-strong p-3 text-left text-ink hover:border-brand hover:bg-brand-soft disabled:opacity-70"
+              >
+                <span className="grid size-12 shrink-0 place-items-center rounded-pill bg-brand-soft text-brand">
+                  {busy > 0 ? <Loader2 className="animate-spin" aria-hidden="true" /> : <ImagePlus aria-hidden="true" />}
+                </span>
+                <span className="min-w-0">
+                  <span className="text-label block">
+                    {busy > 0 ? `Adding ${busy} photo${busy === 1 ? "" : "s"}…` : photos.length ? "Add more photos" : "Add photos"}
+                  </span>
+                  <span className="text-caption block text-ink-muted">
+                    {photos.length ? `You can add ${room} more. Pick several at once.` : "Pick several at once from your phone."}
+                  </span>
+                </span>
+              </button>
+            </li>
+          )}
         </ul>
       )}
-      {room > 0 && (
-        <div className="flex flex-wrap gap-2">
-          <button type="button" className="btn btn-secondary" onClick={() => input.current?.click()} disabled={busy > 0}>
-            {busy > 0 ? <Loader2 className="animate-spin" /> : <ImagePlus />}
-            {busy > 0 ? `Adding ${busy} photo${busy === 1 ? "" : "s"}…` : "Add photos"}
-          </button>
-          {videos < PAGE_LIMITS.videos && (
-            <button type="button" className="btn btn-secondary" onClick={() => videoInput.current?.click()} disabled={videoBusy}>
-              {videoBusy ? <Loader2 className="animate-spin" /> : <Film />}
-              {videoBusy ? "Adding video…" : "Add a video"}
-            </button>
-          )}
-        </div>
+      {room > 0 && videos < PAGE_LIMITS.videos && (
+        <button type="button" className="btn btn-secondary justify-self-start" onClick={() => videoInput.current?.click()} disabled={videoBusy}>
+          {videoBusy ? <Loader2 className="animate-spin" /> : <Film />}
+          {videoBusy ? "Adding video…" : "Add a video"}
+        </button>
       )}
       {problem && (
         <p role="alert" className="text-caption font-semibold text-danger">
