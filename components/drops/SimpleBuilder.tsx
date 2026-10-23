@@ -23,6 +23,7 @@ import {
   setTierCount,
   setTotal,
   summary,
+  LIMITS,
   tierCount,
   validateStep1,
   validateStep2,
@@ -251,7 +252,7 @@ export function SimpleBuilder({
               />
             )}
             {step === 2 && (
-              <StepSize draft={draft} errors={errors} tiers={tiers} vouchers={vouchers} business={business} pastSuggest={pastSuggest} openedAt={openedAt} update={update} patch={patch} />
+              <StepSize draft={draft} errors={errors} tiers={tiers} vouchers={vouchers} business={business} pastSuggest={pastSuggest} openedAt={openedAt} update={update} patch={patch} onChangeOffer={() => goTo(1)} />
             )}
             {step === 3 && (
               <>
@@ -675,6 +676,7 @@ function StepSize({
   openedAt,
   update,
   patch,
+  onChangeOffer,
 }: {
   draft: DropDraft;
   errors: Errors;
@@ -685,6 +687,8 @@ function StepSize({
   openedAt: number;
   update: (d: DropDraft, touched?: string[]) => void;
   patch: (p: Partial<DropDraft>) => void;
+  /** Back to the offer screen, where "Make your own" sets a different split. */
+  onChangeOffer: () => void;
 }) {
   const now = new Date(openedAt);
   const hasFree = vouchers.some((v) => v.source === "signup" && usable(v, now));
@@ -776,6 +780,33 @@ function StepSize({
           </p>
         )}
         <p className="text-caption text-ink-muted">Over 3,000? Talk to us and we&apos;ll set it up with you.</p>
+        {draft.total >= LIMITS.minTotal && !errors.total && (
+          <div className="rounded-card border border-line bg-surface-sunken p-3">
+            <p className="text-body flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="font-semibold">{count(draft.total)} Tikkas:</span>
+              {(
+                [
+                  ["legendary", "Legendary", "bg-rarity-legendary"],
+                  ["rare", "Rare", "bg-rarity-rare"],
+                  ["thank_you", "Thank-you", "bg-rarity-common"],
+                ] as const
+              ).map(([tier, word, dot]) => (
+                <span key={tier} className="inline-flex items-center gap-1.5 tabular-nums">
+                  <span className={`size-2 rounded-pill ${dot}`} aria-hidden="true" />
+                  {count(tierCount(draft, tier))} {word}
+                </span>
+              ))}
+            </p>
+            {draft.templateId && (
+              <p className="text-caption mt-1.5 text-ink-muted">
+                Set by the offer you picked.{" "}
+                <button type="button" onClick={onChangeOffer} className="inline-flex min-h-11 items-center font-semibold text-brand underline-offset-4 hover:underline">
+                  Want a different split? Make your own
+                </button>
+              </p>
+            )}
+          </div>
+        )}
       </section>
 
       <section className="grid gap-2" aria-labelledby="dur-h">
