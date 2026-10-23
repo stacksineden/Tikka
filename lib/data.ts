@@ -4,6 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
+import { BusinessSaveError, dbAddPoster, dbPosterByCode, dbPosters, dbSavePosterHook, dbTaken, isDbId, loadBusiness, loadBusinessBySlug, saveBusinessDb } from "./business-db";
 
 // Dummy data until Supabase is wired up (M1). Every function here becomes an RPC/view call;
 // keep the signatures so the pages don't change.
@@ -140,9 +141,26 @@ export async function getBusiness(user: Pick<SessionUser, "id"> & Partial<Pick<S
   // Staff see the business they work for (the redeem screen's header).
   const id = user.role === "staff" ? user.businessOwnerId : user.id;
   if (!id) return null;
+  // Real accounts: the database (by the owner's id, or the business's own id for public pages).
+  if (isDbId(id)) {
+    const db = await loadBusiness(id);
+    return db ? normalize(db) : null;
+  }
   const b = store.get(id) ?? mockBusiness(id);
   return b ? withRatings(id, normalize(b)) : null;
 }
+
+/**
+ * Saves a business: to the database for real accounts (returning it as stored, with the
+ * database's ids), else to the demo store. Throws BusinessSaveError when the database refuses.
+ */
+async function putBusiness(ownerId: string, next: Business): Promise<Business> {
+  if (isDbId(ownerId)) return normalize(await saveBusinessDb(ownerId, next));
+  store.set(ownerId, next);
+  return normalize(next);
+}
+
+export { BusinessSaveError };
 
 /** The public business page's data (usetikka.com/[slug]). Real version: get_business_page(slug). */
 export async function getBusinessBySlug(slug: string): Promise<{ business: Business; ownerId: string } | null> {
@@ -151,7 +169,9 @@ export async function getBusinessBySlug(slug: string): Promise<{ business: Busin
   if ((business as Business).slug === slug && !store.has(DEMO_USER)) return { business: withRatings(DEMO_USER, normalize(business as Business)), ownerId: DEMO_USER };
   const seed = SEEDS.find((x) => x.business.slug === slug);
   if (seed) return { business: withRatings(seed.ownerId, normalize(seed.business)), ownerId: seed.ownerId };
-  return null;
+  // A real business: its own id stands in for the owner's (getBusiness reads it either way).
+  const db = await loadBusinessBySlug(slug);
+  return db ? { business: normalize(db), ownerId: db.id } : null;
 }
 
 /** Page addresses other businesses already use. */
@@ -159,6 +179,11 @@ export async function takenSlugs(user: Pick<SessionUser, "id">): Promise<Set<str
   const all = new Set<string>([(business as Business).slug, ...SEEDS.map((x) => x.business.slug)]);
   for (const [id, b] of store) if (id !== user.id) all.add(b.slug);
   if (user.id === DEMO_USER) all.delete((business as Business).slug);
+  for (const slug of (await dbTaken()).slugs) all.add(slug);
+  if (isDbId(user.id)) {
+    const mine = (await getBusiness(user))?.slug;
+    if (mine) all.delete(mine);
+  }
   return all;
 }
 
@@ -168,8 +193,7 @@ export async function addPortfolioPhoto(user: Pick<SessionUser, "id">, photo: Om
   const b = await getBusiness(user);
   if (!b || b.portfolio.length >= PORTFOLIO_MAX) return null;
   const portfolio = [...b.portfolio, { ...photo, id: `ph_${Date.now().toString(36)}` }];
-  store.set(user.id, { ...b, portfolio });
-  return portfolio;
+  return (await putBusiness(user.id, { ...b, portfolio })).portfolio;
 }
 
 /* ------------------------------------------------------- your page */
@@ -207,8 +231,12 @@ export async function savePage(
       faqs: merged.faqs?.map((f) => ({ ...f, id: f.id || newId("fq"), q: f.q.trim(), a: f.a.trim() })),
     },
   };
-  store.set(user.id, next);
-  return { ok: true, business: normalize(next) };
+  try {
+    return { ok: true, business: await putBusiness(user.id, next) };
+  } catch (e) {
+    if (e instanceof BusinessSaveError) return { ok: false, errors: { form: e.message } };
+    throw e;
+  }
 }
 
 export async function saveServices(user: Pick<SessionUser, "id" | "role">, services: ServiceItem[]): Promise<{ ok: true; services: ServiceItem[] } | { ok: false; errors: PageErrors }> {
@@ -226,8 +254,12 @@ export async function saveServices(user: Pick<SessionUser, "id" | "role">, servi
     duration: x.duration?.trim() || undefined,
     price: x.priceKind === "ask" ? null : x.price,
   }));
-  store.set(user.id, { ...b, services: next });
-  return { ok: true, services: next };
+  try {
+    return { ok: true, services: (await putBusiness(user.id, { ...b, services: next })).services };
+  } catch (e) {
+    if (e instanceof BusinessSaveError) return { ok: false, errors: { form: e.message } };
+    throw e;
+  }
 }
 
 /** A portfolio video: 3 at most, 15 s and 15 MB each (checked in the browser and here). */
@@ -238,13 +270,18 @@ export async function addPortfolioVideo(user: Pick<SessionUser, "id" | "role">, 
   const problem = videoProblem(b.portfolio, v.seconds, 0);
   if (problem) return { ok: false, error: problem };
   const portfolio = [...b.portfolio, { id: newId("pf"), kind: "video" as const, url: v.url, thumbUrl: v.thumbUrl, seconds: Math.round(v.seconds) }];
-  store.set(user.id, { ...b, portfolio });
-  return { ok: true, portfolio };
+  try {
+    return { ok: true, portfolio: (await putBusiness(user.id, { ...b, portfolio })).portfolio };
+  } catch (e) {
+    if (e instanceof BusinessSaveError) return { ok: false, error: e.message };
+    throw e;
+  }
 }
 
-export async function updatePortfolio(user: Pick<SessionUser, "id">, portfolio: PortfolioPhoto[]): Promise<void> {
+export async function updatePortfolio(user: Pick<SessionUser, "id">, portfolio: PortfolioPhoto[]): Promise<PortfolioPhoto[]> {
   const b = await getBusiness(user);
-  if (b) store.set(user.id, { ...b, portfolio: portfolio.slice(0, PORTFOLIO_MAX) });
+  if (!b) return [];
+  return (await putBusiness(user.id, { ...b, portfolio: portfolio.slice(0, PORTFOLIO_MAX) })).portfolio;
 }
 
 /* ---------------------------------------------------------------- tiers */
@@ -263,12 +300,14 @@ export async function getDropPacks(): Promise<DropPack[]> {
   return packStore.filter((p) => p.active);
 }
 
-export async function saveBusiness(user: Pick<SessionUser, "id">, next: Business): Promise<void> {
-  // A new business gets its first drop free (TECH_PLAN §3: one 'signup' voucher).
+/** Card setup and Settings. Throws BusinessSaveError when the database refuses (say a page address was just taken). */
+export async function saveBusiness(user: Pick<SessionUser, "id">, next: Business): Promise<Business> {
+  // A new business gets its first drop free (TECH_PLAN §3: one 'signup' voucher). The database
+  // adds its own in create_business; DEMO: the pay screens still read this store.
   if (!store.has(user.id) && !mockBusiness(user.id) && !(voucherStore.get(user.id)?.length)) {
     voucherStore.set(user.id, [signupVoucher(user.id, new Date())]);
   }
-  store.set(user.id, next);
+  return putBusiness(user.id, next);
 }
 
 /* ----------------------------------------------- drops without paying */
@@ -306,6 +345,7 @@ export async function takenPrefixes(user: Pick<SessionUser, "id">): Promise<Set<
   const all = new Set(SEEDS.map((x) => x.business.codePrefix));
   all.add((business as Business).codePrefix);
   for (const b of store.values()) all.add(b.codePrefix);
+  for (const prefix of (await dbTaken()).prefixes) all.add(prefix);
   if (mine && user.id !== DEMO_USER) all.delete(mine);
   if (user.id === DEMO_USER) all.delete((business as Business).codePrefix);
   return all;
@@ -731,7 +771,12 @@ export async function getNewClaims(user: Pick<SessionUser, "id" | "role">, since
 export async function saveOwnerAlerts(user: Pick<SessionUser, "id">, ownerWhatsapp: string, dailySummary: boolean): Promise<boolean> {
   const b = await getBusiness(user);
   if (!b) return false;
-  store.set(user.id, { ...b, ownerWhatsapp: ownerWhatsapp || undefined, dailySummary });
+  try {
+    await putBusiness(user.id, { ...b, ownerWhatsapp: ownerWhatsapp || undefined, dailySummary });
+  } catch (e) {
+    if (e instanceof BusinessSaveError) return false;
+    throw e;
+  }
   return true;
 }
 
@@ -774,6 +819,11 @@ const posterStore: Map<string, Poster[]> = ((globalThis as { __tikkaPosters?: Ma
 const posterScans: Map<string, number> = ((globalThis as { __tikkaPosterScans?: Map<string, number> }).__tikkaPosterScans ??= new Map());
 const scannedBy: Set<string> = ((globalThis as { __tikkaScannedBy?: Set<string> }).__tikkaScannedBy ??= new Set());
 
+/** A business's posters: the database's for real accounts (created at setup), else the demo store's. */
+async function postersFor(ownerId: string): Promise<Poster[]> {
+  return isDbId(ownerId) ? dbPosters(ownerId) : postersOf(ownerId);
+}
+
 function postersOf(ownerId: string): Poster[] {
   let list = posterStore.get(ownerId);
   if (!list?.length) {
@@ -795,7 +845,7 @@ export interface PosterRow extends Poster {
 export async function getPosters(user: Pick<SessionUser, "id" | "role">): Promise<PosterRow[]> {
   if (user.role !== "owner" || !(await getBusiness(user))) return [];
   const events = [...eventStore.values()].flat();
-  return postersOf(user.id).map((p) => ({
+  return (await postersFor(user.id)).map((p) => ({
     ...p,
     scans: posterScans.get(p.id) ?? 0,
     views: events.filter((e) => e.posterId === p.id && e.kind === "view").length,
@@ -807,6 +857,14 @@ export async function addPoster(user: Pick<SessionUser, "id" | "role">, label: s
   if (user.role !== "owner") return { ok: false, error: "Only the owner can add posters." };
   const problem = validateLabel(label);
   if (problem) return { ok: false, error: problem };
+  if (isDbId(user.id)) {
+    try {
+      return { ok: true, poster: await dbAddPoster(user.id, label.trim()) };
+    } catch (e) {
+      if (e instanceof BusinessSaveError) return { ok: false, error: e.message };
+      throw e;
+    }
+  }
   const list = postersOf(user.id);
   if (list.length >= 20) return { ok: false, error: "You can have up to 20 posters." };
   const taken = new Set([...posterStore.values()].flat().map((p) => p.code));
@@ -821,6 +879,7 @@ export async function savePosterHook(user: Pick<SessionUser, "id" | "role">, pos
   if (user.role !== "owner") return "Only the owner can change posters.";
   const problem = validateHook(hook);
   if (problem) return problem;
+  if (isDbId(user.id)) return dbSavePosterHook(posterId, hook);
   posterStore.set(user.id, postersOf(user.id).map((p) => (p.id === posterId ? { ...p, hookLine: hook.trim() || undefined } : p)));
   return null;
 }
@@ -829,7 +888,7 @@ export async function savePosterHook(user: Pick<SessionUser, "id" | "role">, pos
 export async function getPosterForPrint(user: Pick<SessionUser, "id" | "role">, posterId: string) {
   if (user.role !== "owner") return null;
   const b = await getBusiness(user);
-  const poster = postersOf(user.id).find((p) => p.id === posterId);
+  const poster = (await postersFor(user.id)).find((p) => p.id === posterId);
   return b && poster ? { business: b, poster } : null;
 }
 
@@ -856,7 +915,10 @@ export async function scanPoster(code: string, visitorId: string | undefined): P
     const drops = await getDrops({ id: ownerId });
     return posterTarget(b.slug, p.id, drops);
   }
-  return null;
+  // A real business's poster. Its drops aren't in the database yet, so it opens the business page.
+  // TODO(drops): count the scan and pass the business's drops once drops move to the database.
+  const db = await dbPosterByCode(code);
+  return db ? posterTarget(db.businessSlug, db.poster.id, []) : null;
 }
 
 /** A poster id from a link, kept only when it's one of this business's posters. */

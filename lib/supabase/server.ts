@@ -2,6 +2,7 @@ import "server-only";
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { supabaseEnv } from "./env";
 
 /**
@@ -10,6 +11,9 @@ import { supabaseEnv } from "./env";
  * refreshes the session before they render, so the failed write there is harmless.
  */
 export async function createClient() {
+  // Per request, always: Supabase reads the clock (token expiry), which Next only allows once a
+  // render is known to be dynamic.
+  await connection();
   const store = await cookies();
   const { url, key } = supabaseEnv();
   return createServerClient(url, key, {

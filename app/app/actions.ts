@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  BusinessSaveError,
   addPortfolioPhoto,
   addPortfolioVideo,
   addPoster,
@@ -118,7 +119,12 @@ export async function saveCard(input: Partial<CardDraft> & Extras): Promise<Save
     address: merged.address?.trim() || undefined,
     slug,
   };
-  await saveBusiness(user, next);
+  try {
+    await saveBusiness(user, next);
+  } catch (e) {
+    if (e instanceof BusinessSaveError) return { ok: false, errors: { [e.field ?? "form"]: e.message } };
+    throw e;
+  }
   revalidatePath("/app", "layout");
   return { ok: true };
 }
@@ -154,9 +160,9 @@ export async function savePortfolio(next: { id: string; caption?: string }[]): P
     const p = byId.get(n.id);
     return p ? [{ ...p, caption: n.caption?.trim().slice(0, 80) || undefined }] : [];
   });
-  await updatePortfolio(user, portfolio);
+  const saved = await updatePortfolio(user, portfolio);
   revalidatePath("/app", "layout");
-  return portfolio;
+  return saved;
 }
 
 export async function checkPrefix(prefix: string, name: string): Promise<{ available: boolean; alternatives: string[] }> {
