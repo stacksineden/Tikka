@@ -3,7 +3,7 @@
 
 import { serialLabel } from "./claim";
 import { reviewState, type CheckResult } from "./redeem";
-import type { CardStatus, ClaimedCard, Tier } from "./types";
+import type { CardStatus, ClaimedCard, Lead, Source, Tier } from "./types";
 import { validDaysLabel, visitOptions } from "./visit";
 
 export interface CardJson {
@@ -91,4 +91,52 @@ export function checkFrom(j: Record<string, unknown>): CheckResult {
     default:
       return { kind: "unknown", code };
   }
+}
+
+/* ------------------------------------------------------------------ leads */
+
+export interface LeadRow {
+  claim_id: string;
+  drop_id: string;
+  first_name: string;
+  profile_name: string | null;
+  phone: string;
+  source: string;
+  is_new_lead: boolean;
+  claimed_at: string;
+  expires_at: string;
+  redeemed_at: string | null;
+  bill_amount_kobo: number | null;
+  planned_visit_date: string | null;
+  planned_visit_part: Lead["plannedVisitPart"] | null;
+  tier: CardJson["tier"];
+  reward: string;
+  marketing_opt_in: boolean;
+  last_followup_at: string | null;
+}
+
+const SOURCES: Source[] = ["wa", "ig", "qr", "web", "ads", "market", "direct"];
+
+/** One row of get_leads() as the Leads page shows it: the owner sees the full name and number (rule 4). */
+export function leadFrom(r: LeadRow): Lead {
+  const iso = (v: string | null) => (v ? new Date(v).toISOString() : undefined);
+  return {
+    id: r.claim_id,
+    name: r.profile_name?.trim() || r.first_name,
+    phone: r.phone,
+    status: r.redeemed_at ? "redeemed" : "claimed",
+    isNew: r.is_new_lead,
+    fromMarketplace: r.source === "market",
+    source: SOURCES.includes(r.source as Source) ? (r.source as Source) : "direct",
+    tier: TIER[r.tier] ?? "thank_you",
+    reward: r.reward,
+    dropId: r.drop_id,
+    claimedAt: new Date(r.claimed_at).toISOString(),
+    spent: r.bill_amount_kobo ? r.bill_amount_kobo / 100 : undefined,
+    lastFollowupAt: iso(r.last_followup_at),
+    marketingOptIn: r.marketing_opt_in,
+    expiresAt: new Date(r.expires_at).toISOString(),
+    plannedVisitDate: r.planned_visit_date ?? undefined,
+    plannedVisitPart: r.planned_visit_part ?? undefined,
+  };
 }

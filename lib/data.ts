@@ -4,6 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
+import { dbLeads, dbLogFollowup } from "./leads-db";
 import { dbAcceptInvite, dbCancelInvite, dbCheckCode, dbConfirm, dbInviteInfo, dbInviteStaff, dbRemoveStaff, dbTeam, type ConfirmDbResult } from "./team-db";
 import { dbCardByViewToken, dbCardOwner, dbDropExists, dbPublicDrop, dbRecordEvent, dbRevealCard } from "./claim-db";
 import { dbAddTikkas, dbBuyPack, dbCompletePayment, dbDeleteDraft, dbDrops, dbEndEarly, dbExtend, dbPayment, dbPayments, dbPublish, dbSaveDraft, dbVouchers, DropSaveError, type DbPublishResult } from "./drop-db";
@@ -1114,6 +1115,10 @@ export async function deleteDropDraft(user: Pick<SessionUser, "id">, id: string)
 /** get_leads: every claimer in full, to owners only. Staff and anonymous callers get an error. */
 export async function getLeads(user: Pick<SessionUser, "id" | "role">): Promise<Lead[]> {
   assertCanReadLeads(user.role);
+  if (isDbId(user.id)) {
+    const b = await getBusiness(user);
+    return b ? dbLeads(b.id) : [];
+  }
   if (user.id !== DEMO_USER) return [];
   // DEMO: a seed claim redeemed at the counter shows as redeemed on its lead (same first name).
   const used = new Map<string, number | undefined>();
@@ -1149,13 +1154,20 @@ export async function getFollowups(user: Pick<SessionUser, "id" | "role">): Prom
       lastFollowupAt: l.lastFollowupAt,
     })),
     b.name,
-    DEMO_NOW,
+    await leadsNow(user),
   );
+}
+
+/** "Now" for the Leads page: the real clock for real businesses; DEMO_NOW for the demo's frozen data. */
+export async function leadsNow(user: Pick<SessionUser, "id">): Promise<Date> {
+  await connection();
+  return isDbId(user.id) ? new Date() : DEMO_NOW;
 }
 
 /** "Message on WhatsApp" was tapped: a followup_tap for the funnel and leads.last_followup_at. */
 export async function recordFollowup(user: Pick<SessionUser, "id" | "role">, leadId: string): Promise<boolean> {
   if (user.role !== "owner") return false;
+  if (isDbId(user.id)) return isDbId(leadId) ? dbLogFollowup(leadId) : false;
   const lead = (await getLeads(user)).find((l) => l.id === leadId);
   if (!lead) return false;
   followups.set(leadId, new Date().toISOString());

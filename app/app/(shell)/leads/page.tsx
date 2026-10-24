@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import { AutoSubmit, FollowUpButton, LiveRefresh } from "@/components/leads/LeadBits";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
 import { MessageToday } from "@/components/leads/MessageToday";
-import { DEMO_NOW, getBusiness, getDrops, getFollowups, getLeads } from "@/lib/data";
+import { getBusiness, getDrops, getFollowups, getLeads, leadsNow } from "@/lib/data";
 import { visitPlanLabel } from "@/lib/followups";
 import { naira, shortDate, timeAgo } from "@/lib/format";
 import { filterLeads, followUpLink, LEAD_TABS, parseLeadFilters, SOURCE_LABEL, tabCounts, type LeadFilters } from "@/lib/leads";
@@ -37,7 +37,7 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
   // Owners only (rule 4). Staff never reach this page, and get_leads refuses them anyway.
   const user = await getOwnerUser();
   if (!user) redirect("/app/redeem");
-  const [b, all, drops, today, sp] = await Promise.all([getBusiness(user), getLeads(user), getDrops(user), getFollowups(user), searchParams]);
+  const [b, all, drops, today, sp, planNow] = await Promise.all([getBusiness(user), getLeads(user), getDrops(user), getFollowups(user), searchParams, leadsNow(user)]);
   if (!b) redirect("/app/setup");
 
   const f = parseLeadFilters(sp);
@@ -149,8 +149,8 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
           <ul className="divide-y divide-line">
             {rows.map((l) => {
               const drop = dropById.get(l.dropId);
-              const wa = followUpLink(l, b.name, DEMO_NOW);
-              const plan = l.status === "claimed" ? visitPlanLabel(l.plannedVisitDate, l.plannedVisitPart, DEMO_NOW) : null;
+              const wa = followUpLink(l, b.name, planNow);
+              const plan = l.status === "claimed" ? visitPlanLabel(l.plannedVisitDate, l.plannedVisitPart, planNow) : null;
               return (
                 <li key={l.id} className="grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto] lg:items-center">
                   <div className="min-w-0">

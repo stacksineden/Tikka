@@ -16,13 +16,13 @@ import { BioCard } from "@/components/business/BioCard";
 import { SoloCard } from "@/components/tikka/SoloCard";
 import { faceFromBusiness } from "@/components/tikka/TikkaCard";
 import {
-  DEMO_NOW,
   getActivity,
   getBusiness,
   getDropReport,
   getDrops,
   getGuaranteeNotice,
   getLeads,
+  leadsNow,
 } from "@/lib/data";
 import { ClaimPrompt } from "@/components/dashboard/ClaimPrompt";
 import { GuaranteeNotice } from "@/components/dashboard/GuaranteeNotice";
@@ -56,17 +56,19 @@ async function Home() {
   ]);
   const live = drops.find((d) => d.status === "live");
   const renderedAt = new Date().toISOString();
+  // The real clock for real businesses; the demo's data is frozen at DEMO_NOW.
+  const now = await leadsNow(user);
   // When a drop ends: its results for two weeks, unless the next one is already running.
   const ended = drops.find((d) => d.status === "ended" || d.status === "sold_out");
   const recentEnd =
-    owner && ended && !live && DEMO_NOW.getTime() - new Date(ended.endsAt).getTime() < 14 * 86_400_000 ? await getDropReport(user, ended.id) : null;
+    owner && ended && !live && now.getTime() - new Date(ended.endsAt).getTime() < 14 * 86_400_000 ? await getDropReport(user, ended.id) : null;
   const nudge = owner ? seasonalNudge(new Date(), ended ? { id: ended.id, name: ended.name, customers: ended.redeemed } : null) : null;
   const scheduled = drops.find((d) => d.status === "scheduled");
-  const newToday = leads.filter((l) => l.isNew && sameDayWAT(l.claimedAt, DEMO_NOW)).length;
+  const newToday = leads.filter((l) => l.isNew && sameDayWAT(l.claimedAt, now)).length;
 
   return (
     <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <HomeHeader name={user.name} now={DEMO_NOW} />
+      <HomeHeader name={user.name} now={now} />
       {owner && <ClaimPrompt since={renderedAt} />}
       {guarantee && <GuaranteeNotice message={guarantee} />}
       {nudge && <SeasonalNudge text={nudge.text} fromId={nudge.fromId} />}
@@ -74,11 +76,11 @@ async function Home() {
       <TopStats drop={live} newToday={newToday} leadsTotal={live?.claimed ?? leads.length} />
       <div className="grid items-start gap-6 xl:grid-cols-[1.35fr_1fr]">
         <div className="grid gap-6">
-          {live && <LiveDropPanel drop={live} business={business} now={DEMO_NOW} />}
-          {owner && <NewLeads leads={leads} businessName={business.name} now={DEMO_NOW} />}
+          {live && <LiveDropPanel drop={live} business={business} now={now} />}
+          {owner && <NewLeads leads={leads} businessName={business.name} now={now} />}
         </div>
         <div className="grid gap-6">
-          <ActivityFeed events={activity} now={DEMO_NOW} />
+          <ActivityFeed events={activity} now={now} />
           <BioCard slug={business.slug} name={business.name} />
           {scheduled && <ComingUp drop={scheduled} />}
           <FinishPageChecklist business={business} />

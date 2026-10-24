@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardFrom, checkFrom, claimMessageUrl, statusFrom, type CardJson } from "./claim-map";
+import { cardFrom, checkFrom, claimMessageUrl, leadFrom, statusFrom, type CardJson } from "./claim-map";
 
 const now = new Date("2026-10-23T10:00:00+01:00");
 const json = (p: Partial<CardJson> = {}): CardJson => ({
@@ -71,5 +71,33 @@ describe("the counter's check", () => {
     expect(checkFrom({ kind: "wrong_day", code: "X", days: [1, 2, 3, 4] })).toEqual({ kind: "wrong_day", code: "X", days: "Valid Mon–Thu only" });
     expect(checkFrom({ kind: "wrong_business", code: "X" }).kind).toBe("wrong_business");
     expect(checkFrom({ kind: "something else", code: "X" }).kind).toBe("unknown");
+  });
+});
+
+describe("a lead", () => {
+  const row = {
+    claim_id: "c1",
+    drop_id: "d1",
+    first_name: "Ada",
+    profile_name: "Ada Okafor",
+    phone: "+2348150000001",
+    source: "market",
+    is_new_lead: true,
+    claimed_at: "2026-10-22T09:00:00Z",
+    expires_at: "2026-11-05T22:59:00Z",
+    redeemed_at: "2026-10-23T12:00:00Z",
+    bill_amount_kobo: 1_500_000,
+    planned_visit_date: null,
+    planned_visit_part: null,
+    tier: "rare" as const,
+    reward: "20% off any service",
+    marketing_opt_in: true,
+    last_followup_at: null,
+  };
+  it("reads as the Leads page shows it, with the full name and number", () => {
+    expect(leadFrom(row)).toMatchObject({ id: "c1", name: "Ada Okafor", phone: "+2348150000001", status: "redeemed", isNew: true, fromMarketplace: true, source: "market", tier: "rare", spent: 15000, marketingOptIn: true });
+  });
+  it("falls back to the first name, and an unknown source is direct", () => {
+    expect(leadFrom({ ...row, profile_name: null, source: "tiktok", redeemed_at: null, bill_amount_kobo: null })).toMatchObject({ name: "Ada", source: "direct", status: "claimed", spent: undefined, fromMarketplace: false });
   });
 });
