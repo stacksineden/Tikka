@@ -4,8 +4,9 @@ import { Bell, Check, Loader2, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /**
- * Notify me (PRD A6). Production: "Continue on WhatsApp" opens WhatsApp with "Notify me about
- * Glow Studio NT-7KQ4A" to Tikka's number and the webhook confirms there. DEMO: confirms here.
+ * Notify me (PRD A6). A real business: "Continue on WhatsApp" gets the NT-XXXXX code, then
+ * "Open WhatsApp" sends "Notify me about Glow Studio NT-7KQ4A" to Tikka's number and the webhook
+ * confirms there. DEMO businesses confirm here.
  */
 export function NotifyMe({
   businessSlug,
@@ -25,8 +26,9 @@ export function NotifyMe({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
-  const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [state, setState] = useState<"idle" | "sending" | "ready" | "done" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [waUrl, setWaUrl] = useState("");
 
   useEffect(() => {
     const d = ref.current;
@@ -38,8 +40,12 @@ export function NotifyMe({
   async function subscribe() {
     setState("sending");
     try {
-      const r = await fetch("/api/demo/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ business: businessSlug, drop: dropSlug }) });
-      const data = (await r.json()) as { ok: boolean; message?: string; error?: string };
+      const r = await fetch("/api/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ business: businessSlug, drop: dropSlug }) });
+      const data = (await r.json()) as { ok: boolean; waUrl?: string; message?: string; error?: string };
+      if (data.ok && data.waUrl) {
+        setWaUrl(data.waUrl);
+        return setState("ready");
+      }
       setMessage(data.ok ? data.message! : (data.error ?? "That didn't work. Try again."));
       setState(data.ok ? "done" : "error");
     } catch {
@@ -78,7 +84,16 @@ export function NotifyMe({
               <X size={20} aria-hidden="true" />
             </button>
           </div>
-          {state === "done" ? (
+          {state === "ready" ? (
+            <div className="mt-2 grid gap-4">
+              <p className="text-body text-ink-muted">We&apos;ve written the message for you. Send it, and Tikka confirms on WhatsApp.</p>
+              <a href={waUrl} target="_blank" rel="noopener noreferrer" className="btn btn-lg w-full" onClick={() => setOpen(false)}>
+                <Bell />
+                Open WhatsApp
+              </a>
+              <p className="text-caption text-ink-muted">Reply STOP to Tikka on WhatsApp any time to stop.</p>
+            </div>
+          ) : state === "done" ? (
             <div className="mt-2 grid gap-4">
               <p className="text-body flex items-start gap-2">
                 <Check size={20} className="mt-0.5 shrink-0 text-success" aria-hidden="true" />

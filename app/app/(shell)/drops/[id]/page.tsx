@@ -216,7 +216,7 @@ async function Dashboard({ params, searchParams }: { params: PageProps<"/app/dro
             {stats.notifyWaiting > 0 && (
               <p className="text-label mt-3 flex items-center gap-2 rounded-md bg-brand-soft px-3 py-2.5 font-medium text-ink">
                 <Bell size={18} className="shrink-0 text-brand" aria-hidden="true" />
-                {count(stats.notifyWaiting)} people asked to be told when this drop opens.
+                {stats.notifyWaiting === 1 ? "1 person" : `${count(stats.notifyWaiting)} people`} asked to be told when this drop opens.
               </p>
             )}
           </Card>

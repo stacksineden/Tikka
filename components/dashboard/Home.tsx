@@ -310,7 +310,7 @@ export function ComingUp({ drop }: { drop: Drop }) {
           </p>
           {drop.notifyWaiting ? (
             <p className="text-label mt-3 rounded-md bg-surface-sunken px-3 py-2">
-              {count(drop.notifyWaiting)} people are waiting for this drop
+              {drop.notifyWaiting === 1 ? "1 person is" : `${count(drop.notifyWaiting)} people are`} waiting for this drop
             </p>
           ) : null}
         </div>

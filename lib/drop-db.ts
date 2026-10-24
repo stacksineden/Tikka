@@ -49,10 +49,20 @@ export async function dbDrops(now: Date, rebuild: (d: Drop) => DropDraft): Promi
   }
   const pendingFor = new Map<string, string>();
   for (const p of pending ?? []) if (!pendingFor.has(p.drop_id)) pendingFor.set(p.drop_id, p.id);
-  return rows.map((row) => {
+  const out = rows.map((row) => {
     const drop = dropFrom(row, counts.get(row.id) ?? { claimed: 0, redeemed: 0, revenue: 0 }, now, pendingFor.get(row.id));
     return { drop, draft: draftFrom(row, () => rebuild(drop)) };
   });
+  // "142 people are waiting for this drop": a count, never who (rule 4).
+  await Promise.all(
+    out
+      .filter(({ drop }) => drop.status === "scheduled")
+      .map(async ({ drop }) => {
+        const { data } = await sb.rpc("notify_waiting", { p_business: businessId, p_drop: drop.id });
+        drop.notifyWaiting = typeof data === "number" ? data : 0;
+      }),
+  );
+  return out;
 }
 
 /** Saves a draft (creating it on first save) and returns its id. Drafts get a placeholder address until they publish. */

@@ -5,6 +5,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
 import { dbLeads, dbLogFollowup } from "./leads-db";
+import { dbMarketplaceDrops, dbNotifyIntent, dbReportDrop } from "./market-db";
 import { dbOwnerReviews, dbPublicReviews, dbReportReview, dbReviewPage, dbSubmitReview } from "./reviews-db";
 import { dbDropDashboard, dbDropFeed, dbDropReport } from "./stats-db";
 import { dbAcceptInvite, dbCancelInvite, dbCheckCode, dbConfirm, dbInviteInfo, dbInviteStaff, dbRemoveStaff, dbTeam, type ConfirmDbResult } from "./team-db";
@@ -1251,7 +1252,8 @@ export async function getMarketplaceDrops({ includeDemo = SHOW_DEMO_ON_MARKETPLA
       });
     }
   }
-  return out;
+  // Real businesses' drops, from the database (never demo ones).
+  return [...out, ...(await dbMarketplaceDrops())];
 }
 
 /** Admin pins (marketplace_pins): the featured carousel. */
@@ -1274,6 +1276,30 @@ interface DemoNotify {
 const notifyStore: DemoNotify[] = ((globalThis as { __tikkaNotify?: DemoNotify[] }).__tikkaNotify ??= []);
 
 export type NotifyResult = { ok: true; code: string; message: string; waiting: number } | { ok: false; error: string };
+
+export type NotifyStart = { ok: true; waUrl: string } | NotifyResult;
+
+/**
+ * The Notify me button. A real business: its NT-XXXXX code and the WhatsApp message that brings
+ * it back with the number (the webhook subscribes and confirms there). DEMO: confirms here.
+ */
+export async function startNotify(businessSlug: string, dropSlug: string | undefined, visitorId: string): Promise<NotifyStart> {
+  const found = await getBusinessBySlug(businessSlug);
+  if (!found) return { ok: false, error: "We couldn't find that business." };
+  if (!isDbId(found.business.id)) return demoSubscribeNotify(businessSlug, dropSlug, visitorId);
+  const pub = dropSlug ? await getPublicDrop(businessSlug, dropSlug) : null;
+  if (dropSlug && !pub) return { ok: false, error: "We couldn't find that drop." };
+  const code = await dbNotifyIntent(found.business.id, pub?.drop.id ?? null, visitorId);
+  if (!code) return { ok: false, error: "This business can't take sign-ups right now." };
+  const text = `Notify me about ${found.business.name} ${code}`;
+  const number = (process.env.NEXT_PUBLIC_TIKKA_WHATSAPP ?? "").replace(/\D/g, "");
+  // DEMO (development only): until Tikka's number is set, the message goes to the test phone.
+  const waUrl =
+    !number && process.env.NODE_ENV !== "production"
+      ? `/dev/whatsapp?text=${encodeURIComponent(text)}`
+      : `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
+  return { ok: true, waUrl };
+}
 
 /**
  * DEMO stand-in for subscribe_notify: the real button opens WhatsApp with "Notify me about
@@ -1308,6 +1334,8 @@ const dropReports: { dropId: string; reason: string; visitorId: string; at: stri
 
 /** "Report this drop": goes to the admin queue (PRD C2). One report per visitor per drop. */
 export async function reportDrop(dropId: string, reason: string, visitorId: string): Promise<boolean> {
+  const realId: string | undefined = dropId; // a copy: isDbId narrows what it tests
+  if (isDbId(realId)) return dbReportDrop(realId, reason.slice(0, 200), visitorHash(visitorId, new Date()));
   if (!(await dropExists(dropId))) return false;
   if (!dropReports.some((r) => r.dropId === dropId && r.visitorId === visitorId)) {
     dropReports.push({ dropId, reason: reason.slice(0, 200), visitorId, at: new Date().toISOString() });
