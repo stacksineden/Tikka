@@ -40,6 +40,11 @@ function buzz(pattern: number | number[]) {
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Drops in the database have uuids; demo drops don't (they claim instantly, without WhatsApp). */
+const REAL = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+type IntentPoll = { kind: "ready"; card: ClaimedCard; qr: string; status: CardStatus } | { kind: "pending" | "sold_out" | "market_sold_out" | "blocked_new_only" | "blocked_period" | "expired" | "invalid" };
+
 export function ClaimFlow({
   businessSlug,
   face,
@@ -83,6 +88,8 @@ export function ClaimFlow({
   const [futureDrops, setFutureDrops] = useState(false);
   const [cardState, setCardState] = useState<CardStatus | undefined>(claimed?.status);
   const [announce, setAnnounce] = useState("");
+  // Click-to-claim: the TK-XXXXX code and the WhatsApp link it goes out in.
+  const [intent, setIntent] = useState<{ token: string; waUrl: string } | null>(null);
 
   const beatRef = useRef(beat);
   const chargingRef = useRef(false);
@@ -115,6 +122,38 @@ export function ClaimFlow({
     return () => clearInterval(id);
   }, [status, businessSlug, drop.slug]);
 
+  function settle(r: IntentPoll) {
+    setIntent(null);
+    if (r.kind === "ready") return ready(r.card, r.qr, r.status);
+    if (r.kind === "sold_out") {
+      setStatus("sold_out");
+      setLeft(0);
+      return go("closed");
+    }
+    go("front");
+    setNote(
+      r.kind === "market_sold_out"
+        ? `The marketplace's share of this drop is gone. ${face.name}'s own link may still have some.`
+        : r.kind === "blocked_new_only"
+          ? `This drop is for new customers, and your number has claimed from ${face.name} before.`
+          : r.kind === "blocked_period"
+            ? `You had a Tikka from ${face.name} recently. Catch their next drop.`
+            : r.kind === "expired"
+              ? "That took a while, so the code expired. Tap Claim to get a new one."
+              : "That didn't go through. Tap Claim again.",
+    );
+  }
+
+  function ready(c: ClaimedCard, code: string, s: CardStatus | null | undefined) {
+    setCard(c);
+    setQr(code);
+    setCardState(s ?? undefined);
+    setLeft((n) => Math.max(0, n - 1));
+    go("ready");
+    buzz(20);
+    setAnnounce("Confirmed. Press and hold the button to open your Tikka.");
+  }
+
   function go(next: Beat) {
     beatRef.current = next;
     setBeat(next);
@@ -130,6 +169,31 @@ export function ClaimFlow({
     } catch {}
     fetch("/api/events", { method: "POST", body, keepalive: true, headers: { "Content-Type": "application/json" } }).catch(() => {});
   }
+
+  // Waiting for WhatsApp: ask every 2 seconds while the page is in front, and straight away when
+  // they come back from WhatsApp. The code lasts 30 minutes.
+  useEffect(() => {
+    if (beat !== "verifying" || !intent) return;
+    let done = false;
+    const check = async () => {
+      if (done || document.hidden) return;
+      const r = (await fetch(`/api/claim-intent?token=${encodeURIComponent(intent.token)}`, { cache: "no-store" })
+        .then((x) => x.json())
+        .catch(() => ({ kind: "pending" }))) as IntentPoll;
+      if (done || r.kind === "pending") return;
+      done = true;
+      settle(r);
+    };
+    const id = setInterval(check, 2000);
+    document.addEventListener("visibilitychange", check);
+    return () => {
+      done = true;
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", check);
+    };
+    // settle only reads setters and props.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [beat, intent]);
 
   function tear() {
     if (beatRef.current !== "sealed") return;
@@ -155,7 +219,26 @@ export function ClaimFlow({
     }
     beacon("claim_continue");
     go("verifying");
-    // DEMO: the real page opens WhatsApp here and waits for the webhook (M5).
+    if (REAL.test(drop.id)) {
+      // The server makes the claim code; WhatsApp proves the number and sends the card.
+      const r = (await fetch("/api/claim-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ business: businessSlug, drop: drop.slug, name: first, source, posterId, futureDrops }),
+      })
+        .then((x) => x.json())
+        .catch(() => ({ ok: false, reason: "network" }))) as { ok: true; token: string; waUrl: string } | { ok: false; reason: string };
+      if (r.ok) return setIntent({ token: r.token, waUrl: r.waUrl });
+      if (r.reason === "sold_out" || r.reason === "ended") {
+        setStatus(r.reason);
+        if (r.reason === "sold_out") setLeft(0);
+        return go("closed");
+      }
+      if (r.reason === "scheduled") setStatus("scheduled");
+      go("front");
+      return setNote(r.reason === "network" ? "No connection. Check your data and tap Claim again." : "That didn't go through. Tap Claim again.");
+    }
+    // DEMO: demo drops claim straight away, without WhatsApp.
     const [res] = await Promise.all([
       fetch("/api/demo/claim", {
         method: "POST",
@@ -166,16 +249,7 @@ export function ClaimFlow({
         .catch(() => ({ ok: false as const, reason: "network" })),
       wait(1500),
     ]);
-    if (res.ok) {
-      setCard(res.card);
-      setQr(res.qr);
-      setCardState(res.status ?? undefined);
-      setLeft((n) => Math.max(0, n - 1));
-      go("ready");
-      buzz(20);
-      setAnnounce("Confirmed. Press and hold the button to open your Tikka.");
-      return;
-    }
+    if (res.ok) return ready(res.card, res.qr, res.status);
     if (res.reason === "sold_out" || res.reason === "ended") {
       setStatus(res.reason);
       if (res.reason === "sold_out") setLeft(0);
@@ -606,9 +680,38 @@ export function ClaimFlow({
 
       {beat === "verifying" && (
         <div className="tk-verify" role="status">
-          <div className="tk-spin" aria-hidden="true" />
-          <h2 className="tk-h">Confirming on WhatsApp</h2>
-          <p className="tk-p">Send the message WhatsApp opens with, then come straight back here.</p>
+          {intent ? (
+            <>
+              <h2 className="tk-h">Claim it on WhatsApp</h2>
+              <p className="tk-p">Send this code to Tikka on WhatsApp. Your Tikka shows up here, and in the chat, as soon as it&apos;s sent.</p>
+              <span className="tk-claimcode" aria-label={`Your claim code is ${intent.token.split("").join(" ")}`}>
+                {intent.token}
+              </span>
+              <a className="tk-btn tk-btn-gold" href={intent.waUrl} target="_blank" rel="noopener noreferrer">
+                Open WhatsApp
+              </a>
+              <div className="tk-waiting">
+                <div className="tk-spin tk-spin-sm" aria-hidden="true" />
+                Waiting for your message…
+              </div>
+              <button
+                className="tk-btn tk-btn-text"
+                type="button"
+                onClick={() => {
+                  setIntent(null);
+                  go("front");
+                }}
+              >
+                Not now
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="tk-spin" aria-hidden="true" />
+              <h2 className="tk-h">Confirming on WhatsApp</h2>
+              <p className="tk-p">Send the message WhatsApp opens with, then come straight back here.</p>
+            </>
+          )}
         </div>
       )}
     </div>

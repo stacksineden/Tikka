@@ -4,6 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
+import { dbCardByViewToken, dbDropExists, dbPublicDrop, dbRecordEvent } from "./claim-db";
 import { dbAddTikkas, dbBuyPack, dbCompletePayment, dbDeleteDraft, dbDrops, dbEndEarly, dbExtend, dbPayment, dbPayments, dbPublish, dbSaveDraft, dbVouchers, DropSaveError, type DbPublishResult } from "./drop-db";
 import { BusinessSaveError, dbAddPoster, dbPosterByCode, dbPosters, dbSavePosterHook, dbTaken, isDbId, loadBusiness, loadBusinessBySlug, saveBusinessDb } from "./business-db";
 
@@ -974,6 +975,8 @@ export async function scanPoster(code: string, visitorId: string | undefined): P
 export async function posterOf(businessSlug: string, posterId: string | undefined): Promise<string | undefined> {
   if (!posterId) return undefined;
   const found = await getBusinessBySlug(businessSlug);
+  // Real businesses: the database checks the poster belongs to the drop's business.
+  if (found && isDbId(found.business.id)) return isDbId(posterId) ? posterId : undefined;
   return found && (posterStore.get(found.ownerId) ?? []).some((p) => p.id === posterId) ? posterId : undefined;
 }
 
@@ -1420,7 +1423,14 @@ function findDropById(dropId: string): { drop: Drop; ownerId: string; newOnly: b
 /** get_public_drop: what the claim page shows. Never the deck (rule 1). */
 export async function getPublicDrop(businessSlug: string, dropSlug: string): Promise<{ business: Business; drop: PublicDrop } | null> {
   const f = await findDrop(businessSlug, dropSlug);
-  if (!f) return null;
+  if (!f) {
+    // A real business's drop, from the database.
+    const found = await getBusinessBySlug(businessSlug);
+    if (!found || !isDbId(found.business.id)) return null;
+    const now = new Date();
+    const db = await dbPublicDrop(found.business.id, dropSlug, now);
+    return db ? { business: found.business, drop: toPublicDrop(db.drop, 0, db.newOnly, now) } : null;
+  }
   return { business: f.business, drop: toPublicDrop(f.drop, newClaimCount(f.drop.id), f.newOnly, new Date()) };
 }
 
@@ -1463,6 +1473,10 @@ export async function getBrowserClaim(
   visitorId: string | undefined,
 ): Promise<{ card: ClaimedCard; status: CardStatus } | null> {
   if (!token) return null;
+  if (isDbId(dropId)) {
+    const db = await dbCardByViewToken(token);
+    return db && db.dropId === dropId ? { card: db.card, status: db.status } : null;
+  }
   const c = claimStore.get(token);
   if (!c || c.dropId !== dropId || (visitorId && c.visitorId && c.visitorId !== visitorId)) return null;
   return { card: c.card, status: cardStatus(c, new Date()) };
@@ -1862,6 +1876,7 @@ function visitorHash(visitorId: string, now: Date): string {
 export async function recordEvent(dropId: string, kind: EventKind, source: Source, visitorId: string, posterId?: string): Promise<void> {
   const now = new Date();
   const hash = visitorHash(visitorId, now);
+  if (isDbId(dropId)) return dbRecordEvent(dropId, kind, source, hash, source === "qr" ? posterId : undefined);
   const list = eventStore.get(dropId) ?? [];
   if (kind === "view") {
     viewTotals.set(dropId, (viewTotals.get(dropId) ?? 0) + 1);
@@ -1872,6 +1887,7 @@ export async function recordEvent(dropId: string, kind: EventKind, source: Sourc
 
 /** Whether a drop id exists (beacons only accept events for real drops). */
 export async function dropExists(dropId: string): Promise<boolean> {
+  if (isDbId(dropId)) return dbDropExists(dropId);
   if (allMockDrops().some((m) => m.drop.id === dropId)) return true;
   for (const list of dropStore.values()) if (list.some((x) => x.id === dropId && x.publishedAt)) return true;
   return false;

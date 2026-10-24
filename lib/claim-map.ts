@@ -1,0 +1,64 @@
+// One claimer's card from the database (private.card_json) as the claim page and the card page
+// show it. Pure, so the mapping is pinned by tests. Never carries a phone number.
+
+import { serialLabel } from "./claim";
+import { reviewState } from "./redeem";
+import type { CardStatus, ClaimedCard, Tier } from "./types";
+import { visitOptions } from "./visit";
+
+export interface CardJson {
+  view_token: string;
+  kind: "drop" | "bounce_back";
+  drop_id: string;
+  tier: "legendary" | "rare" | "common";
+  reward: string;
+  action: string | null;
+  code: string;
+  serial: number | null;
+  total: number;
+  first_name: string;
+  expires_at: string;
+  redeemed_at: string | null;
+  planned_visit_date: string | null;
+  planned_visit_part: CardStatus["plannedVisitPart"] | null;
+  valid_weekdays: number[] | null;
+}
+
+const TIER: Record<CardJson["tier"], Tier> = { legendary: "legendary", rare: "rare", common: "thank_you" };
+
+export function cardFrom(j: CardJson): ClaimedCard {
+  return {
+    token: j.view_token,
+    kind: j.kind,
+    tier: TIER[j.tier],
+    reward: j.reward,
+    instruction: j.action ? `${j.action} and show it at the counter` : undefined,
+    action: j.action ?? undefined,
+    code: j.code,
+    serial: j.serial === null ? "" : serialLabel(j.serial, j.total),
+    total: j.total,
+    claimer: j.first_name,
+    expiresAt: new Date(j.expires_at).toISOString(),
+  };
+}
+
+export function statusFrom(j: CardJson, now: Date): CardStatus {
+  const redeemedAt = j.redeemed_at ? new Date(j.redeemed_at).toISOString() : undefined;
+  const expired = !redeemedAt && Date.parse(j.expires_at) <= now.getTime();
+  const canPlan = !redeemedAt && !expired && j.kind === "drop";
+  return {
+    redeemedAt,
+    expired,
+    review: reviewState({ redeemedAt }, now),
+    plannedVisitDate: j.planned_visit_date ?? undefined,
+    plannedVisitPart: j.planned_visit_part ?? undefined,
+    visitOptions: canPlan ? visitOptions(now, new Date(j.expires_at).toISOString(), j.valid_weekdays) : undefined,
+  };
+}
+
+/** "Claim my Tikka TK-4821K from Glow Studio", to Tikka's WhatsApp number (any chat until it's set). */
+export function claimMessageUrl(token: string, businessName: string, number: string | undefined): string {
+  const text = encodeURIComponent(`Claim my Tikka ${token} from ${businessName}`);
+  const digits = (number ?? "").replace(/\D/g, "");
+  return digits ? `https://wa.me/${digits}?text=${text}` : `https://wa.me/?text=${text}`;
+}
