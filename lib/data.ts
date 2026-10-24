@@ -5,7 +5,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
 import { dbLeads, dbLogFollowup, dbNewClaims } from "./leads-db";
-import { dbAdminBusinesses, dbAdminDecide, dbAdminDrops, dbAdminGrantDrop, dbAdminOverview, dbAdminPayments, dbAdminPinDrop, dbAdminReports, dbAdminSaveTier, dbAdminSavePack, dbAdminSetBusiness, dbAdminSetDropShown, dbPacks, dbPins, dbTiers, type AdminBusiness, type AdminDrop, type AdminOverview, type AdminPayment, type AdminReport } from "./admin-db";
+import { dbAdminBusinesses, dbAdminDecide, dbAdminForgetPerson, dbAdminPersonLookup, dbAdminPrivacyLog, type PersonRecord, type PrivacyLogEntry, dbAdminDrops, dbAdminGrantDrop, dbAdminOverview, dbAdminPayments, dbAdminPinDrop, dbAdminReports, dbAdminSaveTier, dbAdminSavePack, dbAdminSetBusiness, dbAdminSetDropShown, dbPacks, dbPins, dbTiers, type AdminBusiness, type AdminDrop, type AdminOverview, type AdminPayment, type AdminReport } from "./admin-db";
 import { dbMarketplaceDrops, dbNotifyIntent, dbReportDrop } from "./market-db";
 import { dbOwnerReviews, dbPublicReviews, dbReportReview, dbReviewPage, dbSubmitReview } from "./reviews-db";
 import { dbDropDashboard, dbDropFeed, dbDropReport } from "./stats-db";
@@ -1063,7 +1063,7 @@ export async function getDropReport(user: Pick<SessionUser, "id" | "role">, drop
 
 /* --------------------------------------------------------------- admin */
 
-export type { AdminBusiness, AdminDrop, AdminOverview, AdminPayment, AdminReport } from "./admin-db";
+export type { AdminBusiness, AdminDrop, AdminOverview, AdminPayment, AdminReport, PersonRecord, PrivacyLogEntry } from "./admin-db";
 
 type AdminUser = Pick<SessionUser, "id">;
 
@@ -1164,6 +1164,21 @@ export async function adminSetDropShown(user: AdminUser, id: string, shown: bool
 /** Pin a drop in the featured carousel; an empty headline unpins it. */
 export async function adminPinDrop(user: AdminUser, id: string, headline: string, blurb: string): Promise<void> {
   if (isDbId(user.id)) return dbAdminPinDrop(id, headline, blurb);
+}
+
+/** Privacy requests: what Tikka holds for a number. Real data only (the demo store holds no numbers). */
+export async function adminPersonLookup(user: AdminUser, phone: string): Promise<PersonRecord | null> {
+  return isDbId(user.id) ? dbAdminPersonLookup(phone) : null;
+}
+
+/** Deletes everything held for a number, on the person's request. */
+export async function adminForgetPerson(user: AdminUser, phone: string): Promise<Record<string, number> | null> {
+  return isDbId(user.id) ? dbAdminForgetPerson(phone) : null;
+}
+
+/** The last privacy requests handled (numbers masked). */
+export async function adminPrivacyLog(user: AdminUser): Promise<PrivacyLogEntry[]> {
+  return isDbId(user.id) ? dbAdminPrivacyLog() : [];
 }
 
 /** Every season pack, including ones taken off sale (admin, and old payments). */

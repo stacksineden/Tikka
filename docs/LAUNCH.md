@@ -112,6 +112,14 @@ WhatsApp, redeem it at `/app/redeem`, leave a review from the thank-you message,
 card image arrived with the card. Delete that test business from `/admin` afterwards (suspend it,
 or ask for it to be removed in SQL).
 
+## 7b. Privacy requests
+
+When someone asks what Tikka holds about them, or asks to be deleted (the privacy policy promises
+both), go to `/admin` → Privacy requests, type their WhatsApp number and tap Find. To delete, tick
+"This person asked us to delete their details" and tap Delete everything, then tell them it's done.
+Each lookup and deletion is logged there with the number masked. Check it's really them first: ask
+them to message Tikka's WhatsApp from that number.
+
 ## 8. Running the pilot on the free plan
 
 - **Backups:** the free plan has none. Every week (and before any big change), run `pnpm backup`

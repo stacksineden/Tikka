@@ -24,6 +24,8 @@ import {
   adminPinDrop,
   adminSetBusiness,
   adminSetDropShown,
+  adminForgetPerson,
+  adminPersonLookup,
   buyPack,
   checkCode,
   completeOwnerPayment,
@@ -63,6 +65,8 @@ import { LIMITS, normalizeNgPhone, prefixAlternatives, validateCard, type CardDr
 import type { CheckResult } from "@/lib/redeem";
 import type { BusinessPageInput } from "@/lib/page";
 import type { Business, OpeningHours, PortfolioPhoto, ServeMode, ServiceItem } from "@/lib/types";
+import { requestPhone } from "@/lib/privacy";
+import type { PersonRecord } from "@/lib/data";
 
 export type Extras = Partial<Pick<Business, "tagline" | "about" | "hours" | "services" | "hasVideo" | "videoUrl" | "videoPosterUrl" | "address" | "slug">>;
 export type SaveResult = { ok: true } | { ok: false; errors: Errors };
@@ -452,6 +456,40 @@ export async function adminPinDropAction(id: string, form: FormData): Promise<vo
   await adminPinDrop(admin, id, String(form.get("headline") ?? "").slice(0, 60), String(form.get("blurb") ?? "").slice(0, 140));
   revalidatePath("/admin");
   revalidatePath("/drops");
+}
+
+/* ------------------------------------------------- privacy requests */
+
+export type PersonLookupState =
+  | { step: "idle" }
+  | { step: "error"; error: string; input?: string }
+  | { step: "found"; phone: string; record: PersonRecord }
+  | { step: "deleted"; phoneHint: string; counts: Record<string, number> };
+
+/** Privacy requests (admin): what Tikka holds for a number. Posted, so the number never sits in an address. */
+export async function adminLookupPersonAction(_prev: PersonLookupState, form: FormData): Promise<PersonLookupState> {
+  const admin = await getAdmin();
+  if (!admin) return { step: "error", error: "Admins only." };
+  const input = String(form.get("phone") ?? "");
+  const phone = requestPhone(input);
+  if (!phone) return { step: "error", error: "Type the WhatsApp number, like 0803 123 4567 or +44 7700 900123.", input };
+  const record = await adminPersonLookup(admin, phone);
+  if (!record) return { step: "error", error: "Privacy requests work on real accounts, not the demo.", input };
+  revalidatePath("/admin");
+  return { step: "found", phone, record };
+}
+
+/** Deletes everything held for a number, once the admin ticks that the person asked. */
+export async function adminForgetPersonAction(_prev: PersonLookupState, form: FormData): Promise<PersonLookupState> {
+  const admin = await getAdmin();
+  if (!admin) return { step: "error", error: "Admins only." };
+  const phone = requestPhone(String(form.get("phone") ?? ""));
+  if (!phone) return { step: "error", error: "That number doesn't look right." };
+  if (form.get("asked") !== "on") return { step: "error", error: "Tick that the person asked for this first." };
+  const counts = await adminForgetPerson(admin, phone);
+  if (!counts) return { step: "error", error: "Privacy requests work on real accounts, not the demo." };
+  revalidatePath("/admin");
+  return { step: "deleted", phoneHint: `${phone.slice(0, 4)}•••${phone.slice(-4)}`, counts };
 }
 
 /* ------------------------------------------------------------ Paystack */

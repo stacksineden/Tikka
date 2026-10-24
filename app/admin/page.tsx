@@ -12,8 +12,9 @@ import {
   adminSetBusinessAction,
   adminSetDropShownAction,
 } from "@/app/app/actions";
+import { PrivacyRequests } from "@/components/admin/PrivacyRequests";
 import { Logo } from "@/components/site/Logo";
-import { adminView, getAllDropPacks, getDropTiers } from "@/lib/data";
+import { adminPrivacyLog, adminView, getAllDropPacks, getDropTiers } from "@/lib/data";
 import { count, naira, place, shortDate } from "@/lib/format";
 import { koboToNaira } from "@/lib/pricing";
 import { getSessionUser } from "@/lib/session";
@@ -43,7 +44,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
   if (!user.isAdmin) notFound();
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
-  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs] = await Promise.all([adminView(user, q), getDropTiers(), getAllDropPacks()]);
+  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog] = await Promise.all([adminView(user, q), getDropTiers(), getAllDropPacks(), adminPrivacyLog(user)]);
   const paidTiers = tiers.filter((t) => t.priceKobo > 0);
 
   return (
@@ -114,6 +115,28 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
               </li>
             ))}
           </ul>
+        )}
+      </Section>
+
+      <Section
+        id="privacy-h"
+        title="Privacy requests"
+        note="When someone asks what Tikka holds about them, or asks to be deleted (our privacy policy promises both), find them by their WhatsApp number here."
+      >
+        <PrivacyRequests />
+        {privacyLog.length > 0 && (
+          <details className="rounded-card border border-line bg-surface-raised p-4">
+            <summary className="text-label min-h-11 cursor-pointer content-center">Recent requests ({count(privacyLog.length)})</summary>
+            <ul className="text-caption mt-2 grid gap-1 text-ink-muted">
+              {privacyLog.map((r, i) => (
+                <li key={i}>
+                  {shortDate(r.createdAt)} · {r.kind === "deleted" ? "Deleted" : "Looked up"} {r.phoneHint}
+                  {r.kind === "deleted" ? ` (${r.counts.claims ?? 0} Tikkas)` : ""}
+                  {r.doneBy ? ` · by ${r.doneBy}` : ""}
+                </li>
+              ))}
+            </ul>
+          </details>
         )}
       </Section>
 

@@ -230,3 +230,56 @@ export async function dbPins(): Promise<{ dropId: string; headline: string; blur
   const { data } = await sb.from("marketplace_pins").select("drop_id, headline, blurb").order("created_at", { ascending: false });
   return (data ?? []).map((p) => ({ dropId: p.drop_id, headline: p.headline, blurb: p.blurb }));
 }
+
+export interface PersonRecord {
+  claims: { businessName: string; dropTitle: string; kind: string; firstName: string; reward: string; claimedAt: string; redeemedAt?: string; reviewed: boolean }[];
+  businessesWithLead: string[];
+  notify: { businessName: string; dropTitle?: string; status: string }[];
+  optedOut: boolean;
+  messages: number;
+}
+
+/** Privacy requests: what Tikka holds for a number (the lookup is logged, with the number masked). */
+export async function dbAdminPersonLookup(phone: string): Promise<PersonRecord> {
+  const j = await call<Record<string, unknown>>("admin_person_lookup", { p_phone: phone });
+  return {
+    claims: ((j.claims as Record<string, unknown>[]) ?? []).map((c) => ({
+      businessName: String(c.business_name),
+      dropTitle: String(c.drop_title),
+      kind: String(c.kind),
+      firstName: String(c.first_name),
+      reward: String(c.reward ?? ""),
+      claimedAt: String(c.claimed_at),
+      redeemedAt: c.redeemed_at ? String(c.redeemed_at) : undefined,
+      reviewed: !!c.reviewed,
+    })),
+    businessesWithLead: (j.businesses_with_lead as string[]) ?? [],
+    notify: ((j.notify as Record<string, unknown>[]) ?? []).map((n) => ({ businessName: String(n.business_name), dropTitle: n.drop_title ? String(n.drop_title) : undefined, status: String(n.status) })),
+    optedOut: !!j.opted_out,
+    messages: Number(j.messages),
+  };
+}
+
+/** Deletes everything held for a number, on the person's request. Returns what was removed. */
+export async function dbAdminForgetPerson(phone: string): Promise<Record<string, number>> {
+  return call<Record<string, number>>("admin_forget_person", { p_phone: phone });
+}
+
+export interface PrivacyLogEntry {
+  kind: "lookup" | "deleted";
+  phoneHint: string;
+  counts: Record<string, number>;
+  createdAt: string;
+  doneBy?: string;
+}
+
+export async function dbAdminPrivacyLog(): Promise<PrivacyLogEntry[]> {
+  const rows = await call<Record<string, unknown>[]>("admin_privacy_requests");
+  return rows.map((r) => ({
+    kind: r.kind as PrivacyLogEntry["kind"],
+    phoneHint: String(r.phone_hint),
+    counts: (r.counts as Record<string, number>) ?? {},
+    createdAt: String(r.created_at),
+    doneBy: r.done_by ? String(r.done_by) : undefined,
+  }));
+}
