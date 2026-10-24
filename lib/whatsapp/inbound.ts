@@ -44,7 +44,7 @@ export async function handleInbound(msg: InboundMessage): Promise<boolean> {
     if (r && (r.result === "claimed" || r.result === "duplicate") && r.view_token) {
       const { data: card } = await admin.rpc("claim_by_view_token", { p_view_token: r.view_token });
       const c = card as Record<string, unknown>;
-      const payload = { business_name: c.business_name, reward: c.reward, tier: c.tier, code: c.code, expires_at: c.expires_at, view_token: c.view_token };
+      const payload = { claim_id: r.claim_id, business_name: c.business_name, reward: c.reward, tier: c.tier, code: c.code, expires_at: c.expires_at, view_token: c.view_token };
       // The card once per claim; a repeat (a new code, or the same message sent again) resends it (rule 3).
       const first = r.result === "claimed" ? (await enqueue("card", payload, `card:${r.claim_id}`)).data : null;
       if (!first) await enqueue("resend", payload, `resend:${msg.id}`);

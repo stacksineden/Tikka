@@ -54,6 +54,10 @@ async function Phone({ searchParams }: { searchParams: PageProps<"/dev/whatsapp"
             className={`text-body max-w-[85%] whitespace-pre-wrap rounded-card px-3 py-2 ${m.direction === "in" ? "self-end bg-brand text-on-brand" : "self-start border border-line bg-surface-raised text-ink"}`}
           >
             {m.template && <span className="text-caption mb-1 block text-ink-muted">Template: {m.template}</span>}
+            {m.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={m.image} alt="The card image" width={270} height={338} className="mb-2 block w-[270px] max-w-full rounded-md" />
+            )}
             <Linked text={m.text} />
             <span className={`text-caption mt-1 block ${m.direction === "in" ? "text-on-brand/80" : "text-ink-muted"}`}>{clockTime(m.at)}</span>
           </li>

@@ -10,7 +10,7 @@ import { dbMarketplaceDrops, dbNotifyIntent, dbReportDrop } from "./market-db";
 import { dbOwnerReviews, dbPublicReviews, dbReportReview, dbReviewPage, dbSubmitReview } from "./reviews-db";
 import { dbDropDashboard, dbDropFeed, dbDropReport } from "./stats-db";
 import { dbAcceptInvite, dbCancelInvite, dbCheckCode, dbConfirm, dbInviteInfo, dbInviteStaff, dbRemoveStaff, dbTeam, type ConfirmDbResult } from "./team-db";
-import { dbCardByViewToken, dbCardOwner, dbDropExists, dbPublicDrop, dbRecordEvent, dbRevealCard } from "./claim-db";
+import { dbCardByViewToken, dbCardImage, dbCardOwner, dbDropExists, dbPublicDrop, dbRecordEvent, dbRevealCard } from "./claim-db";
 import { dbAddTikkas, dbBuyPack, dbCompletePayment, dbDeleteDraft, dbDrops, dbEndEarly, dbExtend, dbPayment, dbPayments, dbPublish, dbSaveDraft, dbVouchers, DropSaveError, type DbPublishResult } from "./drop-db";
 import { BusinessSaveError, dbAddPoster, dbPosterByCode, dbPosters, dbSavePosterHook, dbTaken, isDbId, loadBusiness, loadBusinessBySlug, saveBusinessDb } from "./business-db";
 
@@ -27,7 +27,9 @@ import seedClaims from "./mock/claims.json";
 import dropTiers from "./mock/drop_tiers.json";
 import { actionInstruction, cardAt, dealtCounts, firstName, serialLabel, toPublicDrop } from "./claim";
 import { funnel, groupViews, suggestNextSize, type FunnelStep } from "./dashboard";
-import { clockTime, shortDate } from "./format";
+import { clockTime, place, shortDate } from "./format";
+import type { CardArt } from "./og-art";
+import { siteUrl } from "./supabase/env";
 import { notifyCode } from "./notify";
 import dropStats from "./mock/drop_stats.json";
 import { generate as generateCode } from "./codes";
@@ -1673,6 +1675,28 @@ async function dbCardPage(token: string): Promise<CardPageData | null> {
     businessSlug: found.business.slug,
     drop: pub.drop,
     ownerId: found.ownerId,
+  };
+}
+
+/** /api/og/card: the revealed card as an image, for a claim in the database. The route checks the signature first. */
+export async function getCardImage(claimId: string): Promise<CardArt | null> {
+  if (!isDbId(claimId)) return null;
+  const j = await dbCardImage(claimId);
+  if (!j) return null;
+  const tier = j.tier === "legendary" ? "legendary" : j.tier === "rare" ? "rare" : "thank_you";
+  const host = siteUrl().replace(/^https?:\/\//, "");
+  return {
+    tier,
+    reward: j.reward,
+    action: j.action ?? undefined,
+    serial: j.serial === null ? "" : serialLabel(j.serial, j.total),
+    total: j.total,
+    claimer: j.first_name,
+    expiresAt: j.expires_at,
+    businessName: j.business_name,
+    codePrefix: j.code_prefix,
+    where: place(j.area, j.city),
+    getYours: j.drop_open ? `${host}/d/${j.business_slug}/${j.drop_slug}` : undefined,
   };
 }
 

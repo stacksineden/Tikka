@@ -167,3 +167,85 @@ export async function dropImage(b: Business, drop: PublicDrop, layout: Layout, l
     },
   });
 }
+
+/** What the card image shows: the card back, without the code (the image gets shared). */
+export interface CardArt {
+  tier: "legendary" | "rare" | "thank_you";
+  reward: string;
+  action?: string;
+  serial: string;
+  total: number;
+  claimer: string;
+  expiresAt: string;
+  businessName: string;
+  /** The business's code prefix: the code shows masked, "BB-•••••". */
+  codePrefix: string;
+  where: string;
+  /** "usetikka.com/d/…" while the drop still has Tikkas, else undefined. */
+  getYours?: string;
+}
+
+const TIER_COLOR = { legendary: TOKENS.rarityLegendary, rare: TOKENS.gold, thank_you: TOKENS.rarityCommon } as const;
+const TIER_NAME = { legendary: "Legendary", rare: "Rare", thank_you: "Thank-you" } as const;
+const PIPS = { thank_you: 1, rare: 2, legendary: 3 } as const;
+
+/** The revealed card (1080×1350), for the WhatsApp card message and "Share my Tikka". */
+export async function cardImage(c: CardArt): Promise<ImageResponse> {
+  const [wordmark, loadedFonts] = await Promise.all([loadWordmark(), loadFonts()]);
+  const rar = TIER_COLOR[c.tier];
+  const s = 2;
+  const got = c.tier === "thank_you" ? "Thank you for coming through" : "You got a Tikka!";
+  const till = new Date(c.expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Africa/Lagos" });
+
+  const art = (
+    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: TOKENS.night, color: TOKENS.onNight, fontFamily: "Bricolage" }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={wordmark} width={146} height={51} alt="" />
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", width: 280 * s, height: 392 * s, marginTop: 56, borderRadius: 18 * s, overflow: "hidden", background: TOKENS.nightRaised }}>
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: `${18 * s}px ${18 * s}px 0` }}>
+          <div style={{ display: "flex", alignSelf: "flex-start", alignItems: "center", gap: 6 * s, padding: `${4 * s}px ${10 * s}px`, borderRadius: 999, border: `${1.5 * s}px solid ${rar}`, color: rar, fontSize: 11 * s, ...mono, letterSpacing: 1.5 * s }}>
+            {Array.from({ length: PIPS[c.tier] }, (_, i) => (
+              <div key={i} style={{ width: 6 * s, height: 6 * s, borderRadius: 6 * s, background: rar }} />
+            ))}
+            {TIER_NAME[c.tier]}
+          </div>
+          <svg width={76 * s} height={76 * s} viewBox="0 0 24 24" style={{ margin: `${14 * s}px auto 0` }}>
+            <path d={SPARK} fill={rar} />
+          </svg>
+          <div style={{ display: "flex", marginTop: "auto", fontSize: 25 * s, fontWeight: 800, lineHeight: 1.12, letterSpacing: -1 }}>{got}</div>
+          <div style={{ display: "flex", marginTop: 4 * s, fontSize: 12 * s, fontWeight: 500, color: TOKENS.onNightMuted }}>
+            from {c.businessName} · {c.where}
+          </div>
+          <div style={{ display: "flex", marginTop: 10 * s, padding: `${10 * s}px 0 ${12 * s}px`, borderTop: `1px solid rgba(246,243,255,.18)`, fontSize: 10 * s, ...mono, letterSpacing: 1 * s }}>
+            Issued to {c.claimer}
+            {c.serial ? ` · No. ${c.serial} / ${count(c.total)}` : ""}
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", height: 392 * s * 0.28, padding: `${14 * s}px ${18 * s}px`, background: rar, color: TOKENS.night }}>
+          <div style={{ display: "flex", fontSize: 21 * s, fontWeight: 800, lineHeight: 1.14, letterSpacing: -0.8 }}>{c.reward}</div>
+          {c.action && <div style={{ display: "flex", fontSize: 11.5 * s, fontWeight: 500, marginTop: 2 * s }}>{c.action}</div>}
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 * s, fontSize: 13 * s, ...mono, letterSpacing: 1 * s }}>
+            <span>{c.codePrefix}-•••••</span>
+            <span>Till {till}</span>
+          </div>
+        </div>
+      </div>
+      {c.getYours ? (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 56 }}>
+          <div style={{ display: "flex", fontSize: 30, fontWeight: 500, color: TOKENS.onNightMuted }}>Every Tikka holds something. Get yours:</div>
+          <div style={{ display: "flex", marginTop: 18, padding: "16px 32px", borderRadius: 999, background: TOKENS.gold, color: TOKENS.night, fontSize: 30, fontWeight: 800 }}>{c.getYours}</div>
+        </div>
+      ) : (
+        <div style={{ display: "flex", marginTop: 64, fontSize: 30, fontWeight: 500, color: TOKENS.onNightMuted }}>Every Tikka holds something.</div>
+      )}
+    </div>
+  );
+
+  return new ImageResponse(art, {
+    width: 1080,
+    height: 1350,
+    fonts: loadedFonts,
+    // The card can change state (used, expired) but the image only shows what doesn't.
+    headers: { "Cache-Control": "public, max-age=3600, s-maxage=86400" },
+  });
+}

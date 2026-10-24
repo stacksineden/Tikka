@@ -86,3 +86,31 @@ export async function dbCardOwner(viewToken: string): Promise<{ businessSlug: st
   const j = data as { business_slug?: string; drop_slug?: string } | null;
   return j?.business_slug && j.drop_slug ? { businessSlug: j.business_slug, dropSlug: j.drop_slug } : null;
 }
+
+/** The card image's data (no code, view token or number). Null for an unknown claim or a suspended business. */
+export async function dbCardImage(claimId: string): Promise<{
+  kind: string;
+  tier: string;
+  reward: string;
+  action: string | null;
+  serial: number | null;
+  total: number;
+  first_name: string;
+  expires_at: string;
+  business_name: string;
+  code_prefix: string;
+  business_slug: string;
+  area: string;
+  city: string;
+  drop_slug: string;
+  drop_open: boolean;
+} | null> {
+  const { data } = await adminClient().rpc("card_image", { p_claim: claimId });
+  return data ?? null;
+}
+
+/** The claim behind a card link, for its share image. */
+export async function dbClaimIdByViewToken(viewToken: string): Promise<string | null> {
+  const { data } = await adminClient().from("claims").select("id").eq("view_token", viewToken).maybeSingle();
+  return data?.id ?? null;
+}

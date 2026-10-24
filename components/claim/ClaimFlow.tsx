@@ -305,6 +305,13 @@ export function ClaimFlow({
   async function share(text: string) {
     const url = `${location.origin}${dropPath}`;
     try {
+      // The card as a picture where the phone can share files (it never shows the code); else the link.
+      if (card && navigator.share && navigator.canShare) {
+        const res = await fetch(`/api/card-image?t=${encodeURIComponent(card.token)}`).catch(() => null);
+        const blob = res?.ok ? await res.blob() : null;
+        const file = blob && new File([blob], "my-tikka.png", { type: "image/png" });
+        if (file && navigator.canShare({ files: [file] })) return await navigator.share({ files: [file], title: `A Tikka from ${face.name}`, text: `${text} ${url}` });
+      }
       if (navigator.share) return await navigator.share({ title: `A Tikka from ${face.name}`, text, url });
       await navigator.clipboard.writeText(url);
       setNote("Link copied. Send it to a friend.");

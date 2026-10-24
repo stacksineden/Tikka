@@ -11,6 +11,8 @@ export interface DevMessage {
   at: string;
   /** Template messages: which template Meta would have sent. */
   template?: string | null;
+  /** Image messages: the picture (the text is its caption). */
+  image?: string;
 }
 
 const box: DevMessage[] = ((globalThis as { __tikkaDevWhatsApp?: DevMessage[] }).__tikkaDevWhatsApp ??= []);
