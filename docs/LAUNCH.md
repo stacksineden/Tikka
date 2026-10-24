@@ -3,12 +3,17 @@
 What has to happen before the first real claim (the pilot), in order. Items marked **You** need
 your accounts, money or signature; the rest are commands or checks. Tick them off here.
 
+The pilot runs on Supabase's **free plan** (a handful of businesses, a drop each). Section 8 says
+what that means and what to watch; move to Pro before the public launch.
+
 ## 1. Accounts and plans (You)
 
-- [ ] **Supabase:** move the project to a paid plan (backups, no pausing). Note its region: the
-      privacy policy names it.
+- [ ] **Supabase:** the free plan is fine for the pilot (section 8). Note the project's region:
+      the privacy policy names it. Move to Pro ($25/month) before the public launch.
 - [ ] **Domain:** point `usetikka.com` at Vercel.
 - [ ] **Vercel:** create the project from this repo. Node 22 (Supabase's library warns on 20).
+      The free Hobby plan is meant for non-commercial use: check Vercel's terms for a paid pilot.
+      The schedule doesn't depend on Vercel (it runs in Supabase, section 3b).
 - [ ] **Email:** pick a provider (for example Resend, Postmark or SendGrid), add the domain, and
       put its SMTP details in Supabase → Authentication → Emails → SMTP. Then uncomment the
       `[auth.email.smtp]` and template blocks in `supabase/config.toml` and run
@@ -28,12 +33,13 @@ Production values for everything in `.env.example`:
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Connect |
 | `SUPABASE_SECRET_KEY` | Supabase → Project Settings → API Keys (server only) |
 | `NEXT_PUBLIC_SITE_URL` | `https://usetikka.com` (WhatsApp fetches card images from here) |
-| `CRON_SECRET` | any long random string. **Required:** in production the cron routes refuse to run without it |
+| `CRON_SECRET` | any long random string. **Required:** in production the cron routes refuse to run without it. The same value goes into Supabase Vault (section 3b) |
 | `PAYSTACK_SECRET_KEY`, `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | Paystack → Settings → API Keys (live) |
 | `NEXT_PUBLIC_TIKKA_WHATSAPP` | Tikka's WhatsApp number, `+234…` |
 | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_APP_SECRET` | Meta app → WhatsApp → API Setup; App Settings → Basic |
 | `WHATSAPP_VERIFY_TOKEN` | any random string; the same one goes into Meta's webhook settings |
 | `OG_SIGNING_SECRET` | optional; a long random string for card image links |
+| `NEXT_PUBLIC_TIKKA_VIDEOS` | `off` for the free-plan pilot: owners can't add card or portfolio videos (photos are fine). Remove on Pro |
 
 Never set `TIKKA_SHOW_DEMO` in production unless you're running a sales demo.
 
@@ -50,6 +56,21 @@ Never set `TIKKA_SHOW_DEMO` in production unless you're running a sales demo.
   ```sql
   update public.wa_templates set approved = true where name = 'tikka_drop_live';
   ```
+
+## 3b. The schedule (one-time, in the Supabase SQL editor)
+
+The WhatsApp queue runs every 5 minutes and the owners' summaries at 8:00 WAT, scheduled inside
+Supabase. It does nothing until it knows where the site is and the cron secret. After the first
+deploy, run these two lines with your real values (they're stored encrypted in Vault):
+
+```sql
+select vault.create_secret('https://usetikka.com', 'tikka_site_url');
+select vault.create_secret('<the same CRON_SECRET as on Vercel>', 'tikka_cron_secret');
+```
+
+To check it's running, a few minutes later: `select status, return_message, start_time from
+cron.job_run_details order by start_time desc limit 5;`, and Vercel's logs show
+`/api/cron/outbound` every 5 minutes.
 
 ## 4. Payments (You)
 
@@ -90,6 +111,22 @@ Then, on the live site with a real phone: set up a business, publish its free dr
 WhatsApp, redeem it at `/app/redeem`, leave a review from the thank-you message, and check the
 card image arrived with the card. Delete that test business from `/admin` afterwards (suspend it,
 or ask for it to be removed in SQL).
+
+## 8. Running the pilot on the free plan
+
+- **Backups:** the free plan has none. Every week (and before any big change), run `pnpm backup`
+  in Terminal and keep the file somewhere other than your laptop. One-time setup:
+  `brew install libpq && brew link --force libpq`. It asks for the "Session pooler" connection
+  string from Supabase → Connect, with your database password; nothing is saved.
+- **Email:** set up your own email provider (section 1) before onboarding businesses; Supabase's
+  built-in email sends only about 2 an hour.
+- **Videos:** keep `NEXT_PUBLIC_TIKKA_VIDEOS=off`. Files are limited to 1 GB and about 5 GB served
+  a month, and a few popular videos would use that up.
+- **Pausing:** free projects pause after a week with no activity. The 5-minute schedule keeps it
+  busy once the site is live; if it ever pauses, restore it from the Supabase dashboard.
+- **Watch the usage:** Supabase → Project → Usage, weekly. Move to Pro when the database passes
+  ~400 MB, files pass ~800 MB, or data served passes ~4 GB in a month, and in any case before the
+  public launch.
 
 ## What's already in place
 

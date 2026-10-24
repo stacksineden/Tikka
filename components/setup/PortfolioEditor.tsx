@@ -7,6 +7,7 @@ import { capturePoster, checkPlayable, preparePortfolio, uploadMedia, uploadPhot
 import { PAGE_LIMITS, videoProblem } from "@/lib/page";
 import { PORTFOLIO_MAX } from "@/lib/slug";
 import type { PortfolioPhoto } from "@/lib/types";
+import { VIDEO_UPLOADS } from "@/lib/features";
 
 /** Short-video check in the browser (the server checks again): length from the file's metadata. */
 function readClip(file: File): Promise<{ video: HTMLVideoElement; seconds: number }> {
@@ -92,7 +93,9 @@ export function PortfolioEditor({ initial }: { initial: PortfolioPhoto[] }) {
   return (
     <div className="grid gap-3">
       <p className="text-caption text-ink-muted">
-        Up to {PORTFOLIO_MAX} photos and videos of your work, space or products ({PAGE_LIMITS.videos} videos at most, {PAGE_LIMITS.videoSeconds} seconds each). People tap to see them full
+        {VIDEO_UPLOADS
+          ? `Up to ${PORTFOLIO_MAX} photos and videos of your work, space or products (${PAGE_LIMITS.videos} videos at most, ${PAGE_LIMITS.videoSeconds} seconds each).`
+          : `Up to ${PORTFOLIO_MAX} photos of your work, space or products.`} People tap to see them full
         screen. {photos.length} of {PORTFOLIO_MAX}.
       </p>
       {(photos.length > 0 || room > 0) && (
@@ -154,7 +157,7 @@ export function PortfolioEditor({ initial }: { initial: PortfolioPhoto[] }) {
           )}
         </ul>
       )}
-      {room > 0 && videos < PAGE_LIMITS.videos && (
+      {VIDEO_UPLOADS && room > 0 && videos < PAGE_LIMITS.videos && (
         <button type="button" className="btn btn-secondary justify-self-start" onClick={() => videoInput.current?.click()} disabled={videoBusy}>
           {videoBusy ? <Loader2 className="animate-spin" /> : <Film />}
           {videoBusy ? "Adding video…" : "Add a video"}

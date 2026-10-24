@@ -7,7 +7,7 @@ Claimer / marketplace visitor ──> Next.js on Vercel ──> Supabase (Postgr
         │                                                  ▲
         └─ wa.me link ─> WhatsApp ─> Meta Cloud API webhook ┘ (claims, notify, STOP in; cards, alerts out)
 Business / staff ──> dashboard (Supabase Auth) ──> Paystack checkout ─> Paystack webhook
-Vercel Cron (every minute) ──> outbound message queue ──> Meta Cloud API
+Supabase pg_cron (every 5 minutes) ──> outbound message queue ──> Meta Cloud API
 ```
 
 - Public pages (landing, marketplace, business pages, claim page, my card, review) are server-rendered and read through narrow RPCs or views. They never query base tables directly.
@@ -197,7 +197,7 @@ In code: `app/api/whatsapp/webhook/route.ts` checks Meta's signature (`WHATSAPP_
 4. The reveal endpoint returns only this claimer's reward, tier, code, serial and name, and only to the visitor id that created the intent.
 
 ### The outbound queue
-- `/api/cron/outbound` runs every minute (Vercel Cron) and also gets a direct kick after each webhook so card replies leave within seconds.
+- `/api/cron/outbound` runs every 5 minutes (Supabase pg_cron calls it with `CRON_SECRET` from Vault, so it works on Vercel's free plan) and also gets a direct kick after each webhook so card replies leave within seconds.
 - Takes queued rows by priority (1 card/resend/replies, 2 thank-you, 3 notify confirm, expiry reminders and owner summaries, 4 drop-live alerts) with `for update skip locked`, sends, records the result, retries failures with backoff (max 3).
 - Skips any phone in `opt_outs` for that business or for all of Tikka, except direct replies to something the person just sent (card, resend, reply, Notify me confirmation), which always go. Skipped messages stay in the table as `skipped` with the reason (`opted_out`, `window_closed`, `template_not_approved`).
 - Functions (service role only): `record_inbound` (dedupe + opens the window), `enqueue_message` (priority from the kind; `dedupe_key` makes it once-only), `take_outbound(limit)` (locks and marks `sending`; stuck sends go back after 5 minutes), `finish_outbound(id, wa_message_id, error)` (retries after 2 then 4 minutes, `failed` after 3 tries), `record_outbound_status` (delivered/read/failed, never backwards), `enqueue_due_reminders`, `enqueue_drop_alerts(cap)`. `confirm_redemption` queues the thank-you itself. `wa_templates` holds each template's approval and cost. `pnpm test:concurrency` also races 10 queue runs.

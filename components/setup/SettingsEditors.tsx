@@ -12,6 +12,7 @@ import { ClaimPreview, FullPreviewButton, type PreviewBusiness } from "./ClaimPr
 import { HoursField, VideoField } from "./ExtrasFields";
 import { ActionsField, BackgroundField, CategorySelect, ColorField, LocationFields, LogoField, PrefixField, SlugField, TextInput } from "./Fields";
 import { draftToFace } from "./SetupFlow";
+import { VIDEO_UPLOADS } from "@/lib/features";
 
 type Draft = CardDraft & Extras;
 
@@ -309,9 +310,12 @@ export function ProfileEditor({ business }: { business: Business }) {
         </Link>
       </Section>
 
-      <Section id="video" title="Video">
-        <VideoField hasVideo={!!draft.hasVideo} posterUrl={draft.videoPosterUrl} onChange={(v) => patch(v)} />
-      </Section>
+      {/* Videos can be switched off per deployment; one already added can still be removed. */}
+      {(VIDEO_UPLOADS || draft.hasVideo) && (
+        <Section id="video" title="Video">
+          <VideoField hasVideo={!!draft.hasVideo} posterUrl={draft.videoPosterUrl} onChange={(v) => patch(v)} />
+        </Section>
+      )}
 
       <Section id="codes" title="Page address and code letters">
         <SlugField value={draft.slug ?? ""} city={draft.city} onChange={(v) => patch({ slug: v })} error={errors.slug} />

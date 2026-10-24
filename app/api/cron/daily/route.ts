@@ -4,8 +4,9 @@ import { runDailySummaries } from "@/lib/data";
 import { dbQueueDailySummaries } from "@/lib/summary-db";
 import { processQueue } from "@/lib/whatsapp/send";
 
-// Vercel Cron at 07:00 UTC (8:00 WAT): owner daily summaries with the seasonal "Run it again"
-// line (TECH_PLAN §5). Only Vercel Cron can call it in production (CRON_SECRET).
+// The scheduler (Supabase pg_cron, see the scheduler migration) at 07:00 UTC (8:00 WAT): owner
+// daily summaries with the seasonal "Run it again" line (TECH_PLAN §5). In production only the
+// scheduler can call it (CRON_SECRET).
 export async function GET(request: Request) {
   if (!cronAllowed(request)) return NextResponse.json({ ok: false }, { status: 401 });
   const now = new Date();
