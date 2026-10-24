@@ -112,6 +112,10 @@ const sections: LegalSection[] = [
           knowing who they are, your browser keeps a random code, and we only store a scrambled version of it that changes every day. These counts never include
           your name or number.
         </p>
+        <p>
+          To stop anyone flooding a drop with fake claims, we also count how often each browser and internet address uses the claim, Notify me and report
+          buttons. We only store a scrambled version of these, and throw the counts away after a day.
+        </p>
         <p>We also use a few small cookies to keep the site working: the random code above, one to show your Tikka again if you come back to the drop, and your chosen city on the marketplace.</p>
       </>
     ),

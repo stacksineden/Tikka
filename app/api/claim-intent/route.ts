@@ -5,6 +5,7 @@ import { dbClaimResult, dbCreateIntent, dbRevealCard } from "@/lib/claim-db";
 import { claimMessageUrl } from "@/lib/claim-map";
 import { getPublicDrop, isDbId, posterOf } from "@/lib/data";
 import { qrSvg } from "@/lib/qr";
+import { tooMany } from "@/lib/rate-limit";
 
 // Click-to-claim for drops in the database (TECH_PLAN §5). POST: the claim sheet gets its
 // TK-XXXXX code and the WhatsApp link. GET: the waiting page asks whether WhatsApp has confirmed;
@@ -14,6 +15,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { business?: string; drop?: string; name?: string; source?: string; posterId?: string; futureDrops?: boolean } | null;
   const visitorId = (await cookies()).get(VISITOR_COOKIE)?.value;
   if (!body?.business || !body.drop || !visitorId) return NextResponse.json({ ok: false, reason: "not_found" }, { status: 400 });
+  if (await tooMany(request, "claim", visitorId)) return NextResponse.json({ ok: false, reason: "slow_down" }, { status: 429 });
   const name = firstName(String(body.name ?? ""));
   if (!name) return NextResponse.json({ ok: false, reason: "name" }, { status: 400 });
 

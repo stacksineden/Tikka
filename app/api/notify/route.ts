@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { VISITOR_COOKIE } from "@/lib/claim";
 import { startNotify } from "@/lib/data";
+import { tooMany } from "@/lib/rate-limit";
 
 // Notify me (PRD A6). A real business: the NT-XXXXX code's WhatsApp link, and the webhook
 // subscribes them and confirms there. DEMO businesses confirm here.
@@ -10,6 +11,9 @@ export async function POST(request: Request) {
   if (!body?.business) return NextResponse.json({ ok: false, error: "Missing business" }, { status: 400 });
   const jar = await cookies();
   const visitorId = jar.get(VISITOR_COOKIE)?.value ?? crypto.randomUUID();
+  if (await tooMany(request, "notify", jar.get(VISITOR_COOKIE)?.value)) {
+    return NextResponse.json({ ok: false, error: "Too many tries. Wait a little and try again." }, { status: 429 });
+  }
   const r = await startNotify(body.business, body.drop || undefined, visitorId);
   const res = NextResponse.json(r, { status: r.ok ? 200 : 404 });
   if (!jar.has(VISITOR_COOKIE)) res.cookies.set(VISITOR_COOKIE, visitorId, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 365 });

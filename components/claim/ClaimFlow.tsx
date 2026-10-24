@@ -236,7 +236,13 @@ export function ClaimFlow({
       }
       if (r.reason === "scheduled") setStatus("scheduled");
       go("front");
-      return setNote(r.reason === "network" ? "No connection. Check your data and tap Claim again." : "That didn't go through. Tap Claim again.");
+      return setNote(
+        r.reason === "network"
+          ? "No connection. Check your data and tap Claim again."
+          : r.reason === "slow_down"
+            ? "Too many tries. Wait a minute, then tap Claim again."
+            : "That didn't go through. Tap Claim again.",
+      );
     }
     // DEMO: demo drops claim straight away, without WhatsApp.
     const [res] = await Promise.all([

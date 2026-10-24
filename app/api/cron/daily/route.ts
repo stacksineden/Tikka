@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cronAllowed } from "@/lib/cron-auth";
 import { runDailySummaries } from "@/lib/data";
+import { removeOrphanMedia } from "@/lib/media-cleanup";
 import { dbQueueDailySummaries } from "@/lib/summary-db";
 import { processQueue } from "@/lib/whatsapp/send";
 
@@ -15,5 +16,7 @@ export async function GET(request: Request) {
   const sent = await processQueue(100);
   // DEMO: the demo store's summaries.
   const demo = await runDailySummaries(now);
-  return NextResponse.json({ ok: true, queued, sent, demo });
+  // Files nothing points at any more (a week after upload), so storage doesn't fill up.
+  const filesRemoved = await removeOrphanMedia().catch(() => -1);
+  return NextResponse.json({ ok: true, queued, sent, demo, filesRemoved });
 }
