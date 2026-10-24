@@ -2,9 +2,9 @@
 // show it. Pure, so the mapping is pinned by tests. Never carries a phone number.
 
 import { serialLabel } from "./claim";
-import { reviewState } from "./redeem";
+import { reviewState, type CheckResult } from "./redeem";
 import type { CardStatus, ClaimedCard, Tier } from "./types";
-import { visitOptions } from "./visit";
+import { validDaysLabel, visitOptions } from "./visit";
 
 export interface CardJson {
   view_token: string;
@@ -61,4 +61,34 @@ export function claimMessageUrl(token: string, businessName: string, number: str
   const text = encodeURIComponent(`Claim my Tikka ${token} from ${businessName}`);
   const digits = (number ?? "").replace(/\D/g, "");
   return digits ? `https://wa.me/${digits}?text=${text}` : `https://wa.me/?text=${text}`;
+}
+
+/* ---------------------------------------------------------------- the counter */
+
+/** check_code()'s answer as the counter screen shows it (lib/redeem.ts CheckResult). Never a phone number. */
+export function checkFrom(j: Record<string, unknown>): CheckResult {
+  const code = String(j.code ?? "");
+  switch (j.kind) {
+    case "valid":
+      return {
+        kind: "valid",
+        code,
+        name: String(j.name ?? ""),
+        reward: String(j.reward ?? ""),
+        tier: TIER[(j.tier as CardJson["tier"]) ?? "common"] ?? "thank_you",
+        expiresAt: new Date(String(j.expires_at)).toISOString(),
+        action: typeof j.action === "string" ? j.action : undefined,
+        suggestedStatus: j.suggested_status === "returning" ? "returning" : "new",
+      };
+    case "already_used":
+      return { kind: "already_used", code, at: new Date(String(j.at)).toISOString() };
+    case "expired":
+      return { kind: "expired", code, at: new Date(String(j.at)).toISOString() };
+    case "wrong_day":
+      return { kind: "wrong_day", code, days: validDaysLabel((j.days as number[]) ?? []) };
+    case "wrong_business":
+      return { kind: "wrong_business", code };
+    default:
+      return { kind: "unknown", code };
+  }
 }

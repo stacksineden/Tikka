@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import {
   BusinessSaveError,
+  confirmRedemptionDb,
   completeDbPayment,
   DropSaveError,
   isDbId,
@@ -52,6 +54,7 @@ import { templateCategory } from "@/lib/templates";
 import { paymentPlace, type Payment } from "@/lib/payments";
 import { PORTFOLIO_MAX, slugAlternatives, slugError, suggestSlug } from "@/lib/slug";
 import { getOwnerUser, getSessionUser } from "@/lib/session";
+import { processQueue } from "@/lib/whatsapp/send";
 import { LIMITS, normalizeNgPhone, prefixAlternatives, validateCard, type CardDraft, type Errors } from "@/lib/setup";
 import type { CheckResult } from "@/lib/redeem";
 import type { BusinessPageInput } from "@/lib/page";
@@ -497,11 +500,20 @@ export async function confirmRedemptionAction(
 ): Promise<ConfirmActionResult> {
   const user = await getSessionUser();
   if (!user) return { ok: false, result: { kind: "no_access" } };
-  const r = await confirmRedemption(user, code, {
+  const input = {
     billKobo: billNaira && billNaira > 0 ? Math.round(billNaira * 100) : undefined,
     actionConfirmed,
     customerStatus: customerStatus === "returning" ? "returning" : customerStatus === "new" ? "new" : undefined,
-  });
+  } as const;
+  if (isDbId(user.id)) {
+    const r = await confirmRedemptionDb(user, code, input);
+    if (!r.ok) return { ok: false, result: r.result };
+    // The thank-you (with the next-visit Tikka and the review link) leaves right away.
+    after(() => processQueue(10).catch(() => {}));
+    revalidatePath("/app", "layout");
+    return { ok: true, name: r.name };
+  }
+  const r = await confirmRedemption(user, code, input);
   if (!r.ok) return { ok: false, result: r.result };
   revalidatePath("/app", "layout");
   return { ok: true, name: r.name };

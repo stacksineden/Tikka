@@ -24,13 +24,13 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
 
   const [{ data: profile }, { data: membership }] = await Promise.all([
     supabase.from("profiles").select("display_name, is_admin").eq("user_id", id).maybeSingle(),
-    supabase.from("business_members").select("role").eq("user_id", id).limit(1).maybeSingle(),
+    supabase.from("business_members").select("role, business_id").eq("user_id", id).limit(1).maybeSingle(),
   ]);
   const name = (profile?.display_name ?? meta.name ?? meta.full_name ?? String(claims.email ?? "").split("@")[0]).split(" ")[0] || "there";
 
-  // DEMO: staff redeem for a business in the demo store until Team moves to business_members.
-  const staffOf = demoStaffOwner(id);
-  const role = membership?.role === "staff" || staffOf ? "staff" : "owner";
+  // Staff redeem for the business that invited them. DEMO: or one in the demo store.
+  const staffOf = membership?.role === "staff" ? (membership.business_id as string) : demoStaffOwner(id);
+  const role = staffOf ? "staff" : "owner";
   return {
     id,
     email: String(claims.email ?? ""),

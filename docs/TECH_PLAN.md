@@ -40,7 +40,7 @@ Vercel Cron (every minute) ──> outbound message queue ──> Meta Cloud API
 
 - Supabase Auth with **Google** and **email + password** (email confirmation on, password reset by email).
 - `profiles (user_id, display_name, is_admin bool default false)`.
-- Roles per business in `business_members`: `owner` (everything) or `staff` (redeem only).
+- Roles per business in `business_members`: `owner` (everything) or `staff` (redeem only). Staff join through `invite_staff()` (owner; a link-safe token, 7 days, a new invite to the same email replaces the old one) and `accept_invite()` (signed in with the invited email only; an account is either an owner or someone's staff). `invite_info()` is the invite page's public read; `team_members()`, `cancel_invite()` and `remove_staff()` are owner-only.
 - Staff invites: `business_invites (id, business_id, email, role, token, invited_by, accepted_at, expires_at)`. Accepting signs them in (Google or email) and adds the membership.
 - Middleware: `/app/*` needs a signed-in member; staff are redirected to `/app/redeem` from every other `/app` route; `/admin/*` needs `is_admin`.
 

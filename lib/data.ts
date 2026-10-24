@@ -4,6 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
+import { dbAcceptInvite, dbCancelInvite, dbCheckCode, dbConfirm, dbInviteInfo, dbInviteStaff, dbRemoveStaff, dbTeam, type ConfirmDbResult } from "./team-db";
 import { dbCardByViewToken, dbCardOwner, dbDropExists, dbPublicDrop, dbRecordEvent, dbRevealCard } from "./claim-db";
 import { dbAddTikkas, dbBuyPack, dbCompletePayment, dbDeleteDraft, dbDrops, dbEndEarly, dbExtend, dbPayment, dbPayments, dbPublish, dbSaveDraft, dbVouchers, DropSaveError, type DbPublishResult } from "./drop-db";
 import { BusinessSaveError, dbAddPoster, dbPosterByCode, dbPosters, dbSavePosterHook, dbTaken, isDbId, loadBusiness, loadBusinessBySlug, saveBusinessDb } from "./business-db";
@@ -1591,6 +1592,8 @@ async function dbCardPage(token: string): Promise<CardPageData | null> {
 
 /** The business a member works for: owners their own, staff the one that invited them. */
 export async function memberBusinessId(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">): Promise<string | null> {
+  // Real accounts: the business's own id (the database checks the membership again).
+  if (isDbId(user.id)) return user.role === "owner" ? ((await getBusiness(user))?.id ?? null) : (user.businessOwnerId ?? null);
   if (user.role === "owner") return (await getBusiness(user)) ? user.id : null;
   const owner = user.businessOwnerId;
   return owner && teamFor(owner).staff.some((m) => m.userId === user.id) ? owner : null;
@@ -1617,6 +1620,7 @@ function hasBeenBefore(c: StoredClaim): boolean {
 export async function checkCode(user: SessionUser, code: string): Promise<CheckResult | { kind: "no_access" }> {
   const owner = await memberBusinessId(user);
   if (!owner) return { kind: "no_access" };
+  if (isDbId(owner)) return dbCheckCode(owner, code);
   const claim = findByCode(code);
   return checkClaim(claim, owner, code, new Date(), claim ? hasBeenBefore(claim) : false);
 }
@@ -1629,6 +1633,17 @@ export interface OutboxMessage {
   at: string;
 }
 const outbox: OutboxMessage[] = ((globalThis as { __tikkaOutbox?: OutboxMessage[] }).__tikkaOutbox ??= []);
+
+/** confirm_redemption for real businesses: the database locks, checks again, and queues the thank-you. */
+export async function confirmRedemptionDb(
+  user: SessionUser,
+  code: string,
+  input: { billKobo?: number; actionConfirmed: boolean; customerStatus?: "new" | "returning" },
+): Promise<ConfirmDbResult | { ok: false; result: { kind: "no_access" } }> {
+  const business = await memberBusinessId(user);
+  if (!business || !isDbId(business)) return { ok: false, result: { kind: "no_access" } };
+  return dbConfirm(business, code, input);
+}
 
 /**
  * confirm_redemption. The real function holds `select … for update` on the claim; here the
@@ -1808,6 +1823,10 @@ const INVITE_DAYS = 7;
 export async function getTeam(user: Pick<SessionUser, "id" | "role">): Promise<{ staff: TeamMember[]; invites: TeamInvite[] } | null> {
   if (user.role !== "owner") return null;
   await connection();
+  if (isDbId(user.id)) {
+    const b = await getBusiness(user);
+    return b ? dbTeam(b.id) : { staff: [], invites: [] };
+  }
   const t = teamFor(user.id);
   const now = new Date();
   return { staff: t.staff, invites: t.invites.filter((i) => !i.acceptedAt && new Date(i.expiresAt) > now) };
@@ -1815,6 +1834,13 @@ export async function getTeam(user: Pick<SessionUser, "id" | "role">): Promise<{
 
 export async function inviteStaff(user: Pick<SessionUser, "id" | "role" | "email">, emailInput: string): Promise<{ ok: true; invite: TeamInvite } | { ok: false; error: string }> {
   if (user.role !== "owner") return { ok: false, error: "Only the owner can invite staff." };
+  if (isDbId(user.id)) {
+    const b = await getBusiness(user);
+    if (!b) return { ok: false, error: "Set up your card first." };
+    const r = await dbInviteStaff(b.id, emailInput);
+    const now = new Date();
+    return r.ok ? { ok: true, invite: { token: r.token, email: r.email, createdAt: now.toISOString(), expiresAt: new Date(now.getTime() + INVITE_DAYS * 86_400_000).toISOString() } } : r;
+  }
   const email = emailInput.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Enter their email address." };
   if (email === user.email.toLowerCase()) return { ok: false, error: "That's your own email." };
@@ -1834,12 +1860,22 @@ export async function inviteStaff(user: Pick<SessionUser, "id" | "role" | "email
 
 export async function cancelInvite(user: Pick<SessionUser, "id" | "role">, token: string): Promise<void> {
   if (user.role !== "owner") return;
+  if (isDbId(user.id)) {
+    const b = await getBusiness(user);
+    if (b) await dbCancelInvite(b.id, token);
+    return;
+  }
   const t = teamFor(user.id);
   teamStore.set(user.id, { ...t, invites: t.invites.filter((i) => i.token !== token) });
 }
 
 export async function removeStaff(user: Pick<SessionUser, "id" | "role">, staffId: string): Promise<void> {
   if (user.role !== "owner") return;
+  if (isDbId(user.id)) {
+    const b = await getBusiness(user);
+    if (b && isDbId(staffId)) await dbRemoveStaff(b.id, staffId);
+    return;
+  }
   const t = teamFor(user.id);
   teamStore.set(user.id, { ...t, staff: t.staff.filter((m) => m.userId !== staffId) });
 }
@@ -1856,7 +1892,8 @@ export async function getInvite(token: string): Promise<InviteView | null> {
     const state = i.acceptedAt ? "accepted" : new Date(i.expiresAt) <= new Date() ? "expired" : "open";
     return { state, email: i.email, business: { name: b.name, initials: b.initials, brandColor: b.brandColor, onBrandColor: b.onBrandColor, logoUrl: b.logoUrl } };
   }
-  return null;
+  // A real business's invite.
+  return /^[A-Za-z0-9_-]{16,64}$/.test(token) ? dbInviteInfo(token) : null;
 }
 
 /** DEMO: the business a staff member redeems for (its owner's id), until Team uses business_members. */
@@ -1877,7 +1914,9 @@ export async function acceptInvite(token: string, name: string, userId: string):
     });
     return { ownerId, email: i.email };
   }
-  return null;
+  // A real business's invite: the database checks the signed-in email is the invited one.
+  const businessId = await dbAcceptInvite(token);
+  return businessId ? { ownerId: businessId, email: "" } : null;
 }
 
 // visitor_hash = sha256(visitor_id + daily salt): no raw ids kept (TECH_PLAN §12).

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardFrom, claimMessageUrl, statusFrom, type CardJson } from "./claim-map";
+import { cardFrom, checkFrom, claimMessageUrl, statusFrom, type CardJson } from "./claim-map";
 
 const now = new Date("2026-10-23T10:00:00+01:00");
 const json = (p: Partial<CardJson> = {}): CardJson => ({
@@ -55,5 +55,21 @@ describe("the claim message", () => {
   });
   it("opens any chat until the number is set", () => {
     expect(claimMessageUrl("TK-4821K", "Glow & Co", undefined)).toBe("https://wa.me/?text=Claim%20my%20Tikka%20TK-4821K%20from%20Glow%20%26%20Co");
+  });
+});
+
+describe("the counter's check", () => {
+  it("shows a valid code with the reward, never more", () => {
+    expect(
+      checkFrom({ kind: "valid", code: "GS-7X4QP", name: "Ada O.", reward: "A free drink", tier: "common", expires_at: "2026-11-06T22:59:00Z", action: "Follow us on Instagram", suggested_status: "returning" }),
+    ).toEqual({ kind: "valid", code: "GS-7X4QP", name: "Ada O.", reward: "A free drink", tier: "thank_you", expiresAt: "2026-11-06T22:59:00.000Z", action: "Follow us on Instagram", suggestedStatus: "returning" });
+    expect(checkFrom({ kind: "valid", code: "X", tier: "rare", expires_at: "2026-11-06T22:59:00Z", action: null })).not.toHaveProperty("action", expect.anything());
+  });
+
+  it("says why a code can't be used", () => {
+    expect(checkFrom({ kind: "already_used", code: "X", at: "2026-10-20T12:00:00Z" })).toEqual({ kind: "already_used", code: "X", at: "2026-10-20T12:00:00.000Z" });
+    expect(checkFrom({ kind: "wrong_day", code: "X", days: [1, 2, 3, 4] })).toEqual({ kind: "wrong_day", code: "X", days: "Valid Mon–Thu only" });
+    expect(checkFrom({ kind: "wrong_business", code: "X" }).kind).toBe("wrong_business");
+    expect(checkFrom({ kind: "something else", code: "X" }).kind).toBe("unknown");
   });
 });
