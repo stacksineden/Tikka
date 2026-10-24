@@ -67,16 +67,20 @@ export function platformStats(input: StatsInput, now: Date): PlatformStats {
       const b = real.get(dropOwner.get(c.dropId)!)!;
       return { id: c.id, city: b.city, tier: c.tier, businessName: b.name, at: c.claimedAt };
     });
+  return statsFromTotals(
+    { tikkasClaimed: claims.length, businesses: real.size, dropsLive: live, recordedSales: claims.reduce((x, c) => x + (c.redeemedAt && c.billKobo ? c.billKobo : 0), 0) / 100, recent },
+    now,
+  );
+}
+
+/** Totals (from the database's platform_stats(), or worked out above) plus which blocks may show. */
+export function statsFromTotals(t: Omit<PlatformStats, "show" | "asOf">, now: Date): PlatformStats {
   return {
-    tikkasClaimed: claims.length,
-    businesses: real.size,
-    dropsLive: live,
-    recordedSales: claims.reduce((x, c) => x + (c.redeemedAt && c.billKobo ? c.billKobo : 0), 0) / 100,
-    recent,
+    ...t,
     show: {
-      bar: real.size >= THRESHOLDS.barBusinesses && live >= THRESHOLDS.barLiveDrops,
-      ticker: recent.length >= THRESHOLDS.tickerClaims24h,
-      strip: live >= THRESHOLDS.stripLiveDrops,
+      bar: t.businesses >= THRESHOLDS.barBusinesses && t.dropsLive >= THRESHOLDS.barLiveDrops,
+      ticker: t.recent.length >= THRESHOLDS.tickerClaims24h,
+      strip: t.dropsLive >= THRESHOLDS.stripLiveDrops,
     },
     asOf: now.toISOString(),
   };

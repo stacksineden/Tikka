@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { putDemoMedia } from "@/lib/demo-media";
-import { getOwnerUser } from "@/lib/session";
+import { demoAllowed, getOwnerUser } from "@/lib/session";
 
 // DEMO: stands in for a Supabase Storage upload until M1. Files are too big for a server
 // action (1 MB), so the browser sends the already-compressed file here and saves the URL it gets.
 export async function POST(request: Request) {
+  if (!demoAllowed) return new Response(null, { status: 404 });
   const user = await getOwnerUser();
   if (!user) return NextResponse.json({ ok: false, error: "Sign in as the owner." }, { status: 403 });
   const type = request.headers.get("content-type") ?? "";

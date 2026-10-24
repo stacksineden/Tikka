@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { PRICES_TAG } from "@/lib/admin-db";
 import { after } from "next/server";
 import {
   BusinessSaveError,
@@ -414,6 +415,7 @@ export async function adminSaveTierAction(id: string, form: FormData): Promise<v
   const min = Math.floor(Number(form.get("guaranteeMin") ?? 0));
   if (![price, founding].every((n) => Number.isFinite(n) && n > 0)) return;
   await adminSaveTier(admin, id, { priceKobo: Math.round(price * 100), foundingPriceKobo: Math.round(founding * 100), guaranteeMinRedemptions: min > 0 ? min : null });
+  updateTag(PRICES_TAG);
   revalidatePath("/admin");
 }
 
@@ -423,6 +425,7 @@ export async function adminSavePackAction(id: string, form: FormData): Promise<v
   const price = naira(form, "price");
   if (!Number.isFinite(price) || price <= 0) return;
   await adminSavePack(admin, id, Math.round(price * 100), form.get("active") === "on");
+  updateTag(PRICES_TAG);
   revalidatePath("/admin");
 }
 

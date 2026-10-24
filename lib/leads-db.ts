@@ -20,3 +20,11 @@ export async function dbLogFollowup(claimId: string): Promise<boolean> {
   const { data } = await sb.rpc("log_followup", { p_claim: claimId });
   return data === true;
 }
+
+/** The owner's newest claims since a time, with the number (new_claims_since() refuses anyone else). */
+export async function dbNewClaims(businessId: string, since: string): Promise<{ view_token: string; first_name: string; tier: string; reward: string; claimed_at: string; expires_at: string; phone: string }[]> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("new_claims_since", { p_business: businessId, p_since: since });
+  if (error) return [];
+  return data ?? [];
+}

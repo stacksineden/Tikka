@@ -109,6 +109,18 @@ export async function dbCardImage(claimId: string): Promise<{
   return data ?? null;
 }
 
+/** "When will you come in?": saves the plan if the day can still be used; the card's new status, or null. */
+export async function dbSetVisitPlan(viewToken: string, date: string, part: string): Promise<CardStatus | null> {
+  const { data } = await adminClient().rpc("set_visit_plan", { p_view_token: viewToken, p_date: date, p_part: part });
+  return data ? statusFrom(data as CardJson, new Date()) : null;
+}
+
+/** The landing page's live numbers: real businesses only, counts and the ticker (no names). */
+export async function dbPlatformTotals(): Promise<{ businesses: number; drops_live: number; tikkas_claimed: number; recorded_sales_kobo: number; recent: { id: string; city: string; tier: string; business_name: string; at: string }[] } | null> {
+  const { data } = await adminClient().rpc("platform_stats");
+  return data ?? null;
+}
+
 /** The claim behind a card link, for its share image. */
 export async function dbClaimIdByViewToken(viewToken: string): Promise<string | null> {
   const { data } = await adminClient().from("claims").select("id").eq("view_token", viewToken).maybeSingle();

@@ -1,7 +1,9 @@
 import { getDemoMedia } from "@/lib/demo-media";
+import { demoAllowed } from "@/lib/session";
 
 // DEMO: serves an uploaded video, with byte ranges so phones can seek and play it.
 export async function GET(request: Request, { params }: RouteContext<"/api/demo/media/[id]">) {
+  if (!demoAllowed) return new Response("Not found", { status: 404 });
   const { id } = await params;
   const m = getDemoMedia(id);
   if (!m) return new Response("Not found", { status: 404 });

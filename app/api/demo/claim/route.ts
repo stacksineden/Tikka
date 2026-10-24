@@ -1,12 +1,14 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { claimCookie, parseSource, VISITOR_COOKIE } from "@/lib/claim";
-import { demoClaim, getClaimStatus, posterOf, recordEvent } from "@/lib/data";
+import { demoClaim, getClaimStatus, posterOf, recordEvent, SHOW_DEMO_ON_MARKETPLACE } from "@/lib/data";
 import { qrSvg } from "@/lib/qr";
 
 // DEMO: stands in for click-to-claim on WhatsApp until M5. The real flow creates a claim
 // intent here and the card comes from claim_card() once the WhatsApp message arrives.
 export async function POST(request: Request) {
+  // Only where demo drops are on show (development, or a sales demo with TIKKA_SHOW_DEMO=1).
+  if (!SHOW_DEMO_ON_MARKETPLACE) return NextResponse.json({ ok: false, reason: "not_found" }, { status: 404 });
   const body = (await request.json().catch(() => null)) as { business?: string; drop?: string; name?: string; source?: string; posterId?: string; futureDrops?: boolean } | null;
   const visitorId = (await cookies()).get(VISITOR_COOKIE)?.value;
   if (!body?.business || !body.drop || !visitorId) return NextResponse.json({ ok: false, reason: "not_found" }, { status: 400 });

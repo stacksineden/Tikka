@@ -4,13 +4,13 @@ import { createHash, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
-import { dbLeads, dbLogFollowup } from "./leads-db";
+import { dbLeads, dbLogFollowup, dbNewClaims } from "./leads-db";
 import { dbAdminBusinesses, dbAdminDecide, dbAdminDrops, dbAdminGrantDrop, dbAdminOverview, dbAdminPayments, dbAdminPinDrop, dbAdminReports, dbAdminSaveTier, dbAdminSavePack, dbAdminSetBusiness, dbAdminSetDropShown, dbPacks, dbPins, dbTiers, type AdminBusiness, type AdminDrop, type AdminOverview, type AdminPayment, type AdminReport } from "./admin-db";
 import { dbMarketplaceDrops, dbNotifyIntent, dbReportDrop } from "./market-db";
 import { dbOwnerReviews, dbPublicReviews, dbReportReview, dbReviewPage, dbSubmitReview } from "./reviews-db";
 import { dbDropDashboard, dbDropFeed, dbDropReport } from "./stats-db";
 import { dbAcceptInvite, dbCancelInvite, dbCheckCode, dbConfirm, dbInviteInfo, dbInviteStaff, dbRemoveStaff, dbTeam, type ConfirmDbResult } from "./team-db";
-import { dbCardByViewToken, dbCardImage, dbCardOwner, dbDropExists, dbPublicDrop, dbRecordEvent, dbRevealCard } from "./claim-db";
+import { dbCardByViewToken, dbCardImage, dbCardOwner, dbDropExists, dbPlatformTotals, dbPublicDrop, dbRecordEvent, dbRevealCard, dbSetVisitPlan } from "./claim-db";
 import { dbAddTikkas, dbBuyPack, dbCompletePayment, dbDeleteDraft, dbDrops, dbEndEarly, dbExtend, dbPayment, dbPayments, dbPublish, dbSaveDraft, dbVouchers, DropSaveError, type DbPublishResult } from "./drop-db";
 import { BusinessSaveError, dbAddPoster, dbPosterByCode, dbPosters, dbSavePosterHook, dbTaken, isDbId, loadBusiness, loadBusinessBySlug, saveBusinessDb } from "./business-db";
 
@@ -33,7 +33,8 @@ import { siteUrl } from "./supabase/env";
 import { notifyCode } from "./notify";
 import dropStats from "./mock/drop_stats.json";
 import { generate as generateCode } from "./codes";
-import { followups as followupList, type Followup } from "./followups";
+import { followupMessage, followups as followupList, type Followup } from "./followups";
+import { waLink } from "./leads";
 import { validatePage, validateServices, videoProblem, type BusinessPageInput, type PageErrors } from "./page";
 import { newPosterCode, posterTarget, validateHook, validateLabel, type Poster } from "./posters";
 import { dropReport, type DropFee, type DropReport, type ReportClaim } from "./report";
@@ -65,7 +66,10 @@ import { abandonStale, assertCanReadLeads, completePayment, newReference, type P
 import { quoteAddTikkas, quoteDrop, type DropPack, type DropQuote, type DropTier } from "./pricing";
 import { adminVoucher, guaranteeVoucher, packVouchers, signupVoucher, usable, type Voucher } from "./vouchers";
 import { PORTFOLIO_MAX } from "./slug";
-import { platformStats, type PlatformStats, type StatsInput } from "./stats";
+import { platformStats, statsFromTotals, type PlatformStats, type StatsInput } from "./stats";
+
+/** The database calls the Thank-you tier "common". */
+const TIER_FROM_DB: Record<string, Tier> = { legendary: "legendary", rare: "rare", common: "thank_you" };
 import type {
   ActivityEvent,
   Business,
@@ -809,6 +813,19 @@ export interface NewClaim {
 /** "Adaeze just claimed a Rare Tikka": claims on this owner's drops since `since`. Owners only. */
 export async function getNewClaims(user: Pick<SessionUser, "id" | "role">, since: string): Promise<NewClaim[]> {
   if (user.role !== "owner") return [];
+  if (isDbId(user.id)) {
+    const b = await getBusiness(user);
+    if (!b) return [];
+    const now = new Date();
+    return (await dbNewClaims(b.id, since)).map((c) => ({
+      token: c.view_token,
+      firstName: c.first_name,
+      tier: TIER_FROM_DB[c.tier] ?? "thank_you",
+      reward: c.reward,
+      at: c.claimed_at,
+      whatsapp: waLink(c.phone, followupMessage("just_claimed", { name: c.first_name, reward: c.reward, expiresAt: c.expires_at }, b.name, now)),
+    }));
+  }
   return [...claimStore.values()]
     .filter((c) => c.ownerId === user.id && !c.seed && (c.kind ?? "drop") === "drop" && c.claimedAt > since)
     .sort((a, b) => b.claimedAt.localeCompare(a.claimedAt))
@@ -1397,6 +1414,20 @@ export async function reportDrop(dropId: string, reason: string, visitorId: stri
 export async function getPlatformStats(at?: Date): Promise<PlatformStats> {
   await connection();
   const now = at ?? new Date();
+  // Real businesses live in the database; demo ones never count anyway.
+  const t = await dbPlatformTotals().catch(() => null);
+  if (t) {
+    return statsFromTotals(
+      {
+        businesses: t.businesses,
+        dropsLive: t.drops_live,
+        tikkasClaimed: t.tikkas_claimed,
+        recordedSales: t.recorded_sales_kobo / 100,
+        recent: t.recent.map((r) => ({ id: r.id, city: r.city, tier: TIER_FROM_DB[r.tier] ?? "thank_you", businessName: r.business_name, at: r.at })),
+      },
+      now,
+    );
+  }
   const owners = new Map<string, Business>();
   owners.set(DEMO_USER, normalize(store.get(DEMO_USER) ?? (business as Business)));
   for (const x of SEEDS) owners.set(x.ownerId, normalize(store.get(x.ownerId) ?? x.business));
@@ -1550,6 +1581,8 @@ export async function getClaimStatus(token: string): Promise<CardStatus | null> 
 export async function setVisitPlan(token: string, date: string, part: VisitPart): Promise<CardStatus | null> {
   const c = claimStore.get(token);
   const now = new Date();
+  // A card from a drop in the database: set_visit_plan() checks the day (and that it's unused).
+  if (!c) return /^[A-Za-z0-9_-]{16,64}$/.test(token) && VISIT_PARTS.some((p) => p.id === part) ? dbSetVisitPlan(token, date, part) : null;
   if (!c || c.redeemedAt || !VISIT_PARTS.some((p) => p.id === part)) return null;
   if (!isPlannable(now, c.card.expiresAt, c.validWeekdays, date)) return null;
   const next = { ...c, plannedVisitDate: date, plannedVisitPart: part };

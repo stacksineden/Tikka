@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cacheLife, cacheTag } from "next/cache";
 import type { DropPack, DropTier } from "./pricing";
 import { adminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
@@ -190,8 +191,14 @@ export async function dbAdminSavePack(id: string, priceKobo: number, active: boo
   await call("admin_save_pack", { p_pack: id, p_price_kobo: priceKobo, p_active: active });
 }
 
-/** Prices as the database has them: public data, read without the visitor's cookies. */
+/** Prices change only when an admin saves them (which clears this tag), so pages can be prerendered. */
+export const PRICES_TAG = "prices";
+
+/** Prices as the database has them: public data, read without the visitor's cookies, and cached. */
 export async function dbTiers(): Promise<DropTier[] | null> {
+  "use cache";
+  cacheTag(PRICES_TAG);
+  cacheLife("hours");
   const sb = adminClient();
   const { data, error } = await sb.from("drop_tiers").select("id, label, max_cards, price_kobo, founding_price_kobo, guarantee_min_redemptions, sort").order("sort");
   if (error || !data?.length) return null;
@@ -206,8 +213,11 @@ export async function dbTiers(): Promise<DropTier[] | null> {
   }));
 }
 
-/** Every pack, on sale or not (callers filter). */
+/** Every pack, on sale or not (callers filter). Cached like the tiers. */
 export async function dbPacks(): Promise<DropPack[] | null> {
+  "use cache";
+  cacheTag(PRICES_TAG);
+  cacheLife("hours");
   const sb = adminClient();
   const { data, error } = await sb.from("drop_packs").select("id, tier_id, drops, price_kobo, active").order("price_kobo");
   if (error || !data?.length) return null;
