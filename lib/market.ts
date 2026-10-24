@@ -20,7 +20,7 @@ export type CityId = (typeof CITIES)[number]["id"];
 const NAMED = CITIES.filter((c) => c.id !== "other" && c.id !== "all").map((c) => c.label as string);
 
 export function cityId(input: string | undefined): CityId {
-  return CITIES.find((c) => c.id === input)?.id ?? "lagos";
+  return CITIES.find((c) => c.id === input)?.id ?? "all";
 }
 export function cityLabel(id: CityId): string {
   return CITIES.find((c) => c.id === id)!.label;

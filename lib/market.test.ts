@@ -56,7 +56,7 @@ describe("marketplace", () => {
     expect(inCity(tile({ city: "Lagos" }), "lagos")).toBe(true);
     expect(inCity(tile({ city: "Enugu" }), "other")).toBe(true);
     expect(inCity(tile({ city: "Abuja" }), "other")).toBe(false);
-    expect(parseMarketFilters({ city: "nowhere" }).city).toBe("lagos");
+    expect(parseMarketFilters({ city: "nowhere" }).city).toBe("all");
   });
 
   it("round-trips category slugs", () => {

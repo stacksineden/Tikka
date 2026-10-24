@@ -37,9 +37,9 @@ async function Home({ searchParams }: { searchParams: PageProps<"/drops">["searc
   const now = new Date();
   const area = typeof sp.area === "string" ? sp.area : undefined;
   const inThisCity = all.filter((d) => inCity(d, city) && (!area || d.area === area));
-  const here: MarketDrop[] = inThisCity.length > 0 ? inThisCity : all.filter((d) => inCity(d, "lagos"));
-  const fellBack = inThisCity.length === 0;
-  const shownCity: CityId = fellBack ? "lagos" : city;
+  const here: MarketDrop[] = inThisCity.length > 0 ? inThisCity : all;
+  const fellBack = inThisCity.length === 0 && city !== "all";
+  const shownCity: CityId = fellBack ? "all" : city;
   const where = shownCity === "all" ? "across Nigeria" : shownCity === "other" ? "in other cities" : `in ${area ? `${area}, ` : ""}${cityLabel(shownCity)}`;
 
   // Featured is nationwide: admin pins first, then whatever is hottest.
@@ -92,7 +92,7 @@ async function Home({ searchParams }: { searchParams: PageProps<"/drops">["searc
           <CityChips city={city} areas={areasIn(all, city)} area={area} />
           {fellBack && (
             <p className="text-body rounded-card border border-dashed border-line-strong bg-surface-raised p-4">
-              No drops {area ? `in ${area}` : `in ${city === "other" ? "other cities" : cityLabel(city)}`} right now. Here&apos;s what&apos;s live in Lagos.
+              No drops {area ? `in ${area}` : `in ${city === "other" ? "other cities" : cityLabel(city)}`} right now. Here&apos;s what&apos;s on across Nigeria.
             </p>
           )}
         </div>
