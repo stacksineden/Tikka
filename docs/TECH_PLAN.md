@@ -188,6 +188,8 @@ Not used for: business sign-in, or businesses messaging their leads (that's `wa.
 
 Status webhooks (sent, delivered, failed) update `outbound_messages`.
 
+In code: `app/api/whatsapp/webhook/route.ts` checks Meta's signature (`WHATSAPP_APP_SECRET`) and the verify token (`WHATSAPP_VERIFY_TOKEN`); every message goes through `handleInbound()` in `lib/whatsapp/inbound.ts`; replies are queued and sent right after the response (`after()`), then by the cron. `lib/whatsapp/send.ts` sends through the Cloud API when `WHATSAPP_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` are set. Message wording lives in `lib/wa-text.ts` (tested, no gambling words). Until Meta is connected, development uses a test phone at `/dev/whatsapp`: what you send there runs the same `handleInbound()`, and Tikka's replies land there instead of WhatsApp; without `NEXT_PUBLIC_TIKKA_WHATSAPP`, the claim page's "Open WhatsApp" opens it. A repeat of the same claim message resends the card. The card link's first open plays the hold-and-flip (`claims.revealed_at`). Vercel's Hobby plan runs crons once a day at most; the outbound cron needs Pro for every few minutes (card replies don't wait for it).
+
 ### Click-to-claim
 1. Claim sheet (first name) → server creates a `claim_intent` (30-minute expiry) → the page opens `https://wa.me/<TIKKA_NUMBER>?text=Claim%20my%20Tikka%20TK-4821K%20from%20Glow%20Studio`.
 2. The page subscribes to the intent (Supabase Realtime; 2s polling fallback) and shows Confirming.

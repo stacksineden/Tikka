@@ -4,7 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
-import { dbCardByViewToken, dbDropExists, dbPublicDrop, dbRecordEvent } from "./claim-db";
+import { dbCardByViewToken, dbCardOwner, dbDropExists, dbPublicDrop, dbRecordEvent, dbRevealCard } from "./claim-db";
 import { dbAddTikkas, dbBuyPack, dbCompletePayment, dbDeleteDraft, dbDrops, dbEndEarly, dbExtend, dbPayment, dbPayments, dbPublish, dbSaveDraft, dbVouchers, DropSaveError, type DbPublishResult } from "./drop-db";
 import { BusinessSaveError, dbAddPoster, dbPosterByCode, dbPosters, dbSavePosterHook, dbTaken, isDbId, loadBusiness, loadBusinessBySlug, saveBusinessDb } from "./business-db";
 
@@ -1549,7 +1549,7 @@ export interface CardPageData {
 export async function getCardPage(token: string): Promise<CardPageData | null> {
   await connection();
   const c = claimStore.get(token);
-  if (!c) return null;
+  if (!c) return dbCardPage(token);
   const d = findDropById(c.dropId);
   const b = d ? await getBusiness({ id: d.ownerId }) : null;
   if (!d || !b) return null;
@@ -1564,6 +1564,26 @@ export async function getCardPage(token: string): Promise<CardPageData | null> {
     businessSlug: b.slug,
     drop: toPublicDrop(d.drop, newClaimCount(d.drop.id), d.newOnly, now),
     ownerId: d.ownerId,
+  };
+}
+
+/** The card link from WhatsApp, for a card from a drop in the database. */
+async function dbCardPage(token: string): Promise<CardPageData | null> {
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return null;
+  const owner = await dbCardOwner(token);
+  const db = owner && (await dbCardByViewToken(token));
+  const found = owner && (await getBusinessBySlug(owner.businessSlug));
+  const pub = owner && (await getPublicDrop(owner.businessSlug, owner.dropSlug));
+  if (!owner || !db || !found || !pub) return null;
+  return {
+    card: db.card,
+    status: db.status,
+    // The first open (they claimed on WhatsApp and never came back to the page) holds and flips.
+    firstVisit: await dbRevealCard(token),
+    business: found.business,
+    businessSlug: found.business.slug,
+    drop: pub.drop,
+    ownerId: found.ownerId,
   };
 }
 

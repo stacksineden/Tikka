@@ -73,3 +73,16 @@ export async function dbCardByViewToken(viewToken: string): Promise<{ card: Clai
   const j = data as CardJson | null;
   return j ? { card: cardFrom(j), status: statusFrom(j, new Date()), dropId: j.drop_id } : null;
 }
+
+/** Marks a card opened; true the first time (the card link then plays the hold-and-flip). */
+export async function dbRevealCard(viewToken: string): Promise<boolean> {
+  const { data } = await adminClient().rpc("reveal_card", { p_view_token: viewToken });
+  return data === true;
+}
+
+/** The business and drop a card belongs to, for the card page. */
+export async function dbCardOwner(viewToken: string): Promise<{ businessSlug: string; dropSlug: string } | null> {
+  const { data } = await adminClient().rpc("claim_by_view_token", { p_view_token: viewToken });
+  const j = data as { business_slug?: string; drop_slug?: string } | null;
+  return j?.business_slug && j.drop_slug ? { businessSlug: j.business_slug, dropSlug: j.drop_slug } : null;
+}
