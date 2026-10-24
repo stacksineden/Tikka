@@ -5,6 +5,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
 import { dbLeads, dbLogFollowup } from "./leads-db";
+import { dbDropDashboard, dbDropFeed, dbDropReport } from "./stats-db";
 import { dbAcceptInvite, dbCancelInvite, dbCheckCode, dbConfirm, dbInviteInfo, dbInviteStaff, dbRemoveStaff, dbTeam, type ConfirmDbResult } from "./team-db";
 import { dbCardByViewToken, dbCardOwner, dbDropExists, dbPublicDrop, dbRecordEvent, dbRevealCard } from "./claim-db";
 import { dbAddTikkas, dbBuyPack, dbCompletePayment, dbDeleteDraft, dbDrops, dbEndEarly, dbExtend, dbPayment, dbPayments, dbPublish, dbSaveDraft, dbVouchers, DropSaveError, type DbPublishResult } from "./drop-db";
@@ -1015,6 +1016,7 @@ export async function getDropReport(user: Pick<SessionUser, "id" | "role">, drop
   const found = await getDrop(user, dropId);
   if (!found || found.drop.status === "draft") return null;
   const d = found.drop;
+  if (isDbId(d.id)) return dbDropReport(d);
   const claims: ReportClaim[] = claimsFor(d.id)
     .filter((c) => !c.seed)
     .map((c) => ({
@@ -2005,6 +2007,7 @@ export async function getDropDashboard(user: Pick<SessionUser, "id" | "role">, d
   const found = await getDrop(user, dropId);
   if (!found || found.drop.status === "draft") return null;
   const { drop } = found;
+  if (isDbId(dropId)) return dbDropDashboard(drop);
   const base = (dropStats as Record<string, BaseStats>)[dropId] ?? ZERO;
   const events = eventStore.get(dropId) ?? [];
   const n = (k: EventKind) => events.filter((e) => e.kind === k).length;
@@ -2069,6 +2072,7 @@ export async function getDropDashboard(user: Pick<SessionUser, "id" | "role">, d
  */
 export async function getDropFeed(user: Pick<SessionUser, "id" | "role">, dropId: string, limit = 20): Promise<ActivityEvent[] | null> {
   if (user.role !== "owner") return null;
+  if (isDbId(dropId)) return (await getDrop(user, dropId)) ? dbDropFeed(dropId, limit) : null;
   const owns = storedFor(user).some((x) => x.id === dropId) || mockDropsOf(user.id).some((d) => d.id === dropId);
   if (!owns) return null;
   const views = (eventStore.get(dropId) ?? []).filter((e) => e.kind === "view").map((e) => ({ at: e.at, source: e.source }));
