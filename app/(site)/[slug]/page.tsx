@@ -237,7 +237,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
                 )}
                 {b.rating ? (
                   <span className="inline-flex items-center gap-1 text-[12px] font-semibold uppercase tracking-[0.08em]">
-                    <Star size={13} className="fill-current text-gold" aria-hidden="true" /> {b.rating} · {count(b.reviewCount)} reviews
+                    <Star size={13} className="fill-current text-gold" aria-hidden="true" /> {b.rating} · {count(b.reviewCount)} {b.reviewCount === 1 ? "review" : "reviews"}
                   </span>
                 ) : null}
               </div>
@@ -322,7 +322,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
             {b.rating ? (
               <p className="text-body mt-6 flex items-center gap-1.5 text-ink-muted">
                 <Star size={16} className="fill-current text-gold" aria-hidden="true" />
-                {b.rating} from {count(b.reviewCount)} reviews · every review is from a real visit
+                {b.rating} from {count(b.reviewCount)} {b.reviewCount === 1 ? "review" : "reviews"} · every review is from a real visit
               </p>
             ) : null}
             <ul className="-mx-4 mt-10 flex snap-x snap-mandatory scroll-px-4 gap-px overflow-x-auto bg-[var(--biz-rule)] px-4 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-3">

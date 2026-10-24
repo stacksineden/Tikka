@@ -22,7 +22,7 @@ function Stars({ n, size = 16 }: { n: number; size?: number }) {
 async function Reviews() {
   const user = await getOwnerUser();
   if (!user) redirect("/app/redeem");
-  const [b, reviews] = await Promise.all([getBusiness(user), getBusinessReviews(user.id)]);
+  const [b, reviews] = await Promise.all([getBusiness(user), getBusinessReviews(user.id, { ownerView: true })]);
   if (!b) redirect("/app/setup");
 
   return (
@@ -32,7 +32,7 @@ async function Reviews() {
         <div>
           <Stars n={Math.round(b.rating ?? 0)} size={20} />
           <p className="text-body mt-1 text-ink-muted">
-            {b.reviewCount ? `${count(b.reviewCount)} reviews from people who used a Tikka` : "No reviews yet"}
+            {b.reviewCount ? `${count(b.reviewCount)} ${b.reviewCount === 1 ? "review" : "reviews"} from people who used a Tikka` : reviews.length ? "No reviews on show" : "No reviews yet"}
           </p>
         </div>
       </section>
@@ -58,7 +58,11 @@ async function Reviews() {
                 <span className="text-caption text-ink-muted">
                   Used a Tikka · {r.dropName} · {shortDate(r.at)}
                 </span>
-                <ReportButton id={r.id} reported={r.status === "reported"} />
+                {r.status === "hidden" ? (
+                  <span className="text-caption font-semibold text-ink-muted">Hidden by Tikka after your report</span>
+                ) : (
+                  <ReportButton id={r.id} reported={r.status === "reported"} />
+                )}
               </div>
             </li>
           ))}

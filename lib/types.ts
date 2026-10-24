@@ -279,8 +279,8 @@ export interface Review {
   text?: string;
   dropName: string;
   at: string;
-  /** Reported reviews stay visible until Tikka decides (PRD B9). */
-  status?: "visible" | "reported";
+  /** Reported reviews stay visible until Tikka decides (PRD B9); only the owner sees hidden ones. */
+  status?: "visible" | "reported" | "hidden";
 }
 
 /** A drop tile on the marketplace (TECH_PLAN §13, the marketplace_drops view). */

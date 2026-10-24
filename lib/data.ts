@@ -5,6 +5,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
 import { dbLeads, dbLogFollowup } from "./leads-db";
+import { dbOwnerReviews, dbPublicReviews, dbReportReview, dbReviewPage, dbSubmitReview } from "./reviews-db";
 import { dbDropDashboard, dbDropFeed, dbDropReport } from "./stats-db";
 import { dbAcceptInvite, dbCancelInvite, dbCheckCode, dbConfirm, dbInviteInfo, dbInviteStaff, dbRemoveStaff, dbTeam, type ConfirmDbResult } from "./team-db";
 import { dbCardByViewToken, dbCardOwner, dbDropExists, dbPublicDrop, dbRecordEvent, dbRevealCard } from "./claim-db";
@@ -1740,8 +1741,16 @@ function claimReviews(ownerId: string): Review[] {
   return out;
 }
 
-/** get_business_reviews: newest first. Reported reviews stay visible until Tikka decides. */
-export async function getBusinessReviews(ownerId: string): Promise<Review[]> {
+/**
+ * get_business_reviews: newest first. Reported reviews stay visible until Tikka decides. The
+ * owner's own Reviews screen (`ownerView`) also lists the ones Tikka hid.
+ */
+export async function getBusinessReviews(ownerId: string, opts: { ownerView?: boolean } = {}): Promise<Review[]> {
+  if (isDbId(ownerId)) {
+    const b = await getBusiness({ id: ownerId });
+    if (!b) return [];
+    return opts.ownerView ? dbOwnerReviews(b.id) : dbPublicReviews(b.id);
+  }
   const mock = ownerId === DEMO_USER ? (reviews as Review[]).map((r) => ({ ...r, status: reportStore.has(r.id) ? ("reported" as const) : ("visible" as const) })) : [];
   return [...claimReviews(ownerId), ...mock].sort((a, b) => b.at.localeCompare(a.at));
 }
@@ -1759,9 +1768,10 @@ function withRatings(ownerId: string, b: Business): Business {
 export async function getReviewPage(token: string) {
   await connection();
   const c = claimStore.get(token);
-  const d = c && findDropById(c.dropId);
+  if (!c) return dbReviewPageData(token);
+  const d = findDropById(c.dropId);
   const b = d ? await getBusiness({ id: d.ownerId }) : null;
-  if (!c || !b) return null;
+  if (!b) return null;
   return {
     state: reviewState(c, new Date()),
     claimer: c.card.claimer,
@@ -1772,12 +1782,44 @@ export async function getReviewPage(token: string) {
   };
 }
 
+/** The review page for a card from a drop in the database. */
+async function dbReviewPageData(token: string) {
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return null;
+  const r = await dbReviewPage(token);
+  const found = r && (await getBusinessBySlug(r.businessSlug));
+  if (!r || !found) return null;
+  const b = found.business;
+  return {
+    state: r.state,
+    claimer: r.firstName,
+    shownAs: r.shownAs,
+    reward: r.reward,
+    business: { name: b.name, initials: b.initials, brandColor: b.brandColor, onBrandColor: b.onBrandColor, logoUrl: b.logoUrl },
+    review: r.review,
+  };
+}
+
 export type ReviewSubmit = { ok: true } | { ok: false; error: string };
+
+const REVIEW_REFUSAL: Record<string, string> = {
+  not_found: "We couldn't find that Tikka.",
+  not_redeemed: "You can review once you've used your Tikka.",
+  reviewed: "You've already reviewed this visit.",
+  closed: `Reviews close ${REVIEW_WINDOW_DAYS} days after your visit.`,
+};
 
 /** submit_review: redeemed, within 30 days, once per claim (rule 6). */
 export async function submitReview(token: string, rating: unknown, body: unknown): Promise<ReviewSubmit> {
   const c = claimStore.get(token);
-  if (!c) return { ok: false, error: "We couldn't find that Tikka." };
+  if (!c) {
+    // A card from a drop in the database: submit_review checks redeemed, 30 days and once.
+    const v = validateReview(rating, body);
+    if (!v.ok) return v;
+    if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return { ok: false, error: REVIEW_REFUSAL.not_found };
+    const kind = await dbSubmitReview(token, v.rating, v.body);
+    if (kind === "ok") return { ok: true };
+    return { ok: false, error: REVIEW_REFUSAL[kind] ?? "Something went wrong. Please try again." };
+  }
   const state = reviewState(c, new Date());
   if (state === "not_redeemed") return { ok: false, error: "You can review once you've used your Tikka." };
   if (state === "reviewed") return { ok: false, error: "You've already reviewed this visit." };
@@ -1793,6 +1835,8 @@ export async function submitReview(token: string, rating: unknown, body: unknown
 /** report_review: the business flags it for Tikka. It can never edit or delete it (rule 6). */
 export async function reportReview(user: Pick<SessionUser, "id" | "role">, id: string, reason: string): Promise<boolean> {
   if (user.role !== "owner") return false;
+  const reviewId: string | undefined = id; // a copy: isDbId narrows what it tests
+  if (isDbId(reviewId)) return dbReportReview(reviewId, reason);
   if (id.startsWith("rv_")) {
     const c = claimStore.get(id.slice(3));
     if (!c || c.ownerId !== user.id || !c.review) return false;
