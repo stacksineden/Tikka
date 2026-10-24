@@ -19,7 +19,10 @@ import {
   adminGrantDrop,
   adminSavePack,
   adminSaveTier,
-  adminSetFounding,
+  adminDecide,
+  adminPinDrop,
+  adminSetBusiness,
+  adminSetDropShown,
   buyPack,
   checkCode,
   completeOwnerPayment,
@@ -377,45 +380,75 @@ export async function saveOwnerAlertsAction(_prev: { error?: string; saved?: boo
 
 /* --------------------------------------------------------------- admin */
 
-/** DEMO: is_admin comes from the profile in M1; here the demo owner is the admin. */
+/** is_admin from the profile (the demo owner is the demo store's admin). The database checks again. */
 async function getAdmin() {
   const user = await getOwnerUser();
   return user && user.role === "owner" && user.isAdmin ? user : null;
 }
 
-export async function adminSetFoundingAction(ownerId: string, founding: boolean): Promise<void> {
-  if (!(await getAdmin())) return;
-  await adminSetFounding(ownerId, founding);
+/** Verified badge, suspend, founding member. */
+export async function adminSetBusinessAction(id: string, patch: { verified?: boolean; suspended?: boolean; foundingMember?: boolean }): Promise<void> {
+  const admin = await getAdmin();
+  if (!admin) return;
+  await adminSetBusiness(admin, id, patch);
   revalidatePath("/admin");
 }
 
 /** Grant a free drop: a size, and an optional last day to use it (WAT). Never expires without one. */
-export async function adminGrantDropAction(ownerId: string, form: FormData): Promise<void> {
-  if (!(await getAdmin())) return;
+export async function adminGrantDropAction(id: string, form: FormData): Promise<void> {
+  const admin = await getAdmin();
+  if (!admin) return;
   const tierId = String(form.get("tier") ?? "");
   const expiresOn = String(form.get("expiresOn") ?? "");
-  await adminGrantDrop(ownerId, tierId, /^\d{4}-\d{2}-\d{2}$/.test(expiresOn) ? watToIso(`${expiresOn}T23:59`) : undefined);
+  await adminGrantDrop(admin, id, tierId, /^\d{4}-\d{2}-\d{2}$/.test(expiresOn) ? watToIso(`${expiresOn}T23:59`) : undefined);
   revalidatePath("/admin");
 }
 
 const naira = (form: FormData, key: string) => Number(String(form.get(key) ?? "").replace(/[^\d.]/g, ""));
 
 export async function adminSaveTierAction(id: string, form: FormData): Promise<void> {
-  if (!(await getAdmin())) return;
+  const admin = await getAdmin();
+  if (!admin) return;
   const price = naira(form, "price");
   const founding = naira(form, "founding");
   const min = Math.floor(Number(form.get("guaranteeMin") ?? 0));
   if (![price, founding].every((n) => Number.isFinite(n) && n > 0)) return;
-  await adminSaveTier(id, { priceKobo: Math.round(price * 100), foundingPriceKobo: Math.round(founding * 100), guaranteeMinRedemptions: min > 0 ? min : null });
+  await adminSaveTier(admin, id, { priceKobo: Math.round(price * 100), foundingPriceKobo: Math.round(founding * 100), guaranteeMinRedemptions: min > 0 ? min : null });
   revalidatePath("/admin");
 }
 
 export async function adminSavePackAction(id: string, form: FormData): Promise<void> {
-  if (!(await getAdmin())) return;
+  const admin = await getAdmin();
+  if (!admin) return;
   const price = naira(form, "price");
   if (!Number.isFinite(price) || price <= 0) return;
-  await adminSavePack(id, Math.round(price * 100), form.get("active") === "on");
+  await adminSavePack(admin, id, Math.round(price * 100), form.get("active") === "on");
   revalidatePath("/admin");
+}
+
+/** The moderation queue: hide or keep. */
+export async function adminDecideAction(targetType: "drop" | "review", id: string, hide: boolean): Promise<void> {
+  const admin = await getAdmin();
+  if (!admin) return;
+  await adminDecide(admin, targetType, id, hide);
+  revalidatePath("/admin");
+}
+
+export async function adminSetDropShownAction(id: string, shown: boolean): Promise<void> {
+  const admin = await getAdmin();
+  if (!admin) return;
+  await adminSetDropShown(admin, id, shown);
+  revalidatePath("/admin");
+  revalidatePath("/drops");
+}
+
+/** Pin to the featured carousel (an empty headline unpins). */
+export async function adminPinDropAction(id: string, form: FormData): Promise<void> {
+  const admin = await getAdmin();
+  if (!admin) return;
+  await adminPinDrop(admin, id, String(form.get("headline") ?? "").slice(0, 60), String(form.get("blurb") ?? "").slice(0, 140));
+  revalidatePath("/admin");
+  revalidatePath("/drops");
 }
 
 /* ------------------------------------------------------------ Paystack */

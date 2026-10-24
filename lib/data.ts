@@ -5,6 +5,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
 import { dbLeads, dbLogFollowup } from "./leads-db";
+import { dbAdminBusinesses, dbAdminDecide, dbAdminDrops, dbAdminGrantDrop, dbAdminOverview, dbAdminPayments, dbAdminPinDrop, dbAdminReports, dbAdminSaveTier, dbAdminSavePack, dbAdminSetBusiness, dbAdminSetDropShown, dbPacks, dbPins, dbTiers, type AdminBusiness, type AdminDrop, type AdminOverview, type AdminPayment, type AdminReport } from "./admin-db";
 import { dbMarketplaceDrops, dbNotifyIntent, dbReportDrop } from "./market-db";
 import { dbOwnerReviews, dbPublicReviews, dbReportReview, dbReviewPage, dbSubmitReview } from "./reviews-db";
 import { dbDropDashboard, dbDropFeed, dbDropReport } from "./stats-db";
@@ -299,12 +300,12 @@ const packStore: DropPack[] = ((globalThis as { __tikkaPacks?: DropPack[] }).__t
 
 /** drop_tiers, read from the database and cached. */
 export async function getDropTiers(): Promise<DropTier[]> {
-  return [...tierStore].sort((a, b) => a.sort - b.sort);
+  return (await dbTiers()) ?? [...tierStore].sort((a, b) => a.sort - b.sort);
 }
 
 /** drop_packs that can be bought. */
 export async function getDropPacks(): Promise<DropPack[]> {
-  return packStore.filter((p) => p.active);
+  return ((await dbPacks()) ?? packStore).filter((p) => p.active);
 }
 
 /** Card setup and Settings. Throws BusinessSaveError when the database refuses (say a page address was just taken). */
@@ -1043,68 +1044,112 @@ export async function getDropReport(user: Pick<SessionUser, "id" | "role">, drop
 
 /* --------------------------------------------------------------- admin */
 
-export interface AdminBusinessRow {
-  ownerId: string;
-  business: Business;
-  dropsReady: number;
-  paidKobo: number;
+export type { AdminBusiness, AdminDrop, AdminOverview, AdminPayment, AdminReport } from "./admin-db";
+
+type AdminUser = Pick<SessionUser, "id">;
+
+/** Everything /admin shows. A real admin reads the database (is_admin checked there); the demo admin, the demo store. */
+export async function adminView(user: AdminUser, query?: string): Promise<{ overview: AdminOverview; businesses: AdminBusiness[]; payments: AdminPayment[]; reports: AdminReport[]; drops: AdminDrop[] }> {
+  await connection();
+  if (isDbId(user.id)) {
+    const [overview, businesses, payments, reports, drops] = await Promise.all([dbAdminOverview(), dbAdminBusinesses(query), dbAdminPayments(), dbAdminReports(), dbAdminDrops()]);
+    return { overview, businesses, payments, reports, drops };
+  }
+  return demoAdminView(query);
 }
 
-/** /admin: every business with its money at a glance. */
-export async function adminBusinesses(): Promise<AdminBusinessRow[]> {
-  await connection();
+/** DEMO: the demo store in the same shapes (no moderation queue or marketplace controls). */
+function demoAdminView(query?: string) {
   const owners = new Map<string, Business>();
   owners.set(DEMO_USER, normalize(store.get(DEMO_USER) ?? (business as Business)));
   for (const x of SEEDS) owners.set(x.ownerId, normalize(store.get(x.ownerId) ?? x.business));
   for (const [id, b] of store) owners.set(id, normalize(b));
   const now = new Date();
-  return [...owners].map(([ownerId, b]) => ({
-    ownerId,
-    business: b,
-    dropsReady: (voucherStore.get(ownerId) ?? []).filter((v) => usable(v, now)).length,
-    paidKobo: (paymentStore.get(ownerId) ?? []).filter((p) => p.status === "paid").reduce((x, p) => x + p.amountKobo, 0),
-  }));
-}
-
-export async function adminSetFounding(ownerId: string, founding: boolean): Promise<void> {
-  const b = store.get(ownerId) ?? mockBusiness(ownerId);
-  if (b) store.set(ownerId, { ...normalize(b), foundingMember: founding });
-}
-
-export async function adminGrantDrop(ownerId: string, tierId: string, expiresAt?: string): Promise<void> {
-  if (!tierStore.some((t) => t.id === tierId)) return;
-  addVouchers(ownerId, [adminVoucher(ownerId, tierId, new Date(), expiresAt)]);
-}
-
-export async function adminPayments(): Promise<(Payment & { businessName: string })[]> {
-  await connection();
-  const out: (Payment & { businessName: string })[] = [];
+  const q = query?.trim().toLowerCase();
+  const businesses: AdminBusiness[] = [...owners]
+    .filter(([, b]) => !q || [b.name, b.slug, b.city].some((x) => x?.toLowerCase().includes(q)))
+    .map(([ownerId, b]) => ({
+      id: ownerId,
+      name: b.name,
+      slug: b.slug,
+      area: b.area,
+      city: b.city,
+      category: b.category,
+      verified: !!b.verified,
+      suspended: false,
+      isDemo: true,
+      foundingMember: !!b.foundingMember,
+      guaranteeUsed: !!b.guaranteeUsed,
+      dropsReady: (voucherStore.get(ownerId) ?? []).filter((v) => usable(v, now)).length,
+      paidKobo: (paymentStore.get(ownerId) ?? []).filter((p) => p.status === "paid").reduce((x, p) => x + p.amountKobo, 0),
+      drops: (dropStore.get(ownerId) ?? []).filter((d) => d.publishedAt).length,
+    }));
+  const payments: AdminPayment[] = [];
   for (const [ownerId, list] of paymentStore) {
-    const b = store.get(ownerId) ?? mockBusiness(ownerId);
-    for (const p of list) out.push({ ...p, businessName: b?.name ?? ownerId });
+    const b = owners.get(ownerId);
+    for (const p of list) payments.push({ id: p.id, kind: p.kind, amountKobo: p.amountKobo, status: p.status, reference: p.reference, toTier: p.toTier, createdAt: p.createdAt, businessName: b?.name ?? ownerId });
   }
-  return out.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  payments.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const paid = payments.filter((p) => p.status === "paid");
+  const sum = (k?: string) => paid.filter((p) => !k || p.kind === k).reduce((x, p) => x + p.amountKobo, 0);
+  const guaranteeVouchers: AdminOverview["guaranteeVouchers"] = [];
+  for (const [ownerId, list] of voucherStore) for (const v of list) if (v.source === "guarantee") guaranteeVouchers.push({ businessName: owners.get(ownerId)?.name ?? ownerId, tierId: v.tierId, createdAt: v.createdAt });
+  const overview: AdminOverview = {
+    businesses: owners.size,
+    liveDrops: 0,
+    claimsToday: 0,
+    redemptionsToday: 0,
+    waSent30d: 0,
+    waCost30dUsd: 0,
+    revenue: { total: sum(), drop: sum("drop"), upgrade: sum("upgrade"), pack: sum("pack") },
+    guaranteeVouchers,
+  };
+  return { overview, businesses, payments, reports: [] as AdminReport[], drops: [] as AdminDrop[] };
 }
 
-export async function adminGuaranteeDrops(): Promise<{ ownerId: string; tierId: string; createdAt: string }[]> {
-  const out: { ownerId: string; tierId: string; createdAt: string }[] = [];
-  for (const [ownerId, list] of voucherStore) for (const v of list) if (v.source === "guarantee") out.push({ ownerId, tierId: v.tierId, createdAt: v.createdAt });
-  return out;
+/** Verified badge, suspend, founding member. */
+export async function adminSetBusiness(user: AdminUser, id: string, patch: { verified?: boolean; suspended?: boolean; foundingMember?: boolean }): Promise<void> {
+  if (isDbId(user.id)) return dbAdminSetBusiness(id, patch);
+  const b = store.get(id) ?? mockBusiness(id);
+  if (b) store.set(id, { ...normalize(b), ...(patch.foundingMember !== undefined && { foundingMember: patch.foundingMember }), ...(patch.verified !== undefined && { verified: patch.verified }) });
 }
 
-export async function adminSaveTier(id: string, patch: { priceKobo: number; foundingPriceKobo: number; guaranteeMinRedemptions: number | null }): Promise<void> {
+export async function adminGrantDrop(user: AdminUser, id: string, tierId: string, expiresAt?: string): Promise<void> {
+  if (isDbId(user.id)) return dbAdminGrantDrop(id, tierId, expiresAt);
+  if (!tierStore.some((t) => t.id === tierId)) return;
+  addVouchers(id, [adminVoucher(id, tierId, new Date(), expiresAt)]);
+}
+
+export async function adminSaveTier(user: AdminUser, id: string, patch: { priceKobo: number; foundingPriceKobo: number; guaranteeMinRedemptions: number | null }): Promise<void> {
+  if (isDbId(user.id)) return dbAdminSaveTier(id, patch);
   const t = tierStore.find((x) => x.id === id);
   if (t && id !== "free") Object.assign(t, patch);
 }
 
-/** Every season pack, including ones taken off sale (admin, and old payments). */
-export async function getAllDropPacks(): Promise<DropPack[]> {
-  return [...packStore];
-}
-
-export async function adminSavePack(id: string, priceKobo: number, active: boolean): Promise<void> {
+export async function adminSavePack(user: AdminUser, id: string, priceKobo: number, active: boolean): Promise<void> {
+  if (isDbId(user.id)) return dbAdminSavePack(id, priceKobo, active);
   const p = packStore.find((x) => x.id === id);
   if (p) Object.assign(p, { priceKobo, active });
+}
+
+/** The moderation queue: hide or keep a reported drop or review. */
+export async function adminDecide(user: AdminUser, targetType: "drop" | "review", id: string, hide: boolean): Promise<void> {
+  if (isDbId(user.id)) return dbAdminDecide(targetType, id, hide);
+}
+
+/** Take a drop off the marketplace, or put it back. */
+export async function adminSetDropShown(user: AdminUser, id: string, shown: boolean): Promise<void> {
+  if (isDbId(user.id)) return dbAdminSetDropShown(id, shown);
+}
+
+/** Pin a drop in the featured carousel; an empty headline unpins it. */
+export async function adminPinDrop(user: AdminUser, id: string, headline: string, blurb: string): Promise<void> {
+  if (isDbId(user.id)) return dbAdminPinDrop(id, headline, blurb);
+}
+
+/** Every season pack, including ones taken off sale (admin, and old payments). */
+export async function getAllDropPacks(): Promise<DropPack[]> {
+  return (await dbPacks()) ?? [...packStore];
 }
 
 export async function deleteDropDraft(user: Pick<SessionUser, "id">, id: string): Promise<void> {
@@ -1258,8 +1303,8 @@ export async function getMarketplaceDrops({ includeDemo = SHOW_DEMO_ON_MARKETPLA
 
 /** Admin pins (marketplace_pins): the featured carousel. */
 export async function getMarketPins(): Promise<MarketPin[]> {
-  // The seeded pins all point at demo drops.
-  return SHOW_DEMO_ON_MARKETPLACE ? (marketPins as MarketPin[]) : [];
+  // Admin pins on real drops first; the seeded pins all point at demo drops.
+  return [...(await dbPins()), ...(SHOW_DEMO_ON_MARKETPLACE ? (marketPins as MarketPin[]) : [])];
 }
 
 /* ---------------------------------------------------------- Notify me */
