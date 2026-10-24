@@ -1447,3 +1447,7 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+.tk-consent a {
+  color: inherit;
+  text-decoration: underline;
+}

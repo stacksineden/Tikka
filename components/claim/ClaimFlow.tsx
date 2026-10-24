@@ -673,7 +673,17 @@ export function ClaimFlow({
               <input type="checkbox" checked={futureDrops} onChange={(e) => setFutureDrops(e.target.checked)} />
               <span>Send me future drops from {face.name}</span>
             </label>
-            <p className="tk-consent">{face.name} will be able to message you on WhatsApp about this drop.</p>
+            <p className="tk-consent">
+              {face.name} will be able to message you on WhatsApp about this drop. By continuing you agree to Tikka&apos;s{" "}
+              <a href="/terms" target="_blank" rel="noopener">
+                terms
+              </a>{" "}
+              and{" "}
+              <a href="/privacy" target="_blank" rel="noopener">
+                privacy policy
+              </a>
+              .
+            </p>
             <button className="tk-btn tk-btn-gold" type="submit">
               <ChatIcon />
               Continue on WhatsApp

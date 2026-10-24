@@ -90,7 +90,15 @@ export function SignUpForm() {
         <PasswordField autoComplete="new-password" hint="At least 8 characters." />
         <SubmitButton pendingLabel="Creating your account…">Create account</SubmitButton>
         <p className="text-caption text-ink-muted">
-          By creating an account you agree to Tikka&apos;s terms and privacy policy.
+          By creating an account you agree to Tikka&apos;s{" "}
+          <Link href="/terms" className="underline">
+            terms
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="underline">
+            privacy policy
+          </Link>
+          .
         </p>
       </form>
     </div>

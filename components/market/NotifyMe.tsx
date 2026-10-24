@@ -106,7 +106,12 @@ export function NotifyMe({
             </div>
           ) : (
             <div className="mt-2 grid gap-4">
-              <p className="text-body text-ink-muted">Tikka will send you one message {what}. {businessName} sees how many people are waiting, never who.</p>
+              <p className="text-body text-ink-muted">
+                Tikka will send you one message {what}. {businessName} sees how many people are waiting, never who.{" "}
+                <a href="/privacy#notify" target="_blank" rel="noopener" className="underline">
+                  Privacy
+                </a>
+              </p>
               {state === "error" && (
                 <p role="alert" className="text-caption font-semibold text-danger">
                   {message}

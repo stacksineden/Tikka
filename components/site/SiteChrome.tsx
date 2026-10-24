@@ -63,8 +63,8 @@ export function SiteFooter() {
           <ul className="text-body mt-3 grid gap-2 text-ink-muted">
             <li><Link className="hover:text-ink" href="/drops">Browse drops</Link></li>
             <li><Link className="hover:text-ink" href="/#faq">FAQs</Link></li>
-            <li><span>Privacy policy (coming soon)</span></li>
-            <li><span>Terms (coming soon)</span></li>
+            <li><Link className="hover:text-ink" href="/privacy">Privacy policy</Link></li>
+            <li><Link className="hover:text-ink" href="/terms">Terms</Link></li>
           </ul>
         </div>
       </div>
