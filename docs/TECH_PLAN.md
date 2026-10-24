@@ -207,7 +207,7 @@ In code: `app/api/whatsapp/webhook/route.ts` checks Meta's signature (`WHATSAPP_
 - `tikka_drop_live`: "{{1}}'s drop is live. {{2}} Tikkas, {{3}} legendary. Claim yours: {{4}}" with a button to the claim page.
 - `tikka_redeemed_thanks`: "Thanks for coming to {{1}}, {{2}}. {{3}} How was it? Rate them here: {{4}}" ({{3}} is the bounce-back line, or empty).
 - `tikka_expiry_reminder`: "Your {{1}} at {{2}} ends {{3}}. Show this at the counter: {{4}}".
-- `tikka_owner_daily`: "{{1}} today: {{2}} new claims, {{3}} planning to come tomorrow, {{4}} Tikkas expiring soon. Open your list: {{5}}".
+- `tikka_owner_daily`: "{{1}} today: {{2}}, {{3}} planning to come tomorrow, {{4}} expiring soon. {{5}} Open your list: {{6}}" ({{2}} and {{4}} carry their nouns, "1 new claim", "5 Tikkas"; {{5}} is the seasonal "Run it again" line, or empty).
 If a template isn't approved yet, skip that message and log it.
 
 ### Expiry reminders

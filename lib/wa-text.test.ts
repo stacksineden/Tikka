@@ -52,6 +52,12 @@ describe("WhatsApp messages", () => {
     );
   });
 
+  it("sum up the owner's day", () => {
+    const m = compose("owner_daily", { business_name: "Bodija Barbers", new_claims: 1, planning_tomorrow: 1, expiring_soon: 0, nudge: null }, SITE);
+    expect(m.text).toBe("Bodija Barbers today: 1 new claim, 1 planning to come tomorrow, 0 Tikkas expiring soon. Open your list: https://usetikka.com/app/leads");
+    expect(m.params).toEqual(["Bodija Barbers", "1 new claim", "1", "0 Tikkas", "", "https://usetikka.com/app/leads"]);
+  });
+
   it("never use gambling words", () => {
     const replies = ["sold_out", "market_sold_out", "blocked_new_only", "blocked_period", "expired", "invalid", "help", "stopped", "stopped_all", "notify_live", "notify_invalid"];
     for (const reply of replies) expect(compose("reply", { reply, business_name: "Glow" }, SITE).text).not.toMatch(GAMBLING);

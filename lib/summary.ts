@@ -23,11 +23,20 @@ export function summaryCounts(claims: SummaryClaim[], now: Date): { newClaims: n
   };
 }
 
+/**
+ * The template's values, in order (tikka_owner_daily: "{{1}} today: {{2}}, {{3}} planning to come
+ * tomorrow, {{4}} expiring soon. {{5}} Open your list: {{6}}"). Each count carries its own noun so
+ * one reads "1 new claim"; {{5}} is the seasonal "Run it again" line, or blank.
+ */
+export function dailySummaryParams(businessName: string, c: ReturnType<typeof summaryCounts>, link: string, nudge?: string | null): string[] {
+  const s = (n: number, one: string, many: string) => `${count(n)} ${n === 1 ? one : many}`;
+  return [businessName, s(c.newClaims, "new claim", "new claims"), count(c.planningTomorrow), s(c.expiringSoon, "Tikka", "Tikkas"), nudge ?? "", link];
+}
+
 /** "Glow Studio today: 12 new claims, 3 planning to come tomorrow, 5 Tikkas expiring soon. Open your list: …" */
 export function dailySummaryText(businessName: string, c: ReturnType<typeof summaryCounts>, link: string, nudge?: string | null): string {
-  const s = (n: number, one: string, many: string) => `${count(n)} ${n === 1 ? one : many}`;
-  const text = `${businessName} today: ${s(c.newClaims, "new claim", "new claims")}, ${count(c.planningTomorrow)} planning to come tomorrow, ${s(c.expiringSoon, "Tikka", "Tikkas")} expiring soon. Open your list: ${link}`;
-  return nudge ? `${text}\n${nudge}` : text;
+  const [name, claims, planning, expiring] = dailySummaryParams(businessName, c, link, nudge);
+  return `${name} today: ${claims}, ${planning} planning to come tomorrow, ${expiring} expiring soon.${nudge ? ` ${nudge}` : ""} Open your list: ${link}`;
 }
 
 /** Nothing new and nothing coming up: skip the message rather than send zeros. */

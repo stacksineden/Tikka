@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { followupKind, followups, visitPlanLabel, type FollowupLead } from "./followups";
 import { blackFriday, seasonalNudge, seasonOn } from "./nudges";
 import { dropReport, rewardCost, type ReportClaim } from "./report";
-import { dailySummaryText, summaryCounts, worthSending } from "./summary";
+import { dailySummaryParams, dailySummaryText, summaryCounts, worthSending } from "./summary";
 
 // Tue 20 Oct 2026, 11:00 WAT
 const now = new Date("2026-10-20T11:00:00+01:00");
@@ -148,6 +148,10 @@ describe("daily summary", () => {
     expect(dailySummaryText("Glow Studio", c, "usetikka.com/app/leads")).toBe(
       "Glow Studio today: 1 new claim, 1 planning to come tomorrow, 1 Tikka expiring soon. Open your list: usetikka.com/app/leads",
     );
+    expect(dailySummaryText("Glow Studio", { newClaims: 12, planningTomorrow: 3, expiringSoon: 5 }, "usetikka.com/app/leads", "December is coming. Run it again?")).toBe(
+      "Glow Studio today: 12 new claims, 3 planning to come tomorrow, 5 Tikkas expiring soon. December is coming. Run it again? Open your list: usetikka.com/app/leads",
+    );
+    expect(dailySummaryParams("Glow Studio", c, "usetikka.com/app/leads")).toEqual(["Glow Studio", "1 new claim", "1", "1 Tikka", "", "usetikka.com/app/leads"]);
     expect(worthSending({ newClaims: 0, planningTomorrow: 0, expiringSoon: 0 })).toBe(false);
     expect(worthSending({ newClaims: 0, planningTomorrow: 0, expiringSoon: 0 }, "December is here.")).toBe(true);
   });

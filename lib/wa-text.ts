@@ -3,6 +3,7 @@
 // Meta's approved templates take them (TECH_PLAN §5). No gambling words (rule 8); naira as ₦.
 
 import { clockTime, count, shortDate } from "./format";
+import { dailySummaryParams, dailySummaryText } from "./summary";
 
 const TIER_WORD: Record<string, string> = { legendary: "Legendary", rare: "Rare", common: "Thank-you", thank_you: "Thank-you" };
 
@@ -95,6 +96,12 @@ export function compose(kind: string, p: P, site: string): Composed {
       const total = count(Number(p.total) || 0);
       const legendary = count(Number(p.legendary) || 0);
       return { text: `${str(p.business_name)}'s drop is live. ${total} Tikkas, ${legendary} legendary. Claim yours: ${url}`, params: [str(p.business_name), total, legendary, url] };
+    }
+    case "owner_daily": {
+      const c = { newClaims: Number(p.new_claims) || 0, planningTomorrow: Number(p.planning_tomorrow) || 0, expiringSoon: Number(p.expiring_soon) || 0 };
+      const link = `${site}/app/leads`;
+      const nudge = str(p.nudge) || null;
+      return { text: dailySummaryText(str(p.business_name), c, link, nudge), params: dailySummaryParams(str(p.business_name), c, link, nudge) };
     }
     default:
       return { text: str(p.text) || "A message from Tikka." };
