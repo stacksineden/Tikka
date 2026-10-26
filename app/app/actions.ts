@@ -67,6 +67,7 @@ import type { BusinessPageInput } from "@/lib/page";
 import type { Business, OpeningHours, PortfolioPhoto, ServeMode, ServiceItem } from "@/lib/types";
 import { requestPhone } from "@/lib/privacy";
 import type { PersonRecord } from "@/lib/data";
+import { dbAdminSetEnquiryStatus } from "@/lib/studio-db";
 
 export type Extras = Partial<Pick<Business, "tagline" | "about" | "hours" | "services" | "hasVideo" | "videoUrl" | "videoPosterUrl" | "address" | "slug">>;
 export type SaveResult = { ok: true } | { ok: false; errors: Errors };
@@ -456,6 +457,18 @@ export async function adminPinDropAction(id: string, form: FormData): Promise<vo
   await adminPinDrop(admin, id, String(form.get("headline") ?? "").slice(0, 60), String(form.get("blurb") ?? "").slice(0, 140));
   revalidatePath("/admin");
   revalidatePath("/drops");
+}
+
+/* ------------------------------------------------- Studio enquiries */
+
+/** An admin moves a Tikka Studio enquiry along: new → contacted → converted or closed. */
+export async function adminEnquiryStatusAction(id: string, form: FormData): Promise<void> {
+  const admin = await getAdmin();
+  if (!admin || !isDbId(admin.id)) return;
+  const status = String(form.get("status") ?? "");
+  if (status !== "new" && status !== "contacted" && status !== "converted" && status !== "closed") return;
+  await dbAdminSetEnquiryStatus(id, status);
+  revalidatePath("/admin");
 }
 
 /* ------------------------------------------------- privacy requests */

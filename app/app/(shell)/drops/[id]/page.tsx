@@ -19,6 +19,8 @@ import { SOURCE_LABEL } from "@/lib/leads";
 import { rewardHook } from "@/lib/posters";
 import { qrSvg, SITE } from "@/lib/qr";
 import { getOwnerUser } from "@/lib/session";
+import { sparkState } from "@/lib/studio-db";
+import { SparkCard } from "@/components/spark/SparkTeaser";
 import type { Source } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Drop" };
@@ -63,6 +65,7 @@ async function Dashboard({ params, searchParams }: { params: PageProps<"/app/dro
   const { drop } = found;
   if (drop.status === "draft") redirect(`/app/drops/new?draft=${drop.id}`);
   if (!stats) notFound();
+  const spark = await sparkState(business.id);
 
   const url = `${SITE}/d/${business.slug}/${drop.slug}`;
   // The counter poster (every business has one): it opens whatever drop is live.
@@ -172,6 +175,16 @@ async function Dashboard({ params, searchParams }: { params: PageProps<"/app/dro
           </div>
 
           {report && drop.status !== "scheduled" && <ResultsCard report={report} />}
+
+          {/* Spark isn't built yet: a "coming soon" card only (PRD B12), hidden once dismissed. */}
+          {!spark.dismissed.includes("spark_dashboard") && (
+            <SparkCard
+              teaser="spark_dashboard"
+              text="Spark's read on this drop. Coming soon: what worked, what didn't and what to try next."
+              onList={spark.onList}
+              canAct
+            />
+          )}
 
           <Card title="Where people drop off" id="funnel-h">
             <ol className="mt-4 grid gap-3">

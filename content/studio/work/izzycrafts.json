@@ -1,0 +1,30 @@
+{
+  "title": "An online store for IzzyCrafts",
+  "slug": "izzycrafts",
+  "client": "IzzyCrafts",
+  "city": null,
+  "categories": [
+    "websites"
+  ],
+  "industry": "fashion",
+  "services": [
+    "Online store",
+    "Custom order flow"
+  ],
+  "cover": "/studio/work/izzycrafts.jpg",
+  "media": [
+    {
+      "type": "image",
+      "src": "/studio/work/izzycrafts.jpg",
+      "alt": "IzzyCrafts home page, showing handmade leather loafers and the shop navigation"
+    }
+  ],
+  "challenge": null,
+  "what_we_did": "An online store for handmade footwear, with a catalogue by style and a made-to-order custom pair flow.",
+  "results": [],
+  "quote": null,
+  "live_url": "https://www.izzycrafts.com/",
+  "featured": true,
+  "order": 3,
+  "published": true
+}

@@ -1,0 +1,32 @@
+{
+  "title": "Branding and online ordering for Macbite",
+  "slug": "macbite",
+  "client": "Macbite",
+  "city": "Ibadan",
+  "categories": [
+    "websites"
+  ],
+  "industry": "food",
+  "services": [
+    "Branding",
+    "Website",
+    "Online ordering"
+  ],
+  "cover": "/studio/work/macbite.jpg",
+  "media": [
+    {
+      "type": "image",
+      "src": "/studio/work/macbite.jpg",
+      "alt": "Macbite home page with the menu and ordering options",
+      "caption": "Home page — order for delivery or pickup"
+    }
+  ],
+  "challenge": "Customers ordering through long chats.",
+  "what_we_did": "Branding, then an online ordering platform for breakfast, lunch and dinner.",
+  "results": [],
+  "quote": null,
+  "live_url": "https://www.macbite.com.ng/",
+  "featured": true,
+  "order": 2,
+  "published": true
+}

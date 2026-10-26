@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ChevronRight, Clock, Film, Globe, Images, Wallet, ListChecks, Palette, Phone, Store, UserRound, UsersRound, type LucideIcon } from "lucide-react";
+import { ChevronRight, Clock, Film, Globe, Images, Wallet, ListChecks, Palette, Phone, Sparkles, Store, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -79,6 +79,7 @@ async function Hub() {
 
       {group("Your card", card)}
       {group("Your account", account)}
+      {group("Help", [{ href: "/studio", label: "Get help from Tikka Studio", meta: "We build websites, WhatsApp follow-up and ads, and run drops for you", Icon: Sparkles }])}
     </div>
   );
 }

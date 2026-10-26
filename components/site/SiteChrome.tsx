@@ -8,6 +8,7 @@ const NAV = [
   { href: "/#who-its-for", label: "Who it's for" },
   { href: "/#pricing", label: "Pricing" },
   { href: "/#faq", label: "FAQs" },
+  { href: "/studio", label: "Studio" },
 ];
 
 /** Sits on the night stage at the top of the landing page. */
@@ -62,6 +63,7 @@ export function SiteFooter() {
           <h2 className="text-label text-ink">Tikka</h2>
           <ul className="text-body mt-3 grid gap-2 text-ink-muted">
             <li><Link className="hover:text-ink" href="/drops">Browse drops</Link></li>
+            <li><Link className="hover:text-ink" href="/studio">Studio</Link></li>
             <li><Link className="hover:text-ink" href="/#faq">FAQs</Link></li>
             <li><Link className="hover:text-ink" href="/privacy">Privacy policy</Link></li>
             <li><Link className="hover:text-ink" href="/terms">Terms</Link></li>

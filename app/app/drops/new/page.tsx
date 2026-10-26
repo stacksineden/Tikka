@@ -6,6 +6,7 @@ import { SimpleBuilder } from "@/components/drops/SimpleBuilder";
 import { getBusiness, getDrop, getDrops, getDropTemplates, getDropTiers, getVouchers } from "@/lib/data";
 import { blankDraft, copyDraft, setTotal, sizeAdvice } from "@/lib/drop";
 import { getSessionUser } from "@/lib/session";
+import { sparkState } from "@/lib/studio-db";
 import { templateCategory } from "@/lib/templates";
 import { usable } from "@/lib/vouchers";
 
@@ -23,11 +24,12 @@ async function Builder({ searchParams }: { searchParams: PageProps<"/app/drops/n
   const fromId = typeof sp.from === "string" ? sp.from : undefined;
   await connection(); // dates and drafts are per request
   const now = new Date();
-  const [tiers, vouchers, templates, drops] = await Promise.all([
+  const [tiers, vouchers, templates, drops, spark] = await Promise.all([
     getDropTiers(),
     getVouchers(user),
     getDropTemplates(templateCategory(business.category)),
     getDrops(user, now),
+    sparkState(business.id),
   ]);
 
   let initial = blankDraft(now);
@@ -68,6 +70,7 @@ async function Builder({ searchParams }: { searchParams: PageProps<"/app/drops/n
       vouchers={vouchers}
       pastSuggest={pastSuggest}
       editing={editing}
+      spark={spark.dismissed.includes("spark_builder") ? null : { onList: spark.onList }}
     />
   );
 }

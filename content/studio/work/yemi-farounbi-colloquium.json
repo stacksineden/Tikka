@@ -1,0 +1,29 @@
+{
+  "title": "A landing page for The Yemi Farounbi Colloquium",
+  "slug": "yemi-farounbi-colloquium",
+  "client": "The Yemi Farounbi Colloquium",
+  "city": null,
+  "categories": [
+    "websites"
+  ],
+  "industry": "events",
+  "services": [
+    "Landing page"
+  ],
+  "cover": "/studio/work/tyf-colloquium.jpg",
+  "media": [
+    {
+      "type": "image",
+      "src": "/studio/work/tyf-colloquium.jpg",
+      "alt": "The Yemi Farounbi Colloquium home page"
+    }
+  ],
+  "challenge": null,
+  "what_we_did": "A landing page for the colloquium.",
+  "results": [],
+  "quote": "yemi-farounbi",
+  "live_url": "https://www.tyfcolloquium.org/",
+  "featured": true,
+  "order": 4,
+  "published": true
+}

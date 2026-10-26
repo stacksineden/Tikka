@@ -249,3 +249,37 @@ export async function cardImage(c: CardArt): Promise<ImageResponse> {
     headers: { "Cache-Control": "public, max-age=3600, s-maxage=86400" },
   });
 }
+
+/** Link preview for a Tikka Studio case study (1200×630): the client, what we did, and the cover. */
+export async function studioCaseImage(c: { client: string; title: string; label: string; cover: string | null }): Promise<ImageResponse> {
+  const [wordmark, loadedFonts] = await Promise.all([loadWordmark(), loadFonts()]);
+  // A cover in public/ is read from disk (the renderer won't fetch from our own host); Cloudinary is fetched.
+  let cover: string | null = null;
+  if (c.cover?.startsWith("/")) {
+    const file = await readFile(join(process.cwd(), "public", c.cover)).catch(() => null);
+    cover = file ? `data:image/jpeg;base64,${file.toString("base64")}` : null;
+  } else if (c.cover) {
+    cover = c.cover.includes("/video/upload/")
+      ? c.cover.replace("/video/upload/", "/video/upload/so_2,w_560,h_630,c_fill,f_jpg,q_auto/").replace(/\.\w+$/, ".jpg")
+      : c.cover.replace("/image/upload/", "/image/upload/w_560,h_630,c_fill,g_north,f_jpg,q_auto/");
+  }
+  const art = (
+    <div style={{ width: "100%", height: "100%", display: "flex", background: TOKENS.night, color: TOKENS.onNight, fontFamily: "Bricolage" }}>
+      <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", flex: 1, padding: "0 70px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={wordmark} width={120} height={42} alt="" />
+          <div style={{ display: "flex", fontSize: 38, fontWeight: 800, letterSpacing: -1 }}>Studio</div>
+        </div>
+        <div style={{ display: "flex", fontSize: 20, color: TOKENS.onNightMuted, marginTop: 44, ...mono }}>{c.label}</div>
+        <div style={{ display: "flex", fontSize: 64, fontWeight: 800, lineHeight: 1.05, letterSpacing: -2, marginTop: 14 }}>{c.client}</div>
+        <div style={{ display: "flex", fontSize: 30, fontWeight: 500, color: TOKENS.onNightMuted, marginTop: 18 }}>{c.title}</div>
+      </div>
+      {cover && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={cover} width={560} height={630} alt="" style={{ objectFit: "cover" }} />
+      )}
+    </div>
+  );
+  return new ImageResponse(art, { width: 1200, height: 630, fonts: loadedFonts, headers: { "Cache-Control": "public, max-age=3600, s-maxage=86400" } });
+}

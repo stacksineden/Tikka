@@ -17,12 +17,14 @@ export const LIMITS = {
   report: [{ max: 5, seconds: 86_400 }, { max: 60, seconds: 86_400 }],
   events: [{ max: 300, seconds: 600 }, { max: 5000, seconds: 600 }],
   visit: [{ max: 30, seconds: 600 }, { max: 300, seconds: 600 }],
+  enquiry: [{ max: 5, seconds: 3600 }, { max: 40, seconds: 3600 }],
+  early_access: [{ max: 10, seconds: 3600 }, { max: 100, seconds: 3600 }],
 } satisfies Record<string, [Rule, Rule]>;
 
 export type Limited = keyof typeof LIMITS;
 
 /** The caller's address as Vercel passes it (the first in x-forwarded-for). */
-export function clientIp(request: Request): string | null {
+export function clientIp(request: Request | { headers: Headers }): string | null {
   const fwd = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   return fwd || request.headers.get("x-real-ip") || null;
 }
@@ -33,7 +35,7 @@ function hashed(value: string): string {
 }
 
 /** True when this caller has gone over the endpoint's limit (and the request should get a 429). */
-export async function tooMany(request: Request, endpoint: Limited, visitorId?: string | null): Promise<boolean> {
+export async function tooMany(request: Request | { headers: Headers }, endpoint: Limited, visitorId?: string | null): Promise<boolean> {
   const [perVisitor, perIp] = LIMITS[endpoint];
   const ip = clientIp(request);
   const checks: [string, Rule][] = [];

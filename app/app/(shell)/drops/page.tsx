@@ -157,6 +157,12 @@ async function DropsList() {
             <Plus />
             Create your first drop
           </Link>
+          <p className="text-body mt-4 text-ink-muted">
+            Want us to plan and launch it for you?{" "}
+            <Link href="/studio/contact" className="font-semibold text-brand underline">
+              Talk to Tikka Studio.
+            </Link>
+          </p>
         </div>
       </div>
     );

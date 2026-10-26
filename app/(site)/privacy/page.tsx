@@ -88,6 +88,16 @@ const sections: LegalSection[] = [
     ),
   },
   {
+    id: "studio",
+    title: "Tikka Studio and Spark",
+    body: (
+      <p>
+        If you ask Tikka Studio for help, we keep what you send (your name, business, WhatsApp number and what you need) to reply to you on WhatsApp. If you ask to hear
+        about Spark first, we keep your email or WhatsApp number only to tell you when it&apos;s ready. Neither is shared with any business.
+      </p>
+    ),
+  },
+  {
     id: "messages",
     title: "WhatsApp messages and STOP",
     body: (

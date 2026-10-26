@@ -6,6 +6,7 @@ export const RESERVED_SLUGS = new Set([
   "check-email", "forgot-password", "reset-password", "pricing", "terms", "privacy", "help", "support", "about",
   "settings", "account", "dashboard", "blog", "careers", "contact", "legal", "static", "assets", "brand", "mock",
   "favicon", "icon", "robots", "sitemap", "tikka", "usetikka", "marketplace", "search", "new", "www", "mail",
+  "studio", "spark", "dev", "q", "auth",
 ]);
 
 const SLUG = /^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])$/;

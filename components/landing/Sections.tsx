@@ -546,6 +546,10 @@ function faqs(tiers: DropTier[], packs: DropPack[]): { id?: string; q: string; a
       a: `Your business page and your first drop (up to ${count(free?.maxCards ?? 200)} Tikkas) are free. After that you pay per drop: ${list(prices)}.${pack ? ` Or buy a season pack of ${count(pack.drops)} drops.` : ""} Pay by card or transfer. No subscription.`,
     },
     {
+      q: "Does Tikka use AI?",
+      a: "Spark, our drop strategist, is coming soon. It will suggest offers, sizes and timing based on what works for businesses like yours.",
+    },
+    {
       id: "faq-guarantee",
       q: "What if my drop doesn't bring customers?",
       a: `If a paid drop brings fewer than ${list(thresholds)} through your door, your next drop of the same size is free. You just need to share it in at least 3 places, like your Instagram bio, your status and the QR at your counter. Once per business.`,

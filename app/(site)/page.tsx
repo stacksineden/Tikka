@@ -13,6 +13,7 @@ import {
 } from "@/components/landing/Sections";
 import { SiteFooter, SiteHeader } from "@/components/site/SiteChrome";
 import { LiveStats } from "@/components/landing/LiveStats";
+import { SparkSection, StudioStrip } from "@/components/landing/StudioAndSpark";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getDropPacks, getDropTiers, getMarketplaceDrops, getPlatformStats } from "@/lib/data";
@@ -70,6 +71,8 @@ export default async function LandingPage() {
           <LiveDropsNow />
         </Suspense>
         <Pricing tiers={tiers} packs={packs} />
+        <StudioStrip />
+        <SparkSection />
         <Faq tiers={tiers} packs={packs} />
         <FinalCta />
       </main>

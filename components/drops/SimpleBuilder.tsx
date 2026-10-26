@@ -45,6 +45,7 @@ import type { Business, Tier } from "@/lib/types";
 import { usable, type Voucher } from "@/lib/vouchers";
 import { faceFromBusiness } from "@/components/tikka/TikkaCard";
 import { RewardEditor } from "./RewardEditor";
+import { SparkCard } from "@/components/spark/SparkTeaser";
 
 const STEPS = [
   { title: "What do you want this drop to do?", body: "Pick one. We'll suggest offers that work for it." },
@@ -70,6 +71,7 @@ export function SimpleBuilder({
   vouchers,
   pastSuggest,
   editing,
+  spark,
 }: {
   initial: DropDraft;
   /** "Run it again" opens on the last screen. */
@@ -83,6 +85,8 @@ export function SimpleBuilder({
   /** A size suggested from the last drop's real numbers. */
   pastSuggest: { text: string; suggest: number } | null;
   editing: boolean;
+  /** Spark's "coming soon" teaser (PRD B12); null once this business has hidden it. */
+  spark: { onList: boolean } | null;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<DropDraft>(initial);
@@ -249,6 +253,7 @@ export function SimpleBuilder({
                 patch={patch}
                 patchReward={patchReward}
                 update={update}
+                spark={spark}
               />
             )}
             {step === 2 && (
@@ -365,6 +370,7 @@ function StepOffer({
   patch,
   patchReward,
   update,
+  spark,
 }: {
   draft: DropDraft;
   filled: DropDraft;
@@ -375,6 +381,7 @@ function StepOffer({
   patch: (p: Partial<DropDraft>) => void;
   patchReward: (id: string, p: Partial<DraftReward>) => void;
   update: (d: DropDraft, touched?: string[]) => void;
+  spark: { onList: boolean } | null;
 }) {
   const own = !draft.templateId && !!draft.id && draft.rewards.some((r) => r.what.trim() || r.value);
   const [ownOpen, setOwnOpen] = useState(own && !draft.templateId);
@@ -440,6 +447,8 @@ function StepOffer({
           </span>
         </button>
       </div>
+      {/* Spark isn't built yet: a "coming soon" teaser only, never a working suggestion (PRD B12). */}
+      {spark && <SparkCard teaser="spark_builder" text="Not sure what to offer? Spark will help. Coming soon." onList={spark.onList} canAct />}
       {errors.offer && (
         <p role="alert" className="text-label rounded-md bg-danger-soft px-3 py-2.5 text-danger">
           {errors.offer}

@@ -1,0 +1,1418 @@
+{
+  "pieces": [
+    {
+      "key": "face-facts-asset2_u8sjim",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779190171/face-facts-asset2_u8sjim.png",
+      "type": "image",
+      "title": "Skincare — texture and finish",
+      "categories": [
+        "ads"
+      ],
+      "industry": "skincare",
+      "client": null,
+      "featured": true,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "face-facts-assets3_zsg9aa",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779190171/face-facts-assets3_zsg9aa.png",
+      "type": "image",
+      "title": "Skincare — offer-led static",
+      "categories": [
+        "ads"
+      ],
+      "industry": "skincare",
+      "client": null,
+      "featured": true,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "face-facts-ad1_hds0vl",
+      "src": "https://res.cloudinary.com/dast35q6f/video/upload/v1779190107/face-facts-ad1_hds0vl.mp4",
+      "type": "video",
+      "title": "Skincare serum ad",
+      "categories": [
+        "ads"
+      ],
+      "industry": "skincare",
+      "client": null,
+      "featured": true,
+      "hero": "reel",
+      "published": true
+    },
+    {
+      "key": "face-facts-asset1_tflbn6",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779190166/face-facts-asset1_tflbn6.png",
+      "type": "image",
+      "title": "Skincare — ingredient still",
+      "categories": [
+        "ads"
+      ],
+      "industry": "skincare",
+      "client": null,
+      "featured": true,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "face-facts-ugc1_msgmcs",
+      "src": "https://res.cloudinary.com/dast35q6f/video/upload/v1779190140/face-facts-ugc1_msgmcs.mov",
+      "type": "video",
+      "title": "Skincare creator-style variant",
+      "categories": [
+        "ads"
+      ],
+      "industry": "skincare",
+      "client": null,
+      "featured": true,
+      "hero": "fan",
+      "published": true
+    },
+    {
+      "key": "face-facts-assets5_vwzz4b",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779195053/face-facts-assets5_vwzz4b.png",
+      "type": "image",
+      "title": "Skincare — hero product still",
+      "categories": [
+        "ads"
+      ],
+      "industry": "skincare",
+      "client": null,
+      "featured": true,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "face-facts-assets4_qoxzfj",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779194724/face-facts-assets4_qoxzfj.png",
+      "type": "image",
+      "title": "Face serum campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "skincare",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wellman-ad1_kdx73g",
+      "src": "https://res.cloudinary.com/dast35q6f/video/upload/v1779191359/wellman-ad1_kdx73g.mp4",
+      "type": "video",
+      "title": "Supplement — problem-led opener",
+      "categories": [
+        "ads"
+      ],
+      "industry": "health",
+      "client": null,
+      "featured": true,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wellman-asset3_m9mylo",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779198612/wellman-asset3_m9mylo.png",
+      "type": "image",
+      "title": "Supplement — benefit breakdown",
+      "categories": [
+        "ads"
+      ],
+      "industry": "health",
+      "client": null,
+      "featured": true,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wellman-asset1_q7btle",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779198601/wellman-asset1_q7btle.png",
+      "type": "image",
+      "title": "Supplement — problem-led static",
+      "categories": [
+        "ads"
+      ],
+      "industry": "health",
+      "client": null,
+      "featured": true,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wellman-ugc1_k9mhfp",
+      "src": "https://res.cloudinary.com/dast35q6f/video/upload/v1779191693/wellman-ugc1_k9mhfp.mp4",
+      "type": "video",
+      "title": "Creator-style ad variant",
+      "categories": [
+        "ads"
+      ],
+      "industry": "health",
+      "client": null,
+      "featured": true,
+      "hero": "fan",
+      "published": true
+    },
+    {
+      "key": "wellman-asset2_yk8kmk",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779198663/wellman-asset2_yk8kmk.png",
+      "type": "image",
+      "title": "Men supplements campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "health",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wellman-ugc-1-chineese_u6zyaq",
+      "src": "https://res.cloudinary.com/dast35q6f/video/upload/v1779191948/wellman-ugc-1-chineese_u6zyaq.mp4",
+      "type": "video",
+      "title": "Same creative, Mandarin variant",
+      "categories": [
+        "ads"
+      ],
+      "industry": "health",
+      "client": null,
+      "featured": true,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "curlumi-ad3_w0ppoy",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1781594807/curlumi-ad3_w0ppoy.png",
+      "type": "image",
+      "title": "Hair curler campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "beauty",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "curlumi-ad5_uhuhlr",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1781594810/curlumi-ad5_uhuhlr.png",
+      "type": "image",
+      "title": "Hair curler campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "beauty",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "curlumi-ad2_mnwekb",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1781594835/curlumi-ad2_mnwekb.png",
+      "type": "image",
+      "title": "Hair curler campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "beauty",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "curlumi-ad1_nbt6px",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1781594840/curlumi-ad1_nbt6px.png",
+      "type": "image",
+      "title": "Hair curler campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "beauty",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "curlumi-ad4_ovqs8x",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1781594917/curlumi-ad4_ovqs8x.png",
+      "type": "image",
+      "title": "Haircare — benefit-led static",
+      "categories": [
+        "ads"
+      ],
+      "industry": "beauty",
+      "client": null,
+      "featured": true,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "curlumi-ugc_kwuf0o",
+      "src": "https://res.cloudinary.com/dyryfgjro/video/upload/v1781595420/curlumi-ugc_kwuf0o.mov",
+      "type": "video",
+      "title": "Haircare creator-style variant",
+      "categories": [
+        "ads"
+      ],
+      "industry": "beauty",
+      "client": null,
+      "featured": true,
+      "hero": "fan",
+      "published": true
+    },
+    {
+      "key": "wrth3_mtkyat",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197847/wrth3_mtkyat.png",
+      "type": "image",
+      "title": "Jersey campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth8_ys1vxg",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197853/wrth8_ys1vxg.png",
+      "type": "image",
+      "title": "Jersey campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth7_cedazq",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197857/wrth7_cedazq.png",
+      "type": "image",
+      "title": "Jersey campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth-ad2_vnqekn",
+      "src": "https://res.cloudinary.com/dast35q6f/video/upload/v1779190666/wrth-ad2_vnqekn.mp4",
+      "type": "video",
+      "title": "Jersey campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth2_slxdql",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197857/wrth2_slxdql.png",
+      "type": "image",
+      "title": "Jersey campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth6_le0l56",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197863/wrth6_le0l56.png",
+      "type": "image",
+      "title": "Jersey campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth5_u73eud",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197895/wrth5_u73eud.png",
+      "type": "image",
+      "title": "Jersey campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth-ad1_rdbexo",
+      "src": "https://res.cloudinary.com/dast35q6f/video/upload/v1779190216/wrth-ad1_rdbexo.mov",
+      "type": "video",
+      "title": "Jersey campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth4_g4fxwt",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197956/wrth4_g4fxwt.png",
+      "type": "image",
+      "title": "Jersey campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth9_dhnss2",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197872/wrth9_dhnss2.png",
+      "type": "image",
+      "title": "Varsity jacket campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth14_psdhcn",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197876/wrth14_psdhcn.png",
+      "type": "image",
+      "title": "Varsity jacket campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth12_gdfr1l",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197877/wrth12_gdfr1l.png",
+      "type": "image",
+      "title": "Varsity jacket campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth10_zhodmd",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197882/wrth10_zhodmd.png",
+      "type": "image",
+      "title": "Varsity jacket campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth15_hiodyu",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197887/wrth15_hiodyu.png",
+      "type": "image",
+      "title": "Varsity jacket campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth-set-ugc_b3orw8",
+      "src": "https://res.cloudinary.com/dast35q6f/video/upload/v1779190943/wrth-set-ugc_b3orw8.mov",
+      "type": "video",
+      "title": "Varsity jacket campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth18_bwmos5",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197886/wrth18_bwmos5.png",
+      "type": "image",
+      "title": "Varsity jacket campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "wrth17_ciqxut",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197891/wrth17_ciqxut.png",
+      "type": "image",
+      "title": "Varsity jacket campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "men_tshirt8_ln4k4c",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1763818582/men_tshirt8_ln4k4c.png",
+      "type": "image",
+      "title": "Tshirts campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "men_tshirtad1_ejs88w",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1763819461/men_tshirtad1_ejs88w.png",
+      "type": "image",
+      "title": "Tshirts campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "men_tshirt9_arkh9p",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1763818633/men_tshirt9_arkh9p.png",
+      "type": "image",
+      "title": "Tshirts campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "men_tshirt3_aaax15",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1763812732/men_tshirt3_aaax15.png",
+      "type": "image",
+      "title": "Tshirts campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "archive5_kyn25y",
+      "src": "https://res.cloudinary.com/dyryfgjro/video/upload/v1771431785/archive5_kyn25y.mov",
+      "type": "video",
+      "title": "Tshirts campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "Generated_Image_September_05_2025_-_7_09PM_xeizaf",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779200376/Generated_Image_September_05_2025_-_7_09PM_xeizaf.jpg",
+      "type": "image",
+      "title": "Chilli sauce campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "food",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "Generated_Image_September_05_2025_-_7_26PM_jqmfqv",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779200377/Generated_Image_September_05_2025_-_7_26PM_jqmfqv.jpg",
+      "type": "image",
+      "title": "Chilli sauce campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "food",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "Generated_Image_September_05_2025_-_7_19PM_lzw8wr",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779200378/Generated_Image_September_05_2025_-_7_19PM_lzw8wr.jpg",
+      "type": "image",
+      "title": "Chilli sauce campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "food",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "mv-demo4_dxuwgy",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1771332039/mv-demo4_dxuwgy.png",
+      "type": "image",
+      "title": "Twopieces campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "mv-demo9_x6ptiu",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1771332215/mv-demo9_x6ptiu.png",
+      "type": "image",
+      "title": "Twopieces campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "mv-demo12_bnrhcy",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1771332287/mv-demo12_bnrhcy.png",
+      "type": "image",
+      "title": "Twopieces campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "mv-demo8_om3wsv",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1774510024/mv-demo8_om3wsv.png",
+      "type": "image",
+      "title": "Twopieces campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "mv-land1_blf6vb",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1774510129/mv-land1_blf6vb.jpg",
+      "type": "image",
+      "title": "Twopieces campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "mv-ig_eyl4se",
+      "src": "https://res.cloudinary.com/dyryfgjro/video/upload/v1774510214/mv-ig_eyl4se.mov",
+      "type": "video",
+      "title": "Twopieces campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "d6gkk0rdh88e5xqkgy1j_aursf0",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779199736/d6gkk0rdh88e5xqkgy1j_aursf0.webp",
+      "type": "image",
+      "title": "Sauce campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "food",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "dlvgndhysd0eap95esdu_q9j2lv",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779199765/dlvgndhysd0eap95esdu_q9j2lv.webp",
+      "type": "image",
+      "title": "Sauce campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "food",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "goods1_ycdnnc",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779199890/goods1_ycdnnc.webp",
+      "type": "image",
+      "title": "Sauce campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "food",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "pfzlhz8lyfqjxrnskfug_icx18j",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779199905/pfzlhz8lyfqjxrnskfug_icx18j.webp",
+      "type": "image",
+      "title": "Sauce campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "food",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ads3_xtw1iv",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1771410999/ads3_xtw1iv.png",
+      "type": "image",
+      "title": "Shoe campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ads14_ibcrxk",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1771411002/ads14_ibcrxk.png",
+      "type": "image",
+      "title": "Shoe campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "izzy-land_iwdkga",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1774514043/izzy-land_iwdkga.jpg",
+      "type": "image",
+      "title": "Shoe campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ads4_iyfvrn",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1774514991/ads4_iyfvrn.png",
+      "type": "image",
+      "title": "Hoodie campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ads7_vydhpr",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1774515586/ads7_vydhpr.png",
+      "type": "image",
+      "title": "Hoodie campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ads10_clqrp7",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1774515885/ads10_clqrp7.png",
+      "type": "image",
+      "title": "Hoodie campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ads12_ibjexf",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1774515917/ads12_ibjexf.png",
+      "type": "image",
+      "title": "Hoodie campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ads16_adyqmu",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1774516030/ads16_adyqmu.png",
+      "type": "image",
+      "title": "Hoodie campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "vg-landscape_opjmje",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1774516109/vg-landscape_opjmje.jpg",
+      "type": "image",
+      "title": "Hoodie campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "viding1_hkga82",
+      "src": "https://res.cloudinary.com/dyryfgjro/video/upload/v1774516143/viding1_hkga82.mp4",
+      "type": "video",
+      "title": "Hoodie campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "decor1_exmbv0",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779200161/decor1_exmbv0.png",
+      "type": "image",
+      "title": "Home decor campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "home",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "decor3_rgpjzx",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779200178/decor3_rgpjzx.png",
+      "type": "image",
+      "title": "Home decor campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "home",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "decor2_abyozz",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779200179/decor2_abyozz.png",
+      "type": "image",
+      "title": "Home decor campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "home",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "rove-demo1_ydq0w2",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1775807371/rove-demo1_ydq0w2.jpg",
+      "type": "image",
+      "title": "Female gymwear campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "rove-demo4_dn4jbq",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1775807376/rove-demo4_dn4jbq.jpg",
+      "type": "image",
+      "title": "Female gymwear campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "rove-vid2_gwpglb",
+      "src": "https://res.cloudinary.com/dyryfgjro/video/upload/v1775896819/rove-vid2_gwpglb.mp4",
+      "type": "video",
+      "title": "Female gymwear campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "rove-demo2_gfjo8z",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1775807381/rove-demo2_gfjo8z.jpg",
+      "type": "image",
+      "title": "Female gymwear campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "rove-demo5_xgensd",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1775807382/rove-demo5_xgensd.jpg",
+      "type": "image",
+      "title": "Female gymwear campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "rove-demo8_wubmrx",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1775807383/rove-demo8_wubmrx.jpg",
+      "type": "image",
+      "title": "Female gymwear campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "rove-vid3_myukx5",
+      "src": "https://res.cloudinary.com/dyryfgjro/video/upload/v1775896817/rove-vid3_myukx5.mp4",
+      "type": "video",
+      "title": "Female gymwear campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "rove-demo9_kgtskb",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1775807393/rove-demo9_kgtskb.jpg",
+      "type": "image",
+      "title": "Female gymwear campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "rove-demo3_nbtoxa",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1775807393/rove-demo3_nbtoxa.jpg",
+      "type": "image",
+      "title": "Female gymwear campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "rove-vid6_u2rhct",
+      "src": "https://res.cloudinary.com/dyryfgjro/video/upload/v1775896853/rove-vid6_u2rhct.mp4",
+      "type": "video",
+      "title": "Female gymwear campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "rove-demo6_vbfe2v",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1775807397/rove-demo6_vbfe2v.jpg",
+      "type": "image",
+      "title": "Female gymwear campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "rove-landp_nz9hsh",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1775807399/rove-landp_nz9hsh.jpg",
+      "type": "image",
+      "title": "Female gymwear campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "rove-demo7_ri28ha",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1775807400/rove-demo7_ri28ha.jpg",
+      "type": "image",
+      "title": "Female gymwear campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "rove-reel-3-min_m2hohq",
+      "src": "https://res.cloudinary.com/dyryfgjro/video/upload/v1775821123/rove-reel-3-min_m2hohq.mov",
+      "type": "video",
+      "title": "Female gymwear campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ad4_uifb2d",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197401/ad4_uifb2d.png",
+      "type": "image",
+      "title": "Men slide campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ad2_grirmf",
+      "src": "https://res.cloudinary.com/dast35q6f/video/upload/v1779197401/ad2_grirmf.mp4",
+      "type": "video",
+      "title": "Men slide campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ad3_ci9xgk",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197402/ad3_ci9xgk.png",
+      "type": "image",
+      "title": "Men slide campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ad9_lo7lx4",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197402/ad9_lo7lx4.png",
+      "type": "image",
+      "title": "Men slide campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ad1_q1xs0f",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197404/ad1_q1xs0f.png",
+      "type": "image",
+      "title": "Men slide campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ad7_fs1bi0",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197407/ad7_fs1bi0.png",
+      "type": "image",
+      "title": "Men slide campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ad8_jmwuzg",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197407/ad8_jmwuzg.png",
+      "type": "image",
+      "title": "Men slide campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ad6_zbn8eq",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197408/ad6_zbn8eq.png",
+      "type": "image",
+      "title": "Men slide campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ad5_kbrtwm",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779197461/ad5_kbrtwm.png",
+      "type": "image",
+      "title": "Men slide campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "fashion",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "food1_fdtoil",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779200260/food1_fdtoil.png",
+      "type": "image",
+      "title": "Food cusine campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "food",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "food2_dhp0ry",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779200268/food2_dhp0ry.png",
+      "type": "image",
+      "title": "Food cusine campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "food",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "food3_d0klxy",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779200275/food3_d0klxy.png",
+      "type": "image",
+      "title": "Food cusine campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "food",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "food4_ibbgrd",
+      "src": "https://res.cloudinary.com/dast35q6f/image/upload/v1779200278/food4_ibbgrd.png",
+      "type": "image",
+      "title": "Food cusine campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "food",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "a-uplift-pro-ugc-final_dbarsd",
+      "src": "https://res.cloudinary.com/dyryfgjro/video/upload/v1790668307/a-uplift-pro-ugc-final_dbarsd.mov",
+      "type": "video",
+      "title": "Uplift pro campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "skincare",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "uplift-pro-ad1_tru0pd",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1790668353/uplift-pro-ad1_tru0pd.png",
+      "type": "image",
+      "title": "Uplift pro campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "skincare",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "uplift-pro-ad2_xfjsjk",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1790668365/uplift-pro-ad2_xfjsjk.png",
+      "type": "image",
+      "title": "Uplift pro campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "skincare",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "uplift-pro-ad3_mdnsau",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1790668376/uplift-pro-ad3_mdnsau.png",
+      "type": "image",
+      "title": "Uplift pro campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "skincare",
+      "client": null,
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "Uplift-pro-ugc_epeuhs",
+      "src": "https://res.cloudinary.com/dyryfgjro/video/upload/v1785833096/Uplift-pro-ugc_epeuhs.mov",
+      "type": "video",
+      "title": "Skincare cleanser creator-style ad",
+      "categories": [
+        "ads"
+      ],
+      "industry": "skincare",
+      "client": null,
+      "featured": true,
+      "hero": "fan",
+      "published": true
+    },
+    {
+      "key": "kiosk-front_kya2pn",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1790773126/kiosk-front_kya2pn.png",
+      "type": "image",
+      "title": "Macbite campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "food",
+      "client": "Macbite",
+      "featured": false,
+      "hero": null,
+      "published": true
+    },
+    {
+      "key": "ChatGPT_Image_Sep_9_2026_01_07_07_PM_lqs0kh",
+      "src": "https://res.cloudinary.com/dyryfgjro/image/upload/v1790773155/ChatGPT_Image_Sep_9_2026_01_07_07_PM_lqs0kh.png",
+      "type": "image",
+      "title": "Macbite campaign",
+      "categories": [
+        "ads"
+      ],
+      "industry": "food",
+      "client": "Macbite",
+      "featured": false,
+      "hero": null,
+      "published": true
+    }
+  ]
+}

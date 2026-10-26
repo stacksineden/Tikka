@@ -1,0 +1,24 @@
+{
+  "clients": [
+    {
+      "name": "TYFQ",
+      "published": true
+    },
+    {
+      "name": "Macbite",
+      "published": true
+    },
+    {
+      "name": "Arike",
+      "published": true
+    },
+    {
+      "name": "IzzyCrafts",
+      "published": true
+    },
+    {
+      "name": "H&D Kitchen",
+      "published": true
+    }
+  ]
+}

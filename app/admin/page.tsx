@@ -11,6 +11,7 @@ import {
   adminSavePackAction,
   adminSetBusinessAction,
   adminSetDropShownAction,
+  adminEnquiryStatusAction,
 } from "@/app/app/actions";
 import { PrivacyRequests } from "@/components/admin/PrivacyRequests";
 import { Logo } from "@/components/site/Logo";
@@ -18,6 +19,9 @@ import { adminPrivacyLog, adminView, getAllDropPacks, getDropTiers } from "@/lib
 import { count, naira, place, shortDate } from "@/lib/format";
 import { koboToNaira } from "@/lib/pricing";
 import { getSessionUser } from "@/lib/session";
+import { isDbId } from "@/lib/business-db";
+import { dbAdminEarlyAccess, dbAdminEnquiries } from "@/lib/studio-db";
+import { STUDIO_CATEGORIES } from "@/lib/studio-shared";
 
 export const metadata: Metadata = { title: "Admin" };
 
@@ -44,7 +48,16 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
   if (!user.isAdmin) notFound();
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
-  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog] = await Promise.all([adminView(user, q), getDropTiers(), getAllDropPacks(), adminPrivacyLog(user)]);
+  const real = isDbId(user.id);
+  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog, enquiries, early] = await Promise.all([
+    adminView(user, q),
+    getDropTiers(),
+    getAllDropPacks(),
+    adminPrivacyLog(user),
+    real ? dbAdminEnquiries() : Promise.resolve([]),
+    real ? dbAdminEarlyAccess() : Promise.resolve({ count: 0, list: [] }),
+  ]);
+  const newEnquiries = enquiries.filter((e) => e.status === "new").length;
   const paidTiers = tiers.filter((t) => t.priceKobo > 0);
 
   return (
@@ -115,6 +128,68 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
               </li>
             ))}
           </ul>
+        )}
+      </Section>
+
+      <Section id="studio-h" title={`Studio enquiries${newEnquiries ? ` · ${count(newEnquiries)} new` : ""}`} note="From /studio/contact. Message them on WhatsApp, then move each one along.">
+        {enquiries.length === 0 ? (
+          <p className="text-body text-ink-muted">No enquiries yet.</p>
+        ) : (
+          <ul className="grid gap-3">
+            {enquiries.map((e) => (
+              <li key={e.id} className={`${card} grid gap-2`}>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <p className="text-body font-semibold">
+                    {e.name} · {e.businessName}
+                  </p>
+                  <span className="text-caption text-ink-muted">{shortDate(e.createdAt)}</span>
+                </div>
+                <p className="text-body">
+                  <a href={`https://wa.me/${e.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="font-mono text-brand underline">
+                    {e.phone}
+                  </a>
+                </p>
+                <p className="text-caption text-ink-muted">
+                  Needs: {e.services.map((sv) => STUDIO_CATEGORIES.find((c) => c.id === sv)?.label ?? sv).join(", ") || "not said"}
+                  {e.budgetRange ? ` · Budget ${e.budgetRange}` : ""}
+                  {e.sourceCaseStudy ? ` · From the ${e.sourceCaseStudy} case study` : ""}
+                  {e.tikkaBusiness ? ` · On Tikka as ${e.tikkaBusiness}` : ""}
+                </p>
+                {e.note && <p className="text-body rounded-md bg-surface-sunken p-3">{e.note}</p>}
+                <form action={adminEnquiryStatusAction.bind(null, e.id)} className="flex flex-wrap items-center gap-2">
+                  <label className="sr-only" htmlFor={`status-${e.id}`}>
+                    Status
+                  </label>
+                  <select id={`status-${e.id}`} name="status" defaultValue={e.status} className={`${field} w-auto`}>
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="converted">Converted</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                  <button type="submit" className="btn btn-secondary min-h-11 px-4 text-label">
+                    Save
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
+
+      <Section id="spark-h" title={`Spark early access · ${count(early.count)}`} note="Spark isn't built yet; these people asked to hear first.">
+        {early.list.length === 0 ? (
+          <p className="text-body text-ink-muted">Nobody has signed up yet.</p>
+        ) : (
+          <details className="rounded-card border border-line bg-surface-raised p-4">
+            <summary className="text-label min-h-11 cursor-pointer content-center">See the list</summary>
+            <ul className="text-caption mt-2 grid gap-1 text-ink-muted">
+              {early.list.map((r, i) => (
+                <li key={i}>
+                  {shortDate(r.createdAt)} · {r.businessName ? `${r.businessName} (business)` : r.contact}
+                </li>
+              ))}
+            </ul>
+          </details>
         )}
       </Section>
 
