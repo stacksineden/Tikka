@@ -44,6 +44,7 @@ app/
   (market)/b/[business]/      business page
   (claim)/d/[business]/[drop]/ claim page: sealed → unwrap → profile → claim → hold → flip
   (claim)/t/[token]/          a claimer's card (linked from WhatsApp), and /review
+  (studio)/studio/            Tikka Studio: landing, /work, /work/[slug] case studies, /contact (PRD B11)
   q/[code]/                   a business's permanent QR poster: the live drop, else the business page
   app/                        dashboard: tour, card setup, drops, drop builder, drop report, leads, reviews, posters, settings
   app/redeem/                 the counter screen (owners and staff)
@@ -55,6 +56,7 @@ app/
 lib/                          db clients, codes, deck, pricing, vouchers, payments, templates, drop check, slugs, whatsapp, queue, paystack, analytics
 supabase/migrations/          tables, RLS, claim_card, redemption, reviews, notify, pricing, vouchers, payments, guarantee, reminders
 design/                       tokens, brand book, logos, component references, card reference
+content/studio/               Tikka Studio content: case studies, our ad and content pieces, testimonials, client names (JSON)
 ```
 
 ## Rules that must never break

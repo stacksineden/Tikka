@@ -8,6 +8,8 @@ Week 1: M0–M3 · Week 2: M4–M5 · Week 3: M6–M8 · Week 4: M9–M10.
 **Before M5:** Tikka's WhatsApp number, Meta Business verification and the Cloud API app must be ready.
 **Before M9:** the four message templates in TECH_PLAN §5 (drop live, thanks, expiry reminder, owner daily) must be submitted to Meta; any not yet approved are skipped and logged.
 
+**Studio track:** S1 (Tikka Studio) needs only M0, so it can be built at any point; it's built now, ahead of the remaining launch work.
+
 **Plain language:** every dashboard screen is for owners who aren't tech-savvy. One decision per screen, big tap targets, no jargon (CLAUDE.md).
 
 ---
@@ -26,6 +28,19 @@ Set up the project:
 - A dev-only /styleguide page with buttons, rarity badges, code chip, counter, lead row and redeem result built from the tokens, matching design/BRAND.md and design/components.
 
 Done when: pnpm dev, lint, typecheck and test pass, and /styleguide matches the brand book in light and dark.
+```
+
+## S1 · Tikka Studio (Studio track)
+
+```
+Read PRD B11 and B12 and TECH_PLAN §19. Needs only M0 (tokens, fonts, light layout).
+- studio_enquiries and early_access (and teaser_dismissals) with RLS: submit_studio_enquiry(), join_early_access(), the admin read and status functions; database tests first (inserts only through the functions, rate-limited, only admins read, signing up twice leaves one row).
+- content/studio/: case studies (work/<slug>.json), our ad and content pieces (pieces.json), permitted testimonials and client names, from our agency's real work (never invented; empty fields left out). lib/studio.ts reads and checks them (schema unit test), with search synonyms. Media stays on Cloudinary (next/image remote host; videos preload="none" with posters).
+- Pages under app/(studio)/studio/: the landing page (hero with our own ad work, featured work, What we do with anchors, How we work, clients and testimonials, close), /studio/work (grid with service and industry filters and search in the URL), /studio/work/[slug] (case study with its own metadata and Open Graph image, related work), /studio/contact (enquiry form, free business audit line, consent, success message; prefilled and linked when signed in). Studio header and footer.
+- "Chat with us on WhatsApp": wa.me/<STUDIO_WA_NUMBER> with the PRD's message (naming the client on a case study).
+- No sign of the former agency anywhere public: Tikka's brand, tokens and logo only.
+
+Done when: /studio, /studio/work, a case study and /studio/contact work on a phone at 375px and load fast on 4G (server-rendered, lazy media); an enquiry saves and shows in admin; the WhatsApp button opens with the right message; lint, typecheck and tests pass.
 ```
 
 ## M1 · Database, auth and roles
@@ -70,8 +85,9 @@ Build PRD B4 (drops list) and B5 (the simple builder) and TECH_PLAN §4 and the 
 - One question per screen, progress bar, autosave, Back keeps answers. One live plus one scheduled drop per business.
 - "Run it again" opens Screen 4 prefilled with an updated size suggestion.
 - lib/deck.ts spread shuffle with unit tests.
+- Spark teaser (PRD B12) beside the quick-start mixes: "Not sure what to offer? Spark will help. Coming soon." with Get early access (one tap; "You're on the list" after), dismissible per business. Never a working feature.
 
-Done when: a first-time owner publishes a free drop from a template in under 2 minutes on a phone without help; template drops publish with correct reward rows for 200, 300 and 1,000 Tikkas; a second drop of 600 shows ₦10,000; staff can't create or publish drops.
+Done when: a first-time owner publishes a free drop from a template in under 2 minutes on a phone without help; the Spark teaser records early access once and stays dismissed for that business; template drops publish with correct reward rows for 200, 300 and 1,000 Tikkas; a second drop of 600 shows ₦10,000; staff can't create or publish drops.
 ```
 
 ## M4 · The claim page and link activity (no WhatsApp yet)
@@ -146,8 +162,9 @@ Implement PRD B6 and TECH_PLAN §12 (funnel, live feed, sources, suggested size)
 - Cards left by reward; extend end date; add more Tikkas (append to the deck in the same proportions); end early.
 - Share kit images: WhatsApp status 1080x1920 and square 1080x1080.
 - drop_daily_stats nightly rollup.
+- Spark card (PRD B12): "Spark's read on this drop. Coming soon: what worked, what didn't and what to try next." with Get early access, dismissible per business.
 
-Done when: during a test drop, opening the link on another phone shows up in the feed within a few seconds, and every dashboard number matches a direct SQL count.
+Done when: the Spark card shows "You're on the list" once the business has signed up; during a test drop, opening the link on another phone shows up in the feed within a few seconds, and every dashboard number matches a direct SQL count.
 ```
 
 ## M9 · Marketplace, business pages and Notify me
@@ -178,6 +195,8 @@ Done when: with 5 seeded businesses and drops the marketplace looks full and loa
 - Load test: 500 claims in 60 s against a staging drop with no double cards and webhook p95 under 1 s; 2,000 marketplace page views in 5 minutes.
 - Error tracking and an uptime check on the webhook.
 - Seed a demo business and drop for sales conversations.
+- Landing page: the Spark section and "Does Tikka use AI?" FAQ (PRD B12; signed-out early access by email or WhatsApp), the Tikka Studio strip, and "Studio" in the nav and footer (PRD B11). Studio links in the drops-list empty state and Settings.
+- /admin: Studio enquiries (status new / contacted / converted / closed) and the Spark early-access count and list.
 
-Done when: I can onboard a real Lagos business, they publish a drop that appears on the marketplace, and real customers claim, redeem and review.
+Done when: a signed-out visitor can join Spark's early access once (a second try changes nothing) and an admin sees it with the Studio enquiries; I can onboard a real Lagos business, they publish a drop that appears on the marketplace, and real customers claim, redeem and review.
 ```

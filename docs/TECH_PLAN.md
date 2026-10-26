@@ -25,6 +25,10 @@ Supabase pg_cron (every 5 minutes) ──> outbound message queue ──> Meta C
 /t/[token]                 a claimer's card
 /t/[token]/review          review form
 /q/[code]                  a business's permanent QR poster → the live drop, else the business page
+/studio                    Tikka Studio landing page (PRD B11)
+/studio/work               all Studio work, filterable (?category=, ?industry=, ?search=)
+/studio/work/[slug]        a Studio case study (own metadata and Open Graph image)
+/studio/contact            Studio enquiry form
 /app/...                   dashboard: tour, setup, drops, drop dashboard, leads, reviews, settings
 /app/redeem                counter screen (owner and staff)
 /admin/...                 Tikka admin (is_admin only)
@@ -135,6 +139,12 @@ Every business gets its `business_page` row when it's created. Anyone reads thes
 Indexes (drop_id, created_at), (business_id, created_at).
 
 **reports** `id, target_type ('drop'|'review'), target_id, reason, reporter_business_id null, reporter_visitor_hash null, status ('open'|'kept'|'hidden'), decided_at, decided_by, created_at`
+
+**studio_enquiries** (Tikka Studio, PRD B11) `id, name, business_name, phone (E.164), services text[] (websites, whatsapp, follow_up, ads, drops), budget_range null, note null, source_case_study null (a case study slug), business_id null (set when the person is signed in as an owner), status ('new'|'contacted'|'converted'|'closed') default 'new', created_at`. RLS on, no policies: inserted only through `submit_studio_enquiry()` (server only, rate-limited), read and updated only by admins (`admin_studio_enquiries()`, `admin_set_enquiry_status()`).
+
+**early_access** (Spark sign-ups, PRD B12) `id, feature ('spark'), business_id null, contact null (lower-cased email or E.164 WhatsApp number), created_at`; unique (feature, business_id) and (feature, contact), so signing up twice changes nothing. Written through `join_early_access()`: an owner signs up their own business; a signed-out visitor leaves a contact (server only, rate-limited). Owners read whether their own business is on the list; admins read the count and the list.
+
+**teaser_dismissals** `business_id, teaser ('spark_builder'|'spark_dashboard'), created_at`, primary key (business_id, teaser). The owner inserts and reads their own; nothing else.
 
 ## 4. Publishing a drop: the deck
 
@@ -313,12 +323,15 @@ One transaction:
 - The video tab plays from storage with `preload="none"` and the poster. Transcoding is out of version one; ask for MP4 (H.264) where possible.
 - Card patterns: 4 SVG patterns tinted with the brand colour in CSS.
 
+- **Tikka Studio media** lives on Cloudinary, not Supabase Storage (it already does, and it would fill the free plan): images through `next/image` with `res.cloudinary.com` allowed as a remote host, videos as `<video preload="none">` with a poster taken from the same Cloudinary asset (first frame as JPG), so nothing loads until tapped.
+
 ## 15. Images
 - `/api/og/card?claim=…&sig=…`: the revealed card (signed HMAC so it can't be enumerated), used in WhatsApp and "Share my Tikka".
 - `/api/og/drop?drop=…`: the sealed wrapper with the business seal (link previews, marketplace sharing).
 - `/api/og/status?drop=…`: 1080×1920 WhatsApp status image; `/api/og/square?drop=…`: 1080×1080 post.
 
 ## 16. Admin
+- Studio enquiries (status new / contacted / converted / closed) and the Spark early-access count and list (PRD C2).
 - `/admin` behind `is_admin`: businesses (search, verify, suspend, founding member), the reports queue (hide or keep), marketplace pins and hides, platform numbers, WhatsApp spend from `outbound_messages.cost_estimate_usd`, payments and revenue (`payments` where `status = 'paid'`, by kind), granting vouchers, guarantee vouchers issued, and editing tier prices, founding prices and pack prices.
 
 ## 17. Environment
@@ -330,6 +343,7 @@ WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_BUSINESS_ACCOUNT_ID, WHATSAPP_ACCESS_TOKEN, W
 PAYSTACK_SECRET_KEY, NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY
 OG_SIGNING_SECRET, ANALYTICS_SALT, CRON_SECRET
 NEXT_PUBLIC_SITE_URL (https://usetikka.com; absolute link-preview URLs)
+STUDIO_WA_NUMBER (+2348022211241: the Studio team's own WhatsApp, separate from Tikka's claim number), STUDIO_EMAIL (studio@usetikka.com)
 ```
 
 ## 18. Testing priorities
@@ -353,3 +367,17 @@ NEXT_PUBLIC_SITE_URL (https://usetikka.com; absolute link-preview URLs)
 18. Business page: reserved slugs rejected; renders with only required setup; portfolio capped at 12.
 19. Builder: a template drop publishes with correct reward rows for 200, 300 and 1,000 Tikkas.
 20. Staff can't create, pay for or publish drops, or read `payments`.
+21. Studio: every content file in `content/studio/` passes the schema (unit); a case study renders with only the required fields; enquiries insert only through `submit_studio_enquiry()`, are rate-limited, and only admins read them.
+22. Spark early access: signing up twice leaves one row (per business and per contact); dismissals are per business; nobody but an admin reads the list.
+
+## 19. Tikka Studio and Spark
+- **Pages** are server-rendered under `app/(studio)/studio/` with their own header and footer, Tikka's tokens and the light layout. Every page links to `/studio/contact`. Case studies get `generateMetadata` and an Open Graph image (`/api/og/studio?slug=…`) from their cover.
+- **Content** (no CMS in version one) is JSON in `content/studio/`, read on the server by `lib/studio.ts` and checked against a schema in a unit test, so a bad file fails the tests instead of the page:
+  - `work/<slug>.json`, one per case study: `title, slug, client, categories[] (websites, whatsapp, follow_up, ads, drops), industry, services[], cover, poster null, media[] ({type: image|video, src, poster?, alt}), challenge null, what_we_did null, results[] (each a figure from the client's own data), quote null (a testimonial id), live_url null, featured, order, published`.
+  - `pieces.json`: our ad and content work (images and videos): `key, src, type, poster null, title (what it advertises), categories[], industry, client null (only when we did it for that client), featured, published`.
+  - `testimonials/<id>.json`: `id, quote, name, business, permission_confirmed` (shown only when true). `clients.json`: names to list (`name, published`).
+  - Only `published: true` items show. Empty fields are left out of the page, never filled with placeholder text.
+- **Search** in `/studio/work` matches title, client, industry and categories, with synonyms ("skin care" → skincare, "food and drinks" → food) in `lib/studio.ts`; filters live in the query string so a view can be shared.
+- **Enquiries:** the contact form posts to a server action that checks the fields, hashes visitor and IP for `rate_hit()` (`lib/rate-limit.ts`), and calls `submit_studio_enquiry()`; a signed-in owner's form is prefilled and the enquiry linked to their business. "Chat with us on WhatsApp" is a plain `wa.me/<STUDIO_WA_NUMBER>?text=…` link built on the server (case studies name the client in the message).
+- **Spark** is never called or built: only the teasers in PRD B12. "Get early access" calls `join_early_access('spark', …)` through a server action; the button reads "You're on the list" wherever the business is already signed up; dashboard teasers check `teaser_dismissals`.
+- **No redirects:** the former agency domain has lapsed, so there's nothing to redirect. If it's ever renewed, add it to the Vercel project and map its paths in `next.config` redirects with a `host` condition.

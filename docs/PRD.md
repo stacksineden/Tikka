@@ -32,6 +32,8 @@ The pitch: drops turn people who see a business into customers who come in, and 
 | QR poster | One permanent QR per business that always leads to the current drop, with printable posters |
 | Where | Businesses anywhere in Nigeria can sign up. The marketplace is filtered by city and launches with Lagos first |
 | WhatsApp | Tikka's own number receives claims and sends cards, reminders, thank-yous and alerts. Businesses follow up from their own phones |
+| Tikka Studio | Tikka's tailor-made, done-for-you service (our agency work, now sold under Tikka only). Ships in version one as its own landing site inside usetikka.com (`/studio`): services, past work and case studies. No prices or checkout: every enquiry starts with a free business audit, then a quote (B11) |
+| Spark | Tikka's AI drop strategist. **Not built in version one.** It appears only as "Coming soon" teasers with "Get early access", which records interest. Never styled as a working feature (B12) |
 
 ---
 
@@ -217,7 +219,8 @@ Plain language everywhere: one decision per screen, big buttons, no jargon.
   - Footnote: "Pay by card or transfer. No subscription. During the pilot, Tikka pays for every WhatsApp message."
 - **FAQs** (answers match the product; amounts and thresholds from the database): no app needed; how people claim; one per number; what a thank-you gives; other cities; staff; business page; **What does it cost?**; **What if my drop doesn't bring customers?** (the guarantee: fewer than 5 / 10 / 20 customers through the door, shared in at least 3 places, once per business); **How long do Tikkas last?** (usually 14 days from claiming, or 7 or 30; the full time even if the drop ends first); **Who sees my customers' numbers?** (only the owner; staff never); **Can I message people about my next drop?** (about their Tikka, anyone who claimed; about future drops, only people who ticked "Send me future drops"); **What's the QR poster?**
 - **Final call to action:** "Your first drop can be live today." / "Pick an offer, share one link, and see who walks in. Free to start." / "Start free".
-- **Footer:** "Privacy policy (coming soon)" and "Terms (coming soon)" until C1 is live.
+- **Footer:** links to the privacy policy and terms (drafts until C1 is signed off), and "Studio".
+- **Tikka Studio strip** and **Spark section** (B11, B12), and "Does Tikka use AI?" among the FAQs.
 
 **Sign-in:** Continue with Google, or email and password. Email sign-ups confirm by link before the dashboard opens. Forgot password by email. Staff invited by email sign in the same way.
 
@@ -354,12 +357,58 @@ Every person who claims is the owner's to follow up, in full, with no per-person
 - **Payments:** drops you can publish without paying (free drop, season pack drops, guarantee drops), season packs to buy, and the payment history (date, what for, amount, Paystack reference, status).
 - Account: email, password, sign out.
 
+### B11. Tikka Studio `/studio`
+Tikka Studio is Tikka's tailor-made, done-for-you service: websites, WhatsApp systems, lead follow-up, ads and content, and drops run for a business. It is our agency's work, now under the Tikka brand only: the former agency's name, logo, colours and links never appear (its old domain has lapsed, so there are no redirects). Studio uses Tikka's tokens, fonts and light layout. Public, server-rendered, no sign-in, fast on 4G.
+
+**Routes:** `/studio` (landing), `/studio/work` (all work), `/studio/work/[slug]` (a case study), `/studio/contact` (enquiry form; reachable from every Studio page).
+
+**Header:** the Tikka logo (from `design/logos`, never redrawn or recoloured) followed by "Studio" in Bricolage Grotesque; links Work · Services · How we work · Contact; primary button "Chat with us on WhatsApp"; a quiet link "Try Tikka" back to the product. **Footer:** the same links plus Tikka, Marketplace, Privacy and Terms, and the Studio email (studio@usetikka.com).
+
+**`/studio`, in order:**
+1. **Hero:** eyebrow "Tikka Studio", heading "Tailor-made solutions for your business.", body "We build the websites, WhatsApp systems and ads that bring customers in and keep them coming back.", buttons "Chat with us on WhatsApp" and "See our work". Visual: our own ad work (the reel and UGC videos), never stock imagery.
+2. **Featured work:** 3–6 case study cards (cover image or video poster, client, category, one-line result where there's a real one), "See all work".
+3. **What we do,** one card each, linking to an anchor with more detail and related work:
+   - Websites: "A proper website for your business, from a simple page to a full booking site."
+   - WhatsApp automations: "Instant replies, reminders and follow-ups, so no lead goes cold."
+   - Lead follow-up systems: "Every new contact tracked from first message to repeat customer."
+   - Ads and content: "Ad creative, status images, reels and posts that make people stop and act."
+   - Drops, done for you: "We plan the offer, design the drop and launch it with you."
+4. **How we work:** Talk → Plan → Build → Run and report. Under it: "Today our Studio team plans drops by hand. Spark will bring that know-how to every Tikka dashboard."
+5. **Clients and testimonials:** the names of businesses we've worked with, as a text strip (we have no logo files, and never draw a client's logo ourselves); then only quotes the client gave permission for, with the person's name and business. Each part is hidden when it has no content.
+6. **Close:** "Tell us what your business needs." with both enquiry buttons, then "Prefer to do it yourself? Start free on Tikka."
+
+**`/studio/work`:** a grid of all work: case studies and our ad and content pieces. Filters by service (Websites, WhatsApp automations, Ads and content, Drops) and industry (Beauty, Food, Fashion, Health, Skincare, Home…), kept in the URL (`?category=`, `?industry=`, `?search=`) so a filtered view can be shared; search understands synonyms ("skin care" finds skincare). Videos show a poster and load nothing until tapped. A client name appears only on work we really did for that client; other pieces show as Tikka Studio's ad creative, named by what they advertise.
+
+**`/studio/work/[slug]` (case study):** client, category, services, cover, "The challenge", "What we did", "The result" (numbers only from the client's own data; omitted when we have none), media gallery, the client's quote if permitted, then "Want something like this?" with both enquiry buttons and 3 related pieces. Each has its own title, description and Open Graph image. Fields we don't have yet are left out, never filled with placeholder text.
+
+**Enquiries:**
+- "Chat with us on WhatsApp" opens `wa.me/<STUDIO_WA_NUMBER>` (the Studio team's own WhatsApp, separate from Tikka's claim number) with "Hi Tikka Studio, I'd like help with my business." On a case study: "Hi Tikka Studio, I saw your work for <client> and I'd like something similar."
+- `/studio/contact`: "It starts with a free business audit. We'll quote once we understand your business." Fields: name, business name, WhatsApp number, what they need (checkboxes matching the services), rough budget (optional), note (optional), and the case study they came from, if any. Consent line "Tikka Studio will contact you on WhatsApp about your enquiry." Success: "Thanks. We'll message you on WhatsApp within one working day." Saved as a Studio enquiry; prefilled and linked to the business when the person is signed in.
+- No prices or checkout in version one.
+
+**Studio across the product:**
+- Landing page strip: "Rather we do it for you?" / "Tikka Studio builds websites, WhatsApp follow-up systems and ads, and runs your drops for you." / "See Tikka Studio".
+- Main site nav and footer: "Studio".
+- Drops list empty state: "Want us to plan and launch it for you? Talk to Tikka Studio."
+- Settings: "Get help from Tikka Studio".
+
+### B12. Spark (coming soon)
+Spark is Tikka's AI drop strategist. **Not built in version one.** It shows only as teasers: a Spark mark in the brand purple (never gold) with a "Coming soon" badge, and a "Get early access" button. Never an input box, a sample answer or anything that looks like it works.
+
+**Teasers (copy exactly):**
+- Landing section: "Coming soon" / "Meet Spark, your drop strategist." / "Spark looks at your business and what's working for businesses like yours, then tells you what to offer, how many Tikkas to drop and where to share them." / [Get early access]
+- Landing FAQ: "Does Tikka use AI?" → "Spark, our drop strategist, is coming soon. It will suggest offers, sizes and timing based on what works for businesses like yours."
+- Drop builder, Screen 2, beside the quick-start mixes: "Not sure what to offer? Spark will help. Coming soon." [Get early access]
+- Drop dashboard card: "Spark's read on this drop. Coming soon: what worked, what didn't and what to try next." [Get early access]
+
+**Early access:** signed in, one tap records it for the business, and the button reads "You're on the list" everywhere. Signed out (the landing page), a short email-or-WhatsApp field. Signing up twice changes nothing. The two dashboard teasers can be dismissed, per business.
+
 ---
 
 ## Part C: trust, admin and legal
 
 ### C1. Legal (before the pilot)
-- Privacy policy and terms (Nigeria Data Protection Act): what's collected (first name, WhatsApp number, claims, visit plans, redemptions, reviews, notify subscriptions, future-drops consent), who sees it (the business owner, for everyone who claimed; never notify-only subscribers), anonymous view counting, how to ask for deletion.
+- Privacy policy and terms (Nigeria Data Protection Act): what's collected (first name, WhatsApp number, claims, visit plans, redemptions, reviews, notify subscriptions, future-drops consent, Tikka Studio enquiries, Spark early-access sign-ups), who sees it (the business owner, for everyone who claimed; never notify-only subscribers), anonymous view counting, how to ask for deletion.
 - Consent line in the claim sheet covers this drop; future drops need the separate checkbox. STOP handling (A3).
 - Before public launch, ask a lawyer whether random rewards count as a prize promotion needing approval.
 - **Privacy policy and terms must be live before the first real claim; the claim sheet links to them for consent.** A build-time check fails the production build while those pages are still placeholders.
@@ -369,6 +418,8 @@ Every person who claims is the owner's to follow up, in full, with no per-person
 - Moderation queue: reported drops and reviews; hide or keep.
 - Marketplace: hide a drop, pin a drop to a section (featured carousel).
 - Platform numbers: businesses, live drops, claims today, redemptions, WhatsApp messages sent and their cost.
+- **Studio enquiries:** the list, newest first, with each one's status (new, contacted, converted, closed), changed by an admin.
+- **Spark early access:** how many signed up, and the list.
 - Money: **grant free drops** of a chosen size (pilot and done-for-you businesses; optional expiry date), view payments and revenue (drops, upgrades, packs), edit tier prices, founding prices and pack prices, see guarantee vouchers issued.
 
 ---
@@ -378,6 +429,8 @@ Tasks that need proof uploads, subscriptions, multiple locations, reserve-at-boo
 - **Pro extras:** own domain, removing Tikka branding from the business page, subdomains.
 - **Marketplace boosts** and paid featured drops.
 - **AI tools tied to drops:** status image and Instagram post for a drop, suggested reward mix and size from past drops, follow-up message drafts, drop covers from portfolio photos.
+- **Spark itself** (the AI drop strategist): only its "Coming soon" teasers and early-access sign-ups ship (B12).
+- **Tikka Studio prices and checkout:** Studio quotes after a free business audit (B11).
 
 ## Risks
 | Risk | Mitigation |
@@ -390,4 +443,4 @@ Tasks that need proof uploads, subscriptions, multiple locations, reserve-at-boo
 | WhatsApp cost grows | One reminder per Tikka, marketing only to opted-in claimers, per-drop alert cap, cost recorded per message |
 
 ## Copy rules
-No gambling words (win, winner, luck, lucky, jackpot, odds, bet, stake, lottery, raffle, prize draw). Sentence case. ₦ always. "Tikka" with a capital T in text. Counts read "23 of 600 left". A thank-you card always names its benefit. Say "recorded" for sales, never "earned"; label estimates as estimated.
+No gambling words (win, winner, luck, lucky, jackpot, odds, bet, stake, lottery, raffle, prize draw). Sentence case. ₦ always. "Tikka" with a capital T in text, and likewise "Tikka Studio" and "Spark". In version one Spark is always "coming soon": never described as available. Counts read "23 of 600 left". A thank-you card always names its benefit. Say "recorded" for sales, never "earned"; label estimates as estimated.

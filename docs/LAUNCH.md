@@ -39,6 +39,7 @@ Production values for everything in `.env.example`:
 | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_APP_SECRET` | Meta app → WhatsApp → API Setup; App Settings → Basic |
 | `WHATSAPP_VERIFY_TOKEN` | any random string; the same one goes into Meta's webhook settings |
 | `OG_SIGNING_SECRET` | optional; a long random string for card image links |
+| `STUDIO_WA_NUMBER`, `STUDIO_EMAIL` | `+2348022211241` and `studio@usetikka.com` (Tikka Studio's WhatsApp and email). The email needs a mailbox that can receive mail (for example Google Workspace or Zoho); Resend only sends |
 | `NEXT_PUBLIC_TIKKA_VIDEOS` | `off` for the free-plan pilot: owners can't add card or portfolio videos (photos are fine). Remove on Pro |
 
 Never set `TIKKA_SHOW_DEMO` in production unless you're running a sales demo.
