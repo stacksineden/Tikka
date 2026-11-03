@@ -26,26 +26,29 @@ export function PosterNudge({
   opensAt?: string;
 }) {
   const hook = poster.hookLine ?? DEFAULT_HOOK;
+  // Side by side only when the box itself has room: in the narrow desktop column it stacks.
   return (
-    <div className="grid gap-4 rounded-card border border-line bg-surface-sunken p-4 sm:grid-cols-[auto_1fr] sm:items-start">
-      {/* A real preview of the A5 face, scaled down. */}
-      <div className="mx-auto overflow-hidden rounded-md shadow-raised" style={{ width: "calc(148mm * 0.32)", height: "calc(210mm * 0.32)" }} aria-hidden="true">
-        <div data-theme="light" style={{ zoom: 0.32 }}>
-          <PosterFace b={b} code={poster.code} qr={qr} hook={hook} />
+    <div className="@container">
+      <div className="grid gap-4 rounded-card border border-line bg-surface-sunken p-4 @md:grid-cols-[auto_minmax(0,1fr)] @md:items-start">
+        {/* A real preview of the A5 face, scaled down. */}
+        <div className="mx-auto overflow-hidden rounded-md shadow-raised" style={{ width: "calc(148mm * 0.32)", height: "calc(210mm * 0.32)" }} aria-hidden="true">
+          <div data-theme="light" style={{ zoom: 0.32 }}>
+            <PosterFace b={b} code={poster.code} qr={qr} hook={hook} />
+          </div>
         </div>
-      </div>
-      <div className="grid content-start gap-3">
-        <div>
-          <h3 className="text-title text-[17px] leading-6">
-            {opensAt ? `From ${shortDate(opensAt)}, ${clockTime(opensAt)}, your counter poster opens this drop` : "Your counter poster now opens this drop"}
-          </h3>
-          <p className="text-body mt-1 text-ink-muted">Already printed it? Nothing to do: it opens your live drop by itself, this one and every one after.</p>
+        <div className="grid content-start gap-3">
+          <div>
+            <h3 className="text-title text-[17px] leading-6">
+              {opensAt ? `From ${shortDate(opensAt)}, ${clockTime(opensAt)}, your counter poster opens this drop` : "Your counter poster now opens this drop"}
+            </h3>
+            <p className="text-body mt-1 text-ink-muted">Already printed it? Nothing to do: it opens your live drop by itself, this one and every one after.</p>
+          </div>
+          <UseRewardOnPoster posterId={poster.id} suggestion={suggestion} current={hook} />
+          <Link href={`/app/posters/${poster.id}/print?format=a4`} className="btn btn-lg w-full @md:w-auto @md:justify-self-start">
+            <Printer />
+            Print your poster
+          </Link>
         </div>
-        <UseRewardOnPoster posterId={poster.id} suggestion={suggestion} current={hook} />
-        <Link href={`/app/posters/${poster.id}/print?format=a4`} className="btn btn-lg w-full sm:w-auto sm:justify-self-start">
-          <Printer />
-          Print your poster
-        </Link>
       </div>
     </div>
   );

@@ -101,13 +101,15 @@ function fold(s: string): string {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
-/** Every word must appear in the business name, category, city, area or drop title. */
+/** Every word must appear in the business name, category, city, area or drop title. Spaces in
+ *  names don't count, so "stacksglow" finds Stacks Glow. */
 export function matches(d: MarketDrop, q: string): boolean {
   const hay = fold([d.businessName, d.category, d.city, d.area, d.state, d.dropName].join(" "));
+  const squashed = hay.replace(/[^a-z0-9₦]+/g, "");
   return fold(q)
     .split(/[^a-z0-9₦]+/)
     .filter(Boolean)
-    .every((w) => hay.includes(w));
+    .every((w) => hay.includes(w) || squashed.includes(w));
 }
 
 export function filterAndSort(drops: MarketDrop[], f: MarketFilters): MarketDrop[] {

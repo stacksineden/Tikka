@@ -34,8 +34,9 @@
   left: 0;
   top: 0;
 }
-/* The stage is drawn at the reference's 390px; shrink it whole on narrow phones. */
-@media (max-width: 400px) {
+/* The stage is drawn at the reference's 390px; shrink it whole on phones, so it fits inside
+   the page margins (390px + 40px of margins needs a 430px screen; iPhone Pro is 402px). */
+@media (max-width: 440px) {
   .hero-stage-fit { zoom: 0.86; }
 }
 @media (max-width: 350px) {

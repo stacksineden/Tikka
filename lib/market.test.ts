@@ -83,6 +83,8 @@ describe("marketplace", () => {
     expect(matches(d, "kiekie cafe")).toBe(true);
     expect(matches(d, "yaba coffee")).toBe(false);
     expect(matches(d, "morning lagos")).toBe(true);
+    expect(matches(d, "kiekiecafe")).toBe(true);
+    expect(matches(d, "kiekiecafes")).toBe(false);
   });
 
   it("filters and sorts", () => {

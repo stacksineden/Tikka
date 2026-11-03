@@ -111,7 +111,7 @@ export function LiveStats({ initial }: { initial: PlatformStats }) {
 
   return (
     <section aria-labelledby="live-title" className="border-t border-night-raised">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-10">
+      <div className="mx-auto max-w-6xl px-5 py-8 sm:px-6 lg:py-10">
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
           <h2 id="live-title" className="text-label flex items-center gap-2 text-on-night">
             <span className="counter__dot" aria-hidden="true" />

@@ -46,10 +46,10 @@ function Eyebrow({ children, onNight = false }: { children: React.ReactNode; onN
 
 export function Hero() {
   return (
-    <section className="mx-auto grid max-w-6xl items-center gap-6 px-4 pb-14 pt-6 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-10 lg:pb-20 lg:pt-10">
+    <section className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] items-center gap-6 px-5 pb-14 pt-6 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-10 lg:pb-20 lg:pt-10">
       <div className="max-w-xl">
         <Eyebrow onNight>For businesses across Nigeria</Eyebrow>
-        <h1 className="mt-4 text-[40px] font-extrabold leading-[42px] tracking-[-0.03em] text-on-night sm:text-display-xl">
+        <h1 className="mt-4 text-[36px] font-extrabold leading-[40px] tracking-[-0.03em] text-on-night sm:text-display-xl">
           Turn people who see your business into customers who walk in.
         </h1>
         <p className="text-body-lg mt-5 max-w-lg text-on-night-muted">
@@ -84,7 +84,7 @@ export function Hero() {
 
 export function ProblemLine() {
   return (
-    <section className="bg-surface px-4 pt-14 sm:px-6 sm:pt-20">
+    <section className="bg-surface px-5 pt-14 sm:px-6 sm:pt-20">
       <p className="text-body-lg mx-auto max-w-2xl text-center text-ink-muted">
         Most people who see your business never come in, and you never find out who they were.
       </p>
@@ -101,7 +101,7 @@ const OUTCOMES: { title: string; body: string; Icon: LucideIcon }[] = [
 export function Outcomes() {
   return (
     <section className="bg-surface pt-10 sm:pt-12" aria-label="What you get">
-      <ul className="mx-auto grid max-w-6xl gap-4 px-4 sm:px-6 md:grid-cols-3">
+      <ul className="mx-auto grid max-w-6xl gap-4 px-5 sm:px-6 md:grid-cols-3">
         {OUTCOMES.map(({ title, body, Icon }) => (
           <li key={title} className="rounded-card border border-line bg-surface-raised p-5 sm:p-6">
             <span className="grid size-11 place-items-center rounded-md bg-brand-soft text-brand">
@@ -214,7 +214,7 @@ const STEPS = [
 export function HowItWorks() {
   return (
     <section id="how-it-works" className="scroll-mt-6 bg-surface py-16 sm:py-24">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div className="max-w-2xl">
           <Eyebrow>How it works</Eyebrow>
           <h2 className="mt-3 text-heading sm:text-display-lg">One link. More people through your door.</h2>
@@ -270,7 +270,7 @@ export function Tiers() {
   ];
   return (
     <section className="overflow-hidden bg-night py-16 text-on-night sm:py-24">
-      <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1.2fr]">
+      <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] items-center gap-12 px-5 sm:px-6 lg:grid-cols-[1fr_1.2fr]">
         <div className="max-w-md">
           <Eyebrow onNight>Every Tikka holds something</Eyebrow>
           <h2 className="mt-3 text-heading sm:text-display-lg">Three tiers. Nobody walks away with nothing.</h2>
@@ -279,11 +279,17 @@ export function Tiers() {
             see what&apos;s inside the drop before they claim, so it feels like a fair surprise, not bait.
           </p>
         </div>
-        <div className="grid justify-items-center gap-3">
+        <div className="grid justify-items-center gap-8 sm:gap-3">
           <ExampleTag onNight />
-        <div className="flex justify-center gap-3 sm:gap-5">
+        {/* Phones: the three cards overlap in a fan, rare in front, so the row fits the screen. */}
+        <div className="flex justify-center sm:gap-5">
           {cards.map((c, i) => (
-            <div key={c.tier} className={i === 1 ? "-translate-y-4" : "translate-y-4"}>
+            <div
+              key={c.tier}
+              className={`${i === 1 ? "z-10 -translate-y-4" : "translate-y-4"} ${i > 0 ? "-ml-[92px] sm:ml-0" : ""} ${
+                i === 0 ? "-rotate-6 sm:rotate-0" : i === 2 ? "rotate-6 sm:rotate-0" : ""
+              }`}
+            >
               <SoloCard
                 zoom={0.62}
                 flipped
@@ -315,7 +321,7 @@ const AUDIENCE: { title: string; idea: string; Icon: LucideIcon; image?: string 
 export function WhoItsFor() {
   return (
     <section id="who-its-for" className="scroll-mt-6 bg-surface py-16 sm:py-24">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div className="max-w-2xl">
           <Eyebrow>Who it&apos;s for</Eyebrow>
           <h2 className="mt-3 text-heading sm:text-display-lg">Built for places people walk into.</h2>
@@ -361,7 +367,7 @@ export function ExampleResults({ tiers }: { tiers: DropTier[] }) {
   ];
   return (
     <section className="bg-surface pb-16 sm:pb-24">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div className="relative overflow-hidden rounded-card border border-line bg-surface-raised">
           <div className="grid gap-10 p-6 sm:p-10 lg:grid-cols-[1fr_1.1fr] lg:items-center">
             <div>
@@ -417,7 +423,7 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
   const pack = cheapestPack(packs);
   return (
     <section id="pricing" className="scroll-mt-6 border-t border-line bg-surface-sunken py-16 sm:py-24">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div className="max-w-2xl">
           <Eyebrow>Pricing</Eyebrow>
           <h2 className="mt-3 text-heading sm:text-display-lg">Start free. Pay per drop after that.</h2>
@@ -560,7 +566,7 @@ function faqs(tiers: DropTier[], packs: DropPack[]): { id?: string; q: string; a
 export function Faq({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[] }) {
   return (
     <section id="faq" className="scroll-mt-6 bg-surface py-16 sm:py-24">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.6fr]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 sm:px-6 lg:grid-cols-[1fr_1.6fr]">
         <div>
           <Eyebrow>FAQs</Eyebrow>
           <h2 className="mt-3 text-heading sm:text-display-lg">Questions businesses ask first.</h2>
@@ -592,7 +598,7 @@ export function Faq({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[] }) 
 export function LiveDrops({ drops, liveCount, now }: { drops: MarketDrop[]; liveCount: number; now: Date }) {
   return (
     <section className="border-t border-line bg-surface py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <Eyebrow>On the marketplace</Eyebrow>
@@ -605,7 +611,7 @@ export function LiveDrops({ drops, liveCount, now }: { drops: MarketDrop[]; live
         </div>
       </div>
       <ul
-        className="mx-auto mt-8 flex max-w-6xl snap-x gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:thin] sm:px-6"
+        className="mx-auto mt-8 flex max-w-6xl snap-x gap-4 overflow-x-auto px-5 pb-2 [scrollbar-width:thin] sm:px-6"
         aria-label="Drops on the Tikka marketplace"
       >
         {drops
@@ -627,7 +633,7 @@ export function LiveDrops({ drops, liveCount, now }: { drops: MarketDrop[]; live
 export function FinalCta() {
   return (
     <section className="bg-night text-on-night">
-      <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-16 sm:px-6 sm:py-20 md:flex-row md:items-center md:justify-between">
+      <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-5 py-16 sm:px-6 sm:py-20 md:flex-row md:items-center md:justify-between">
         <div className="max-w-xl">
           <h2 className="text-heading sm:text-display-lg">Your first drop can be live today.</h2>
           <p className="text-body-lg mt-3 text-on-night-muted">

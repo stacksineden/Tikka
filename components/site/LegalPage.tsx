@@ -22,7 +22,7 @@ export function LegalPage({ title, intro, updated, draft, sections, other }: { t
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-3xl px-4 pb-20 pt-8 sm:px-6 sm:pt-12">
+      <main className="mx-auto max-w-3xl px-5 pb-20 pt-8 sm:px-6 sm:pt-12">
         {draft && (
           <p role="note" className="text-body mb-6 rounded-card border border-dashed border-line-strong bg-surface-sunken p-4 text-ink">
             <strong>Draft.</strong> This text is being checked by our lawyer and may change before Tikka opens to the public. Blanks in [brackets] are still to be filled in.

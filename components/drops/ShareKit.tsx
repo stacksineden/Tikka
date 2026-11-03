@@ -68,7 +68,7 @@ export function ShareKit({
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
       <div className="grid gap-2">
         <div className="flex min-w-0 items-center gap-2 rounded-md border border-line bg-surface-sunken py-1 pl-3 pr-1">
           <span className="text-code min-w-0 flex-1 truncate font-mono font-normal">{url.replace(/^https:\/\//, "")}</span>

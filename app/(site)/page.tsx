@@ -53,7 +53,9 @@ export default async function LandingPage() {
       <div className="stage bg-night">
         <SiteHeader />
       </div>
-      <main>
+      {/* Clip the sides: the hero's sparks and the torn wrapper fly past the edge on phones, and
+          the page must never get wider than the screen (it makes phones zoom out for a moment). */}
+      <main className="overflow-x-clip">
         <div className="stage bg-night">
           <Hero />
         </div>
