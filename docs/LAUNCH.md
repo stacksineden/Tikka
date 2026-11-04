@@ -41,6 +41,7 @@ Production values for everything in `.env.example`:
 | `OG_SIGNING_SECRET` | optional; a long random string for card image links |
 | `STUDIO_WA_NUMBER`, `STUDIO_EMAIL` | `+2348022211241` and `studio@usetikka.com` (Tikka Studio's WhatsApp and email). The email needs a mailbox that can receive mail (for example Google Workspace or Zoho); Resend only sends |
 | `NEXT_PUBLIC_TIKKA_VIDEOS` | `off` for the free-plan pilot: owners can't add card or portfolio videos (photos are fine). Remove on Pro |
+| `TIKKA_PRELAUNCH` | `1` until the lawyer-checked privacy policy and terms are in (section 5). The site is online, but only Tikka admins and a business's own team can claim, and Notify me is closed, so no member of the public gives a WhatsApp number under the drafts. While it's on, the production build is allowed with draft legal pages. Remove it (and redeploy) to open claims: the build then fails until the legal pages are final |
 
 Never set `TIKKA_SHOW_DEMO` in production unless you're running a sales demo.
 
@@ -80,9 +81,11 @@ cron.job_run_details order by start_time desc limit 5;`, and Vercel's logs show
 
 ## 5. Legal (You and the lawyer)
 
+- [ ] Until this section is done, keep `TIKKA_PRELAUNCH=1` on Vercel (section 2).
 - [ ] Lawyer-checked text in `app/(site)/privacy/page.tsx` and `app/(site)/terms/page.tsx`. Fill
       every highlighted blank, remove the `LEGAL_PLACEHOLDER` comment and set `DRAFT` to false.
-      The production build refuses to ship until both are done.
+      The production build refuses to ship until both are done (unless `TIKKA_PRELAUNCH=1`).
+- [ ] Then remove `TIKKA_PRELAUNCH` on Vercel and redeploy: claims and Notify me open to everyone.
 - [ ] Ask whether rewards that differ from Tikka to Tikka need approval as a promotion (PRD C1).
 
 ## 6. Your admin account

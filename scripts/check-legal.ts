@@ -21,9 +21,15 @@ const missing = PAGES.filter((p) => {
 
 if (missing.length) {
   const msg = `Privacy policy and terms must be live before the first real claim (PRD C1). Not ready: ${missing.join(", ")}`;
-  if (process.env.VERCEL_ENV === "production" || process.env.TIKKA_REQUIRE_LEGAL === "1") {
+  // Pre-launch mode (lib/launch.ts) keeps the public from claiming or giving a number, so the
+  // site may go online with the drafts. Turning it off brings the check back.
+  const prelaunch = process.env.TIKKA_PRELAUNCH === "1";
+  if (prelaunch && process.env.TIKKA_REQUIRE_LEGAL !== "1") {
+    console.warn(`Pre-launch mode: building with draft legal pages. Public claims and Notify me are closed. ${msg}`);
+  } else if (process.env.VERCEL_ENV === "production" || process.env.TIKKA_REQUIRE_LEGAL === "1") {
     console.error(msg);
     process.exit(1);
+  } else {
+    console.warn(`Warning: ${msg}`);
   }
-  console.warn(`Warning: ${msg}`);
 }

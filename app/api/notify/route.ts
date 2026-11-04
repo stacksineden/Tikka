@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { VISITOR_COOKIE } from "@/lib/claim";
 import { startNotify } from "@/lib/data";
+import { openForThisVisitor } from "@/lib/launch";
 import { tooMany } from "@/lib/rate-limit";
 
 // Notify me (PRD A6). A real business: the NT-XXXXX code's WhatsApp link, and the webhook
@@ -13,6 +14,10 @@ export async function POST(request: Request) {
   const visitorId = jar.get(VISITOR_COOKIE)?.value ?? crypto.randomUUID();
   if (await tooMany(request, "notify", jar.get(VISITOR_COOKIE)?.value)) {
     return NextResponse.json({ ok: false, error: "Too many tries. Wait a little and try again." }, { status: 429 });
+  }
+  // Pre-launch: Notify me collects WhatsApp numbers, so it waits for the final privacy policy (lib/launch.ts).
+  if (!(await openForThisVisitor("notify"))) {
+    return NextResponse.json({ ok: false, error: "Notify me opens soon. Check back in a few days." }, { status: 403 });
   }
   const r = await startNotify(body.business, body.drop || undefined, visitorId);
   const res = NextResponse.json(r, { status: r.ok ? 200 : 404 });

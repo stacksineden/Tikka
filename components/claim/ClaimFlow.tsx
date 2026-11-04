@@ -241,7 +241,9 @@ export function ClaimFlow({
           ? "No connection. Check your data and tap Claim again."
           : r.reason === "slow_down"
             ? "Too many tries. Wait a minute, then tap Claim again."
-            : "That didn't go through. Tap Claim again.",
+            : r.reason === "prelaunch"
+              ? "Tikkas open to claim very soon. Check back in a few days."
+              : "That didn't go through. Tap Claim again.",
       );
     }
     // DEMO: demo drops claim straight away, without WhatsApp.

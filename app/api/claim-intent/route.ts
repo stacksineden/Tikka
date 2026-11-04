@@ -4,6 +4,7 @@ import { claimCookie, firstName, parseSource, VISITOR_COOKIE } from "@/lib/claim
 import { dbClaimResult, dbCreateIntent, dbRevealCard } from "@/lib/claim-db";
 import { claimMessageUrl } from "@/lib/claim-map";
 import { getPublicDrop, isDbId, posterOf } from "@/lib/data";
+import { openForThisVisitor } from "@/lib/launch";
 import { qrSvg } from "@/lib/qr";
 import { tooMany } from "@/lib/rate-limit";
 
@@ -21,6 +22,8 @@ export async function POST(request: Request) {
 
   const found = await getPublicDrop(body.business, body.drop);
   if (!found || !isDbId(found.drop.id)) return NextResponse.json({ ok: false, reason: "not_found" }, { status: 404 });
+  // Pre-launch: only Tikka admins and the business's own team can claim (lib/launch.ts).
+  if (!(await openForThisVisitor("claim", found.business.id))) return NextResponse.json({ ok: false, reason: "prelaunch" }, { status: 403 });
   const source = parseSource(body.source);
   const posterId = source === "qr" ? await posterOf(body.business, body.posterId) : undefined;
   // The future-drops box is unticked unless they ticked it (rule 12).
