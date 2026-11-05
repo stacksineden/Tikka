@@ -1,0 +1,31 @@
+{
+  "slug": "what-customers-see",
+  "title": "What your customers see",
+  "section": "start",
+  "order": 3,
+  "minutes": 2,
+  "summary": "How someone claims your Tikka, from opening your link to showing their code at your counter.",
+  "steps": [
+    {
+      "title": "They open your link",
+      "body": "They see a sealed Tikka with your name on it and what's inside the drop, like \"2 legendary · 10 rare · 88 thank-you\". They tap to tear it open and see your card."
+    },
+    {
+      "title": "They claim on WhatsApp",
+      "body": "They tap Claim, type their first name and continue on WhatsApp. WhatsApp opens with a message ready; they send it. That's how Tikka knows their number. They don't need an app or an account."
+    },
+    {
+      "title": "They flip their Tikka",
+      "body": "Back on the page, they hold to open and the card flips to show what they got: legendary, rare or thank-you. Every Tikka holds something.\n\nTheir card, with its code, also arrives in their WhatsApp."
+    },
+    {
+      "title": "They come to you",
+      "body": "They show the code or QR at your counter, and you or your staff check it on the Redeem screen. Tikka reminds them on WhatsApp before their Tikka ends."
+    }
+  ],
+  "tips": [
+    "People can claim from anywhere in Nigeria and visit you before their Tikka ends.",
+    "Each WhatsApp number gets one Tikka per drop. Claiming again sends the same card."
+  ],
+  "published": true
+}

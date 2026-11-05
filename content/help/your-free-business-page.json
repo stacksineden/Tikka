@@ -1,0 +1,30 @@
+{
+  "slug": "your-free-business-page",
+  "title": "Your free business page",
+  "section": "start",
+  "order": 2,
+  "minutes": 3,
+  "summary": "Every business gets a free page at usetikka.com/your-name. Put it in your Instagram and WhatsApp bio.",
+  "app": {
+    "href": "/app/page",
+    "label": "Open Your page"
+  },
+  "steps": [
+    {
+      "title": "Open Your page",
+      "body": "On a phone, tap More, then Your page. On a computer, it's in the menu on the left."
+    },
+    {
+      "title": "Add what people ask about",
+      "body": "Add a headline, a hero photo, what you offer and what it costs, your hours and location, and answers to the questions people always ask before they book.\n\nEverything is optional. Add what you have and come back for the rest."
+    },
+    {
+      "title": "Share the address",
+      "body": "Copy your page address and put it in your Instagram bio, your WhatsApp Business profile and anywhere else people find you. When you're running a drop, your page shows it."
+    }
+  ],
+  "tips": [
+    "Your business page is always free, even when you're not running a drop."
+  ],
+  "published": true
+}

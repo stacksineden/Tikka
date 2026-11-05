@@ -1,0 +1,34 @@
+{
+  "slug": "paying-for-drops",
+  "title": "Paying for drops",
+  "section": "money",
+  "order": 1,
+  "minutes": 2,
+  "summary": "Your first drop is free. After that you pay per drop, by size, or buy a season pack.",
+  "app": {
+    "href": "/app/settings/payments",
+    "label": "Open Payments"
+  },
+  "steps": [
+    {
+      "title": "Your first drop is free",
+      "body": "Your first drop is free, up to 200 Tikkas. Your business page is always free."
+    },
+    {
+      "title": "After that, pay per drop",
+      "body": "The price depends on how many Tikkas are in the drop. You see it on the publish button before you pay, like \"Pay ₦… and publish\"."
+    },
+    {
+      "title": "Pay by card or bank transfer",
+      "body": "Tikka uses Paystack, so you can pay by card or bank transfer. Your drop goes live as soon as the payment comes through. Tikka never sees your card number."
+    },
+    {
+      "title": "Season packs",
+      "body": "A season pack is 3 drops paid at once. Buy one in Payments (on a phone: More, then Payments). Each drop you publish after that uses one, and the button says \"Publish with your season pack\"."
+    }
+  ],
+  "tips": [
+    "Every payment you've made is listed in Payments."
+  ],
+  "published": true
+}

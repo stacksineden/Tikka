@@ -1,0 +1,43 @@
+{
+  "slug": "create-your-first-drop",
+  "title": "Create your first drop",
+  "section": "drops",
+  "order": 1,
+  "minutes": 5,
+  "summary": "A drop is a batch of Tikkas behind one link. Your first one is free.",
+  "app": {
+    "href": "/app/drops",
+    "label": "Open Drops"
+  },
+  "steps": [
+    {
+      "title": "Start a drop",
+      "body": "Go to Drops and tap \"Create a drop\". You need to set up your card first."
+    },
+    {
+      "title": "Pick a goal",
+      "body": "Choose what you want the drop to do: Get new customers, Bring customers back, or Fill quiet days. Tikka suggests offers that work for that goal."
+    },
+    {
+      "title": "Pick an offer",
+      "body": "Pick one of the ready-made offers for your kind of business, then change the amounts if you want. Or tap \"Make my own\" to choose every reward yourself.\n\nThere are three kinds of Tikka: Legendary (very few), Rare (some) and Thank-you (everyone else). A thank-you Tikka always gives something small, so nobody walks away with nothing."
+    },
+    {
+      "title": "Choose the size and how long",
+      "body": "Tell Tikka about how many people see your posts, and it suggests how many Tikkas to make. Then choose when it starts (as soon as you publish, or a date) and how long each Tikka lasts after someone claims it: 7, 14 or 30 days.\n\n\"Who can claim\" and the marketplace settings are under More options. The usual choices are already set."
+    },
+    {
+      "title": "Check and publish",
+      "body": "You see your drop the way customers will. Check the rewards, then tap Publish. Your first drop is free; after that, the price shows on the button before you pay."
+    },
+    {
+      "title": "Share it",
+      "body": "Your drop page opens with your link and share images. See \"Share your drop\" next."
+    }
+  ],
+  "tips": [
+    "Make a few more Tikkas than you expect people to claim. Running out turns people away.",
+    "You can run one drop at a time, and schedule your next one while it runs."
+  ],
+  "published": true
+}

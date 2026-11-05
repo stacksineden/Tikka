@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CircleHelp,
   Globe,
   QrCode,
   ShieldCheck,
@@ -34,6 +35,7 @@ export const NAV: Item[] = [
   { href: "/app/posters", label: "Posters", Icon: QrCode },
   { href: "/app/redeem", label: "Redeem", Icon: ScanLine },
   { href: "/app/settings", label: "Settings", Icon: Settings },
+  { href: "/help", label: "Help", Icon: CircleHelp },
 ];
 
 /** What the account areas show. Comes from the server; null while it streams in. */
@@ -87,9 +89,9 @@ export function SideNav({ staff = false, admin = false }: { staff?: boolean; adm
 }
 
 /** The sidebar links for a given path. With path="" it's the plain version shown while the page loads.
- *  Staff only ever see Redeem. */
+ *  Staff only ever see Redeem (and Help). */
 export function SideNavList({ path, staff = false, admin = false }: { path: string; staff?: boolean; admin?: boolean }) {
-  const links = NAV.filter((n) => !staff || n.href === "/app/redeem");
+  const links = NAV.filter((n) => !staff || n.href === "/app/redeem" || n.href === "/help");
   return (
     <nav aria-label="Dashboard" className="grid gap-0.5">
       {(admin && !staff ? [...links, { href: "/admin", label: "Admin", Icon: ShieldCheck }] : links).map(({ href, label, Icon }) => {
@@ -239,6 +241,7 @@ function MoreSheet({ open, onClose, account, path }: { open: boolean; onClose: (
     { href: "/app/posters", label: "Posters", Icon: QrCode, meta: "Your QR for the counter" },
     { href: "/app/settings/team", label: "Team", Icon: UsersRound },
     { href: "/app/settings", label: "Settings", Icon: Settings, meta: "Card and profile" },
+    { href: "/help", label: "Help", Icon: CircleHelp, meta: "Step-by-step guides" },
     ...(account?.admin ? [{ href: "/admin", label: "Admin", Icon: ShieldCheck, meta: "Tikka team only" }] : []),
   ];
 

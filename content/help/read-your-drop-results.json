@@ -1,0 +1,38 @@
+{
+  "slug": "read-your-drop-results",
+  "title": "Read your drop's results",
+  "section": "followup",
+  "order": 2,
+  "minutes": 3,
+  "summary": "See what your drop brought in, where people came from, and what to change next time.",
+  "app": {
+    "href": "/app/drops",
+    "label": "Open Drops"
+  },
+  "steps": [
+    {
+      "title": "Open your drop",
+      "body": "Go to Drops and tap the drop. The numbers update live while it runs."
+    },
+    {
+      "title": "The headline numbers",
+      "body": "\"This drop brought in\" adds up the bill amounts you logged when redeeming. Until you log one, you see how many Tikkas were redeemed instead. You also see claims, Tikkas left and time left."
+    },
+    {
+      "title": "Where people drop off",
+      "body": "\"Where people drop off\" follows people step by step: opened the link, tore open the wrapper, tapped Claim, continued to WhatsApp, claimed, redeemed, and followed up. A big drop between two steps tells you what to fix, like making your offer clearer."
+    },
+    {
+      "title": "Where people came from",
+      "body": "See which link brought the most claims: WhatsApp status, Instagram, QR code, your website, ads and the marketplace. Share more where it works."
+    },
+    {
+      "title": "Change a running drop",
+      "body": "You can extend the end date, add more Tikkas, or end the drop early. You can't change the rewards once it's published."
+    }
+  ],
+  "tips": [
+    "When a drop ends, tap \"Run it again\" on Drops to start the next one with the same setup."
+  ],
+  "published": true
+}

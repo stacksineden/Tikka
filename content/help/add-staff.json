@@ -1,0 +1,31 @@
+{
+  "slug": "add-staff",
+  "title": "Add staff to redeem",
+  "section": "counter",
+  "order": 2,
+  "minutes": 2,
+  "summary": "Let whoever works your counter redeem Tikkas, without seeing your leads.",
+  "app": {
+    "href": "/app/settings/team",
+    "label": "Open Team"
+  },
+  "steps": [
+    {
+      "title": "Open Team",
+      "body": "On a phone, tap More, then Team. On a computer, go to Settings, then Team."
+    },
+    {
+      "title": "Invite them",
+      "body": "Type their email address and tap \"Send invite\". Then send them the invite link on WhatsApp."
+    },
+    {
+      "title": "They sign in",
+      "body": "They open the link and sign in with Google or an email and password. They go straight to Redeem."
+    }
+  ],
+  "tips": [
+    "Staff can only redeem. They never see your leads or anyone's phone number.",
+    "To remove someone, open Team and tap Remove next to their name (it asks you to confirm)."
+  ],
+  "published": true
+}

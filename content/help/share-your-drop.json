@@ -1,0 +1,34 @@
+{
+  "slug": "share-your-drop",
+  "title": "Share your drop",
+  "section": "drops",
+  "order": 2,
+  "minutes": 2,
+  "summary": "Your drop only works if people see it. Here's where to put your link.",
+  "app": {
+    "href": "/app/drops",
+    "label": "Open Drops"
+  },
+  "steps": [
+    {
+      "title": "Open your drop",
+      "body": "Go to Drops and tap your running drop. \"Share your drop\" is near the top."
+    },
+    {
+      "title": "Copy the right link for each place",
+      "body": "There's a link for each place you share: WhatsApp status, Instagram, QR code, your website and ads. Use the matching link in each place, and your results show which one brings people in."
+    },
+    {
+      "title": "Post the images",
+      "body": "Under \"Images to post\" there's a WhatsApp status picture and a square post for Instagram. Save them, post them, and put your link in the caption."
+    },
+    {
+      "title": "Put up your poster",
+      "body": "Drop links stop working when the drop ends. For your counter or door, print your poster instead: it always opens whatever you're running."
+    }
+  ],
+  "tips": [
+    "Post on your WhatsApp status on the first day, then again when Tikkas are running low."
+  ],
+  "published": true
+}

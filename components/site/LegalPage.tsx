@@ -21,7 +21,9 @@ export interface LegalSection {
 export function LegalPage({ title, intro, updated, draft, sections, other }: { title: string; intro: ReactNode; updated: ReactNode; draft: boolean; sections: LegalSection[]; other: { href: string; label: string } }) {
   return (
     <>
-      <SiteHeader />
+      <div className="stage bg-night">
+        <SiteHeader />
+      </div>
       <main className="mx-auto max-w-3xl px-5 pb-20 pt-8 sm:px-6 sm:pt-12">
         {draft && (
           <p role="note" className="text-body mb-6 rounded-card border border-dashed border-line-strong bg-surface-sunken p-4 text-ink">

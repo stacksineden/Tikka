@@ -1,0 +1,34 @@
+{
+  "slug": "print-your-counter-poster",
+  "title": "Print your counter poster",
+  "section": "drops",
+  "order": 3,
+  "minutes": 3,
+  "summary": "Print once and keep it up for good. People scan it and see whatever you're running.",
+  "app": {
+    "href": "/app/posters",
+    "label": "Open Posters"
+  },
+  "steps": [
+    {
+      "title": "Open Posters",
+      "body": "On a phone, tap More, then Posters. On a computer, it's in the menu on the left."
+    },
+    {
+      "title": "Choose the line on your poster",
+      "body": "Your poster says \"Scan to get your Tikka\" with your QR code. You can use the everyday line, which never goes out of date, or show your current reward."
+    },
+    {
+      "title": "Print it",
+      "body": "Tap \"Print your poster\" and choose a size: an A4 window poster, an A5 counter standee, a table tent or a 5 cm sticker. Save it as a PDF and print it, or take it to a printer.\n\nPut it where people wait or pay: your counter, door, mirror or tables."
+    },
+    {
+      "title": "Add more spots",
+      "body": "Tap \"Add a poster for another spot\" for each extra place. Each poster gets its own code, so you can see which spot brings people in."
+    }
+  ],
+  "tips": [
+    "When there's no drop running, the poster opens your business page, so it never leads nowhere."
+  ],
+  "published": true
+}

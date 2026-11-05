@@ -1,0 +1,35 @@
+{
+  "slug": "redeem-a-tikka",
+  "title": "Redeem a Tikka at the counter",
+  "section": "counter",
+  "order": 1,
+  "minutes": 2,
+  "summary": "Check a customer's code and mark it used. It takes a few seconds.",
+  "app": {
+    "href": "/app/redeem",
+    "label": "Open Redeem"
+  },
+  "steps": [
+    {
+      "title": "Open Redeem",
+      "body": "Tap Redeem in the bar at the bottom of your phone. Staff go straight to it when they sign in."
+    },
+    {
+      "title": "Scan or type the code",
+      "body": "Tap \"Turn on camera\" and scan the QR on their Tikka, or type the code they show you, like GS-7X4QP.\n\nChecking never uses the code. It's only used when you confirm."
+    },
+    {
+      "title": "Check what they get",
+      "body": "You see their first name, what they get and when it ends. If it's an action Tikka, like \"Follow us on Instagram\", tick the box once they've done it."
+    },
+    {
+      "title": "Confirm",
+      "body": "Add the bill amount if you like (it shows you what each drop brought in), then tap \"Confirm redemption\". Tikka thanks them on WhatsApp and asks how it went."
+    }
+  ],
+  "tips": [
+    "If it says a code has a typo, check it with the customer. Codes never use 0, O, 1, I or L, so they're easy to read.",
+    "A code can only be used once. If it was already used, Redeem tells you when."
+  ],
+  "published": true
+}

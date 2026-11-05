@@ -1,0 +1,39 @@
+{
+  "slug": "set-up-your-card",
+  "title": "Set up your card",
+  "section": "start",
+  "order": 1,
+  "minutes": 3,
+  "summary": "Your card is what people see when they open your drop. Set it up once; it takes about 3 minutes.",
+  "app": {
+    "href": "/app/setup",
+    "label": "Set up your card"
+  },
+  "steps": [
+    {
+      "title": "Open the setup",
+      "body": "After you sign up, Home shows \"Set up your card\". Tap it. There are 3 short steps; tap Continue after each, and you can go back to any of them."
+    },
+    {
+      "title": "Your business",
+      "body": "Add your business name, a short tagline, your category, and your state and city. People see these first, so keep the tagline short and clear, like \"Facials and glow-ups since 2019\"."
+    },
+    {
+      "title": "Your look",
+      "body": "Add your logo (a square picture works best), pick your brand colour, and choose a background: your colour, a pattern, or a photo.\n\nTikka checks your colour so the writing on your card is always easy to read."
+    },
+    {
+      "title": "How people reach you",
+      "body": "Add the buttons on your card, like Chat on WhatsApp, Call or Directions. Add the services you offer if you like.\n\nYou also pick your free page address (usetikka.com/your-name) and the two code letters that start every Tikka code, like GS for Glow Studio."
+    },
+    {
+      "title": "Save your card",
+      "body": "Tap \"Save my card\" at the bottom. Your card is ready, and you can change any of it later in Settings."
+    }
+  ],
+  "tips": [
+    "Use a clear logo on a plain background. It shows small on phones.",
+    "You can come back and add services, hours and photos any time."
+  ],
+  "published": true
+}

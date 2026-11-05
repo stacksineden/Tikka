@@ -59,6 +59,7 @@ export function SiteFooter() {
             <li><Link className="hover:text-ink" href="/sign-up">Start free</Link></li>
             <li><Link className="hover:text-ink" href="/sign-in">Sign in</Link></li>
             <li><Link className="hover:text-ink" href="/#pricing">Pricing</Link></li>
+            <li><Link className="hover:text-ink" href="/help">Help</Link></li>
           </ul>
         </div>
         <div>

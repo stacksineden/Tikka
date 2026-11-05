@@ -1,0 +1,35 @@
+{
+  "slug": "follow-up-with-leads",
+  "title": "Follow up with your leads",
+  "section": "followup",
+  "order": 1,
+  "minutes": 3,
+  "summary": "Everyone who claims becomes a lead you can message on WhatsApp, from your own phone.",
+  "app": {
+    "href": "/app/leads",
+    "label": "Open Leads"
+  },
+  "steps": [
+    {
+      "title": "Open Leads",
+      "body": "Tap Leads in the bar at the bottom. You see everyone who claimed, as it happens. They're yours to follow up."
+    },
+    {
+      "title": "Start with Message today",
+      "body": "\"Message today\" shows the people worth messaging now: someone who just claimed, someone planning to come today, someone whose Tikka ends soon and isn't used yet, and someone whose Tikka expired before they came. Each has a message ready, which you can change before WhatsApp opens."
+    },
+    {
+      "title": "Message anyone",
+      "body": "Next to any lead, tap \"Message on WhatsApp\". WhatsApp opens on your phone with your message ready to send."
+    },
+    {
+      "title": "Find people",
+      "body": "Search by name, or filter by drop, where they came from, or which Tikka they got. \"Wants future drops\" shows people who asked to hear about your next drop."
+    }
+  ],
+  "tips": [
+    "Keep messages short and friendly, and mention what's waiting for them.",
+    "If someone asks you to stop, stop. Respecting that keeps people happy to hear from you."
+  ],
+  "published": true
+}
