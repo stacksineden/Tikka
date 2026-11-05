@@ -147,6 +147,35 @@ const sections: LegalSection[] = [
     ),
   },
   {
+    id: "google",
+    title: "If you sign in with Google",
+    body: (
+      <>
+        <p>
+          Business owners and staff can sign in to Tikka with their Google account. When you do, Google shares your name, email address and profile picture with
+          Tikka, and nothing else: we don&apos;t ask for your contacts, Gmail, Drive, calendar or any other Google data.
+        </p>
+        <p>
+          We use your name and email only to create your Tikka account, sign you in, show your name in your dashboard, and send you emails about your account (such
+          as password and sign-in emails). We don&apos;t use your profile picture. Your Google sign-in details are stored with our sign-in provider, Supabase, along
+          with the rest of your account.
+        </p>
+        <p>
+          We don&apos;t sell your Google account data, share it with businesses or anyone else, use it for advertising, or use it to train AI models. Tikka&apos;s use
+          of information received from Google follows the{" "}
+          <a href="https://developers.google.com/terms/api-services-user-data-policy" className="text-brand underline">
+            Google API Services User Data Policy
+          </a>
+          , including its Limited Use requirements.
+        </p>
+        <p>
+          You can stop Tikka&apos;s access at any time from your Google account&apos;s security settings (Third-party apps with account access). To delete your Tikka account
+          and the details that come with it, contact us using the details in section 1 and we&apos;ll do it as described in &quot;Your rights&quot; below.
+        </p>
+      </>
+    ),
+  },
+  {
     id: "providers",
     title: "Services we use",
     body: (
