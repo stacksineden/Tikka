@@ -1,11 +1,54 @@
-<!-- Sign-up confirmation (supabase/config.toml). Colours are the light-theme values of --surface, --surface-raised, --ink, --ink-muted and --brand in design/tokens.css (email can't read CSS variables). -->
-<div style="background:#FAF7F2;padding:32px 16px;font-family:Arial,Helvetica,sans-serif;color:#17112F">
-  <div style="max-width:480px;margin:0 auto;background:#FFFFFF;border-radius:12px;padding:32px 24px">
-    <p style="margin:0 0 24px;font-size:20px;font-weight:700;color:#3E2BB0">Tikka</p>
-    <h1 style="margin:0 0 12px;font-size:22px">Confirm your email</h1>
-    <p style="margin:0 0 24px;font-size:16px;line-height:1.5;color:#5E5873">Tap the button to confirm your email and open your Tikka dashboard.</p>
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/app/welcome"
-       style="display:inline-block;background:#3E2BB0;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:16px;padding:14px 24px;border-radius:999px">Confirm my email</a>
-    <p style="margin:24px 0 0;font-size:13px;line-height:1.5;color:#5E5873">If you didn't create a Tikka account, you can ignore this email.</p>
-  </div>
-</div>
+<!-- Sign-up confirmation. Paste into Supabase → Authentication → Emails → Templates → Confirm signup (subject: "Confirm your Tikka account").
+     Colours are the light-theme values of the tokens in design/tokens.css (email can't read CSS variables):
+     --surface #FAF7F2, --surface-raised #FFFFFF, --night #1B1440, --ink #17112F, --ink-muted #5E5873, --line #E4DDD2, --brand #3E2BB0, --on-brand #FFFFFF, --on-night-muted #B3ABD6.
+     The logo is public/brand/email/tikka-lockup-reversed.png, served from the live site. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Confirm your Tikka account</title>
+</head>
+<body style="margin:0;padding:0;background:#FAF7F2">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">One tap to confirm your email and open your Tikka dashboard.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FAF7F2">
+  <tr>
+    <td align="center" style="padding:32px 16px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;font-family:'Bricolage Grotesque',Arial,Helvetica,sans-serif;color:#17112F">
+        <!-- Night header with the logo -->
+        <tr>
+          <td style="background:#1B1440;border-radius:16px 16px 0 0;padding:28px 32px">
+            <a href="{{ .SiteURL }}" style="text-decoration:none"><img src="{{ .SiteURL }}/brand/email/tikka-lockup-reversed.png" width="148" height="43" alt="Tikka" style="display:block;border:0;width:148px;height:43px"></a>
+          </td>
+        </tr>
+        <!-- Card -->
+        <tr>
+          <td style="background:#FFFFFF;border-radius:0 0 16px 16px;padding:36px 32px 32px">
+            <h1 style="margin:0 0 12px;font-size:24px;line-height:30px;font-weight:800;color:#17112F">Confirm your email</h1>
+            <p style="margin:0 0 28px;font-size:16px;line-height:24px;color:#5E5873">Welcome to Tikka. Tap the button to confirm your email and open your dashboard. Your first drop is free.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="background:#3E2BB0;border-radius:999px">
+                  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/app/welcome" style="display:inline-block;padding:16px 28px;font-size:16px;line-height:20px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:999px">Confirm my email</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:28px 0 0;padding-top:20px;border-top:2px dashed #E4DDD2;font-size:13px;line-height:20px;color:#5E5873">Button not working? Copy this link into your browser:<br>
+              <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/app/welcome" style="color:#3E2BB0;word-break:break-all">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email&amp;next=/app/welcome</a></p>
+            <p style="margin:16px 0 0;font-size:13px;line-height:20px;color:#5E5873">If you didn't create a Tikka account, you can ignore this email.</p>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding:24px 16px 0;font-size:12px;line-height:18px;color:#5E5873">
+            Tikka · Turn people who see your business into customers who walk in.<br>
+            <a href="{{ .SiteURL }}" style="color:#5E5873">usetikka.com</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
