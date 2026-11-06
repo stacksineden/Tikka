@@ -1,0 +1,301 @@
+/* The 9:16 explainer video (dev only). Every animation is set from page load with a delay, so the
+   render script can seek the whole page to any moment (scripts/render-explainer.cjs). Animate
+   only transform and opacity. Colours come from the tokens. */
+
+.xv {
+  position: relative;
+  width: 540px;
+  height: 960px;
+  overflow: hidden;
+  background: var(--night);
+  color: var(--on-night);
+  font-family: var(--font-sans);
+}
+.xv * {
+  box-sizing: border-box;
+}
+/* A soft glow behind everything, so the night stage isn't flat. */
+.xv-glow {
+  position: absolute;
+  inset: -20% -40% auto;
+  height: 70%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--brand) 55%, transparent), transparent);
+  opacity: 0.55;
+}
+.xv-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 96px 40px 80px;
+  text-align: center;
+}
+.xv-kicker {
+  font: 700 15px/20px var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.xv-h {
+  margin-top: 14px;
+  font-size: 40px;
+  line-height: 44px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.xv-big {
+  font-size: 46px;
+  line-height: 52px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.xv-sub {
+  margin-top: 16px;
+  font-size: 22px;
+  line-height: 30px;
+  color: var(--on-night-muted);
+  text-wrap: balance;
+}
+.xv-caption {
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  bottom: 84px;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  text-wrap: balance;
+}
+.xv-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--night-raised);
+  font-size: 18px;
+  font-weight: 700;
+}
+.xv-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--night-raised);
+  color: var(--on-night-muted);
+  font: 700 11px/16px var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.xv-mono {
+  font-family: var(--font-mono);
+}
+.xv-panel {
+  border-radius: 20px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  text-align: left;
+}
+.xv-chat {
+  border-radius: 18px 18px 4px 18px;
+  background: var(--on-night);
+  color: var(--ink);
+  padding: 12px 16px;
+  font-size: 18px;
+  line-height: 24px;
+  text-align: left;
+  box-shadow: var(--shadow-card);
+}
+.xv-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--on-brand);
+  font-size: 18px;
+  font-weight: 700;
+}
+.xv-btn-gold {
+  background: var(--gold);
+  color: var(--on-gold);
+}
+.xv-flip-front,
+.xv-flip-back {
+  position: absolute;
+  left: 55px;
+  top: 24px;
+}
+
+/* ---------- keyframes (all from → to, so stacked animations behave) ---------- */
+@keyframes xvIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes xvOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes xvUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+@keyframes xvPop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+@keyframes xvZoom { from { opacity: 0; transform: scale(0.86); } to { opacity: 1; transform: none; } }
+@keyframes xvLeft { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: none; } }
+@keyframes xvRise { from { opacity: 0; transform: translateY(70px) scale(0.92); } to { opacity: 1; transform: none; } }
+@keyframes xvShake {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-3deg); }
+  40% { transform: rotate(3deg); }
+  60% { transform: rotate(-2deg); }
+  80% { transform: rotate(2deg); }
+}
+@keyframes xvAway { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-140px) rotate(-8deg) scale(0.9); } }
+@keyframes xvSquashOut { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@keyframes xvSquashIn { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes xvFanL { from { opacity: 0; transform: translate(150px, 40px) rotate(0); } to { opacity: 1; transform: rotate(-8deg); } }
+@keyframes xvFanR { from { opacity: 0; transform: translate(-150px, 40px) rotate(0); } to { opacity: 1; transform: rotate(8deg); } }
+@keyframes xvFanC { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: translateY(-18px); } }
+@keyframes xvGlowOn { from { opacity: 0; transform: scale(0.6); } to { opacity: 0.85; transform: scale(1); } }
+@keyframes xvStrike { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---------- v2: phone, chat, scanner, burst ---------- */
+.xv-phone {
+  position: relative;
+  width: 300px;
+  height: 590px;
+  padding: 9px;
+  border-radius: 42px;
+  background: var(--night-raised);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--on-night) 22%, transparent), var(--shadow-card);
+}
+.xv-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 34px;
+  background: var(--night);
+}
+.xv-layer {
+  position: absolute;
+  inset: 0;
+}
+/* A styled chat, clearly a chat but not a copy of any app (no logos, no WhatsApp green). */
+.xv-chat-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 64px;
+  padding: 18px 14px 0;
+  background: var(--ink);
+  color: var(--on-night);
+  text-align: left;
+}
+.xv-chat-body {
+  position: absolute;
+  inset: 64px 0 64px;
+  padding: 14px 12px;
+  background: var(--surface-sunken);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.xv-chat-input {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px 10px;
+  background: var(--surface-sunken);
+}
+.xv-chat-field {
+  flex: 1;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 22px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 17px;
+  text-align: left;
+}
+.xv-send {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--on-brand);
+}
+.xv-bubble-out,
+.xv-bubble-in {
+  max-width: 86%;
+  padding: 8px 11px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink);
+  text-align: left;
+  box-shadow: 0 1px 1px rgba(23, 17, 47, 0.08);
+}
+.xv-bubble-out {
+  align-self: flex-end;
+  border-radius: 14px 14px 4px 14px;
+  background: var(--brand-soft);
+}
+.xv-bubble-in {
+  align-self: flex-start;
+  border-radius: 14px 14px 14px 4px;
+  background: var(--surface-raised);
+}
+.xv-app-label {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  translate: -50% 0;
+  white-space: nowrap;
+}
+.xv-scanline {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--gold);
+  box-shadow: 0 0 14px var(--gold);
+}
+.xv-spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  color: var(--gold);
+}
+.xv-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(closest-side, var(--on-night), transparent);
+}
+
+@keyframes xvCount { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes xvSlam { 0% { opacity: 0; transform: scale(2.6); } 60% { opacity: 1; transform: scale(0.94); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes xvShrinkOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(0.5) translateY(-40px); } }
+@keyframes xvWord { 0% { opacity: 0; transform: translateY(40px) scale(0.8); } 70% { opacity: 1; transform: translateY(-4px) scale(1.04); } 100% { opacity: 1; transform: none; } }
+@keyframes xvDrop { 0% { opacity: 0; transform: translateY(-520px) rotate(-10deg); } 70% { opacity: 1; transform: translateY(14px) rotate(2deg); } 100% { opacity: 1; transform: none; } }
+@keyframes xvBurst { 0% { opacity: 0; transform: scale(0.2); } 65% { opacity: 1; transform: scale(1.14); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes xvFlash { 0% { opacity: 0; transform: scale(0.4); } 30% { opacity: 0.9; } 100% { opacity: 0; transform: scale(1.6); } }
+@keyframes xvSparkFly {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.3) rotate(0deg); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1) rotate(160deg); }
+}
+@keyframes xvTap { 0%, 100% { transform: none; } 50% { transform: scale(0.94); } }
+@keyframes xvScan { 0% { transform: translateY(0); } 50% { transform: translateY(196px); } 100% { transform: translateY(0); } }
+@keyframes xvScroll { from { transform: none; } to { transform: translateY(-150px); } }
+@keyframes xvClear { from { opacity: 1; } to { opacity: 0; } }
