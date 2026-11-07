@@ -2,6 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cache } from "react";
+import type { PageDropRow } from "./page";
 import {
   businessFrom,
   cardTo,
@@ -235,4 +236,12 @@ export async function dbPosterByCode(code: string): Promise<{ poster: Poster; bu
   const { data } = await sb.rpc("poster_target", { p_code: code });
   const row = (data as { poster_id: string; business_id: string; slug: string; label: string }[] | null)?.[0];
   return row ? { poster: { id: row.poster_id, businessId: row.business_id, code, label: row.label, createdAt: "" }, businessSlug: row.slug } : null;
+}
+
+/** A business's live and upcoming drops for its public page and QR poster, from the public
+ *  get_business_page() (counts only, never the deck), so it's the same for every visitor. */
+export async function dbPageDrops(slug: string): Promise<PageDropRow[]> {
+  const sb = await createClient();
+  const { data } = await sb.rpc("get_business_page", { p_slug: slug.toLowerCase() });
+  return ((data as { drops?: PageDropRow[] } | null)?.drops ?? []) as PageDropRow[];
 }

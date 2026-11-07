@@ -11,12 +11,12 @@ import { ServicesSection } from "@/components/business/ServicesSection";
 import { NotifyMe } from "@/components/market/NotifyMe";
 import { Logo } from "@/components/site/Logo";
 import { ActionIcon, actionHref } from "@/components/tikka/ActionIcon";
-import { getBusinessBySlug, getBusinessReviews, getDrops } from "@/lib/data";
+import { getBusinessBySlug, getBusinessReviews, getPageDrops } from "@/lib/data";
 import { clockTime, count, place, shortDate } from "@/lib/format";
-import { bookingLink, focalPosition, heroHeadline, serviceGroups, showsLocation, visibleSections, whereLine } from "@/lib/page";
+import { bookingLink, focalPosition, heroHeadline, serviceGroups, showsLocation, visibleSections, whereLine, type PageDrop } from "@/lib/page";
 import { SITE } from "@/lib/qr";
 import { formatTime } from "@/lib/setup";
-import type { Business, Drop, OpeningHours } from "@/lib/types";
+import type { Business, OpeningHours } from "@/lib/types";
 
 // The free business page: a one-page website for the business's Instagram and WhatsApp bio
 // (PRD A5). One fixed editorial layout filled with their content and brand colour; empty
@@ -100,9 +100,9 @@ function Mark({ b, size }: { b: Business; size: number }) {
 }
 
 /** The live drop band: a moving ticker, the only place the page promotes anything. */
-function DropBand({ b, live, next }: { b: Business; live?: Drop; next?: Drop }) {
+function DropBand({ b, live, next }: { b: Business; live?: PageDrop; next?: PageDrop }) {
   if (live) {
-    const left = count(Math.max(0, live.total - live.claimed));
+    const left = count(live.left);
     const item = (k: number) => (
       <span key={k} className="flex shrink-0 items-center gap-6 pr-6 font-mono text-[13px] uppercase tracking-[0.12em]">
         <span className="text-gold">● Live now</span>
@@ -158,7 +158,8 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
   const found = await getBusinessBySlug(slug);
   if (!found) notFound();
   const b = found.business;
-  const [drops, reviews] = await Promise.all([getDrops({ id: found.ownerId }), getBusinessReviews(found.ownerId)]);
+  // The same for every visitor: the public drops, never the signed-in person's own.
+  const [drops, reviews] = await Promise.all([getPageDrops(b.slug, found.ownerId), getBusinessReviews(found.ownerId)]);
   const live = drops.find((d) => d.status === "live");
   const next = drops.find((d) => d.status === "scheduled");
   const sections = new Set(visibleSections(b, { reviews: reviews.length }));

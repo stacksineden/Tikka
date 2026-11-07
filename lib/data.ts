@@ -12,7 +12,7 @@ import { dbDropDashboard, dbDropFeed, dbDropReport } from "./stats-db";
 import { dbAcceptInvite, dbCancelInvite, dbCheckCode, dbConfirm, dbInviteInfo, dbInviteStaff, dbRemoveStaff, dbTeam, type ConfirmDbResult } from "./team-db";
 import { dbCardByViewToken, dbCardImage, dbCardOwner, dbDropExists, dbPlatformTotals, dbPublicDrop, dbRecordEvent, dbRevealCard, dbSetVisitPlan } from "./claim-db";
 import { dbAddTikkas, dbBuyPack, dbCompletePayment, dbDeleteDraft, dbDrops, dbEndEarly, dbExtend, dbPayment, dbPayments, dbPublish, dbSaveDraft, dbVouchers, DropSaveError, type DbPublishResult } from "./drop-db";
-import { BusinessSaveError, dbAddPoster, dbPosterByCode, dbPosters, dbSavePosterHook, dbTaken, isDbId, loadBusiness, loadBusinessBySlug, saveBusinessDb } from "./business-db";
+import { BusinessSaveError, dbAddPoster, dbPageDrops, dbPosterByCode, dbPosters, dbSavePosterHook, dbTaken, isDbId, loadBusiness, loadBusinessBySlug, saveBusinessDb } from "./business-db";
 
 // Dummy data until Supabase is wired up (M1). Every function here becomes an RPC/view call;
 // keep the signatures so the pages don't change.
@@ -35,7 +35,7 @@ import dropStats from "./mock/drop_stats.json";
 import { generate as generateCode } from "./codes";
 import { followupMessage, followups as followupList, type Followup } from "./followups";
 import { waLink } from "./leads";
-import { validatePage, validateServices, videoProblem, type BusinessPageInput, type PageErrors } from "./page";
+import { pageDropsFrom, pageDropsFromDrops, validatePage, validateServices, videoProblem, type BusinessPageInput, type PageDrop, type PageErrors } from "./page";
 import { newPosterCode, posterTarget, validateHook, validateLabel, type Poster } from "./posters";
 import { dropReport, type DropFee, type DropReport, type ReportClaim } from "./report";
 import { seasonalNudge } from "./nudges";
@@ -990,10 +990,19 @@ export async function scanPoster(code: string, visitorId: string | undefined): P
     const drops = await getDrops({ id: ownerId });
     return posterTarget(b.slug, p.id, drops);
   }
-  // A real business's poster. Its drops aren't in the database yet, so it opens the business page.
-  // TODO(drops): count the scan and pass the business's drops once drops move to the database.
+  // A real business's poster: its live drop if it has one, else its business page.
   const db = await dbPosterByCode(code);
-  return db ? posterTarget(db.businessSlug, db.poster.id, []) : null;
+  return db ? posterTarget(db.businessSlug, db.poster.id, await getPageDrops(db.businessSlug, db.poster.businessId)) : null;
+}
+
+/**
+ * A business's live and upcoming drops as its public page and QR poster show them. Real
+ * businesses read get_business_page(), so every visitor sees the same thing whoever is signed
+ * in (the owner's own drop list is for the dashboard only). DEMO businesses read the demo store.
+ */
+export async function getPageDrops(slug: string, ownerId: string): Promise<PageDrop[]> {
+  if (isDbId(ownerId)) return pageDropsFrom(await dbPageDrops(slug), new Date());
+  return pageDropsFromDrops(await getDrops({ id: ownerId }));
 }
 
 /** A poster id from a link, kept only when it's one of this business's posters. */

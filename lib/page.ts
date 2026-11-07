@@ -3,7 +3,7 @@
 
 import { naira, place } from "./format";
 import { normalizeNgPhone } from "./setup";
-import type { Business, BusinessPage, ServiceItem } from "./types";
+import type { Business, BusinessPage, Drop, ServiceItem } from "./types";
 
 export const PAGE_LIMITS = {
   services: 12,
@@ -170,4 +170,44 @@ export function videoProblem(existing: { kind?: string }[], seconds: number, byt
   if (seconds > PAGE_LIMITS.videoSeconds + 0.5) return `Keep videos to ${PAGE_LIMITS.videoSeconds} seconds. This one is ${Math.round(seconds)}.`;
   if (bytes > PAGE_LIMITS.videoMb * 1024 * 1024) return `Keep videos under ${PAGE_LIMITS.videoMb} MB.`;
   return null;
+}
+
+/** A live or upcoming drop as the public business page and the QR poster see it: counts only,
+ *  never the deck. Real businesses read it from get_business_page(), whoever is signed in. */
+export interface PageDrop {
+  slug: string;
+  name: string;
+  status: "live" | "scheduled" | "sold_out";
+  total: number;
+  left: number;
+  startsAt: string;
+  endsAt: string;
+}
+
+/** One entry of get_business_page()'s `drops`: published drops that haven't ended. */
+export interface PageDropRow {
+  slug: string;
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  total: number;
+  left: number;
+}
+
+export function pageDropsFrom(rows: PageDropRow[], now: Date): PageDrop[] {
+  const t = now.getTime();
+  return rows
+    .filter((r) => new Date(r.ends_at).getTime() > t)
+    .map((r) => {
+      const left = Math.max(0, Number(r.left) || 0);
+      const status = new Date(r.starts_at).getTime() > t ? "scheduled" : left > 0 ? "live" : "sold_out";
+      return { slug: r.slug, name: r.title, status, total: Number(r.total) || 0, left, startsAt: new Date(r.starts_at).toISOString(), endsAt: new Date(r.ends_at).toISOString() };
+    });
+}
+
+/** DEMO businesses: the same shape from their drops. */
+export function pageDropsFromDrops(drops: Drop[]): PageDrop[] {
+  return drops
+    .filter((d): d is Drop & { status: PageDrop["status"] } => d.status === "live" || d.status === "scheduled" || d.status === "sold_out")
+    .map((d) => ({ slug: d.slug, name: d.name, status: d.status, total: d.total, left: Math.max(0, d.total - d.claimed), startsAt: d.startsAt, endsAt: d.endsAt }));
 }

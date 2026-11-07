@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import glow from "./mock/business.json";
-import { bookingLink, focalPosition, heroHeadline, heroLine, whereLine, pageChecklist, priceText, serviceGroups, showsLocation, visibleSections } from "./page";
+import { bookingLink, focalPosition, heroHeadline, heroLine, whereLine, pageChecklist, pageDropsFrom, priceText, serviceGroups, showsLocation, visibleSections } from "./page";
 import type { Business } from "./types";
 
 const base = { ...(glow as unknown as Business), page: undefined, portfolio: [], services: [], about: undefined, hours: undefined, address: undefined };
@@ -90,5 +90,33 @@ describe("editing the page", () => {
     expect(videoProblem([], 10, 16 * 1024 * 1024)).toMatch(/15 MB/);
     expect(videoProblem(Array.from({ length: 12 }, () => ({ kind: "photo" })), 5, 100)).toMatch(/Up to 12/);
     expect(videoProblem([{ kind: "video" }], 14, 5_000_000)).toBeNull();
+  });
+});
+
+describe("pageDropsFrom (the public page's and the poster's drops)", () => {
+  const now = new Date("2026-11-07T12:00:00Z");
+  const row = (over: Partial<{ slug: string; starts_at: string; ends_at: string; left: number }> = {}) => ({
+    slug: "glow-up",
+    title: "Glow up",
+    starts_at: "2026-11-01T09:00:00Z",
+    ends_at: "2026-11-20T21:00:00Z",
+    total: 200,
+    left: 120,
+    ...over,
+  });
+
+  it("marks a running drop with Tikkas left as live, with its count", () => {
+    expect(pageDropsFrom([row()], now)).toEqual([
+      { slug: "glow-up", name: "Glow up", status: "live", total: 200, left: 120, startsAt: "2026-11-01T09:00:00.000Z", endsAt: "2026-11-20T21:00:00.000Z" },
+    ]);
+  });
+
+  it("marks a drop that hasn't started as scheduled, and one with none left as sold out", () => {
+    expect(pageDropsFrom([row({ starts_at: "2026-11-10T09:00:00Z" })], now)[0].status).toBe("scheduled");
+    expect(pageDropsFrom([row({ left: 0 })], now)[0].status).toBe("sold_out");
+  });
+
+  it("leaves out drops that have ended", () => {
+    expect(pageDropsFrom([row({ ends_at: "2026-11-07T11:59:00Z" })], now)).toEqual([]);
   });
 });
