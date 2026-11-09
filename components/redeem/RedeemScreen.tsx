@@ -16,7 +16,7 @@ type View =
   | { kind: "checking"; code: string }
   | { kind: "valid"; result: Extract<CheckResult, { kind: "valid" }> }
   | { kind: "invalid"; problem: Problem }
-  | { kind: "done"; name: string };
+  | { kind: "done"; name: string; askReview?: boolean };
 
 type Scanner = { start(): Promise<void>; stop(): void; destroy(): void };
 
@@ -183,8 +183,9 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
       const res = await confirmRedemptionAction(r.code, naira, ticked, customer);
       if (res.ok) {
         buzz(30);
-        setView({ kind: "done", name: res.name });
-        backTimer.current = setTimeout(scanAgain, 3500);
+        setView({ kind: "done", name: res.name, askReview: res.askReview });
+        // A page claim: give staff time to ask for the review before the screen moves on.
+        backTimer.current = setTimeout(scanAgain, res.askReview ? 8000 : 3500);
       } else if (res.result.kind === "needs_action") {
         setConfirmError("Tick the box once they've done it.");
       } else {
@@ -393,7 +394,11 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
         <section className="rounded-card bg-success p-6 text-center text-on-success" role="status">
           <CheckCircle2 size={44} className="mx-auto" aria-hidden="true" />
           <h2 className="text-title mt-3">Done. {view.name}&apos;s Tikka is used.</h2>
-          <p className="text-body mt-1 opacity-90">Tikka will thank them on WhatsApp and ask how it went.</p>
+          <p className="text-body mt-1 opacity-90">
+            {view.askReview
+              ? "Ask them to rate you before they go. The stars are on their phone now."
+              : "Tikka will thank them on WhatsApp and ask how it went."}
+          </p>
           <button type="button" className="btn btn-secondary btn-lg mt-5 w-full" onClick={scanAgain}>
             <ScanLine />
             Scan the next code

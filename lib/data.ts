@@ -4,7 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
-import { dbLeads, dbLogFollowup, dbNewClaims } from "./leads-db";
+import { dbLeads, dbReviewAsks, dbLogFollowup, dbNewClaims } from "./leads-db";
 import { dbAdminBusinesses, dbAdminDecide, dbAdminForgetPerson, dbAdminPersonLookup, dbAdminPrivacyLog, type PersonRecord, type PrivacyLogEntry, dbAdminDrops, dbAdminGrantDrop, dbAdminOverview, dbAdminPayments, dbAdminPinDrop, dbAdminReports, dbAdminSaveTier, dbAdminSavePack, dbAdminSetBusiness, dbAdminSetDropShown, dbPacks, dbPins, dbTiers, type AdminBusiness, type AdminDrop, type AdminOverview, type AdminPayment, type AdminReport } from "./admin-db";
 import { dbMarketplaceDrops, dbNotifyIntent, dbReportDrop } from "./market-db";
 import { dbOwnerReviews, dbPublicReviews, dbReportReview, dbReviewPage, dbSubmitReview } from "./reviews-db";
@@ -1225,6 +1225,17 @@ export async function getLeads(user: Pick<SessionUser, "id" | "role">): Promise<
     .sort((a, b) => b.claimedAt.localeCompare(a.claimedAt));
 }
 
+/**
+ * "Ask for a review" (page-claim mode): the claims whose number Tikka can't message, redeemed and
+ * not reviewed yet, with their review key. Owners only; review_asks() checks. Demo: none.
+ */
+export async function getReviewAsks(user: Pick<SessionUser, "id" | "role">): Promise<Map<string, string>> {
+  assertCanReadLeads(user.role);
+  if (!isDbId(user.id)) return new Map();
+  const b = await getBusiness(user);
+  return b ? dbReviewAsks(b.id) : new Map();
+}
+
 // DEMO: leads.last_followup_at, until the leads table (M1).
 const followups: Map<string, string> = ((globalThis as { __tikkaFollowups?: Map<string, string> }).__tikkaFollowups ??= new Map());
 
@@ -1612,6 +1623,14 @@ export async function setVisitPlan(token: string, date: string, part: VisitPart)
   const next = { ...c, plannedVisitDate: date, plannedVisitPart: part };
   claimStore.set(token, next);
   return cardStatus(next, now);
+}
+
+/** A card's status by its view token: the card page's light check for "used" at the counter. */
+export async function getCardStatus(token: string): Promise<CardStatus | null> {
+  const c = claimStore.get(token);
+  if (c) return cardStatus(c, new Date());
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return null;
+  return (await dbCardByViewToken(token))?.status ?? null;
 }
 
 /** The card this browser already claimed from a drop, if any. */

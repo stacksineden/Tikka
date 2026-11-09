@@ -14,6 +14,14 @@ export async function dbLeads(businessId: string): Promise<Lead[]> {
   return ((data ?? []) as LeadRow[]).map(leadFrom);
 }
 
+/** "Ask for a review": claim id → review key, for typed-in numbers that can still review (owner only, in SQL). */
+export async function dbReviewAsks(businessId: string): Promise<Map<string, string>> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("review_asks", { p_business: businessId });
+  if (error) return new Map();
+  return new Map(((data ?? []) as { claim_id: string; view_token: string }[]).map((r) => [r.claim_id, r.view_token]));
+}
+
 /** "Message on WhatsApp" was tapped. */
 export async function dbLogFollowup(claimId: string): Promise<boolean> {
   const sb = await createClient();

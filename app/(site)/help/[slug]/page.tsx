@@ -14,7 +14,7 @@ const PAGE_CLAIM_NOTES: Record<string, string> = {
     "For now, customers claim on the page: they type their first name and WhatsApp number, and their Tikka opens right there. Claiming on WhatsApp is switching on soon, and then their Tikka also arrives in their WhatsApp.",
   "create-your-first-drop": "For now, customers claim on the page with their WhatsApp number. Claiming on WhatsApp is switching on soon.",
   "follow-up-with-leads":
-    "For now, customers claim on the page by typing their WhatsApp number, so some leads say \"Number not confirmed\": the number wasn't checked on WhatsApp. Tikka also can't remind them yet, so use Message today to remind them yourself.",
+    "For now, customers claim on the page by typing their WhatsApp number, so some leads say \"Number not confirmed\": the number wasn't checked on WhatsApp. Tikka also can't remind them or ask for a review yet, so use Message today to remind them, and Ask for a review once they've been in.",
 };
 
 export function generateStaticParams() {

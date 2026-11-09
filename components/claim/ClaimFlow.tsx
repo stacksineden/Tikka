@@ -132,6 +132,41 @@ export function ClaimFlow({
     return () => clearInterval(id);
   }, [status, businessSlug, drop.slug]);
 
+  // Page-claim mode: Tikka can't send the thank-you on WhatsApp, so the card itself notices when
+  // staff confirm the code at the counter. It turns "used" and the review stars appear right there.
+  // A light check every few seconds while the card is open, for half an hour at most.
+  const watchCounter = beat === "revealed" && card?.confirmed === false && !cardState?.redeemedAt && !cardState?.expired;
+  const cardToken = card?.token;
+  useEffect(() => {
+    if (!watchCounter || !cardToken) return;
+    const until = Date.now() + 30 * 60_000;
+    let busy = false;
+    const check = async () => {
+      if (busy || document.hidden || Date.now() > until) return;
+      busy = true;
+      try {
+        const r = await fetch(`/api/card-status?t=${encodeURIComponent(cardToken)}`, { cache: "no-store" });
+        if (r.ok) {
+          const next = ((await r.json()) as { status: CardStatus }).status;
+          if (next.redeemedAt) {
+            setCardState(next);
+            buzz([20, 60, 20]);
+            setAnnounce(next.review === "open" ? `Used. How was ${face.name}? Tap the stars to rate your visit.` : "Used.");
+          }
+        }
+      } catch {
+      } finally {
+        busy = false;
+      }
+    };
+    const id = setInterval(check, 5000);
+    document.addEventListener("visibilitychange", check);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", check);
+    };
+  }, [watchCounter, cardToken, face.name]);
+
   function settle(r: IntentPoll) {
     setIntent(null);
     if (r.kind === "ready") return ready(r.card, r.qr, r.status);

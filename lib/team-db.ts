@@ -2,6 +2,7 @@ import "server-only";
 
 import { checkFrom } from "./claim-map";
 import type { CheckResult } from "./redeem";
+import { adminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
 import type { Business } from "./types";
 import { fromStored } from "./media-path";
@@ -40,6 +41,16 @@ export async function dbConfirm(
   if (r.kind === "redeemed") return { ok: true, name: String(r.name ?? ""), bounceBack: !!r.bounce_back };
   if (r.kind === "needs_action") return { ok: false, result: { kind: "needs_action", code: String(r.code ?? code) } };
   return { ok: false, result: checkFrom(r) };
+}
+
+/**
+ * After confirm_redemption() succeeded for this team: whether the claim's number was typed on the
+ * page (never confirmed on WhatsApp), so Tikka can't send the thank-you and staff should ask for the
+ * review at the counter. Only a yes/no reaches the screen, never the number.
+ */
+export async function dbRedeemedOnPage(code: string): Promise<boolean> {
+  const { data } = await adminClient().from("claims").select("phone_confirmed").eq("code", code.trim().toUpperCase()).not("redeemed_at", "is", null).maybeSingle();
+  return data?.phone_confirmed === false;
 }
 
 /* -------------------------------------------------------------------- team */

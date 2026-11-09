@@ -2,6 +2,7 @@
 
 import { revalidatePath, updateTag } from "next/cache";
 import { PRICES_TAG } from "@/lib/admin-db";
+import { dbRedeemedOnPage } from "@/lib/team-db";
 import { after } from "next/server";
 import {
   BusinessSaveError,
@@ -577,7 +578,8 @@ export async function checkCodeAction(code: string): Promise<CheckResult | { kin
   return checkCode(user, code);
 }
 
-export type ConfirmActionResult = { ok: true; name: string } | { ok: false; result: CheckResult | { kind: "needs_action" | "no_access"; code?: string } };
+/** `askReview`: a page claim, so Tikka can't send the WhatsApp thank-you; staff ask at the counter. */
+export type ConfirmActionResult = { ok: true; name: string; askReview?: boolean } | { ok: false; result: CheckResult | { kind: "needs_action" | "no_access"; code?: string } };
 
 export async function confirmRedemptionAction(
   code: string,
@@ -598,7 +600,7 @@ export async function confirmRedemptionAction(
     // The thank-you (with the next-visit Tikka and the review link) leaves right away.
     after(() => processQueue(10).catch(() => {}));
     revalidatePath("/app", "layout");
-    return { ok: true, name: r.name };
+    return { ok: true, name: r.name, askReview: await dbRedeemedOnPage(code).catch(() => false) };
   }
   const r = await confirmRedemption(user, code, input);
   if (!r.ok) return { ok: false, result: r.result };

@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 /** "Message on WhatsApp": opens the chat from the owner's phone and logs a followup_tap. */
-export function FollowUpButton({ href, leadId, name, compact = false }: { href: string; leadId: string; name: string; compact?: boolean }) {
+export function FollowUpButton({ href, leadId, name, compact = false, review = false }: { href: string; leadId: string; name: string; compact?: boolean; review?: boolean }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
       className="btn btn-secondary min-h-11 shrink-0 px-3 text-label"
-      aria-label={`Message ${name} on WhatsApp`}
+      aria-label={review ? `Ask ${name} for a review on WhatsApp` : `Message ${name} on WhatsApp`}
       onClick={() => {
         const body = JSON.stringify({ leadId });
         try {
@@ -22,7 +22,7 @@ export function FollowUpButton({ href, leadId, name, compact = false }: { href: 
       }}
     >
       <MessageCircle />
-      <span className={compact ? "hidden sm:inline" : ""}>Message on WhatsApp</span>
+      <span className={compact ? "hidden sm:inline" : ""}>{review ? "Ask for a review" : "Message on WhatsApp"}</span>
     </a>
   );
 }

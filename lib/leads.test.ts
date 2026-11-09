@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterLeads, followUpLink, leadsCsv, parseLeadFilters, tabCounts } from "./leads";
+import { filterLeads, followUpLink, leadsCsv, parseLeadFilters, reviewAskLink, tabCounts } from "./leads";
 import type { Lead } from "./types";
 
 const base: Lead = {
@@ -57,5 +57,13 @@ describe("CSV export", () => {
     expect(lines[2]).toContain('"Redeemed"');
     expect(lines[2]).toContain('"25000"');
     expect(lines[3]).toContain(`"'=HYPERLINK(""x"")"`);
+  });
+
+  it("asks for a review from the owner's own WhatsApp", () => {
+    const link = reviewAskLink({ name: "Ada Obi", phone: "0803 111 2222" }, "Glow Studio", "https://usetikka.com/t/abc/review");
+    expect(link).toBe(
+      `https://wa.me/2348031112222?text=${encodeURIComponent("Hi Ada, thanks for coming to Glow Studio! How was it? Tap to rate us: https://usetikka.com/t/abc/review")}`,
+    );
+    expect(reviewAskLink({ name: "Ada", phone: "123" }, "Glow Studio", "x")).toBeNull();
   });
 });

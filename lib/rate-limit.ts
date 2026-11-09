@@ -19,6 +19,8 @@ export const LIMITS = {
   report: [{ max: 5, seconds: 86_400 }, { max: 60, seconds: 86_400 }],
   events: [{ max: 300, seconds: 600 }, { max: 5000, seconds: 600 }],
   visit: [{ max: 30, seconds: 600 }, { max: 300, seconds: 600 }],
+  // The card page checking for "used" at the counter (page-claim mode): every few seconds, per card.
+  card_status: [{ max: 150, seconds: 600 }, { max: 3000, seconds: 600 }],
   enquiry: [{ max: 5, seconds: 3600 }, { max: 40, seconds: 3600 }],
   early_access: [{ max: 10, seconds: 3600 }, { max: 100, seconds: 3600 }],
 } satisfies Record<string, [Rule, Rule]>;

@@ -31,6 +31,12 @@ export function followUpLink(
   return `https://wa.me/${e164.slice(1)}?text=${encodeURIComponent(text)}`;
 }
 
+/** "Ask for a review": the owner's own WhatsApp message with this customer's review link (page-claim mode). */
+export function reviewAskLink(lead: { name: string; phone: string }, businessName: string, reviewUrl: string): string | null {
+  const first = lead.name.trim().split(/\s+/)[0] ?? "";
+  return waLink(lead.phone, `Hi ${first}, thanks for coming to ${businessName}! How was it? Tap to rate us: ${reviewUrl}`);
+}
+
 export const LEAD_TABS = [
   { id: "all", label: "All" },
   { id: "new", label: "New" },
