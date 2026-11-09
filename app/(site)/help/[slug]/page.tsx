@@ -4,8 +4,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteFooter, SiteHeader } from "@/components/site/SiteChrome";
 import { StillStuck } from "@/components/site/StillStuck";
+import { claimMode } from "@/lib/claim-mode";
 import { helpGuide, helpGuides } from "@/lib/help";
 import { HELP_SECTIONS, nextGuide, paragraphs } from "@/lib/help-shared";
+
+/** While customers claim on the page (TIKKA_CLAIM_MODE=page), guides that describe WhatsApp claiming say so. Gone once WhatsApp is on. */
+const PAGE_CLAIM_NOTES: Record<string, string> = {
+  "what-customers-see":
+    "For now, customers claim on the page: they type their first name and phone number, and their Tikka opens right there. Claiming on WhatsApp is switching on soon, and then their Tikka also arrives in their WhatsApp.",
+  "create-your-first-drop": "For now, customers claim on the page with their phone number. Claiming on WhatsApp is switching on soon.",
+  "follow-up-with-leads":
+    "For now, customers claim on the page by typing their phone number, so some leads say \"Number not confirmed\": the number wasn't checked on WhatsApp. Tikka also can't remind them yet, so use Message today to remind them yourself.",
+};
 
 export function generateStaticParams() {
   return helpGuides().map((g) => ({ slug: g.slug }));
@@ -52,6 +62,13 @@ export default async function HelpGuidePage({ params }: PageProps<"/help/[slug]"
             </Link>
           )}
         </div>
+
+        {claimMode() === "page" && PAGE_CLAIM_NOTES[g.slug] && (
+          <p role="note" className="text-body mt-8 rounded-card border border-dashed border-line-strong bg-surface-sunken p-4 text-ink">
+            <strong>Right now: </strong>
+            {PAGE_CLAIM_NOTES[g.slug]}
+          </p>
+        )}
 
         <ol className="mt-10 grid gap-8">
           {g.steps.map((s, i) => (

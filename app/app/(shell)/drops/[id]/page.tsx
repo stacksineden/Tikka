@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bell, ChevronLeft, ExternalLink, PartyPopper, RotateCcw, Sparkles, Store } from "lucide-react";
+import { Bell, ChevronLeft, ExternalLink, Info, PartyPopper, RotateCcw, Sparkles, Store } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -10,6 +10,7 @@ import { DropActions } from "@/components/drops/DropActions";
 import { LiveFeed } from "@/components/drops/LiveFeed";
 import { ShareKit } from "@/components/drops/ShareKit";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
+import { claimMode } from "@/lib/claim-mode";
 import { rate } from "@/lib/dashboard";
 import { ResultsCard } from "@/components/drops/ResultsCard";
 import { getBusiness, getDrop, getDropDashboard, getDropFeed, getDropReport, getDropTiers, getDrops, getPosters } from "@/lib/data";
@@ -279,6 +280,15 @@ async function Dashboard({ params, searchParams }: { params: PageProps<"/app/dro
           </div>
           {running && (
             <Card title="Share your drop" id="share-h">
+              {claimMode() === "page" && (
+                <p className="text-body mt-3 flex items-start gap-2 rounded-md bg-brand-soft p-3 text-ink">
+                  <Info size={18} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
+                  <span>
+                    For now, customers claim on the page with their phone number. Claiming on WhatsApp is switching on soon. Nothing changes for you: share
+                    the same link.
+                  </span>
+                </p>
+              )}
               <div className="mt-4">
                 <ShareKit
                   url={url}
