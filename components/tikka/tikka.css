@@ -908,6 +908,25 @@
   font: 500 13px/18px var(--font-sans);
   color: var(--success);
 }
+/* A page-claimed Tikka (TIKKA_CLAIM_MODE=page) isn't in their WhatsApp: a way to keep its link. */
+.tk-save {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line-strong);
+}
+.tk-save .tk-btn {
+  height: 48px;
+  font-size: 16px;
+  background: var(--brand);
+  color: var(--on-brand);
+}
+.tk-save p {
+  margin: 0;
+  font: 400 13px/18px var(--font-sans);
+  color: var(--ink-muted);
+}
 .tk-redeem-sent svg {
   width: 16px;
   height: 16px;

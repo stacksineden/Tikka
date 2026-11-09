@@ -54,6 +54,19 @@ export async function dbCreateIntent(dropId: string, name: string, futureDrops: 
   return r.kind === "intent" ? { kind: "intent", token: r.token!, expiresAt: r.expires_at! } : { kind: r.kind as "scheduled" | "ended" | "sold_out" | "not_found" };
 }
 
+export type PageClaimResult =
+  | { kind: "claimed" | "number_taken" | "invalid_phone" | "sold_out" | "market_sold_out" | "blocked_new_only" | "blocked_period" | "expired" | "invalid" }
+  | { kind: "already_this_browser"; viewToken: string };
+
+/** A page claim (TIKKA_CLAIM_MODE=page) for this intent and a +234 number. The card then comes from dbClaimResult, to this visitor only. */
+export async function dbClaimOnPage(intentToken: string, phone: string): Promise<PageClaimResult> {
+  const { data, error } = await adminClient().rpc("claim_on_page", { p_intent_token: intentToken, p_phone: phone });
+  if (error || !data) return { kind: "invalid" };
+  const r = data as { kind: string; view_token?: string };
+  if (r.kind === "already_this_browser" && r.view_token) return { kind: "already_this_browser", viewToken: r.view_token };
+  return { kind: r.kind as Exclude<PageClaimResult["kind"], "already_this_browser"> };
+}
+
 export type ClaimPoll =
   | { kind: "ready"; card: ClaimedCard; status: CardStatus; dropId: string }
   | { kind: "pending" | "sold_out" | "market_sold_out" | "blocked_new_only" | "blocked_period" | "expired" | "invalid" };

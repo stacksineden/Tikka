@@ -35,8 +35,11 @@ describe("a card from the database", () => {
       total: 600,
       claimer: "Adaeze",
       expiresAt: "2026-11-06T22:59:00.000Z",
+      confirmed: true,
     });
     expect(cardFrom(json({ tier: "legendary", action: null })).instruction).toBeUndefined();
+    // Claimed on the page with a typed number (TIKKA_CLAIM_MODE=page): not in their WhatsApp.
+    expect(cardFrom(json({ phone_confirmed: false })).confirmed).toBe(false);
   });
 
   it("knows where it stands", () => {
@@ -95,7 +98,8 @@ describe("a lead", () => {
     last_followup_at: null,
   };
   it("reads as the Leads page shows it, with the full name and number", () => {
-    expect(leadFrom(row)).toMatchObject({ id: "c1", name: "Ada Okafor", phone: "+2348150000001", status: "redeemed", isNew: true, fromMarketplace: true, source: "market", tier: "rare", spent: 15000, marketingOptIn: true });
+    expect(leadFrom(row)).toMatchObject({ id: "c1", name: "Ada Okafor", phone: "+2348150000001", status: "redeemed", isNew: true, fromMarketplace: true, source: "market", tier: "rare", spent: 15000, marketingOptIn: true, phoneConfirmed: true });
+    expect(leadFrom({ ...row, phone_confirmed: false }).phoneConfirmed).toBe(false);
   });
   it("falls back to the first name, and an unknown source is direct", () => {
     expect(leadFrom({ ...row, profile_name: null, source: "tiktok", redeemed_at: null, bill_amount_kobo: null })).toMatchObject({ name: "Ada", source: "direct", status: "claimed", spent: undefined, fromMarketplace: false });

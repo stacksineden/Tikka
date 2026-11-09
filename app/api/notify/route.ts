@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { VISITOR_COOKIE } from "@/lib/claim";
 import { startNotify } from "@/lib/data";
+import { claimMode } from "@/lib/claim-mode";
 import { openForThisVisitor } from "@/lib/launch";
 import { tooMany } from "@/lib/rate-limit";
 
@@ -18,6 +19,10 @@ export async function POST(request: Request) {
   // Pre-launch: Notify me collects WhatsApp numbers, so it waits for the final privacy policy (lib/launch.ts).
   if (!(await openForThisVisitor("notify"))) {
     return NextResponse.json({ ok: false, error: "Notify me opens soon. Check back in a few days." }, { status: 403 });
+  }
+  // Notify me works through Tikka's WhatsApp, which page-claim mode means isn't connected yet.
+  if (claimMode() === "page") {
+    return NextResponse.json({ ok: false, error: "Notify me opens soon. Follow the business for their next drop." }, { status: 403 });
   }
   const r = await startNotify(body.business, body.drop || undefined, visitorId);
   const res = NextResponse.json(r, { status: r.ok ? 200 : 404 });

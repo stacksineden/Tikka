@@ -223,6 +223,8 @@ export interface ClaimedCard {
   total: number;
   claimer: string;
   expiresAt: string;
+  /** False when it was claimed on the page with a typed number: it isn't in their WhatsApp. */
+  confirmed?: boolean;
 }
 
 /** Link activity (TECH_PLAN §12). */
@@ -264,6 +266,8 @@ export interface Lead {
   expiresAt?: string;
   plannedVisitDate?: string;
   plannedVisitPart?: "morning" | "afternoon" | "evening";
+  /** False when the number was typed on the page, not proven on WhatsApp. */
+  phoneConfirmed?: boolean;
 }
 
 export type ActivityEvent =

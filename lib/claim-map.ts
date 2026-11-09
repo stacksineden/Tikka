@@ -22,6 +22,8 @@ export interface CardJson {
   planned_visit_date: string | null;
   planned_visit_part: CardStatus["plannedVisitPart"] | null;
   valid_weekdays: number[] | null;
+  /** False for a page claim with a typed number (lib/claim-mode.ts). */
+  phone_confirmed?: boolean;
 }
 
 const TIER: Record<CardJson["tier"], Tier> = { legendary: "legendary", rare: "rare", common: "thank_you" };
@@ -39,6 +41,7 @@ export function cardFrom(j: CardJson): ClaimedCard {
     total: j.total,
     claimer: j.first_name,
     expiresAt: new Date(j.expires_at).toISOString(),
+    confirmed: j.phone_confirmed !== false,
   };
 }
 
@@ -113,6 +116,7 @@ export interface LeadRow {
   reward: string;
   marketing_opt_in: boolean;
   last_followup_at: string | null;
+  phone_confirmed?: boolean;
 }
 
 const SOURCES: Source[] = ["wa", "ig", "qr", "web", "ads", "market", "direct"];
@@ -138,5 +142,6 @@ export function leadFrom(r: LeadRow): Lead {
     expiresAt: new Date(r.expires_at).toISOString(),
     plannedVisitDate: r.planned_visit_date ?? undefined,
     plannedVisitPart: r.planned_visit_part ?? undefined,
+    phoneConfirmed: r.phone_confirmed !== false,
   };
 }

@@ -56,6 +56,8 @@ export function ClaimFlow({
   claimed,
   view = "drop",
   firstVisit = false,
+  claimMode = "whatsapp",
+  turnstileSiteKey,
 }: {
   businessSlug: string;
   face: CardFace;
@@ -71,6 +73,10 @@ export function ClaimFlow({
   view?: "drop" | "card";
   /** First open of the card link: hold and flip before the card shows. */
   firstVisit?: boolean;
+  /** "page" while WhatsApp waits for Meta: they type their number here (lib/claim-mode.ts). */
+  claimMode?: "whatsapp" | "page";
+  /** Cloudflare Turnstile's public key for the page claim's bot check, when it's set up. */
+  turnstileSiteKey?: string;
 }) {
   const [beat, setBeat] = useState<Beat>(
     claimed ? (firstVisit ? "ready" : "revealed") : initialDrop.status === "sold_out" || initialDrop.status === "ended" ? "closed" : "sealed",
@@ -86,6 +92,10 @@ export function ClaimFlow({
   const [qr, setQr] = useState(claimed?.qr ?? "");
   const [note, setNote] = useState<string>();
   const [futureDrops, setFutureDrops] = useState(false);
+  const onPage = claimMode === "page";
+  const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState<string>();
+  const turnstile = useTurnstile(onPage && beat === "claim" ? turnstileSiteKey : undefined);
   const [cardState, setCardState] = useState<CardStatus | undefined>(claimed?.status);
   const [announce, setAnnounce] = useState("");
   // Click-to-claim: the TK-XXXXX code and the WhatsApp link it goes out in.
@@ -216,6 +226,46 @@ export function ClaimFlow({
     if (!first) {
       setNameError(`Add your first name so ${face.name} knows who's coming.`);
       return;
+    }
+    if (onPage && REAL.test(drop.id)) {
+      const digits = phone.replace(/\D/g, "");
+      if (digits.length < 10) {
+        setPhoneError("Add your phone number, like 0803 123 4567.");
+        return;
+      }
+      if (turnstileSiteKey && !turnstile.token) {
+        setPhoneError("One moment, we're checking you're not a robot. Then tap Claim again.");
+        return;
+      }
+      beacon("claim_continue");
+      go("verifying");
+      const r = (await fetch("/api/claim-page", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ business: businessSlug, drop: drop.slug, name: first, phone, source, posterId, turnstile: turnstile.token }),
+      })
+        .then((x) => x.json())
+        .catch(() => ({ ok: false, reason: "network" }))) as { ok: true; card: ClaimedCard; qr: string; status: CardStatus | null } | { ok: false; reason: string };
+      turnstile.reset();
+      if (r.ok) return ready(r.card, r.qr, r.status);
+      if (r.reason === "sold_out" || r.reason === "ended") {
+        setStatus(r.reason);
+        if (r.reason === "sold_out") setLeft(0);
+        return go("closed");
+      }
+      if (r.reason === "scheduled") setStatus("scheduled");
+      if (r.reason === "phone" || r.reason === "invalid_phone" || r.reason === "number_taken" || r.reason === "check") {
+        go("claim");
+        return setPhoneError(
+          r.reason === "number_taken"
+            ? "That number already has a Tikka from this drop. Check the number, or use your own."
+            : r.reason === "check"
+              ? "We couldn't check you're not a robot. Wait a moment and tap Claim again."
+              : "That doesn't look like a Nigerian mobile number. Check it and try again.",
+        );
+      }
+      go("front");
+      return setNote(PAGE_CLAIM_NOTES[r.reason] ?? "That didn't go through. Tap Claim again.");
     }
     beacon("claim_continue");
     go("verifying");
@@ -560,16 +610,20 @@ export function ClaimFlow({
                     {qr && <div className="tk-redeem-qr" role="img" aria-label={`QR code for ${card.code}`} dangerouslySetInnerHTML={{ __html: qr }} />}
                   </div>
                   {card.instruction && <p className="tk-redeem-instr">{card.instruction}.</p>}
-                  <div className="tk-redeem-sent">
-                    <Tick />
-                    Also sent to your WhatsApp
-                  </div>
+                  {card.confirmed === false ? (
+                    <SaveTikka token={card.token} businessName={face.name} />
+                  ) : (
+                    <div className="tk-redeem-sent">
+                      <Tick />
+                      Also sent to your WhatsApp
+                    </div>
+                  )}
                 </div>
               )}
             </div>
             {cardState?.visitOptions?.length ? (
               <div className="tk-section">
-                <VisitPlan token={card.token} status={cardState} businessName={face.name} onChange={setCardState} />
+                <VisitPlan token={card.token} status={cardState} businessName={face.name} onChange={setCardState} remind={card.confirmed !== false} />
               </div>
             ) : null}
             {cardState?.review === "open" && (
@@ -606,8 +660,8 @@ export function ClaimFlow({
             </button>
           ) : status === "live" ? (
             <button type="button" className="tk-btn tk-btn-gold" onClick={openClaim}>
-              <ChatIcon />
-              Claim via WhatsApp
+              {onPage ? <Spark /> : <ChatIcon />}
+              {onPage ? "Claim your Tikka" : "Claim via WhatsApp"}
             </button>
           ) : (
             <>
@@ -632,7 +686,7 @@ export function ClaimFlow({
               (beat === "revealed"
                 ? `${count(drop.left)} of ${count(drop.total)} left for your friends`
                 : status === "live"
-                  ? `${count(drop.left)} of ${count(drop.total)} left · One per WhatsApp number`
+                  ? `${count(drop.left)} of ${count(drop.total)} left · One per ${onPage ? "phone" : "WhatsApp"} number`
                   : status === "scheduled"
                     ? opensLabel
                     : `${face.name}'s next drop is one tap away`)}
@@ -648,7 +702,9 @@ export function ClaimFlow({
             <h2 className="tk-sheet-h" id="tk-sheet-h">
               Claim your Tikka
             </h2>
-            <p className="tk-sheet-sub">Your Tikka is saved to your WhatsApp, so you can show it at {face.name}.</p>
+            <p className="tk-sheet-sub">
+              {onPage ? `Your Tikka opens right here, so you can show it at ${face.name}.` : `Your Tikka is saved to your WhatsApp, so you can show it at ${face.name}.`}
+            </p>
             <div className="tk-field">
               <label className="tk-label" htmlFor="tk-name">
                 First name
@@ -677,12 +733,45 @@ export function ClaimFlow({
                 </p>
               )}
             </div>
-            <label className="tk-check">
-              <input type="checkbox" checked={futureDrops} onChange={(e) => setFutureDrops(e.target.checked)} />
-              <span>Send me future drops from {face.name}</span>
-            </label>
+            {onPage ? (
+              <div className="tk-field">
+                <label className="tk-label" htmlFor="tk-phone">
+                  Phone number
+                </label>
+                <input
+                  className="tk-input"
+                  id="tk-phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  maxLength={18}
+                  placeholder="0803 123 4567"
+                  value={phone}
+                  aria-invalid={phoneError ? true : undefined}
+                  aria-describedby={phoneError ? "tk-phone-err" : undefined}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    setPhoneError(undefined);
+                  }}
+                />
+                {phoneError && (
+                  <p className="tk-error" id="tk-phone-err">
+                    {phoneError}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <label className="tk-check">
+                <input type="checkbox" checked={futureDrops} onChange={(e) => setFutureDrops(e.target.checked)} />
+                <span>Send me future drops from {face.name}</span>
+              </label>
+            )}
+            {onPage && turnstileSiteKey && <div ref={turnstile.ref} className="min-h-[65px]" />}
             <p className="tk-consent">
-              {face.name} will be able to message you on WhatsApp about this drop. By continuing you agree to Tikka&apos;s{" "}
+              {onPage
+                ? `${face.name} will be able to contact you about this drop on this number.`
+                : `${face.name} will be able to message you on WhatsApp about this drop.`}{" "}
+              By continuing you agree to Tikka&apos;s{" "}
               <a href="/terms" target="_blank" rel="noopener">
                 terms
               </a>{" "}
@@ -693,8 +782,8 @@ export function ClaimFlow({
               .
             </p>
             <button className="tk-btn tk-btn-gold" type="submit">
-              <ChatIcon />
-              Continue on WhatsApp
+              {onPage ? <Spark /> : <ChatIcon />}
+              {onPage ? "Claim my Tikka" : "Continue on WhatsApp"}
             </button>
             <button className="tk-btn tk-btn-text" type="button" onClick={() => go("front")}>
               Not now
@@ -733,8 +822,8 @@ export function ClaimFlow({
           ) : (
             <>
               <div className="tk-spin" aria-hidden="true" />
-              <h2 className="tk-h">Confirming on WhatsApp</h2>
-              <p className="tk-p">Send the message WhatsApp opens with, then come straight back here.</p>
+              <h2 className="tk-h">{onPage ? "Getting your Tikka" : "Confirming on WhatsApp"}</h2>
+              <p className="tk-p">{onPage ? "One moment." : "Send the message WhatsApp opens with, then come straight back here."}</p>
             </>
           )}
         </div>
@@ -744,7 +833,7 @@ export function ClaimFlow({
 }
 
 /** "When will you come in?" Only days the Tikka still works; one reminder that morning. */
-function VisitPlan({ token, status, businessName, onChange }: { token: string; status: CardStatus; businessName: string; onChange: (s: CardStatus) => void }) {
+function VisitPlan({ token, status, businessName, onChange, remind = true }: { token: string; status: CardStatus; businessName: string; onChange: (s: CardStatus) => void; remind?: boolean }) {
   const options = status.visitOptions ?? [];
   const [editing, setEditing] = useState(!status.plannedVisitDate);
   const [date, setDate] = useState(status.plannedVisitDate ?? "");
@@ -769,7 +858,7 @@ function VisitPlan({ token, status, businessName, onChange }: { token: string; s
       <div className="tk-box">
         <h2 className="tk-box-h">See you {planned.label === "Today" || planned.label === "Tomorrow" ? planned.label.toLowerCase() : planned.label}</h2>
         <p className="tk-plan-p">
-          {VISIT_PARTS.find((p) => p.id === status.plannedVisitPart)?.label ?? ""} at {businessName}. We&apos;ll remind you on WhatsApp.
+          {VISIT_PARTS.find((p) => p.id === status.plannedVisitPart)?.label ?? ""} at {businessName}.{remind ? " We'll remind you on WhatsApp." : ""}
         </p>
         <button type="button" className="tk-chip" onClick={() => setEditing(true)}>
           Change
@@ -816,5 +905,86 @@ function ShareIcon() {
       <path d="m7 8 5-5 5 5" />
       <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
     </svg>
+  );
+}
+
+/** Why a page claim didn't go through, in the claimer's words (lib/claim-mode.ts). */
+const PAGE_CLAIM_NOTES: Record<string, string> = {
+  network: "No connection. Check your data and tap Claim again.",
+  slow_down: "Too many tries. Wait a little, then tap Claim again.",
+  prelaunch: "Tikkas open to claim very soon. Check back in a few days.",
+  blocked_new_only: "This drop is for new customers. Watch out for their next one.",
+  blocked_period: "You had a Tikka from here recently. Catch their next drop.",
+  market_sold_out: "The marketplace Tikkas for this drop are gone. Follow them for the next one.",
+};
+
+type TurnstileApi = {
+  render: (el: HTMLElement, opts: { sitekey: string; callback: (t: string) => void; "expired-callback": () => void; "error-callback": () => void; appearance?: string }) => string;
+  reset: (id?: string) => void;
+  remove: (id: string) => void;
+};
+
+/** Cloudflare Turnstile on the page claim: loads its script only when the sheet opens. */
+function useTurnstile(siteKey: string | undefined) {
+  const ref = useRef<HTMLDivElement>(null);
+  const widget = useRef<string | null>(null);
+  const [token, setToken] = useState<string>();
+  useEffect(() => {
+    const el = ref.current;
+    if (!siteKey || !el) return;
+    let cancelled = false;
+    const mount = () => {
+      const ts = (window as unknown as { turnstile?: TurnstileApi }).turnstile;
+      if (cancelled || !ts || widget.current) return;
+      widget.current = ts.render(el, {
+        sitekey: siteKey,
+        appearance: "interaction-only",
+        callback: setToken,
+        "expired-callback": () => setToken(undefined),
+        "error-callback": () => setToken(undefined),
+      });
+    };
+    if ((window as unknown as { turnstile?: TurnstileApi }).turnstile) mount();
+    else {
+      let script = document.getElementById("cf-turnstile") as HTMLScriptElement | null;
+      if (!script) {
+        script = document.createElement("script");
+        script.id = "cf-turnstile";
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+        script.async = true;
+        document.head.appendChild(script);
+      }
+      script.addEventListener("load", mount);
+    }
+    return () => {
+      cancelled = true;
+      const ts = (window as unknown as { turnstile?: TurnstileApi }).turnstile;
+      if (ts && widget.current) ts.remove(widget.current);
+      widget.current = null;
+      setToken(undefined);
+    };
+  }, [siteKey]);
+  return {
+    ref,
+    token,
+    reset: () => {
+      const ts = (window as unknown as { turnstile?: TurnstileApi }).turnstile;
+      if (ts && widget.current) ts.reset(widget.current);
+      setToken(undefined);
+    },
+  };
+}
+
+/** A page-claimed Tikka isn't in their WhatsApp: a way to keep its link (send it to themselves). */
+function SaveTikka({ token, businessName }: { token: string; businessName: string }) {
+  const link = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://usetikka.com"}/t/${token}`;
+  const text = `My Tikka from ${businessName}. Show it at the counter: ${link}`;
+  return (
+    <div className="tk-save">
+      <a className="tk-btn" href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer">
+        Save my Tikka
+      </a>
+      <p>Send it to yourself on WhatsApp, or screenshot this card, so you can show it at {businessName}.</p>
+    </div>
   );
 }

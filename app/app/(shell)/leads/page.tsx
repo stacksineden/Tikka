@@ -159,6 +159,7 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
                       {l.isNew && <span className="tag tag--new">New</span>}
                       {l.fromMarketplace && <span className="tag bg-brand-soft text-brand">From marketplace</span>}
                       {l.marketingOptIn && <span className="tag bg-surface-sunken text-ink-muted">Wants future drops</span>}
+                      {l.phoneConfirmed === false && <span className="tag bg-surface-sunken text-ink-muted">Number not confirmed</span>}
                     </div>
                     <a href={`tel:${l.phone.replace(/\s/g, "")}`} className="text-body mt-0.5 inline-block font-mono tracking-[0.02em] text-ink">
                       {l.phone}

@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ClaimFlow } from "@/components/claim/ClaimFlow";
+import { claimMode, turnstileSiteKey } from "@/lib/claim-mode";
 import { faceFromBusiness } from "@/components/tikka/TikkaCard";
 import { claimCookie, claimProfile, parseSource, VISITOR_COOKIE } from "@/lib/claim";
 import { getBrowserClaim, getBusinessBySlug, getBusinessReviews, getPublicDrop, posterOf, recordEvent } from "@/lib/data";
@@ -62,6 +63,8 @@ async function Claim({ params, searchParams }: PageProps<"/d/[business]/[drop]">
       source={source}
       posterId={posterId}
       claimed={card ? { ...card, qr: await qrSvg(card.card.code) } : undefined}
+      claimMode={claimMode()}
+      turnstileSiteKey={claimMode() === "page" ? turnstileSiteKey() : undefined}
     />
   );
 }
