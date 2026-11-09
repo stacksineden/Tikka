@@ -230,7 +230,7 @@ export function ClaimFlow({
     if (onPage && REAL.test(drop.id)) {
       const digits = phone.replace(/\D/g, "");
       if (digits.length < 10) {
-        setPhoneError("Add your phone number, like 0803 123 4567.");
+        setPhoneError("Add your WhatsApp number, like 0803 123 4567.");
         return;
       }
       if (turnstileSiteKey && !turnstile.token) {
@@ -686,7 +686,7 @@ export function ClaimFlow({
               (beat === "revealed"
                 ? `${count(drop.left)} of ${count(drop.total)} left for your friends`
                 : status === "live"
-                  ? `${count(drop.left)} of ${count(drop.total)} left · One per ${onPage ? "phone" : "WhatsApp"} number`
+                  ? `${count(drop.left)} of ${count(drop.total)} left · One per WhatsApp number`
                   : status === "scheduled"
                     ? opensLabel
                     : `${face.name}'s next drop is one tap away`)}
@@ -736,7 +736,7 @@ export function ClaimFlow({
             {onPage ? (
               <div className="tk-field">
                 <label className="tk-label" htmlFor="tk-phone">
-                  Phone number
+                  WhatsApp number
                 </label>
                 <input
                   className="tk-input"
@@ -768,9 +768,7 @@ export function ClaimFlow({
             )}
             {onPage && turnstileSiteKey && <div ref={turnstile.ref} className="min-h-[65px]" />}
             <p className="tk-consent">
-              {onPage
-                ? `${face.name} will be able to contact you about this drop on this number.`
-                : `${face.name} will be able to message you on WhatsApp about this drop.`}{" "}
+              {`${face.name} will be able to message you on WhatsApp about this drop.`}{" "}
               By continuing you agree to Tikka&apos;s{" "}
               <a href="/terms" target="_blank" rel="noopener">
                 terms

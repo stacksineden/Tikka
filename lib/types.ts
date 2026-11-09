@@ -271,7 +271,8 @@ export interface Lead {
 }
 
 export type ActivityEvent =
-  | { id: string; kind: "views"; count: number; source?: Source; at: string }
+  /** `day`: every open on an earlier day, folded into one line ("12 people opened your link · Sat 7 Nov"). */
+  | { id: string; kind: "views"; count: number; source?: Source; at: string; day?: true }
   | { id: string; kind: "claim"; name: string; tier: Tier; at: string }
   | { id: string; kind: "redeem"; name: string; amount?: number; at: string }
   | { id: string; kind: "review"; name: string; rating: number; at: string };

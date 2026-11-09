@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { funnel, groupViews, rate, suggestNextSize } from "./dashboard";
+import { foldOldViews, funnel, groupViews, rate, suggestNextSize } from "./dashboard";
 
 describe("drop dashboard", () => {
   it("gives each funnel step as % of the one before", () => {
@@ -28,5 +28,24 @@ describe("drop dashboard", () => {
     expect(g[1]).toMatchObject({ kind: "views", count: 1, source: "qr" });
     expect(rate(1, 4)).toBe("25%");
     expect(rate(1, 0)).toBe("–");
+  });
+
+  it("folds link opens from earlier days into one line per day", () => {
+    const now = new Date("2026-11-09T12:00:00Z"); // 1pm WAT
+    const feed = foldOldViews(
+      [
+        { id: "a", kind: "views", count: 2, at: "2026-11-09T11:00:00Z" },
+        { id: "b", kind: "claim", name: "Ada", tier: "rare", at: "2026-11-08T20:00:00Z" },
+        { id: "c", kind: "views", count: 3, source: "qr", at: "2026-11-08T19:00:00Z" },
+        { id: "d", kind: "views", count: 1, source: "ig", at: "2026-11-08T09:00:00Z" },
+        // 23:30 UTC on the 8th is 00:30 WAT on the 9th: today
+        { id: "e", kind: "views", count: 1, at: "2026-11-08T23:30:00Z" },
+        { id: "f", kind: "views", count: 4, source: "qr", at: "2026-11-07T10:00:00Z" },
+      ],
+      now,
+    );
+    expect(feed.map((e) => e.id)).toEqual(["a", "e", "b", "vd_2026-11-08", "vd_2026-11-07"]);
+    expect(feed[3]).toMatchObject({ kind: "views", count: 4, source: undefined, day: true, at: "2026-11-08T19:00:00Z" });
+    expect(feed[4]).toMatchObject({ count: 4, source: "qr", day: true });
   });
 });

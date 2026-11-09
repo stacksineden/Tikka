@@ -1,6 +1,7 @@
 // Drop dashboard maths (PRD B6, TECH_PLAN §12). Pure, so every number is pinned by tests; the
 // real numbers come from `events` + `claims` (and drop_daily_stats for charts).
 
+import { WAT } from "./format";
 import type { ActivityEvent, Source } from "./types";
 
 export interface FunnelStep {
@@ -58,6 +59,35 @@ export function groupViews(views: { at: string; source: Source }[], windowMs = 5
       at: sorted[i].at,
     });
     i = j + 1;
+  }
+  return out;
+}
+
+const watDay = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: WAT });
+
+/**
+ * The live feed, shorter: link opens from before today (WAT) become one line per day, placed at
+ * that day's latest open. Claims, redemptions, reviews and today's opens stay as they are.
+ */
+export function foldOldViews(events: ActivityEvent[], now: Date): ActivityEvent[] {
+  const today = watDay(now.toISOString());
+  const days = new Map<string, Extract<ActivityEvent, { kind: "views" }>>();
+  const out: ActivityEvent[] = [];
+  for (const e of [...events].sort((a, b) => b.at.localeCompare(a.at))) {
+    const day = e.kind === "views" ? watDay(e.at) : today;
+    if (e.kind !== "views" || day === today) {
+      out.push(e);
+      continue;
+    }
+    const seen = days.get(day);
+    if (seen) {
+      seen.count += e.count;
+      if (seen.source !== e.source) seen.source = undefined;
+    } else {
+      const line = { id: `vd_${day}`, kind: "views" as const, count: e.count, source: e.source, at: e.at, day: true as const };
+      days.set(day, line);
+      out.push(line);
+    }
   }
   return out;
 }

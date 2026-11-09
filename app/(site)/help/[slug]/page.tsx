@@ -11,10 +11,10 @@ import { HELP_SECTIONS, nextGuide, paragraphs } from "@/lib/help-shared";
 /** While customers claim on the page (TIKKA_CLAIM_MODE=page), guides that describe WhatsApp claiming say so. Gone once WhatsApp is on. */
 const PAGE_CLAIM_NOTES: Record<string, string> = {
   "what-customers-see":
-    "For now, customers claim on the page: they type their first name and phone number, and their Tikka opens right there. Claiming on WhatsApp is switching on soon, and then their Tikka also arrives in their WhatsApp.",
-  "create-your-first-drop": "For now, customers claim on the page with their phone number. Claiming on WhatsApp is switching on soon.",
+    "For now, customers claim on the page: they type their first name and WhatsApp number, and their Tikka opens right there. Claiming on WhatsApp is switching on soon, and then their Tikka also arrives in their WhatsApp.",
+  "create-your-first-drop": "For now, customers claim on the page with their WhatsApp number. Claiming on WhatsApp is switching on soon.",
   "follow-up-with-leads":
-    "For now, customers claim on the page by typing their phone number, so some leads say \"Number not confirmed\": the number wasn't checked on WhatsApp. Tikka also can't remind them yet, so use Message today to remind them yourself.",
+    "For now, customers claim on the page by typing their WhatsApp number, so some leads say \"Number not confirmed\": the number wasn't checked on WhatsApp. Tikka also can't remind them yet, so use Message today to remind them yourself.",
 };
 
 export function generateStaticParams() {

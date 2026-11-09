@@ -3,18 +3,15 @@ import {
   ArrowRight,
   CalendarClock,
   Check,
-  Eye,
   Plus,
-  ScanLine,
-  Star,
 } from "lucide-react";
 import Link from "next/link";
 import { FollowUpButton } from "@/components/leads/LeadBits";
-import { Spark } from "@/components/tikka/glyphs";
 import { RarityBadge, TIER_LABEL } from "@/components/tikka/RarityBadge";
 import { clockTime, count, left, naira, nairaShort, percent, shortDate, timeAgo, timeLeft, WAT } from "@/lib/format";
 import { followUpLink } from "@/lib/leads";
 import type { ActivityEvent, Business, Drop, Lead, Tier } from "@/lib/types";
+import { ActivityList } from "./ActivityList";
 import { CopyLink } from "./CopyLink";
 
 /* ------------------------------------------------------------- pieces */
@@ -198,63 +195,6 @@ export function NewLeads({ leads, businessName, now }: { leads: Lead[]; business
 
 /* ---------------------------------------------------------- activity */
 
-const SOURCE_LABEL: Record<string, string> = {
-  ig: "Instagram",
-  wa: "WhatsApp status",
-  qr: "QR code",
-  web: "your website",
-  ads: "ads",
-  market: "the marketplace",
-};
-
-function describe(e: ActivityEvent): { text: React.ReactNode; Icon: React.ElementType; tone: string } {
-  switch (e.kind) {
-    case "views":
-      return {
-        Icon: Eye,
-        tone: "bg-surface-sunken text-ink-muted",
-        text:
-          e.count === 1 ? (
-            <>Someone opened your link{e.source ? ` · via ${SOURCE_LABEL[e.source]}` : ""}</>
-          ) : (
-            <>
-              <b>{e.count} people</b> opened your link in the last 5 minutes
-            </>
-          ),
-      };
-    case "claim":
-      return {
-        Icon: Spark,
-        tone: "bg-brand-soft text-brand",
-        text: (
-          <>
-            <b>{e.name}</b> claimed a {TIER_LABEL[e.tier]} Tikka
-          </>
-        ),
-      };
-    case "redeem":
-      return {
-        Icon: ScanLine,
-        tone: "bg-success-soft text-success",
-        text: (
-          <>
-            <b>{e.name}</b> redeemed{e.amount ? ` · ${naira(e.amount)}` : ""}
-          </>
-        ),
-      };
-    case "review":
-      return {
-        Icon: Star,
-        tone: "bg-gold-soft text-gold-text",
-        text: (
-          <>
-            <b>{e.name}</b> left a {e.rating}-star review
-          </>
-        ),
-      };
-  }
-}
-
 export function ActivityFeed({ events, now, live = true }: { events: ActivityEvent[]; now: Date; live?: boolean }) {
   return (
     <Panel
@@ -273,22 +213,7 @@ export function ActivityFeed({ events, now, live = true }: { events: ActivityEve
           {live ? "Quiet so far. Opens, claims and redemptions appear here as they happen." : "Nothing recorded here for this drop."}
         </p>
       )}
-      <ol className="mt-2 grid gap-1 px-3 pb-3 empty:hidden" aria-live="polite">
-        {events.map((e) => {
-          const { text, Icon, tone } = describe(e);
-          return (
-            <li key={e.id} className="flex items-start gap-3 rounded-md px-2 py-2">
-              <span className={`grid size-8 shrink-0 place-items-center rounded-pill ${tone}`}>
-                <Icon className="size-4" aria-hidden="true" />
-              </span>
-              <div className="min-w-0 pt-0.5">
-                <p className="text-body leading-5 [&_b]:font-semibold">{text}</p>
-                <p className="text-caption mt-0.5 text-ink-muted">{timeAgo(e.at, now)}</p>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+      <ActivityList events={events} now={now.toISOString()} />
     </Panel>
   );
 }
