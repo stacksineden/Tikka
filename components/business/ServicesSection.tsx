@@ -58,7 +58,7 @@ export function ServicesSection({
                   {GLYPHS[i % GLYPHS.length]}
                 </span>
                 <span>
-                  <span className="block font-display text-[15px] font-extrabold uppercase leading-tight tracking-[-0.01em] sm:text-[17px]">{g ?? "All"}</span>
+                  <span className="biz-serif block text-[19px] leading-tight sm:text-[22px]">{g ?? "All"}</span>
                   <span className="block text-[12px] opacity-75">
                     {n} service{n === 1 ? "" : "s"}
                   </span>
@@ -71,7 +71,7 @@ export function ServicesSection({
 
       {tabs.length > 0 && (
         <div className="grid gap-4 lg:grid-cols-2 lg:items-end">
-          <h3 key={group ?? "all"} className="biz-display text-[clamp(36px,6.5vw,88px)]">
+          <h3 key={group ?? "all"} className="biz-display text-[clamp(32px,5vw,64px)]">
             <span className="w">
               <span className="wi biz-fade-in" style={{ animationDelay: "0s" }}>
                 {group ?? "All services"}
@@ -79,7 +79,7 @@ export function ServicesSection({
             </span>
           </h3>
           <p className="text-body-lg max-w-md text-ink-muted lg:justify-self-end">
-            {shown.length} service{shown.length === 1 ? "" : "s"}. Tap one to book it on WhatsApp; prices are shown before you book.
+            {shown.length} service{shown.length === 1 ? "" : "s"}. Tap one to pick a time and book it.
           </p>
         </div>
       )}
@@ -92,36 +92,38 @@ export function ServicesSection({
               <Tag
                 {...(link ? { href: link, target: "_blank", rel: "noopener noreferrer" } : {})}
                 {...(link && sheet ? { "data-book": "", "data-book-name": s.name, "data-book-price": s.priceKind === "ask" || s.price === null ? "" : priceText(s) } : {})}
-                className="group block"
+                className="group flex h-full flex-col"
               >
+                {/* The photo stays clean: no text or fade on it. */}
                 <div className="biz-card-img relative aspect-[4/5] overflow-hidden" style={{ background: brand.color }}>
                   {s.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={s.imageUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
+                    <img src={s.imageUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover" style={{ objectPosition: "50% 30%" }} />
                   ) : (
-                    <span className="absolute inset-0 grid place-items-center font-display text-[64px] font-extrabold opacity-25" style={{ color: brand.on }} aria-hidden="true">
+                    <span className="biz-serif absolute inset-0 grid place-items-center text-[72px] opacity-30" style={{ color: brand.on }} aria-hidden="true">
                       {brand.initials}
                     </span>
                   )}
-                  <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-linear-to-t from-night/75 to-transparent p-4 pt-16 text-on-night">
-                    <span className="font-display text-[20px] font-extrabold uppercase leading-none tracking-[-0.02em]">{s.name}</span>
-                    {link && (
-                      <span className="grid size-10 shrink-0 place-items-center bg-surface-raised text-ink transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true">
-                        <ArrowUpRight size={18} />
-                      </span>
-                    )}
-                  </span>
                 </div>
-                <div className="mt-3 flex items-baseline justify-between gap-3">
-                  <span className={`tabular-nums ${s.priceKind === "ask" || s.price === null ? "text-label text-ink-muted" : "text-title text-[18px]"}`}>{priceText(s)}</span>
+                {/* Three levels: the name (serif), the price (a small label), the description (muted). */}
+                <h4 className="biz-serif mt-5 text-[24px] leading-[1.15] tracking-[-0.01em] sm:text-[26px]">{cleanName(s.name)}</h4>
+                <p className={`biz-price mt-2 ${s.description ? "" : "mb-5"}`}>
+                  <span>{s.priceKind === "ask" || s.price === null ? "Price on request" : priceText(s)}</span>
                   {s.duration && (
-                    <span className="text-caption inline-flex items-center gap-1 text-ink-muted">
-                      <Clock size={13} aria-hidden="true" />
+                    <span className="inline-flex items-center gap-1">
+                      <span aria-hidden="true">·</span>
+                      <Clock size={12} aria-hidden="true" />
                       {s.duration}
                     </span>
                   )}
-                </div>
-                {s.description && <p className="text-body mt-1 line-clamp-2 text-ink-muted">{s.description}</p>}
+                </p>
+                {s.description && <p className="text-body mb-5 mt-3 line-clamp-2 text-ink-muted">{s.description}</p>}
+                {link && (
+                  <span className="biz-card-book" aria-hidden="true">
+                    Book
+                    <ArrowUpRight size={18} className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                  </span>
+                )}
                 {link && <span className="sr-only">Book {s.name}</span>}
               </Tag>
             </li>
@@ -130,4 +132,9 @@ export function ServicesSection({
       </ul>
     </div>
   );
+}
+
+/** "MAKEUP ARTISTRY," → "MAKEUP ARTISTRY": stray punctuation an owner left at the end. */
+function cleanName(name: string): string {
+  return name.trim().replace(/[\s,.;:–—-]+$/, "");
 }

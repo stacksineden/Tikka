@@ -79,7 +79,7 @@ content/studio/               Tikka Studio content: case studies, our ad and con
 
 - Colours come only from the tokens in `design/tokens.css` (`--brand`, `--gold`, `--night`, `--ink`, `--surface`, rarity colours…). Never hard-code another hex. Never use WhatsApp green (#25D366) as a Tikka colour.
 - Gold is scarce: the claim button, rewards, the rare tier and the logo stub only.
-- Fonts: Bricolage Grotesque (everything) and Space Mono (codes, serials, counters), from Google Fonts with the `latin-ext` subset so ₦ renders.
+- Fonts: Bricolage Grotesque (everything) and Space Mono (codes, serials, counters), from Google Fonts with the `latin-ext` subset so ₦ renders. One exception: the business page sets its headlines in Fraunces (serif), loaded only there (`components/business/fonts.ts`); see design/BRAND.md.
 - The claim page is always on the night stage (`--night`). The dashboard is light by default.
 
 ## Plain language for business owners

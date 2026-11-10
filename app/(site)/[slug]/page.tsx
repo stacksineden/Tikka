@@ -6,6 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Fragment, Suspense } from "react";
 import { BookingSheet } from "@/components/business/BookingSheet";
+import { bizSerif } from "@/components/business/fonts";
 import { Gallery } from "@/components/business/Gallery";
 import { Reveal } from "@/components/business/Reveal";
 import { ServicesSection } from "@/components/business/ServicesSection";
@@ -66,8 +67,8 @@ function fitSize(name: string): string {
   // Longer names are sized to fit in about two lines, never by their longest word alone
   // (which let a long name run to five lines of giant type).
   const chars = oneLine ? name.length : Math.max(...words.map((w) => w.length), Math.ceil(name.length / 2), 6);
-  // Bricolage at 800, uppercase, tight tracking: about 0.53em per letter.
-  return `min(${Math.min(22, 86 / (chars * 0.55)).toFixed(2)}vw, 250px)`;
+  // Fraunces, normal case, light: about 0.5em per letter.
+  return `min(${Math.min(22, 86 / (chars * 0.5)).toFixed(2)}vw, 250px)`;
 }
 
 function hoursRows(h: OpeningHours): [string, string][] {
@@ -97,7 +98,7 @@ function Heading({ id, n, label, title, center = false }: { id: string; n?: numb
       <Label n={n} center={center}>
         {label}
       </Label>
-      <h2 id={id} data-reveal="words" className="biz-display mt-5 text-[clamp(40px,9vw,120px)]">
+      <h2 id={id} data-reveal="words" className="biz-display mt-5 text-[clamp(40px,7vw,96px)]">
         <Words text={title} />
       </h2>
     </div>
@@ -208,7 +209,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
   const n = (k: (typeof numbered)[number]) => numbered.indexOf(k) + 1;
 
   return (
-    <div id="biz" data-theme="light" className="biz" style={style}>
+    <div id="biz" data-theme="light" className={`biz ${bizSerif.variable}`} style={style}>
       <Reveal rootId="biz" />
 
       {/* 1. Hero: full-bleed photo, slim nav, a line and a link bottom-left, the name in giant type. */}
@@ -307,7 +308,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
               <Label n={n("about")} center>
                 About us
               </Label>
-              <h2 id="about-h" data-reveal="words" className="biz-display mt-5 text-[clamp(34px,7.2vw,96px)]">
+              <h2 id="about-h" data-reveal="words" className="biz-display mt-5 text-[clamp(32px,5.6vw,76px)]">
                 <Words text={statement} />
               </h2>
             </div>
@@ -405,7 +406,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
                       t.name.trim().charAt(0)
                     )}
                   </div>
-                  <p className="mt-4 font-display text-[18px] font-extrabold uppercase tracking-[-0.02em]">{t.name}</p>
+                  <p className="biz-serif mt-4 text-[22px] leading-tight">{t.name}</p>
                   {t.role && <p className="text-body text-ink-muted">{t.role}</p>}
                 </li>
               ))}
@@ -418,7 +419,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
       {sections.has("text") && (
         <section id="more" aria-labelledby="more-h" className="scroll-mt-4 bg-surface px-4 py-24 sm:px-8 sm:py-32">
           <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2 lg:items-start">
-            <h2 id="more-h" data-reveal="words" className="biz-display text-[clamp(40px,7vw,96px)]">
+            <h2 id="more-h" data-reveal="words" className="biz-display text-[clamp(36px,6vw,80px)]">
               <Words text={page.textTitle!} />
             </h2>
             <p data-reveal="up" className="text-body-lg max-w-xl whitespace-pre-line text-ink-muted lg:pt-3">
@@ -436,7 +437,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
             <div className="border-t border-[var(--biz-rule)]">
               {page.faqs!.map((f) => (
                 <details key={f.id} className="group border-b border-[var(--biz-rule)]">
-                  <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-6 py-5 font-display text-[19px] font-bold leading-tight [&::-webkit-details-marker]:hidden">
+                  <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-6 py-5 biz-serif text-[21px] leading-tight [&::-webkit-details-marker]:hidden">
                     {f.q}
                     <span aria-hidden="true" className="text-[26px] font-light transition-transform duration-300 group-open:rotate-45">
                       +
@@ -481,7 +482,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
       {/* 11. Final call to action */}
       <section className="px-4 py-24 sm:px-8 sm:py-32" style={{ background: b.brandColor, color: b.onBrandColor }} aria-labelledby="cta-h">
         <div className="mx-auto max-w-7xl">
-          <h2 id="cta-h" data-reveal="words" className="biz-display text-[clamp(48px,11vw,170px)]">
+          <h2 id="cta-h" data-reveal="words" className="biz-display text-[clamp(48px,9vw,140px)]">
             <Words text="Book your visit" />
           </h2>
           <div data-reveal="up" className="mt-10 flex flex-wrap items-center gap-3">

@@ -68,7 +68,7 @@ export function BookingSheet({ business, number, hours }: { business: string; nu
       <div className="biz-sheet-panel">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h2 id="book-title" className="font-display text-[22px] font-extrabold leading-tight tracking-[-0.02em]">
+            <h2 id="book-title" className="biz-serif text-[26px] leading-tight tracking-[-0.01em]">
               {service ? `Book ${service.name}` : "Book an appointment"}
             </h2>
             <p className="text-body mt-0.5 text-ink-muted">{service?.price ? `${business} · ${service.price}` : business}</p>

@@ -14,13 +14,47 @@
   overflow-x: clip;
 }
 
-/* Display type: tight, heavy, uppercase. */
+/* Display type: Fraunces, the page's headline serif (design/BRAND.md), light and in normal
+   case. Optical sizing follows the size, so big headings get fine, high-contrast strokes. */
+.biz-display,
+.biz-serif {
+  font-family: var(--font-biz-serif), Georgia, serif;
+  font-weight: 400;
+  font-optical-sizing: auto;
+}
 .biz-display {
-  font-family: var(--font-display);
-  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+}
+/* The hero name reads as a name even when typed in lower case ("Maril kay" → "Maril Kay"). */
+.biz-hero-title {
+  text-transform: capitalize;
+}
+
+/* Service price and duration: a small label in the brand colour, never body text. */
+.biz-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font: 600 12px / 1.4 var(--font-sans);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  letter-spacing: -0.045em;
-  line-height: 0.88;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--biz) 75%, var(--ink));
+}
+/* "Book ↗" under a service: a thin rule, then a quiet text link. */
+.biz-card-book {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  /* Pinned to the card's foot, so a row of cards lines up whatever the description length. */
+  margin-top: auto;
+  border-top: 1px solid var(--biz-rule);
+  font: 600 14px / 1 var(--font-sans);
+  letter-spacing: 0.04em;
 }
 
 /* "01 — ABOUT US": the small numbered label above each section heading. The number and
@@ -160,8 +194,9 @@
   display: inline-block;
   overflow: hidden;
   vertical-align: top;
-  padding-bottom: 0.06em;
-  margin-bottom: -0.06em;
+  /* Room for serif descenders (g, y, p) inside the clip. */
+  padding-bottom: 0.16em;
+  margin-bottom: -0.16em;
 }
 .biz .wi {
   display: inline-block;

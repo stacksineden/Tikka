@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 import { savePageAction, saveServicesAction } from "@/app/app/actions";
 import { PortfolioEditor } from "@/components/setup/PortfolioEditor";
-import { prepareAbout, prepareCropped, prepareHero, uploadPhoto, type MediaKind } from "@/lib/media-client";
+import { prepareAbout, prepareCropped, prepareHero, prepareService, uploadPhoto, type MediaKind } from "@/lib/media-client";
 import { focalPosition, heroHeadline, heroLine, PAGE_LIMITS, priceText } from "@/lib/page";
 import type { Business, BusinessPage, FaqItem, ServeMode, ServiceItem, TeamMember } from "@/lib/types";
 
@@ -429,7 +429,7 @@ function ServicesCard({ b }: { b: Business }) {
                       />
                     </Field>
                     <div className="flex flex-wrap items-center gap-2">
-                      <PhotoPick label={x.imageUrl ? "Change photo" : "Add a photo"} kind="service" prepare={(f) => prepareCropped(f, 800, 600)} onPick={(u) => patch(x.id!, { imageUrl: u })} />
+                      <PhotoPick label={x.imageUrl ? "Change photo" : "Add a photo"} kind="service" prepare={prepareService} onPick={(u) => patch(x.id!, { imageUrl: u })} />
                       <button
                         type="button"
                         className="btn btn-ghost min-h-11 px-3 text-label text-danger"
