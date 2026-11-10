@@ -23,35 +23,38 @@
   line-height: 0.88;
 }
 
-/* "[ ABOUT US ]": the small bracketed label set inside big headings. */
-.biz-tag {
-  position: relative;
-  display: inline-flex;
+/* "01 — ABOUT US": the small numbered label above each section heading. The number and
+   rule take the brand colour; the words stay ink so they read on any brand colour. */
+.biz-label {
+  display: flex;
   align-items: center;
-  vertical-align: middle;
-  margin: 0 0.35em;
-  padding: 0.5em 0.85em;
-  font: 600 clamp(9px, 0.9vw, 12px) / 1 var(--font-sans);
-  letter-spacing: 0.08em;
+  gap: 0.75em;
+  font: 600 12px / 1 var(--font-sans);
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  white-space: nowrap;
+  color: var(--ink);
 }
-.biz-tag::before,
-.biz-tag::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 0.55em;
-  border: 1.5px solid currentColor;
+.biz-label-n {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  /* Darkened a little so pale brand colours still read on white. */
+  color: color-mix(in srgb, var(--biz) 75%, var(--ink));
 }
-.biz-tag::before {
-  left: 0;
-  border-right: 0;
+.biz-label-rule {
+  width: 28px;
+  height: 1.5px;
+  background: color-mix(in srgb, var(--biz) 75%, var(--ink));
 }
-.biz-tag::after {
-  right: 0;
-  border-left: 0;
+
+/* A soft dark pool behind the hero's intro (bottom left), on top of the top-to-bottom scrim. */
+.biz-hero-shade {
+  background: radial-gradient(ellipse at 10% 85%, color-mix(in srgb, var(--night) 55%, transparent), transparent 60%);
+}
+
+/* Hero text over a photo: a soft shadow so small words hold up on bright spots. */
+.biz-hero-text {
+  text-shadow: 0 1px 14px color-mix(in srgb, var(--night) 55%, transparent);
 }
 
 /* Underlined text links ("Book an appointment", "Read more"). */
