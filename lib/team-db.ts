@@ -99,6 +99,26 @@ export async function dbRemoveStaff(businessId: string, userId: string): Promise
   await sb.rpc("remove_staff", { p_business: businessId, p_user: userId });
 }
 
+/**
+ * A new account's way in when its email has an open staff invite: the invite's accept path, so the
+ * person joins that business instead of being walked through setting up their own. The email
+ * that confirms a new account always points at the welcome tour, whatever page asked for it, so
+ * the auth routes ask here first. Server only; the accept route still checks the email itself.
+ */
+export async function dbInviteAcceptPath(email: string | undefined | null): Promise<string | null> {
+  if (!email) return null;
+  const { data } = await adminClient()
+    .from("business_invites")
+    .select("token")
+    .ilike("email", email.replace(/[%_\\]/g, "\\$&"))
+    .is("accepted_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data?.token ? `/invite/${encodeURIComponent(data.token)}/accept` : null;
+}
+
 /** The invite page: whose invite, for which email, and whether it's still open. */
 export async function dbInviteInfo(
   token: string,

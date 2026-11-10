@@ -2,6 +2,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { rememberRole } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
+import { dbInviteAcceptPath } from "@/lib/team-db";
 
 /**
  * Tikka's own email links (supabase/templates, once custom SMTP is set up): a token hash that
@@ -16,6 +17,10 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
     if (!error && data.user) {
+      // Invited staff confirming a new account: join the business that invited them, not the
+      // welcome tour for setting up a business of their own.
+      const invite = next.startsWith("/app/welcome") ? await dbInviteAcceptPath(data.user.email).catch(() => null) : null;
+      if (invite) return NextResponse.redirect(new URL(invite, origin));
       await rememberRole(supabase, data.user.id);
       return NextResponse.redirect(new URL(next, origin));
     }
