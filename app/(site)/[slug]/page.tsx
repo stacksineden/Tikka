@@ -1,10 +1,11 @@
 import "@/components/tikka/tikka.css";
 import "@/components/business/site.css";
 import type { Metadata } from "next";
-import { ArrowUpRight, BadgeCheck, Star } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, CalendarDays, Star } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Fragment, Suspense } from "react";
+import { BookingSheet } from "@/components/business/BookingSheet";
 import { Gallery } from "@/components/business/Gallery";
 import { Reveal } from "@/components/business/Reveal";
 import { ServicesSection } from "@/components/business/ServicesSection";
@@ -13,7 +14,7 @@ import { Logo } from "@/components/site/Logo";
 import { ActionIcon, actionHref } from "@/components/tikka/ActionIcon";
 import { getBusinessBySlug, getBusinessReviews, getPageDrops } from "@/lib/data";
 import { clockTime, count, place, shortDate } from "@/lib/format";
-import { bookingLink, focalPosition, heroHeadline, serviceGroups, showsLocation, visibleSections, whereLine, type PageDrop } from "@/lib/page";
+import { bookingLink, bookingNumber, focalPosition, heroHeadline, serviceGroups, showsLocation, visibleSections, whereLine, type PageDrop } from "@/lib/page";
 import { SITE } from "@/lib/qr";
 import { formatTime } from "@/lib/setup";
 import type { Business, OpeningHours } from "@/lib/types";
@@ -181,7 +182,14 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
   const next = drops.find((d) => d.status === "scheduled");
   const sections = new Set(visibleSections(b, { reviews: reviews.length }));
   const page = b.page ?? {};
-  const book = bookingLink(b);
+  // Every Book opens the booking sheet (PRD A5), unless the owner set their own booking link on
+  // the Book action: then every Book goes there. The sheet's links keep the plain WhatsApp
+  // message as their href, so Book works before the script loads.
+  const external = b.actions.find((a) => a.kind === "book")?.value.trim() || null;
+  const number = bookingNumber(b);
+  const sheet = !external && !!number;
+  const book = external ?? bookingLink(b);
+  const bookProps = { href: book ?? undefined, target: "_blank", rel: "noopener noreferrer", ...(sheet ? { "data-book": "" } : {}) };
   const call = b.actions.find((a) => a.kind === "call");
   const instagram = b.actions.find((a) => a.kind === "instagram");
   const loc = place(b.area, b.city);
@@ -243,7 +251,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
             </ul>
           )}
           {book && (
-            <a href={book} target="_blank" rel="noopener noreferrer" className="biz-btn min-h-10 bg-ink px-4 text-[13px] text-surface-raised">
+            <a {...bookProps} className="biz-btn min-h-10 bg-ink px-4 text-[13px] text-surface-raised">
               <span className="sm:hidden">Book</span>
               <span className="hidden sm:inline">Book an appointment</span>
             </a>
@@ -268,7 +276,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
               <p className="text-body-lg font-semibold text-on-night">{intro}</p>
               <p className="text-body mt-1 font-semibold text-on-night/85">{whereLine(b)}</p>
               {book && (
-                <a href={book} target="_blank" rel="noopener noreferrer" className="biz-link text-[17px]">
+                <a {...bookProps} className="biz-link text-[17px]">
                   Book an appointment
                 </a>
               )}
@@ -325,7 +333,8 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
               <ServicesSection
                 services={b.services}
                 groups={serviceGroups(b.services)}
-                links={b.services.map((s) => bookingLink(b, s))}
+                links={b.services.map((s) => external ?? bookingLink(b, s))}
+                sheet={sheet}
                 brand={{ color: b.brandColor, on: b.onBrandColor, initials: b.initials }}
               />
             </div>
@@ -470,9 +479,9 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
           </h2>
           <div data-reveal="up" className="mt-10 flex flex-wrap items-center gap-3">
             {book && (
-              <a href={book} target="_blank" rel="noopener noreferrer" className="biz-btn bg-surface-raised text-ink">
-                <ActionIcon kind="whatsapp" />
-                Book on WhatsApp
+              <a {...bookProps} className="biz-btn bg-surface-raised text-ink">
+                <CalendarDays size={18} aria-hidden="true" />
+                {sheet ? "Book a time" : "Book an appointment"}
               </a>
             )}
             {call && (
@@ -508,12 +517,14 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
       {/* Phones: booking stays one tap away. */}
       {book && (
         <div className="fixed inset-x-0 bottom-0 z-20 bg-surface-raised/95 px-4 pb-[calc(10px+env(safe-area-inset-bottom))] pt-2.5 backdrop-blur sm:hidden">
-          <a href={book} target="_blank" rel="noopener noreferrer" className="biz-btn w-full bg-ink text-surface-raised">
-            <ActionIcon kind="whatsapp" />
-            Book on WhatsApp
+          <a {...bookProps} className="biz-btn w-full bg-ink text-surface-raised">
+            <CalendarDays size={18} aria-hidden="true" />
+            {sheet ? "Book a time" : "Book an appointment"}
           </a>
         </div>
       )}
+
+      {sheet && <BookingSheet business={b.name} number={number!} hours={b.hours} />}
     </div>
   );
 }
