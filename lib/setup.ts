@@ -5,7 +5,10 @@ import { CATEGORIES, STATE_NAMES } from "./nigeria";
 import type { ActionKind, Business, CardBackground, OpeningHours } from "./types";
 
 export const LIMITS = {
-  name: 40,
+  /** The brand name: short enough for one line on the card and the page hero. */
+  name: 24,
+  /** Names saved before the 24-character limit keep working until the owner changes them. */
+  nameSaved: 60,
   tagline: 60,
   about: 800,
   services: 12,
@@ -99,12 +102,14 @@ function normalizeAction(kind: ActionKind, value: string): string | null {
 
 export type Errors = Partial<Record<string, string>>;
 
-/** Validates and normalises the required card fields. Returns errors keyed by field. */
-export function validateCard(input: CardDraft): { ok: true; card: CardDraft & { onBrandColor: string; initials: string } } | { ok: false; errors: Errors } {
+/** Validates and normalises the required card fields. Returns errors keyed by field. `savedName` is the
+ * name already on file: left unchanged, it may be longer than today's limit. */
+export function validateCard(input: CardDraft, savedName?: string): { ok: true; card: CardDraft & { onBrandColor: string; initials: string } } | { ok: false; errors: Errors } {
   const errors: Errors = {};
   const name = input.name?.trim() ?? "";
-  if (!name) errors.name = "Add your business name.";
-  else if (name.length > LIMITS.name) errors.name = `Keep it under ${LIMITS.name} characters.`;
+  const limit = savedName && name === savedName.trim() ? LIMITS.nameSaved : LIMITS.name;
+  if (!name) errors.name = "Add your brand name.";
+  else if (name.length > limit) errors.name = `Keep it to ${LIMITS.name} characters. Put the rest in your tagline.`;
   if (!CATEGORIES.includes(input.category as (typeof CATEGORIES)[number])) errors.category = "Pick a category.";
   if (!STATE_NAMES.includes(input.state)) errors.state = "Pick your state.";
   if (!input.city?.trim()) errors.city = "Add your city or town.";
@@ -175,4 +180,11 @@ export function formatTime(t: string): string {
   const suffix = h >= 12 ? "pm" : "am";
   const hr = h % 12 === 0 ? 12 : h % 12;
   return m ? `${hr}:${String(m).padStart(2, "0")}${suffix}` : `${hr}${suffix}`;
+}
+
+export const NAME_HINT = "The short name customers call you, e.g. Glow Studio. Put the rest in your tagline.";
+
+/** The name field's typing limit: 24, or a longer name saved before the limit, so it isn't cut off. */
+export function nameMax(saved?: string): number {
+  return Math.max(LIMITS.name, saved?.trim().length ?? 0);
 }

@@ -62,7 +62,9 @@ function Words({ text, start = 0, tagAfter, tag }: { text: string; start?: numbe
 function fitSize(name: string): string {
   const words = name.trim().split(/\s+/);
   const oneLine = name.length <= 14;
-  const chars = oneLine ? name.length : Math.max(...words.map((w) => w.length), 6);
+  // Longer names are sized to fit in about two lines, never by their longest word alone
+  // (which let a long name run to five lines of giant type).
+  const chars = oneLine ? name.length : Math.max(...words.map((w) => w.length), Math.ceil(name.length / 2), 6);
   // Bricolage at 800, uppercase, tight tracking: about 0.53em per letter.
   return `min(${Math.min(22, 86 / (chars * 0.55)).toFixed(2)}vw, 250px)`;
 }
@@ -191,7 +193,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
           // eslint-disable-next-line @next/next/no-img-element
           <img src={page.heroImageUrl} alt="" aria-hidden="true" className="biz-backdrop-img absolute inset-0 -z-10 size-full object-cover" />
         )}
-        <div className="biz-hero-frame relative isolate flex min-h-[calc(100svh-20px)] flex-col overflow-hidden text-on-night sm:min-h-[calc(100svh-40px)] lg:min-h-[calc(100svh-64px)]" style={{ background: b.brandColor }}>
+        <div className="biz-hero-frame relative isolate flex min-h-[72svh] flex-col overflow-hidden text-on-night sm:min-h-[calc(100svh-40px)] lg:min-h-[calc(100svh-64px)]" style={{ background: b.brandColor }}>
         {page.heroImageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={page.heroImageUrl} alt="" fetchPriority="high" className="biz-hero-img absolute inset-0 -z-10 size-full object-cover" style={{ objectPosition: focalPosition(page.heroFocal) }} />

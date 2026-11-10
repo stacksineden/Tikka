@@ -100,7 +100,9 @@ export function TikkaCard({
                 )}
               </div>
               <div className="tk-info">
-                <div className="tk-name">{face.name}</div>
+                <div className="tk-name" data-len={nameLength(face.name)}>
+                  {face.name}
+                </div>
                 <div className="tk-cat">
                   {face.category} · {place(face.area, face.city)}
                 </div>
@@ -184,4 +186,10 @@ function CardCover({ background = { type: "color" } }: { background?: CardBackgr
       <div className="tk-blob" style={{ width: 24, height: 24, right: 74, top: 96, background: "rgba(255,255,255,.5)" }} />
     </div>
   );
+}
+
+/** Longer names step down in size so they stay on the card: up to 24 characters on one line, and
+ *  names saved before the 24-character limit in at most two smaller lines. */
+function nameLength(name: string): "m" | "l" | undefined {
+  return name.length > 24 ? "l" : name.length > 17 ? "m" : undefined;
 }

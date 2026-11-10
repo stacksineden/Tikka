@@ -7,7 +7,7 @@ import { useMemo, useRef, useState, useTransition } from "react";
 import { saveCard } from "@/app/app/actions";
 import type { CardFace } from "@/components/tikka/TikkaCard";
 import { checkBrandColor, normalizeHex, SWATCHES } from "@/lib/color";
-import { initialsFrom, suggestPrefix, validateCard, type CardDraft, type Errors } from "@/lib/setup";
+import { initialsFrom, NAME_HINT, nameMax, suggestPrefix, validateCard, type CardDraft, type Errors } from "@/lib/setup";
 import { suggestSlug } from "@/lib/slug";
 import { CardPreview } from "./CardPreview";
 import { ClaimPreview, FullPreviewButton, type PreviewBusiness } from "./ClaimPreview";
@@ -91,7 +91,7 @@ export function SetupFlow({ initial }: { initial: CardDraft }) {
   }
 
   function next() {
-    const r = validateCard(draft);
+    const r = validateCard(draft, initial.name);
     const stepErrors = r.ok ? {} : Object.fromEntries(Object.entries(r.errors).filter(([k]) => stepOf(k) === step));
     if (Object.keys(stepErrors).length) {
       setErrors(stepErrors);
@@ -158,12 +158,13 @@ export function SetupFlow({ initial }: { initial: CardDraft }) {
             {step === 0 && (
               <>
                 <TextInput
-                  label="Business name"
+                  label="Brand name"
                   value={draft.name}
                   onChange={(v) => patch({ name: v })}
                   error={errors.name}
-                  max={40}
+                  max={nameMax(initial.name)}
                   autoComplete="organization"
+                  hint={NAME_HINT}
                   placeholder="e.g. Glow Studio"
                 />
                 <TextInput

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { saveCard, type Extras } from "@/app/app/actions";
-import type { CardDraft, Errors } from "@/lib/setup";
+import { NAME_HINT, nameMax, type CardDraft, type Errors } from "@/lib/setup";
 import type { Business } from "@/lib/types";
 import { CardPreview } from "./CardPreview";
 import { ClaimPreview, FullPreviewButton, type PreviewBusiness } from "./ClaimPreview";
@@ -256,7 +256,7 @@ export function ProfileEditor({ business }: { business: Business }) {
       </nav>
 
       <Section id="basics" title="Name and location">
-        <TextInput label="Business name" value={draft.name} onChange={(v) => patch({ name: v })} error={errors.name} max={40} autoComplete="organization" />
+        <TextInput label="Brand name" value={draft.name} onChange={(v) => patch({ name: v })} error={errors.name} max={nameMax(business.name)} hint={NAME_HINT} autoComplete="organization" />
         <div id="tagline" className="scroll-mt-20">
           <TextInput
             label="Tagline (optional)"

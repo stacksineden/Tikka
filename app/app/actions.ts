@@ -102,7 +102,7 @@ export async function saveCard(input: Partial<CardDraft> & Extras): Promise<Save
   const current = await getBusiness(user);
 
   const merged = { ...(current ?? { actions: [], background: { type: "color" } }), ...input } as CardDraft & Extras;
-  const card = validateCard(merged);
+  const card = validateCard(merged, current?.name);
   const extraErrors = validateExtras(merged);
   const errors: Errors = { ...(card.ok ? {} : card.errors), ...extraErrors };
 

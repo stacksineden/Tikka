@@ -85,7 +85,7 @@ export function ServicesSection({
         {shown.map(({ s, link }) => {
           const Tag = link ? "a" : "div";
           return (
-            <li key={s.id ?? s.name} className="biz-card w-[80%] shrink-0 snap-start sm:w-auto">
+            <li key={s.id ?? s.name} className="biz-card relative w-[80%] shrink-0 snap-start sm:w-auto">
               <Tag {...(link ? { href: link, target: "_blank", rel: "noopener noreferrer" } : {})} className="group block">
                 <div className="biz-card-img relative aspect-[4/5] overflow-hidden" style={{ background: brand.color }}>
                   {s.imageUrl ? (

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { checkBrandColor, contrast, ON_INK, ON_WHITE, SWATCHES } from "./color";
-import { formatNgPhone, formatTime, initialsFrom, normalizeNgPhone, prefixAlternatives, suggestPrefix, validateCard, type CardDraft } from "./setup";
+import { formatNgPhone, formatTime, initialsFrom, nameMax, normalizeNgPhone, prefixAlternatives, suggestPrefix, validateCard, type CardDraft } from "./setup";
 
 describe("brand colour check", () => {
   it("picks white on dark colours and ink on light ones", () => {
@@ -98,6 +98,16 @@ describe("validateCard", () => {
     const r = validateCard({ ...good, brandColor: "#C4567E", actions: [{ kind: "call", value: "123" }] });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(Object.keys(r.errors).sort()).toEqual(["action-0", "brandColor"]);
+  });
+
+  it("keeps brand names to 24 characters, but lets an older long name stay while it's unchanged", () => {
+    const long = "Anthony Brown Beauty and Content Studio";
+    expect(validateCard({ ...good, name: "Anthony Brown Beauty Hub" }).ok).toBe(true);
+    expect(validateCard({ ...good, name: long }).ok).toBe(false);
+    expect(validateCard({ ...good, name: long }, long).ok).toBe(true);
+    expect(validateCard({ ...good, name: `${long}s` }, long).ok).toBe(false);
+    expect(nameMax(long)).toBe(long.length);
+    expect(nameMax("Glow Studio")).toBe(24);
   });
 });
 

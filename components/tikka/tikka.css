@@ -249,6 +249,19 @@
   margin: 0;
   font: 800 23px/26px var(--font-display);
   letter-spacing: -0.02em;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.tk-name[data-len="m"] {
+  font-size: 18px;
+  line-height: 21px;
+}
+.tk-name[data-len="l"] {
+  font-size: 16px;
+  line-height: 19px;
 }
 .tk-cat {
   font: 500 12.5px/17px var(--font-sans);
