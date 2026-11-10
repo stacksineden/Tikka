@@ -1,6 +1,7 @@
 // Browser-only image and video helpers for card setup (TECH_PLAN §14: logo 256px WebP,
 // background 1200×600 WebP, video ≤30 s and ≤20 MB with a poster frame captured here).
 
+import { SMALL_SUFFIX } from "./media-path";
 import { LIMITS } from "./setup";
 import { browserClient } from "./supabase/client";
 import { HEVC_PROBLEM, videoCodec } from "./video-codec";
@@ -102,52 +103,71 @@ export function capturePoster(video: HTMLVideoElement, time: number): Promise<st
   });
 }
 
-/** Portfolio photo: the whole photo at up to 1600px on its long edge, plus a 400px square thumbnail. */
-export async function preparePortfolio(file: File): Promise<{ url: string; thumbUrl: string }> {
-  if (!file.type.startsWith("image/")) throw new Error("Choose a photo (JPG, PNG or WebP).");
-  const img = await loadImage(file);
-  const iw = img.naturalWidth;
-  const ih = img.naturalHeight;
-  if (Math.max(iw, ih) < 400) throw new Error("Use a photo at least 400px wide.");
-  // Each upload must stay under the 1 MB request limit; step down until it fits.
-  let url = "";
-  for (const edge of [1600, 1400, 1200, 1000]) {
-    const scale = Math.min(1, edge / Math.max(iw, ih));
-    url = toWebp(img, iw, ih, 0, 0, Math.round(iw * scale), Math.round(ih * scale), 0.8);
-    if (url.length < 850_000) break;
-  }
-  return { url, thumbUrl: cropTo(img, 400, 400) };
-}
+/**
+ * A prepared photo: a WebP data URL, or the full photo with a phone copy beside it (uploaded
+ * together; see smallOf() in lib/media-path.ts).
+ */
+export type Prepared = string | { full: string; small: string };
 
-/** Scales a photo down to `edge` px on its long side, stepping down until it stays under ~850 KB. */
-async function fitPhoto(file: File, edges: number[]): Promise<string> {
-  if (!file.type.startsWith("image/")) throw new Error("Choose a photo (JPG, PNG or WebP).");
-  const img = await loadImage(file);
+/** The phone copy: 1000px on the long side, kept under ~170 KB. */
+const SMALL_EDGE = 1000;
+
+/** Scales to `edge` px on the long side, lowering size then quality until under `budget` characters of data URL. */
+function shrink(img: HTMLImageElement, edges: number[], budget: number): string {
   const iw = img.naturalWidth;
   const ih = img.naturalHeight;
-  if (Math.max(iw, ih) < 400) throw new Error("Use a photo at least 400px wide.");
   let url = "";
-  for (const edge of edges) {
-    const scale = Math.min(1, edge / Math.max(iw, ih));
-    url = toWebp(img, iw, ih, 0, 0, Math.round(iw * scale), Math.round(ih * scale), 0.8);
-    if (url.length < 850_000) break;
+  for (const quality of [0.8, 0.72, 0.64]) {
+    for (const edge of edges) {
+      const scale = Math.min(1, edge / Math.max(iw, ih));
+      url = toWebp(img, iw, ih, 0, 0, Math.round(iw * scale), Math.round(ih * scale), quality);
+      if (url.length < budget) return url;
+    }
   }
   return url;
 }
 
-/** The business page's hero: the whole photo (cropped on screen around its focal point). */
-export function prepareHero(file: File): Promise<string> {
-  return fitPhoto(file, [1920, 1600, 1400, 1200]);
+async function readPhoto(file: File): Promise<HTMLImageElement> {
+  if (!file.type.startsWith("image/")) throw new Error("Choose a photo (JPG, PNG or WebP).");
+  const img = await loadImage(file);
+  if (Math.max(img.naturalWidth, img.naturalHeight) < 400) throw new Error("Use a photo at least 400px wide.");
+  return img;
 }
 
-/** About photo: up to 1600px on its long side (shown uncropped, so tall photos stay sharp too). */
-export function prepareAbout(file: File): Promise<string> {
-  return fitPhoto(file, [1600, 1400, 1200, 1000]);
+// Budgets are data-URL characters (base64 is about 4/3 of the bytes): ~450 KB for a full photo,
+// ~170 KB for a phone copy. The storage bucket refuses anything over 2 MB regardless.
+const FULL_BUDGET = 600_000;
+const SMALL_BUDGET = 230_000;
+
+/** The full photo plus its phone copy. */
+async function withSmall(file: File, edges: number[]): Promise<{ full: string; small: string }> {
+  const img = await readPhoto(file);
+  return { full: shrink(img, edges, FULL_BUDGET), small: shrink(img, [SMALL_EDGE, 900, 800], SMALL_BUDGET) };
 }
 
-/** Service photo: the whole photo, up to 1600px (the page crops it on screen, never on upload). */
-export function prepareService(file: File): Promise<string> {
-  return fitPhoto(file, [1600, 1400, 1200, 1000]);
+/** Portfolio photo: the whole photo up to 1600px with a phone copy, plus a 400px square thumbnail. */
+export async function preparePortfolio(file: File): Promise<{ url: Prepared; thumbUrl: string }> {
+  const img = await readPhoto(file);
+  return {
+    url: { full: shrink(img, [1600, 1400, 1200, 1000], FULL_BUDGET), small: shrink(img, [SMALL_EDGE, 900, 800], SMALL_BUDGET) },
+    thumbUrl: cropTo(img, 400, 400),
+  };
+}
+
+/** The business page's hero: the whole photo (cropped on screen around its focal point). No phone
+ *  copy: a phone shows a tall slice of a wide photo, so it needs the full height. */
+export async function prepareHero(file: File): Promise<string> {
+  return shrink(await readPhoto(file), [1920, 1600, 1400, 1200], FULL_BUDGET);
+}
+
+/** About photo: up to 1600px on its long side (shown uncropped), with a phone copy. */
+export function prepareAbout(file: File): Promise<Prepared> {
+  return withSmall(file, [1600, 1400, 1200, 1000]);
+}
+
+/** Service photo: the whole photo, up to 1600px (cropped on screen, never on upload), with a phone copy. */
+export function prepareService(file: File): Promise<Prepared> {
+  return withSmall(file, [1600, 1400, 1200, 1000]);
 }
 
 /** Team photo: square, 600 × 600. */
@@ -166,13 +186,13 @@ const EXT: Record<string, string> = { "image/webp": "webp", "image/png": "png", 
  * to Supabase Storage, into the person's own folder (the bucket's rules check it). DEMO (the demo
  * business, no account): the in-memory media route.
  */
-export async function uploadMedia(file: Blob, kind: MediaKind): Promise<string> {
+export async function uploadMedia(file: Blob, kind: MediaKind, name?: string): Promise<string> {
   const sb = browserClient();
   const { data } = await sb.auth.getSession();
   const user = data.session?.user;
   if (user) {
     const bucket = file.type.startsWith("video/") ? "videos" : "images";
-    const path = `${user.id}/${kind}/${crypto.randomUUID()}.${EXT[file.type] ?? "bin"}`;
+    const path = `${user.id}/${kind}/${name ?? `${crypto.randomUUID()}.${EXT[file.type] ?? "bin"}`}`;
     const { error } = await sb.storage.from(bucket).upload(path, file, { contentType: file.type, cacheControl: "31536000" });
     if (error) throw new Error(/size|large/i.test(error.message) ? "That file is too big. Try a smaller one." : "That upload didn't go through. Try again.");
     return sb.storage.from(bucket).getPublicUrl(path).data.publicUrl;
@@ -183,9 +203,19 @@ export async function uploadMedia(file: Blob, kind: MediaKind): Promise<string> 
   return r.url;
 }
 
-/** A prepared photo (a WebP data URL from the helpers above) uploaded to storage. */
-export async function uploadPhoto(dataUrl: string, kind: MediaKind): Promise<string> {
-  return uploadMedia(await (await fetch(dataUrl)).blob(), kind);
+/**
+ * A prepared photo uploaded to storage; returns the full photo's address. With a phone copy, the
+ * copy goes up first ("{id}.s-sm.webp"), then the photo ("{id}.s.webp"), so a saved photo always
+ * has its copy. The demo store (no account) keeps the full photo only.
+ */
+export async function uploadPhoto(prepared: Prepared, kind: MediaKind): Promise<string> {
+  const blob = async (d: string) => (await fetch(d)).blob();
+  if (typeof prepared === "string") return uploadMedia(await blob(prepared), kind);
+  const { data } = await browserClient().auth.getSession();
+  if (!data.session?.user) return uploadMedia(await blob(prepared.full), kind);
+  const id = crypto.randomUUID();
+  await uploadMedia(await blob(prepared.small), kind, `${id}${SMALL_SUFFIX}`);
+  return uploadMedia(await blob(prepared.full), kind, `${id}.s.webp`);
 }
 
 /** Refuses HEVC ("High Efficiency" iPhone video): many Android phones can't play it. */

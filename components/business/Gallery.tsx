@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { smallOf } from "@/lib/media-path";
 import type { PortfolioPhoto } from "@/lib/types";
 
 /** The masonry's tile shapes, repeated: tall, square and in between, so columns stagger. */
@@ -48,7 +49,7 @@ export function Gallery({ photos, businessName, editorial = false }: { photos: P
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={p.thumbUrl}
-                    srcSet={p.kind === "video" ? undefined : `${p.thumbUrl} 400w, ${p.url} 1600w`}
+                    srcSet={p.kind === "video" ? undefined : `${p.thumbUrl} 400w, ${smallOf(p.url) ? `${smallOf(p.url)} 700w, ` : ""}${p.url} 1400w`}
                     sizes="(min-width: 640px) 33vw, 50vw"
                     alt=""
                     loading="lazy"

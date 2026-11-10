@@ -16,6 +16,7 @@ import { ActionIcon, actionHref } from "@/components/tikka/ActionIcon";
 import { getBusinessBySlug, getBusinessReviews, getPageDrops } from "@/lib/data";
 import { clockTime, count, place, shortDate } from "@/lib/format";
 import { bookingLink, bookingNumber, focalPosition, heroHeadline, serviceGroups, showsLocation, visibleSections, whereLine, type PageDrop } from "@/lib/page";
+import { photoSrcSet } from "@/lib/media-path";
 import { SITE } from "@/lib/qr";
 import { formatTime } from "@/lib/setup";
 import type { Business, OpeningHours } from "@/lib/types";
@@ -325,7 +326,15 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
               // one stands at most most of a screen high, centred.
               <div data-reveal="img" className="w-fit max-w-full lg:max-w-5xl">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={page.aboutImageUrl} alt="" loading="lazy" decoding="async" className="block h-auto max-h-[min(80svh,860px)] w-auto max-w-full" />
+                <img
+                  src={page.aboutImageUrl}
+                  srcSet={photoSrcSet(page.aboutImageUrl)}
+                  sizes="(min-width: 1024px) 1024px, 100vw"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="block h-auto max-h-[min(80svh,860px)] w-auto max-w-full"
+                />
               </div>
             )}
           </div>
