@@ -1,7 +1,7 @@
 import "@/components/tikka/tikka.css";
 import "@/components/business/site.css";
 import type { Metadata } from "next";
-import { ArrowUpRight, BadgeCheck, CalendarDays, Star } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, CalendarDays, MapPin, Star } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Fragment, Suspense } from "react";
@@ -231,8 +231,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
         )}
         {/* The scrim: darker at the top for the nav and much darker at the bottom, plus a soft
             shade behind the intro, so the words read on any photo. */}
-        <div className="absolute inset-0 -z-10 bg-linear-to-b from-night/55 via-night/20 to-night/85" aria-hidden="true" />
-        <div className="biz-hero-shade absolute inset-0 -z-10" aria-hidden="true" />
+        <div className="biz-hero-scrim absolute inset-0 -z-10" aria-hidden="true" />
 
         <nav className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 pt-4 sm:px-8 sm:pt-6" aria-label={b.name}>
           <span className="flex min-w-0 items-center gap-2.5">
@@ -261,24 +260,32 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
         <div className="mt-auto w-full px-4 pb-6 sm:px-8 sm:pb-8">
           <div className="biz-fade-in biz-hero-text mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-x-8 gap-y-3">
             <div className="max-w-md">
-              <div className="mb-3 flex flex-wrap gap-2">
-                {b.verified && (
-                  <span className="inline-flex items-center gap-1 text-[12px] font-semibold uppercase tracking-[0.08em]">
-                    <BadgeCheck size={14} aria-hidden="true" /> Verified on Tikka
-                  </span>
-                )}
-                {b.rating ? (
-                  <span className="inline-flex items-center gap-1 text-[12px] font-semibold uppercase tracking-[0.08em]">
-                    <Star size={13} className="fill-current text-gold" aria-hidden="true" /> {b.rating} · {count(b.reviewCount)} {b.reviewCount === 1 ? "review" : "reviews"}
-                  </span>
-                ) : null}
-              </div>
-              <p className="text-body-lg font-semibold text-on-night">{intro}</p>
-              <p className="text-body mt-1 font-semibold text-on-night/85">{whereLine(b)}</p>
+              {/* Four levels: trust chips, the intro (the loudest), where, then the action. */}
+              {(b.verified || b.rating) && (
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {b.verified && (
+                    <span className="biz-chip-solid">
+                      <BadgeCheck size={14} aria-hidden="true" /> Verified on Tikka
+                    </span>
+                  )}
+                  {b.rating ? (
+                    <span className="biz-chip-glass">
+                      <Star size={13} className="fill-current text-gold" aria-hidden="true" /> {b.rating} · {count(b.reviewCount)} {b.reviewCount === 1 ? "review" : "reviews"}
+                    </span>
+                  ) : null}
+                </div>
+              )}
+              <p className="text-[19px] font-semibold leading-[1.4] tracking-[-0.01em] text-on-night sm:text-[22px]">{intro}</p>
+              <p className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-on-night/75">
+                <MapPin size={14} aria-hidden="true" />
+                {whereLine(b)}
+              </p>
               {book && (
-                <a {...bookProps} className="biz-link text-[17px]">
-                  Book an appointment
-                </a>
+                <div>
+                  <a {...bookProps} className="biz-link gap-1.5 text-[17px]">
+                    Book an appointment <ArrowUpRight size={18} aria-hidden="true" />
+                  </a>
+                </div>
               )}
             </div>
           </div>
