@@ -48,10 +48,6 @@
     {
       "kind": "directions",
       "value": "Admiralty Way, Lekki Phase 1"
-    },
-    {
-      "kind": "book",
-      "value": "https://glowstudio.ng/book"
     }
   ],
   "services": [
