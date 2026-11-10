@@ -10,18 +10,21 @@ const GLYPHS = ["○", "✕", "◇", "✦", "△", "□"];
 /**
  * Services, editorial: outlined group boxes (only with more than one group) that fill with a
  * photo when chosen, the group's name in big type, then the services as photo cards. Each card
- * books on WhatsApp.
+ * opens the booking sheet with its service chosen (or the owner's own booking link).
  */
 export function ServicesSection({
   services,
   groups,
   links,
+  sheet = false,
   brand,
 }: {
   services: ServiceItem[];
   groups: string[];
   /** "Book on WhatsApp" link per service, in the same order (null when there's no number). */
   links: (string | null)[];
+  /** Cards open the booking sheet (components/business/BookingSheet) instead of their link. */
+  sheet?: boolean;
   brand: { color: string; on: string; initials: string };
 }) {
   const [group, setGroup] = useState<string | null>(null);
@@ -86,7 +89,11 @@ export function ServicesSection({
           const Tag = link ? "a" : "div";
           return (
             <li key={s.id ?? s.name} className="biz-card relative w-[80%] shrink-0 snap-start sm:w-auto">
-              <Tag {...(link ? { href: link, target: "_blank", rel: "noopener noreferrer" } : {})} className="group block">
+              <Tag
+                {...(link ? { href: link, target: "_blank", rel: "noopener noreferrer" } : {})}
+                {...(link && sheet ? { "data-book": "", "data-book-name": s.name, "data-book-price": s.priceKind === "ask" || s.price === null ? "" : priceText(s) } : {})}
+                className="group block"
+              >
                 <div className="biz-card-img relative aspect-[4/5] overflow-hidden" style={{ background: brand.color }}>
                   {s.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -115,7 +122,7 @@ export function ServicesSection({
                   )}
                 </div>
                 {s.description && <p className="text-body mt-1 line-clamp-2 text-ink-muted">{s.description}</p>}
-                {link && <span className="sr-only">Book {s.name} on WhatsApp</span>}
+                {link && <span className="sr-only">Book {s.name}</span>}
               </Tag>
             </li>
           );
