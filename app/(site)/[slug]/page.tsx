@@ -305,9 +305,11 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
               )}
             </div>
             {page.aboutImageUrl && (
-              <div data-reveal="img" className="aspect-[16/9] w-full max-w-5xl">
+              // The photo keeps its own shape, never cropped: a wide one spans the column, a tall
+              // one stands at most most of a screen high, centred.
+              <div data-reveal="img" className="w-fit max-w-full lg:max-w-5xl">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={page.aboutImageUrl} alt="" loading="lazy" className="size-full object-cover" />
+                <img src={page.aboutImageUrl} alt="" loading="lazy" decoding="async" className="block h-auto max-h-[min(80svh,860px)] w-auto max-w-full" />
               </div>
             )}
           </div>
