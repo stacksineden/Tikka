@@ -13,8 +13,12 @@ type Rule = { max: number; seconds: number };
 /** [per visitor, per IP] for each endpoint. */
 export const LIMITS = {
   claim: [{ max: 20, seconds: 600 }, { max: 300, seconds: 600 }],
-  // Claiming on the page with a typed number (lib/claim-mode.ts): a few tries per person an hour.
-  claim_page: [{ max: 6, seconds: 3600 }, { max: 120, seconds: 3600 }],
+  // Claiming on the page with a typed number (lib/claim-mode.ts), where the number isn't proven:
+  // 3 tries an hour per person and 40 per connection, and a day cap on top so the hour doesn't
+  // simply refill (6 a day per person, 300 per connection). The connection limits stay generous
+  // because Nigerian mobile networks put many unrelated people behind one address (CGNAT).
+  claim_page: [{ max: 3, seconds: 3600 }, { max: 40, seconds: 3600 }],
+  claim_page_day: [{ max: 6, seconds: 86_400 }, { max: 300, seconds: 86_400 }],
   notify: [{ max: 10, seconds: 3600 }, { max: 150, seconds: 3600 }],
   report: [{ max: 5, seconds: 86_400 }, { max: 60, seconds: 86_400 }],
   events: [{ max: 300, seconds: 600 }, { max: 5000, seconds: 600 }],

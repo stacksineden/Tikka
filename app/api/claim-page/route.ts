@@ -32,7 +32,8 @@ export async function POST(request: Request) {
   const jar = await cookies();
   const visitorId = jar.get(VISITOR_COOKIE)?.value;
   if (!body?.business || !body.drop || !visitorId) return fail("not_found", 400);
-  if (await tooMany(request, "claim_page", visitorId)) return fail("slow_down", 429);
+  // The hour, then the day (lib/rate-limit.ts, LIMITS).
+  if ((await tooMany(request, "claim_page", visitorId)) || (await tooMany(request, "claim_page_day", visitorId))) return fail("slow_down", 429);
 
   const name = firstName(String(body.name ?? ""));
   if (!name) return fail("name", 400);
