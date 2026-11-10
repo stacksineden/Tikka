@@ -145,7 +145,12 @@ export function prepareAbout(file: File): Promise<string> {
   return fitPhoto(file, [1600, 1400, 1200, 1000]);
 }
 
-/** Service photo: 4:3, 800 × 600. Team photo: square, 600 × 600. */
+/** Service photo: the whole photo, up to 1600px (the page crops it on screen, never on upload). */
+export function prepareService(file: File): Promise<string> {
+  return fitPhoto(file, [1600, 1400, 1200, 1000]);
+}
+
+/** Team photo: square, 600 × 600. */
 export async function prepareCropped(file: File, w: number, h: number): Promise<string> {
   if (!file.type.startsWith("image/")) throw new Error("Choose a photo (JPG, PNG or WebP).");
   return cropTo(await loadImage(file), w, h);
