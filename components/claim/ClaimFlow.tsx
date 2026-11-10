@@ -944,7 +944,7 @@ function ShareIcon() {
 /** Why a page claim didn't go through, in the claimer's words (lib/claim-mode.ts). */
 const PAGE_CLAIM_NOTES: Record<string, string> = {
   network: "No connection. Check your data and tap Claim again.",
-  slow_down: "Too many tries. Wait a little, then tap Claim again.",
+  slow_down: "Too many tries from this phone. Try again later.",
   prelaunch: "Tikkas open to claim very soon. Check back in a few days.",
   blocked_new_only: "This drop is for new customers. Watch out for their next one.",
   blocked_period: "You had a Tikka from here recently. Catch their next drop.",
