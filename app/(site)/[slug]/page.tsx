@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: PageProps<"/[slug]">): Promis
 }
 
 /** Text as rising words: each word is clipped and slides up (delays capped so long text stays quick). */
-function Words({ text, start = 0, tagAfter, tag }: { text: string; start?: number; tagAfter?: number; tag?: string }) {
+function Words({ text, start = 0 }: { text: string; start?: number }) {
   const words = text.split(/\s+/).filter(Boolean);
   return (
     <>
@@ -51,7 +51,7 @@ function Words({ text, start = 0, tagAfter, tag }: { text: string; start?: numbe
               {w}
             </span>
           </span>
-          {tag && i === (tagAfter ?? 0) && <span className="biz-tag">{tag}</span>}{" "}
+{" "}
         </Fragment>
       ))}
     </>
@@ -79,12 +79,27 @@ function hoursRows(h: OpeningHours): [string, string][] {
 }
 
 /** "OUR [ SERVICES ] SERVICES": the section heading with its bracketed tag. */
-function Heading({ id, before, tag, after, center = false }: { id: string; before: string; tag: string; after: string; center?: boolean }) {
+/** "01 — ABOUT US": the small numbered label above a section heading. */
+function Label({ n, children, center = false }: { n?: number; children: string; center?: boolean }) {
   return (
-    <h2 id={id} data-reveal="words" className={`biz-display text-[clamp(40px,9vw,120px)] ${center ? "text-center" : ""}`}>
-      <Words text={before} />
-      <span className="biz-tag">{tag}</span> <Words text={after} start={before.split(" ").length} />
-    </h2>
+    <p data-reveal="up" className={`biz-label ${center ? "justify-center" : ""}`}>
+      {n ? <span className="biz-label-n">{String(n).padStart(2, "0")}</span> : null}
+      <span className="biz-label-rule" aria-hidden="true" />
+      {children}
+    </p>
+  );
+}
+
+function Heading({ id, n, label, title, center = false }: { id: string; n?: number; label: string; title: string; center?: boolean }) {
+  return (
+    <div className={center ? "text-center" : ""}>
+      <Label n={n} center={center}>
+        {label}
+      </Label>
+      <h2 id={id} data-reveal="words" className="biz-display mt-5 text-[clamp(40px,9vw,120px)]">
+        <Words text={title} />
+      </h2>
+    </div>
   );
 }
 
@@ -180,6 +195,9 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
     sections.has("location") && ["Visit", "#visit"],
   ].filter(Boolean) as [string, string][];
   const style = { "--biz": b.brandColor, "--on-biz": b.onBrandColor } as React.CSSProperties;
+  // Section labels are numbered in page order, counting only the sections this page shows.
+  const numbered = (["about", "services", "portfolio", "reviews", "team", "faqs", "location"] as const).filter((k) => sections.has(k));
+  const n = (k: (typeof numbered)[number]) => numbered.indexOf(k) + 1;
 
   return (
     <div id="biz" data-theme="light" className="biz" style={style}>
@@ -203,7 +221,10 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
             <div className="absolute -bottom-40 -left-24 size-96 rounded-pill bg-night/15" />
           </div>
         )}
-        <div className="absolute inset-0 -z-10 bg-linear-to-b from-night/45 via-night/5 to-night/65" aria-hidden="true" />
+        {/* The scrim: darker at the top for the nav and much darker at the bottom, plus a soft
+            shade behind the intro, so the words read on any photo. */}
+        <div className="absolute inset-0 -z-10 bg-linear-to-b from-night/55 via-night/20 to-night/85" aria-hidden="true" />
+        <div className="biz-hero-shade absolute inset-0 -z-10" aria-hidden="true" />
 
         <nav className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 pt-4 sm:px-8 sm:pt-6" aria-label={b.name}>
           <span className="flex min-w-0 items-center gap-2.5">
@@ -214,7 +235,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
             <ul className="hidden items-center gap-7 md:flex">
               {nav.map(([l, h]) => (
                 <li key={h}>
-                  <a href={h} className="text-[12px] font-semibold uppercase tracking-[0.1em] text-on-night/85 hover:text-on-night">
+                  <a href={h} className="biz-hero-text text-[12px] font-semibold uppercase tracking-[0.1em] text-on-night/90 hover:text-on-night">
                     {l}
                   </a>
                 </li>
@@ -230,7 +251,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
         </nav>
 
         <div className="mt-auto w-full px-4 pb-6 sm:px-8 sm:pb-8">
-          <div className="biz-fade-in mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-x-8 gap-y-3">
+          <div className="biz-fade-in biz-hero-text mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-x-8 gap-y-3">
             <div className="max-w-md">
               <div className="mb-3 flex flex-wrap gap-2">
                 {b.verified && (
@@ -244,8 +265,8 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
                   </span>
                 ) : null}
               </div>
-              <p className="text-body-lg text-on-night/90">{intro}</p>
-              <p className="text-body mt-1 text-on-night/70">{whereLine(b)}</p>
+              <p className="text-body-lg font-semibold text-on-night">{intro}</p>
+              <p className="text-body mt-1 font-semibold text-on-night/85">{whereLine(b)}</p>
               {book && (
                 <a href={book} target="_blank" rel="noopener noreferrer" className="biz-link text-[17px]">
                   Book an appointment
@@ -263,13 +284,18 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
       {/* 2. The live drop band */}
       <DropBand b={b} live={live} next={next} />
 
-      {/* 3. About: a big statement with its tag, then the story. */}
+      {/* 3. About: its label, a big statement, then the story. */}
       {sections.has("about") && (
         <section id="about" aria-labelledby="about-h" className="scroll-mt-4 px-4 py-24 sm:px-8 sm:py-36">
           <div className="mx-auto grid max-w-6xl justify-items-center gap-10 text-center">
-            <h2 id="about-h" data-reveal="words" className="biz-display text-[clamp(34px,7.2vw,96px)]">
-              <Words text={statement} tagAfter={0} tag="About us" />
-            </h2>
+            <div>
+              <Label n={n("about")} center>
+                About us
+              </Label>
+              <h2 id="about-h" data-reveal="words" className="biz-display mt-5 text-[clamp(34px,7.2vw,96px)]">
+                <Words text={statement} />
+              </h2>
+            </div>
             <div data-reveal="up" className="max-w-xl">
               <p className="text-body-lg whitespace-pre-line text-ink-muted">{b.about}</p>
               {sections.has("services") && (
@@ -292,7 +318,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
       {sections.has("services") && (
         <section id="services" aria-labelledby="services-h" className="scroll-mt-4 border-t border-[var(--biz-rule)] px-4 py-24 sm:px-8 sm:py-32">
           <div className="mx-auto max-w-7xl">
-            <Heading id="services-h" before="Our" tag="Services" after="Services" center />
+            <Heading id="services-h" n={n("services")} label="What we offer" title="Our services" center />
             <div className="mt-12">
               <ServicesSection
                 services={b.services}
@@ -309,7 +335,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
       {sections.has("portfolio") && (
         <section id="work" aria-labelledby="work-h" className="scroll-mt-4 bg-surface px-4 py-24 sm:px-8 sm:py-32">
           <div className="mx-auto max-w-7xl">
-            <Heading id="work-h" before="Our" tag="Portfolio" after="Work" />
+            <Heading id="work-h" n={n("portfolio")} label="Portfolio" title="Our work" />
             <div data-reveal="up" className="mt-12">
               <Gallery photos={b.portfolio} businessName={b.name} editorial />
             </div>
@@ -321,7 +347,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
       {sections.has("reviews") && (
         <section id="reviews" aria-labelledby="reviews-h" className="scroll-mt-4 px-4 py-24 sm:px-8 sm:py-32">
           <div className="mx-auto max-w-7xl">
-            <Heading id="reviews-h" before="Kind" tag="Reviews" after="Words" />
+            <Heading id="reviews-h" n={n("reviews")} label="Reviews" title="Kind words" />
             {b.rating ? (
               <p className="text-body mt-6 flex items-center gap-1.5 text-ink-muted">
                 <Star size={16} className="fill-current text-gold" aria-hidden="true" />
@@ -349,7 +375,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
       {sections.has("team") && (
         <section id="team" aria-labelledby="team-h" className="scroll-mt-4 border-t border-[var(--biz-rule)] px-4 py-24 sm:px-8 sm:py-32">
           <div className="mx-auto max-w-7xl">
-            <Heading id="team-h" before="The" tag="Team" after="People" />
+            <Heading id="team-h" n={n("team")} label="The team" title="Meet the people" />
             <ul className="mt-12 grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
               {page.team!.map((t, i) => (
                 <li key={t.id} data-reveal="up" style={{ "--i": i % 4 } as React.CSSProperties}>
@@ -388,7 +414,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
       {sections.has("faqs") && (
         <section id="faqs" aria-labelledby="faqs-h" className="scroll-mt-4 px-4 py-24 sm:px-8 sm:py-32">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_1.4fr]">
-            <Heading id="faqs-h" before="Good" tag="FAQs" after="Questions" />
+            <Heading id="faqs-h" n={n("faqs")} label="FAQs" title="Good questions" />
             <div className="border-t border-[var(--biz-rule)]">
               {page.faqs!.map((f) => (
                 <details key={f.id} className="group border-b border-[var(--biz-rule)]">
@@ -411,7 +437,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
         <section id="visit" aria-labelledby="visit-h" className="scroll-mt-4 border-t border-[var(--biz-rule)] px-4 py-24 sm:px-8 sm:py-32">
           <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-2">
             <div>
-              <Heading id="visit-h" before="Come" tag="Visit" after="Say hi" />
+              <Heading id="visit-h" n={n("location")} label="Visit us" title="Come say hi" />
               <p data-reveal="up" className="text-body-lg mt-8">
                 {b.address && <span className="block">{b.address}</span>}
                 <span className="block text-ink-muted">{loc}</span>
