@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 import { savePageAction, saveServicesAction } from "@/app/app/actions";
 import { PortfolioEditor } from "@/components/setup/PortfolioEditor";
-import { prepareAbout, prepareCropped, prepareHero, prepareService, uploadPhoto, type MediaKind } from "@/lib/media-client";
+import { prepareAbout, prepareCropped, prepareHero, prepareService, uploadPhoto, type MediaKind, type Prepared } from "@/lib/media-client";
 import { focalPosition, heroHeadline, heroLine, PAGE_LIMITS, priceText } from "@/lib/page";
 import type { Business, BusinessPage, FaqItem, ServeMode, ServiceItem, TeamMember } from "@/lib/types";
 
@@ -114,7 +114,7 @@ function PhotoPick({
   label: string;
   kind: MediaKind;
   onPick: (url: string) => void;
-  prepare: (f: File) => Promise<string>;
+  prepare: (f: File) => Promise<Prepared>;
   busyLabel?: string;
 }) {
   const input = useRef<HTMLInputElement>(null);

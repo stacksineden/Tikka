@@ -2,6 +2,7 @@
 
 import { ArrowLeft, ArrowRight, ArrowUpRight, Clock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { photoSrcSet } from "@/lib/media-path";
 import { focalPosition, priceText } from "@/lib/page";
 import type { ServiceItem } from "@/lib/types";
 
@@ -103,7 +104,16 @@ export function ServicesSection({
                 <div className="biz-card-img relative aspect-[4/5] overflow-hidden" style={{ background: brand.color }}>
                   {s.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={s.imageUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover" style={{ objectPosition: focalPosition(s.focal ?? { x: 0.5, y: 0.3 }) }} />
+                    <img
+                      src={s.imageUrl}
+                      srcSet={photoSrcSet(s.imageUrl)}
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 82vw"
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="size-full object-cover"
+                      style={{ objectPosition: focalPosition(s.focal ?? { x: 0.5, y: 0.3 }) }}
+                    />
                   ) : (
                     <span className="biz-serif absolute inset-0 grid place-items-center text-[72px] opacity-30" style={{ color: brand.on }} aria-hidden="true">
                       {brand.initials}
