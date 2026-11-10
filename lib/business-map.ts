@@ -66,6 +66,9 @@ export interface ServiceRow {
   price_kind: "fixed" | "from" | "ask";
   duration: string | null;
   image_path: string | null;
+  /** Added by the service_focal migration; absent on rows read before it. */
+  focal_x?: number | string | null;
+  focal_y?: number | string | null;
 }
 
 export interface PortfolioRow {
@@ -123,6 +126,7 @@ export function serviceFrom(r: ServiceRow): ServiceItem {
     priceKind: r.price_kind,
     duration: opt(r.duration),
     imageUrl: fromStored(r.image_path),
+    focal: r.focal_x == null || r.focal_y == null ? undefined : { x: Number(r.focal_x), y: Number(r.focal_y) },
   };
 }
 
@@ -138,6 +142,8 @@ export function serviceTo(s: ServiceItem) {
     price_kind: priced ? (s.priceKind ?? "fixed") : "ask",
     duration: s.duration?.trim() || null,
     image_path: toStored(s.imageUrl),
+    focal_x: s.focal?.x ?? 0.5,
+    focal_y: s.focal?.y ?? 0.3,
   };
 }
 

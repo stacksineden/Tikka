@@ -158,6 +158,42 @@ function PhotoPick({
 
 /* ---------------------------------------------------------------- hero */
 
+/** Where a service card crops a photo when the owner hasn't chosen: the upper third. */
+const SERVICE_FOCAL = { x: 0.5, y: 0.3 };
+
+/** Tap the part of a service photo that matters; the card (4:5) crops around it. */
+function ServiceFocus({ url, focal, onChange }: { url: string; focal: { x: number; y: number }; onChange: (f: { x: number; y: number }) => void }) {
+  return (
+    <div className="grid gap-2">
+      <span className="text-label">Tap the part of the photo that matters most</span>
+      <div className="flex items-end gap-3">
+        <button
+          type="button"
+          className="relative w-full max-w-[220px] overflow-hidden rounded-md"
+          aria-label="Set the focus point"
+          onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            onChange({ x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height });
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={url} alt="Your service photo" className="block w-full" />
+          <span
+            className="pointer-events-none absolute size-7 -translate-x-1/2 -translate-y-1/2 rounded-pill border-[3px] border-surface-raised shadow-raised"
+            style={{ left: `${focal.x * 100}%`, top: `${focal.y * 100}%` }}
+            aria-hidden="true"
+          />
+        </button>
+        <div className="grid gap-1">
+          <span className="text-caption text-ink-muted">On your page</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={url} alt="" className="aspect-[4/5] w-20 rounded-sm object-cover" style={{ objectPosition: focalPosition(focal) }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function HeroCard({ b }: { b: Business }) {
   const s = useSave();
   const [img, setImg] = useState(b.page?.heroImageUrl);
@@ -428,8 +464,16 @@ function ServicesCard({ b }: { b: Business }) {
                         onChange={(e) => patch(x.id!, { description: e.target.value })}
                       />
                     </Field>
+                    {x.imageUrl && (
+                      <ServiceFocus url={x.imageUrl} focal={x.focal ?? SERVICE_FOCAL} onChange={(f) => patch(x.id!, { focal: f })} />
+                    )}
                     <div className="flex flex-wrap items-center gap-2">
-                      <PhotoPick label={x.imageUrl ? "Change photo" : "Add a photo"} kind="service" prepare={prepareService} onPick={(u) => patch(x.id!, { imageUrl: u })} />
+                      <PhotoPick
+                        label={x.imageUrl ? "Change photo" : "Add a photo"}
+                        kind="service"
+                        prepare={prepareService}
+                        onPick={(u) => patch(x.id!, { imageUrl: u, focal: SERVICE_FOCAL })}
+                      />
                       <button
                         type="button"
                         className="btn btn-ghost min-h-11 px-3 text-label text-danger"

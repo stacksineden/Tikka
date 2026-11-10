@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bookingDays, bookingMessage, daySlots, slotLabel, whatsappLink } from "./booking";
+import { BOOKING_DAYS, bookingDays, bookingMessage, bookingMonths, daySlots, slotLabel, whatsappLink } from "./booking";
 import type { OpeningHours } from "./types";
 
 const hours: OpeningHours = {
@@ -13,10 +13,21 @@ const now = new Date("2026-11-10T14:10:00Z");
 describe("booking sheet days and times (PRD A5 acceptance)", () => {
   const days = bookingDays(now, hours);
 
-  it("lists 14 days from today, in WAT", () => {
-    expect(days).toHaveLength(14);
+  it("lists about three months from today, in WAT", () => {
+    expect(days).toHaveLength(BOOKING_DAYS);
+    expect(days.at(-1)!.key).toBe("2027-02-09");
     expect(days[0]).toMatchObject({ key: "2026-11-10", short: "Today", date: 10, label: "Tue 10 Nov" });
     expect(days[1].short).toBe("Wed");
+  });
+
+  it("groups the days into calendar months, Sunday first", () => {
+    const months = bookingMonths(days);
+    expect(months.map((m) => m.label)).toEqual(["November 2026", "December 2026", "January 2027", "February 2027"]);
+    // Tue 10 Nov: two empty cells (Sun, Mon) before it. 1 Dec 2026 is a Tuesday too.
+    expect(months[0]).toMatchObject({ lead: 2 });
+    expect(months[0].days[0].date).toBe(10);
+    expect(months[1]).toMatchObject({ lead: 2 });
+    expect(months[1].days).toHaveLength(31);
   });
 
   it("shows no Sunday times", () => {

@@ -9,10 +9,12 @@ const WAT_OFFSET_MS = 60 * 60 * 1000;
 const STEP = 30;
 /** Today, a slot must start at least this long from now. */
 const LEAD = 30;
-export const BOOKING_DAYS = 14;
+/** How far ahead a customer can ask: about three months (makeup artists get booked well ahead). */
+export const BOOKING_DAYS = 92;
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 /** With no opening hours set: 9am–6pm, Monday to Saturday. */
 export const DEFAULT_HOURS: OpeningHours = {
@@ -28,6 +30,10 @@ export interface BookingDay {
   short: string;
   /** 15 */
   date: number;
+  /** 0 = Sunday … 6 = Saturday. */
+  weekday: number;
+  /** "2026-11", for grouping into months. */
+  month: string;
   /** "Sat 15 Nov", for the message. */
   label: string;
   /** Minutes after midnight (WAT) a slot can start; empty when closed or none left today. */
@@ -54,7 +60,7 @@ export function daySlots(d: DayHours, notBefore = 0): number[] {
   return out;
 }
 
-/** The next 14 days in WAT, starting today, with the times that can be asked for on each. */
+/** The next BOOKING_DAYS days in WAT, starting today, with the times that can be asked for on each. */
 export function bookingDays(now: Date, hours?: OpeningHours | null, count = BOOKING_DAYS): BookingDay[] {
   const h = hours ?? DEFAULT_HOURS;
   const wat = new Date(now.getTime() + WAT_OFFSET_MS);
@@ -67,11 +73,38 @@ export function bookingDays(now: Date, hours?: OpeningHours | null, count = BOOK
       key: d.toISOString().slice(0, 10),
       short: i === 0 ? "Today" : WEEKDAYS[wd],
       date: d.getUTCDate(),
+      weekday: wd,
+      month: d.toISOString().slice(0, 7),
       label: `${WEEKDAYS[wd]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`,
       slots: daySlots(hoursFor(h, wd), i === 0 ? nowMin + LEAD : 0),
     });
   }
   return days;
+}
+
+export interface BookingMonth {
+  /** "2026-11" */
+  key: string;
+  /** "November 2026" */
+  label: string;
+  /** Empty cells before the first listed day, for a Sunday-first calendar grid. */
+  lead: number;
+  days: BookingDay[];
+}
+
+/** The days grouped into calendar months (the first month starts at today, the rest at the 1st). */
+export function bookingMonths(days: BookingDay[]): BookingMonth[] {
+  const out: BookingMonth[] = [];
+  for (const d of days) {
+    let m = out.at(-1);
+    if (!m || m.key !== d.month) {
+      const [y, mo] = d.month.split("-").map(Number);
+      m = { key: d.month, label: `${MONTH_NAMES[mo - 1]} ${y}`, lead: d.weekday, days: [] };
+      out.push(m);
+    }
+    m.days.push(d);
+  }
+  return out;
 }
 
 /** 840 → "2:00pm" */
