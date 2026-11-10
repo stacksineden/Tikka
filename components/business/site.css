@@ -47,14 +47,47 @@
   background: color-mix(in srgb, var(--biz) 75%, var(--ink));
 }
 
-/* A soft dark pool behind the hero's intro (bottom left), on top of the top-to-bottom scrim. */
-.biz-hero-shade {
-  background: radial-gradient(ellipse at 10% 85%, color-mix(in srgb, var(--night) 55%, transparent), transparent 60%);
+/* The hero scrim: the darkest neutral token (ink), not the indigo night, so a photo dims to
+   near-black instead of turning purple. An even dim over everything, darker at the top for the
+   nav, much darker at the bottom for the name, and a soft pool behind the intro (bottom left). */
+.biz-hero-scrim {
+  background:
+    radial-gradient(ellipse at 12% 78%, color-mix(in srgb, var(--ink) 55%, transparent), transparent 55%),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--ink) 60%, transparent) 0%,
+      color-mix(in srgb, var(--ink) 30%, transparent) 30%,
+      color-mix(in srgb, var(--ink) 45%, transparent) 55%,
+      color-mix(in srgb, var(--ink) 88%, transparent) 100%
+    );
 }
 
 /* Hero text over a photo: a soft shadow so small words hold up on bright spots. */
 .biz-hero-text {
-  text-shadow: 0 1px 14px color-mix(in srgb, var(--night) 55%, transparent);
+  text-shadow: 0 1px 14px color-mix(in srgb, var(--ink) 60%, transparent);
+}
+
+/* Trust chips in the hero: "Verified" solid (it's the claim that matters), the rating glass. */
+.biz-chip-solid,
+.biz-chip-glass {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px;
+  font: 600 11.5px / 1 var(--font-sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+.biz-chip-solid {
+  background: var(--on-night);
+  color: var(--ink);
+}
+.biz-chip-glass {
+  background: color-mix(in srgb, var(--ink) 45%, transparent);
+  border: 1px solid color-mix(in srgb, var(--on-night) 30%, transparent);
+  color: var(--on-night);
 }
 
 /* Underlined text links ("Book an appointment", "Read more"). */
