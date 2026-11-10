@@ -323,6 +323,118 @@
   transform: scale(1.05);
 }
 
+/* ------------------------------------------------- the portfolio masonry */
+/* Columns, so tiles of different heights stack without gaps: two on phones, three on desktop. */
+.biz-masonry {
+  columns: 2;
+  column-gap: 8px;
+}
+@media (min-width: 640px) {
+  .biz-masonry {
+    columns: 3;
+    column-gap: 16px;
+  }
+}
+.biz-masonry-item {
+  break-inside: avoid;
+  margin-bottom: 8px;
+}
+@media (min-width: 640px) {
+  .biz-masonry-item {
+    margin-bottom: 16px;
+  }
+}
+/* A caption slides up on hover (desktop) and sits quietly at the foot on phones. */
+.biz-masonry-cap {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 28px 12px 10px;
+  font: 500 12px/1.4 var(--font-sans);
+  text-align: left;
+  color: var(--on-night);
+  background: linear-gradient(to top, color-mix(in srgb, var(--ink) 75%, transparent), transparent);
+}
+@media (hover: hover) {
+  .biz-masonry-cap {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.3s, transform 0.3s var(--biz-ease);
+  }
+  .biz-masonry-item button:hover .biz-masonry-cap,
+  .biz-masonry-item button:focus-visible .biz-masonry-cap {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------- the services rail */
+/* One row of cards at every width: most of one card on phones (the next peeks in), two on
+   tablets, three on desktop. Snap to each card; no scrollbar, the progress line shows place. */
+.biz-rail {
+  display: flex;
+  gap: 16px;
+  margin: 0 -16px;
+  padding: 0 16px 4px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 16px;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.biz-rail::-webkit-scrollbar {
+  display: none;
+}
+.biz-rail-item {
+  flex: 0 0 82%;
+  scroll-snap-align: start;
+}
+@media (min-width: 640px) {
+  .biz-rail {
+    gap: 20px;
+    margin: 0;
+    padding: 0 0 4px;
+    scroll-padding-left: 0;
+  }
+  .biz-rail-item {
+    flex-basis: calc((100% - 20px) / 2);
+  }
+}
+@media (min-width: 1024px) {
+  .biz-rail-item {
+    flex-basis: calc((100% - 40px) / 3);
+  }
+}
+/* The progress line: a hairline track, the part in view drawn in ink. Moves by transform only. */
+.biz-progress {
+  position: relative;
+  flex: 1;
+  height: 2px;
+  overflow: hidden;
+  background: var(--biz-rule);
+}
+.biz-progress > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--ink);
+  transition: transform 0.25s var(--biz-ease);
+}
+.biz-rail-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  transition: background-color 0.2s, color 0.2s, opacity 0.2s;
+}
+.biz-rail-btn:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--surface-raised);
+}
+.biz-rail-btn:disabled {
+  opacity: 0.25;
+}
+
 /* ------------------------------------------------- the booking sheet */
 /* A bottom sheet on phones, a small panel on wider screens. Square corners and thin rules, like
    the rest of the page; the chosen day and times take the business's brand colour. */
@@ -383,14 +495,43 @@ html:has(.biz-sheet[open]) {
   text-transform: uppercase;
   color: var(--ink-muted);
 }
-.biz-sheet-days {
-  display: flex;
-  gap: 8px;
-  margin: 0 -16px;
-  padding: 0 16px 4px;
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
-  scrollbar-width: none;
+/* The month calendar: seven columns, Sunday first. */
+.biz-cal {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.biz-cal-head {
+  padding: 6px 0;
+  text-align: center;
+  font: 600 11px/1 var(--font-sans);
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+}
+.biz-cal-day {
+  position: relative;
+  min-height: 44px;
+  font: 600 15px/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.biz-cal-day:disabled {
+  border-color: transparent;
+  text-decoration: none;
+}
+/* Today: a small dot under the date. */
+.biz-cal-day[data-today]::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.biz-sheet-x:disabled {
+  opacity: 0.3;
 }
 .biz-chip {
   border: 1px solid var(--biz-rule);
@@ -418,17 +559,6 @@ html:has(.biz-sheet[open]) {
   color: var(--ink-muted);
   opacity: 0.45;
   text-decoration: line-through;
-}
-.biz-day {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  min-width: 60px;
-  min-height: 64px;
-  flex-shrink: 0;
-  scroll-snap-align: start;
 }
 
 @media (prefers-reduced-motion: reduce) {

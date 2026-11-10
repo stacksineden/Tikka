@@ -88,6 +88,8 @@ export interface ServiceItem {
   /** "1 hr", "45 min". */
   duration?: string;
   imageUrl?: string;
+  /** The part of the photo the card crops around (0–1 each way); the upper third when unset. */
+  focal?: { x: number; y: number };
   /** Optional group shown as a tab ("Hair", "Nails") when there's more than one. */
   group?: string;
 }

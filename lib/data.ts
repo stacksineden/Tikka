@@ -267,6 +267,7 @@ export async function saveServices(user: Pick<SessionUser, "id" | "role">, servi
     description: x.description?.trim() || undefined,
     duration: x.duration?.trim() || undefined,
     price: x.priceKind === "ask" ? null : x.price,
+    focal: x.focal ? { x: clamp01(x.focal.x), y: clamp01(x.focal.y) } : undefined,
   }));
   try {
     return { ok: true, services: (await putBusiness(user.id, { ...b, services: next })).services };
@@ -2341,3 +2342,7 @@ export async function endDropEarly(user: Pick<SessionUser, "id" | "role">, dropI
   return { ok: true };
 }
 
+/** A focus point coordinate, kept inside the photo. */
+function clamp01(n: number): number {
+  return Number.isFinite(n) ? Math.round(Math.min(1, Math.max(0, n)) * 1000) / 1000 : 0.5;
+}

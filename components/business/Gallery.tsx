@@ -4,9 +4,20 @@ import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { PortfolioPhoto } from "@/lib/types";
 
-/** Portfolio grid: thumbnails first (lazy), tap to view full screen with captions. Videos play there, never inline. */
+/** The masonry's tile shapes, repeated: tall, square and in between, so columns stagger. */
+const RHYTHM = ["3 / 4", "1 / 1", "4 / 5", "2 / 3", "1 / 1", "3 / 4"];
+/** Tiles shown before "See all". */
+const MASONRY_FIRST = 6;
+
+/**
+ * Portfolio: thumbnails first (lazy), tap to view full screen with captions. Videos play there,
+ * never inline. On the claim page, a plain grid. On the business page (`editorial`), a masonry:
+ * two columns on phones, three on desktop, tiles in a varied rhythm of tall and square shapes,
+ * the first six with "See all" for the rest, so the page stays short.
+ */
 export function Gallery({ photos, businessName, editorial = false }: { photos: PortfolioPhoto[]; businessName: string; editorial?: boolean }) {
   const [open, setOpen] = useState<number | null>(null);
+  const [all, setAll] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -21,17 +32,57 @@ export function Gallery({ photos, businessName, editorial = false }: { photos: P
 
   return (
     <>
-      <ul className={editorial ? "grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4" : "grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3"}>
+      {editorial ? (
+        <>
+          <ul className="biz-masonry">
+            {(all ? photos : photos.slice(0, MASONRY_FIRST)).map((p, i) => (
+              <li key={p.id} className="biz-masonry-item">
+                <button
+                  type="button"
+                  onClick={() => setOpen(i)}
+                  className="group relative block w-full overflow-hidden bg-surface-sunken"
+                  style={{ aspectRatio: RHYTHM[i % RHYTHM.length] }}
+                  aria-label={`Open ${p.kind === "video" ? "video" : "photo"} ${i + 1} of ${photos.length}${p.caption ? `: ${p.caption}` : ""}`}
+                >
+                  {/* The small thumbnail on phones; the full photo on wider screens, so it stays sharp. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.thumbUrl}
+                    srcSet={p.kind === "video" ? undefined : `${p.thumbUrl} 400w, ${p.url} 1600w`}
+                    sizes="(min-width: 640px) 33vw, 50vw"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                  />
+                  {p.kind === "video" && (
+                    <span className="absolute left-3 top-3 grid size-10 place-items-center bg-surface-raised text-ink" aria-hidden="true">
+                      <Play size={16} className="fill-current" />
+                    </span>
+                  )}
+                  {p.caption && <span className="biz-masonry-cap">{p.caption}</span>}
+                </button>
+              </li>
+            ))}
+          </ul>
+          {!all && photos.length > MASONRY_FIRST && (
+            <button type="button" onClick={() => setAll(true)} className="biz-btn mt-8 w-full border border-[var(--ink)] sm:w-auto">
+              See all {photos.length}
+            </button>
+          )}
+        </>
+      ) : (
+      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
         {photos.map((p, i) => (
           <li key={p.id}>
             <button
               type="button"
               onClick={() => setOpen(i)}
-              className={`group relative block w-full overflow-hidden bg-surface-sunken ${editorial ? `${i % 5 === 0 ? "aspect-[3/4] sm:row-span-2 sm:aspect-auto sm:h-full" : "aspect-[3/4]"}` : "aspect-[4/5] rounded-card"}`}
+              className="group relative block aspect-[4/5] w-full overflow-hidden rounded-card bg-surface-sunken"
               aria-label={`Open ${p.kind === "video" ? "video" : "photo"} ${i + 1} of ${photos.length}${p.caption ? `: ${p.caption}` : ""}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.thumbUrl} alt="" loading="lazy" decoding="async" className={`size-full object-cover group-hover:scale-[1.04] ${editorial ? "transition-transform duration-700" : "transition-transform duration-300"}`} />
+              <img src={p.thumbUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
               {p.kind === "video" && (
                 <span className="absolute left-2 top-2 grid size-9 place-items-center rounded-pill bg-night/70 text-on-night" aria-hidden="true">
                   <Play size={16} className="fill-current" />
@@ -46,6 +97,7 @@ export function Gallery({ photos, businessName, editorial = false }: { photos: P
           </li>
         ))}
       </ul>
+      )}
 
       <dialog
         ref={dialog}
