@@ -7,7 +7,8 @@ insert into auth.users (id, email, aud, role) values
   ('00000000-0000-4000-b500-000000000001', 'owner19@test.tikka', 'authenticated', 'authenticated');
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-b500-000000000001","role":"authenticated"}', true);
-select public.create_business('Market Test', 'markettest', 'MK', 'Food', 'Oyo', 'Ibadan', 'Bodija', '#9C3B5C', '#FFFFFF');
+-- An unlikely prefix: these tests run against the live project, where real businesses own common ones.
+select public.create_business('Market Test', 'markettest', 'XQ', 'Food', 'Oyo', 'Ibadan', 'Bodija', '#9C3B5C', '#FFFFFF');
 reset role;
 
 -- Live, scheduled, ended, kept off the marketplace.

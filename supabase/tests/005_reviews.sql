@@ -65,7 +65,8 @@ begin
   assert rv.body = 'Lovely team, great nails' and rv.rating = 5 and rv.status = 'visible', 'tidied text';
   assert public.submit_review(tk, 1, 'changed my mind') ->> 'kind' = 'reviewed', 'once per Tikka';
   assert (select rating from public.reviews where id = rv.id) = 5, 'the first review stands';
-  assert (select count(*) from public.events where type = 'reviewed') = 1, 'the live feed gets the review';
+  -- Only this review's event: the live project has real reviews too.
+  assert (select count(*) from public.events where type = 'reviewed' and business_id = rv.business_id) = 1, 'the live feed gets the review';
 
   assert public.submit_review((select token from tokens where k = 'came2'), 2) ->> 'kind' = 'ok', 'a review without words';
   assert (select rating_avg = 3.5 and rating_count = 2 from public.businesses where id = (select v from t where k = 'biz')), 'rating follows the reviews';
@@ -76,9 +77,9 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-000000000001","role":"authenticated"}', true);
 do $$
 declare
-  low uuid := (select id from public.reviews where rating = 2);
+  low uuid := (select id from public.reviews where rating = 2 and business_id = (select v from t where k = 'biz'));
 begin
-  assert (select count(*) from public.reviews) = 2, 'the owner sees their reviews';
+  assert (select count(*) from public.reviews where business_id = (select v from t where k = 'biz')) = 2, 'the owner sees their reviews';
   begin
     update public.reviews set rating = 5 where id = low;
     raise exception 'an owner edited a review';
@@ -121,7 +122,7 @@ end $$;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-000000000002","role":"authenticated"}', true);
 do $$ begin
   begin
-    perform public.report_review((select id from public.reviews where rating = 5), 'x');
+    perform public.report_review((select id from public.reviews where rating = 5 and business_id = (select v from t where k = 'biz')), 'x');
     raise exception 'staff reported a review';
   exception when insufficient_privilege then null;
   end;
@@ -146,10 +147,10 @@ end $$;
 reset role;
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-000000000003","role":"authenticated"}', true);
-select public.decide_review_report((select id from public.reviews where rating = 2), true);
+select public.decide_review_report((select id from public.reviews where rating = 2 and business_id = (select v from t where k = 'biz')), true);
 reset role;
 do $$
-declare low uuid := (select id from public.reviews where rating = 2);
+declare low uuid := (select id from public.reviews where rating = 2 and business_id = (select v from t where k = 'biz'));
 begin
   assert (select status from public.reviews where id = low) = 'hidden', 'hidden';
   assert (select status = 'hidden' and decided_by = '00000000-0000-4000-e000-000000000003' from public.reports where target_id = low), 'report closed';
@@ -159,7 +160,7 @@ set local role anon;
 select set_config('request.jwt.claims', '', true);
 do $$ begin
   assert (select count(*) from public.get_business_reviews((select v from t where k = 'biz'))) = 1, 'hidden is gone from the page';
-  assert (select count(*) from public.reviews) = 1, 'and from direct reads';
+  assert (select count(*) from public.reviews where business_id = (select v from t where k = 'biz')) = 1, 'and from direct reads';
 end $$;
 
 rollback;
