@@ -140,9 +140,9 @@ export function prepareHero(file: File): Promise<string> {
   return fitPhoto(file, [1920, 1600, 1400, 1200]);
 }
 
-/** About photo: up to 1200px. */
+/** About photo: up to 1600px on its long side (shown uncropped, so tall photos stay sharp too). */
 export function prepareAbout(file: File): Promise<string> {
-  return fitPhoto(file, [1200, 1000, 800]);
+  return fitPhoto(file, [1600, 1400, 1200, 1000]);
 }
 
 /** Service photo: 4:3, 800 × 600. Team photo: square, 600 × 600. */
