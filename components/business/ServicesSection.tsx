@@ -39,7 +39,10 @@ export function ServicesSection({
   const photoOf = (g: string | null) => all.find(({ s }) => (!g || s.group?.trim() === g) && s.imageUrl)?.s.imageUrl;
 
   return (
-    <div className="grid gap-12">
+    // minmax(0, 1fr) and min-w-0: the column is the page's width, never its content's. Without
+    // them Safari sizes the carousel (percentage-wide cards in a scroll row) at its 33-million-pixel
+    // maximum, the photos can't draw, and iOS reloads the page for memory.
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-12">
       {tabs.length > 0 && (
         <div role="tablist" aria-label="Service groups" className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
           {tabs.map((g, i) => {
@@ -89,7 +92,7 @@ export function ServicesSection({
         </div>
       )}
 
-      <div role="region" aria-roledescription="carousel" aria-label="Services">
+      <div role="region" aria-roledescription="carousel" aria-label="Services" className="min-w-0">
       <ul ref={track} className="biz-rail">
         {shown.map(({ s, link }) => {
           const Tag = link ? "a" : "div";
