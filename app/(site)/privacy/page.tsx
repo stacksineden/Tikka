@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Blank, LegalPage, type LegalSection } from "@/components/site/LegalPage";
+import { LegalPage, type LegalSection } from "@/components/site/LegalPage";
 
-// PRD C1 (Nigeria Data Protection Act 2023). LEGAL_PLACEHOLDER: a first draft written from what
-// Tikka does today. Remove this marker (and set DRAFT to false) only once the lawyer-checked text
-// is in; until then `pnpm build` on Vercel production refuses to ship (scripts/check-legal.ts).
-const DRAFT = true;
+// PRD C1 (Nigeria Data Protection Act 2023). Cleared by Tikka's lawyer on 10 Nov 2026, to be
+// updated as Tikka grows. The company is being registered as Tikka Limited: put the registered
+// address in once the CAC issues it. scripts/check-legal.ts refuses a production build if a
+// blank or the placeholder marker comes back.
+const DRAFT = false;
+const UPDATED = "10 November 2026";
+const CONTACT = "hello@usetikka.com";
 
 export const metadata: Metadata = {
   title: "Privacy policy",
@@ -19,12 +22,12 @@ const sections: LegalSection[] = [
     body: (
       <>
         <p>
-          Tikka is run by <Blank>Tikka&apos;s registered company name</Blank>, <Blank>registered address</Blank>, Nigeria (&ldquo;Tikka&rdquo;, &ldquo;we&rdquo;). Businesses use Tikka to run
+          Tikka is run by Tikka Limited (registration in progress), Airport Road, Alakia, Ibadan, Oyo State, Nigeria (&ldquo;Tikka&rdquo;, &ldquo;we&rdquo;). Businesses use Tikka to run
           drops: limited batches of Tikkas (digital cards with a reward inside) that people claim on WhatsApp and use at the business.
         </p>
         <p>
           For the details people give when they claim a business&apos;s Tikka, that business and Tikka each decide how some of it is used, as explained below. You can
-          reach us about anything in this policy at <Blank>privacy email</Blank>.
+          reach us about anything in this policy at {CONTACT}.
         </p>
       </>
     ),
@@ -48,6 +51,10 @@ const sections: LegalSection[] = [
         <p>
           Claiming is free. We use these details to send your Tikka, let the business check and accept it at the counter, remind you before it runs out, and send
           the thank-you message after your visit.
+        </p>
+        <p>
+          For now, you can also claim by typing your WhatsApp number on the drop page. We don&apos;t check a typed number, so Tikka won&apos;t send it any messages,
+          and the business sees it marked &ldquo;not confirmed&rdquo;. Only type your own number.
         </p>
       </>
     ),
@@ -182,13 +189,13 @@ const sections: LegalSection[] = [
       <>
         <p>We use these companies to run Tikka. They only use your details to provide their service to us.</p>
         <ul>
-          <li>Supabase: our database, sign-in and file storage (<Blank>data location</Blank>).</li>
+          <li>Supabase: our database, sign-in and file storage (stored in Ireland).</li>
           <li>Vercel: hosts the website.</li>
           <li>Meta (WhatsApp Business Platform): sends and receives WhatsApp messages.</li>
           <li>Paystack: takes payments from businesses.</li>
           <li>Google: sign-in with Google for businesses, and the fonts on our pages.</li>
         </ul>
-        <p>Some of these store data outside Nigeria. <Blank>How these transfers are protected under the NDPA, to be confirmed.</Blank></p>
+        <p>Some of these store data outside Nigeria. We only use providers whose contracts require them to protect your details and to use them only to provide their service to us.</p>
       </>
     ),
   },
@@ -197,7 +204,7 @@ const sections: LegalSection[] = [
     title: "How long we keep things",
     body: (
       <p>
-        We keep claim details for as long as the business uses Tikka and <Blank>retention period</Blank> after that, so the business can see its history and we can deal with
+        We keep claim details for as long as the business uses Tikka and 12 months after that, so the business can see its history and we can deal with
         questions. Visit counts never had names in them. When you ask us to delete your details, we do it as described below.
       </p>
     ),
@@ -215,7 +222,7 @@ const sections: LegalSection[] = [
           <li>stop using them for messages you didn&apos;t ask for, or withdraw your consent at any time.</li>
         </ul>
         <p>
-          To ask, email <Blank>privacy email</Blank> or message Tikka on WhatsApp, and tell us the WhatsApp number you claimed with. We&apos;ll reply within <Blank>response time</Blank>. If
+          To ask, email {CONTACT} or message Tikka on WhatsApp, and tell us the WhatsApp number you claimed with. We&apos;ll reply within 30 days. If
           you&apos;re not happy with our answer, you can complain to the Nigeria Data Protection Commission.
         </p>
       </>
@@ -224,7 +231,7 @@ const sections: LegalSection[] = [
   {
     id: "children",
     title: "Children",
-    body: <p>Tikka is meant for people aged <Blank>minimum age</Blank> and over.</p>,
+    body: <p>Tikka is meant for people aged 18 and over.</p>,
   },
   {
     id: "changes",
@@ -237,7 +244,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy policy"
-      updated={<Blank>date</Blank>}
+      updated={UPDATED}
       draft={DRAFT}
       intro={
         <p>
