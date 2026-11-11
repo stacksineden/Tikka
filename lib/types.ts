@@ -5,7 +5,8 @@ export type Tier = "legendary" | "rare" | "thank_you";
 
 export type RewardType = "percent_off" | "naira_off" | "free_item" | "perk" | "action";
 
-export type ActionKind = "whatsapp" | "call" | "directions" | "book" | "instagram" | "services";
+/** Card buttons. The social ones (instagram, tiktok, facebook, x, youtube) follow lib/social.ts. */
+export type ActionKind = "whatsapp" | "call" | "directions" | "book" | "services" | "instagram" | "tiktok" | "facebook" | "x" | "youtube";
 
 export type Finish = "matte" | "foil" | "holo";
 

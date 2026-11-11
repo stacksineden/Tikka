@@ -565,16 +565,15 @@ export function ActionsField({
                 {meta.input === "phone" && (
                   <span className="text-body grid h-12 w-16 shrink-0 place-items-center rounded-md bg-surface-sunken font-semibold">+234</span>
                 )}
-                {meta.input === "handle" && (
-                  <span className="text-body grid h-12 w-10 shrink-0 place-items-center rounded-md bg-surface-sunken font-semibold">@</span>
-                )}
                 <input
                   className="input"
                   value={display}
                   placeholder={meta.placeholder}
-                  aria-label={`${meta.label}: ${meta.input === "phone" ? "number" : meta.input === "url" ? "link" : meta.input === "handle" ? "username" : "address"}`}
+                  aria-label={`${meta.label}: ${meta.input === "phone" ? "number" : meta.input === "url" ? "link" : meta.input === "social" ? "username or link" : "address"}`}
                   aria-invalid={!!errors[`action-${i}`]}
                   inputMode={meta.input === "phone" ? "tel" : meta.input === "url" ? "url" : "text"}
+                  autoCorrect={meta.input === "social" ? "off" : undefined}
+                  spellCheck={meta.input === "social" ? false : undefined}
                   autoComplete={meta.input === "phone" ? "tel-national" : "off"}
                   autoCapitalize={meta.input === "text" ? "sentences" : "none"}
                   onChange={(e) => set(i, e.target.value)}

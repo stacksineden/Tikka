@@ -1,3 +1,4 @@
+import { isSocial, socialHref } from "@/lib/social";
 import type { ActionKind } from "@/lib/types";
 
 // The card's action buttons: icons (inline SVG, as in design/card-reference), short labels and links.
@@ -49,6 +50,33 @@ export function ActionIcon({ kind }: { kind: ActionKind }) {
           <path d="M16.5 7.5h.01" />
         </svg>
       );
+    case "tiktok":
+      return (
+        <svg {...stroke}>
+          <path d="M14 4v10.5a3.5 3.5 0 1 1-3.5-3.5" />
+          <path d="M14 4c.4 2.6 2.2 4.2 5 4.4" />
+        </svg>
+      );
+    case "facebook":
+      return (
+        <svg {...stroke}>
+          <path d="M16 3.5h-2.5A3.5 3.5 0 0 0 10 7v3H7.5v3.5H10v7h3.5v-7H16l.5-3.5h-3V7.5a1 1 0 0 1 1-1H16z" />
+        </svg>
+      );
+    case "x":
+      return (
+        <svg {...stroke}>
+          <path d="M4.5 4h4l11 16h-4z" />
+          <path d="M19.5 4l-6.2 7M10.7 13l-6.2 7" />
+        </svg>
+      );
+    case "youtube":
+      return (
+        <svg {...stroke}>
+          <rect x="3" y="6" width="18" height="12" rx="4" />
+          <path d="M10.5 9.5v5l4-2.5z" />
+        </svg>
+      );
     case "services":
       return (
         <svg {...stroke}>
@@ -65,6 +93,10 @@ export const ACTION_LABEL: Record<ActionKind, string> = {
   directions: "Directions",
   book: "Book",
   instagram: "Instagram",
+  tiktok: "TikTok",
+  facebook: "Facebook",
+  x: "X",
+  youtube: "YouTube",
   services: "Services",
 };
 
@@ -77,7 +109,11 @@ export function actionHref(kind: ActionKind, value: string): string | undefined 
     case "directions":
       return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(value)}`;
     case "instagram":
-      return `https://instagram.com/${value}`;
+    case "tiktok":
+    case "facebook":
+    case "x":
+    case "youtube":
+      return isSocial(kind) ? socialHref(kind, value) : undefined;
     case "book":
       return value;
     case "services":
