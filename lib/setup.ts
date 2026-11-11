@@ -2,6 +2,7 @@
 
 import { checkBrandColor, normalizeHex } from "./color";
 import { CATEGORIES, STATE_NAMES } from "./nigeria";
+import { isSocial, parseSocial, SOCIAL_NAME } from "./social";
 import type { ActionKind, Business, CardBackground, OpeningHours } from "./types";
 
 export const LIMITS = {
@@ -18,14 +19,19 @@ export const LIMITS = {
   logoMinPx: 256,
 } as const;
 
-export const ACTION_KINDS: { kind: ActionKind; label: string; placeholder: string; input: "phone" | "url" | "text" | "handle" | "none" }[] = [
+export const ACTION_KINDS: { kind: ActionKind; label: string; placeholder: string; input: "phone" | "url" | "text" | "social" | "none" }[] = [
   { kind: "whatsapp", label: "Chat on WhatsApp", placeholder: "803 000 0000", input: "phone" },
   { kind: "call", label: "Call", placeholder: "803 000 0000", input: "phone" },
   { kind: "directions", label: "Directions", placeholder: "Street address and area", input: "text" },
   { kind: "book", label: "Book", placeholder: "yourbusiness.com/book", input: "url" },
-  { kind: "instagram", label: "Instagram", placeholder: "yourbusiness", input: "handle" },
   // Opens the Services tab on the card (the business's services and prices); no link needed.
   { kind: "services", label: "Services", placeholder: "", input: "none" },
+  // Social pages: a username or a link to the profile (lib/social.ts).
+  { kind: "instagram", label: "Instagram", placeholder: "@yourbusiness or a link", input: "social" },
+  { kind: "tiktok", label: "TikTok", placeholder: "@yourbusiness or a link", input: "social" },
+  { kind: "facebook", label: "Facebook", placeholder: "Page name or a link", input: "social" },
+  { kind: "x", label: "X", placeholder: "@yourbusiness or a link", input: "social" },
+  { kind: "youtube", label: "YouTube", placeholder: "@yourchannel or a link", input: "social" },
 ];
 
 export function actionMeta(kind: ActionKind) {
@@ -85,8 +91,8 @@ function normalizeAction(kind: ActionKind, value: string): string | null {
   switch (actionMeta(kind).input) {
     case "phone":
       return normalizeNgPhone(v);
-    case "handle":
-      return /^@?[a-z0-9._]{1,30}$/i.test(v) ? v.replace(/^@/, "") : null;
+    case "social":
+      return isSocial(kind) ? parseSocial(kind, v) : null;
     case "url": {
       const url = /^https?:\/\//i.test(v) ? v : "https://" + v;
       try {
@@ -161,8 +167,8 @@ function actionError(kind: ActionKind): string {
       return "Enter a Nigerian mobile number, like 0803 000 0000.";
     case "url":
       return "Enter a web address, like yourbusiness.com/book.";
-    case "handle":
-      return "Enter your Instagram username.";
+    case "social":
+      return isSocial(kind) ? `Enter your ${SOCIAL_NAME[kind]} username, or paste the link to your profile.` : "Enter your username.";
     default:
       return "Enter your address.";
   }

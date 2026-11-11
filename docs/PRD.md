@@ -143,7 +143,7 @@ Part of the package: every business gets a sleek one-page website for its Instag
 8. **FAQs** (optional): question and answer pairs.
 9. **A text section** (optional): a title and one short block (about 600 characters).
 10. **Hours and location:** opening hours, address, "Directions" to Maps. Hidden for online and come-to-you businesses.
-11. **Final call to action:** "Book your visit" with "Book a time" (the booking sheet), Call and Instagram.
+11. **Final call to action:** "Book your visit" with "Book a time" (the booking sheet), Call, and each social page on the card (Instagram, TikTok, Facebook, X, YouTube).
 12. **Footer:** "Made with Tikka", linking to the Tikka landing page, with "Get a free page for your business". No marketplace link.
 Optional sections are switched on or off, never reordered.
 
@@ -254,7 +254,7 @@ Done once, editable any time in Settings. A live card preview beside (desktop) o
 - Logo (square, at least 256px).
 - Brand colour (colour picker + 8 suggested swatches), with the contrast check.
 - Card background: Colour, Pattern or Photo.
-- At least one action button: Chat on WhatsApp, Call, Directions, Book, Instagram, Services (up to 4).
+- At least one action button: Chat on WhatsApp, Call, Directions, Book, Services, or a social page (Instagram, TikTok, Facebook, X, YouTube), up to 4. For a social page the owner types a username or pastes a profile link; both become the profile link (`lib/social.ts`).
 - Code prefix: two letters suggested from the name, editable, unique.
 - **How do customers use their Tikka?** "They come to us" (default) · "Online, anywhere in Nigeria" · "We come to them". Online and come-to-you businesses have no Hours and location section or Directions on their page; the hero line says "Serves all of Nigeria" or "We come to you" instead.
 

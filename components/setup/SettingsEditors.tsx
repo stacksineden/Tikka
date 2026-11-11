@@ -197,7 +197,7 @@ export function CardLookEditor({ business }: { business: Business }) {
           <h2 className="text-title text-[17px] leading-6">More on your card</h2>
           <ul className="mt-2 divide-y divide-line">
             {[
-              ["/app/settings/profile#buttons", "Buttons and contact", "WhatsApp, call, address, booking link, Instagram"],
+              ["/app/settings/profile#buttons", "Buttons and contact", "WhatsApp, call, address, booking link, social pages"],
               ["/app/settings/profile#services", "Services and prices", `${(e.draft.services ?? []).length} listed`],
               ["/app/settings/profile#basics", "Name, tagline and location", e.draft.name],
               ["/app/settings/profile#about", "About and opening hours", e.draft.about ? "Added" : "Not added yet"],
@@ -284,7 +284,7 @@ export function ProfileEditor({ business }: { business: Business }) {
 
       <Section id="buttons" title="Buttons and contact">
         <p className="text-body -mt-2 text-ink-muted">
-          Your WhatsApp and phone number, address for directions, booking link, Instagram, and the Services button.
+          Your WhatsApp and phone number, address for directions, booking link, the Services button, and your Instagram, TikTok, Facebook, X or YouTube.
         </p>
         <ActionsField
           value={draft.actions}

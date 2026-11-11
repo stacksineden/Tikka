@@ -12,7 +12,8 @@ import { Reveal } from "@/components/business/Reveal";
 import { ServicesSection } from "@/components/business/ServicesSection";
 import { NotifyMe } from "@/components/market/NotifyMe";
 import { Logo } from "@/components/site/Logo";
-import { ActionIcon, actionHref } from "@/components/tikka/ActionIcon";
+import { ACTION_LABEL, ActionIcon, actionHref } from "@/components/tikka/ActionIcon";
+import { isSocial } from "@/lib/social";
 import { getBusinessBySlug, getBusinessReviews, getPageDrops } from "@/lib/data";
 import { clockTime, count, place, shortDate } from "@/lib/format";
 import { bookingLink, bookingNumber, focalPosition, heroHeadline, serviceGroups, showsLocation, visibleSections, whereLine, type PageDrop } from "@/lib/page";
@@ -194,7 +195,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
   const book = external ?? bookingLink(b);
   const bookProps = { href: book ?? undefined, target: "_blank", rel: "noopener noreferrer", ...(sheet ? { "data-book": "" } : {}) };
   const call = b.actions.find((a) => a.kind === "call");
-  const instagram = b.actions.find((a) => a.kind === "instagram");
+  const socials = b.actions.filter((a) => isSocial(a.kind));
   const loc = place(b.area, b.city);
   const mapsQuery = b.address || `${b.name}, ${loc}`;
   const statement = heroHeadline(b);
@@ -508,12 +509,12 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
                 Call
               </a>
             )}
-            {instagram && (
-              <a href={actionHref("instagram", instagram.value)} target="_blank" rel="noopener noreferrer" className="biz-btn border" style={{ borderColor: b.onBrandColor }}>
-                <ActionIcon kind="instagram" />
-                Instagram
+            {socials.map((a) => (
+              <a key={a.kind} href={actionHref(a.kind, a.value)} target="_blank" rel="noopener noreferrer" className="biz-btn border" style={{ borderColor: b.onBrandColor }}>
+                <ActionIcon kind={a.kind} />
+                {ACTION_LABEL[a.kind]}
               </a>
-            )}
+            ))}
           </div>
         </div>
       </section>
