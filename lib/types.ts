@@ -185,6 +185,8 @@ export interface Drop {
   validWeekdays?: number[] | null;
   /** The next-visit Tikka sent after redeeming: how it reads and how long it lasts. */
   bounceBack?: { reward: string; validityDays: number } | null;
+  /** Typed-in claims need the WhatsApp check at the counter (page-claim mode). On unless turned off. */
+  counterCheck?: boolean;
   ignoredWarnings?: string[];
   /** Marketplace ranking (drop_activity): claims in the last hour and the last 24 hours. */
   claimsLastHour?: number;
@@ -207,6 +209,8 @@ export interface PublicDrop {
   items: { tier: Tier; count: number; reward: string }[];
   /** "Every Tikka holds something. One per WhatsApp number." */
   note: string;
+  /** Page-claim mode: staff check the claimer's WhatsApp at the counter, so the page says so. */
+  counterCheck: boolean;
 }
 
 /** One claimer's card: only ever sent to the visitor who claimed it. */
@@ -227,6 +231,8 @@ export interface ClaimedCard {
   expiresAt: string;
   /** False when it was claimed on the page with a typed number: it isn't in their WhatsApp. */
   confirmed?: boolean;
+  /** Typed in with the counter check on, and not checked yet: "Bring the phone with this WhatsApp". */
+  counterCheck?: boolean;
 }
 
 /** Link activity (TECH_PLAN §12). */
@@ -270,6 +276,8 @@ export interface Lead {
   plannedVisitPart?: "morning" | "afternoon" | "evening";
   /** False when the number was typed on the page, not proven on WhatsApp. */
   phoneConfirmed?: boolean;
+  /** A typed number that passed the WhatsApp check at the counter. */
+  counterChecked?: boolean;
 }
 
 export type ActivityEvent =

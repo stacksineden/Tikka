@@ -87,6 +87,8 @@ export interface DropDraft {
   /** Quiet-day drops: codes only work on these days (1 = Monday … 7 = Sunday). */
   validWeekdays: number[] | null;
   bounceBack: DraftBounceBack;
+  /** "Check WhatsApp at the counter" (page-claim mode): on unless the owner turns it off. */
+  counterCheck?: boolean;
   audienceBand: AudienceBand | null;
   /** Drop-check warnings still showing at publish (set by the server). */
   ignoredWarnings: string[];

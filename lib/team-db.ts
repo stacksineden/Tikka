@@ -1,7 +1,7 @@
 import "server-only";
 
-import { checkFrom } from "./claim-map";
-import type { CheckResult } from "./redeem";
+import { checkFrom, digitsFrom } from "./claim-map";
+import type { CheckResult, DigitsResult } from "./redeem";
 import { adminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
 import type { Business } from "./types";
@@ -13,7 +13,7 @@ import { initialsFrom } from "./setup";
 
 export type ConfirmDbResult =
   | { ok: true; name: string; bounceBack: boolean }
-  | { ok: false; result: CheckResult | { kind: "needs_action"; code: string } };
+  | { ok: false; result: CheckResult | { kind: "needs_action" | "needs_whatsapp_check"; code: string } };
 
 /** check_code(): read-only (rule 5). */
 export async function dbCheckCode(businessId: string, code: string): Promise<CheckResult> {
@@ -39,8 +39,19 @@ export async function dbConfirm(
   if (error) return { ok: false, result: { kind: "unknown", code } };
   const r = data as Record<string, unknown>;
   if (r.kind === "redeemed") return { ok: true, name: String(r.name ?? ""), bounceBack: !!r.bounce_back };
-  if (r.kind === "needs_action") return { ok: false, result: { kind: "needs_action", code: String(r.code ?? code) } };
+  if (r.kind === "needs_action" || r.kind === "needs_whatsapp_check") return { ok: false, result: { kind: r.kind, code: String(r.code ?? code) } };
   return { ok: false, result: checkFrom(r) };
+}
+
+/**
+ * check_whatsapp_digits(): the last 4 digits staff read off the customer's WhatsApp. The database
+ * compares them with the claim's number, counts the day's tries, and only says matches or not.
+ */
+export async function dbCheckDigits(businessId: string, code: string, digits: string): Promise<CheckResult | DigitsResult> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("check_whatsapp_digits", { p_business: businessId, p_code: code, p_last4: digits });
+  if (error) return { kind: "unknown", code };
+  return digitsFrom(data as Record<string, unknown>, code);
 }
 
 /**

@@ -46,6 +46,7 @@ export function toPublicDrop(d: Drop, extraClaims: number, newOnly: boolean, now
     contents: { legendary: tierSum("legendary"), rare: tierSum("rare"), thankYou: tierSum("thank_you") },
     items: TIER_ORDER.flatMap((tier) => d.rewards.filter((r) => r.tier === tier && r.count > 0).map((r) => ({ tier, count: r.count, reward: r.label }))),
     note: newOnly ? "Every Tikka holds something. New customers only." : "Every Tikka holds something. One per WhatsApp number.",
+    counterCheck: d.counterCheck !== false,
   };
 }
 

@@ -3,10 +3,25 @@
 
 import { isWellFormed, normalize } from "./codes";
 import type { ClaimedCard, Tier } from "./types";
-import { claimExpiry, validDaysLabel, validOn, type VisitPart } from "./visit";
+import { claimExpiry, validDaysLabel, validOn, watDate, type VisitPart } from "./visit";
 
 export const REVIEW_WINDOW_DAYS = 30;
 export const REVIEW_MAX = 140;
+/** The WhatsApp check at the counter: wrong tries allowed per Tikka per day (WAT). */
+export const COUNTER_TRIES_PER_DAY = 3;
+
+/**
+ * The WhatsApp check at the counter, for a Tikka claimed by typing a number (page-claim mode).
+ * The demo store keeps the number's last 4 digits so the check can run without a phone number;
+ * the database compares against the claim's number and keeps neither.
+ */
+export interface CounterCheckState {
+  last4: string;
+  /** Set when the digits matched. */
+  passedAt?: string;
+  /** Every check: when, and whether it matched. Never the digits typed. */
+  checks: { at: string; matched: boolean }[];
+}
 
 /** One claim as the server keeps it. Phone numbers never live here (rule 4). */
 export interface ClaimRecord {
@@ -38,6 +53,8 @@ export interface ClaimRecord {
   customerStatus?: "new" | "returning";
   redeemedBy?: string;
   review?: ReviewRecord;
+  /** Claimed by typing a number with the counter check on (decided when it was claimed). */
+  counterCheck?: CounterCheckState;
 }
 
 export interface ReviewRecord {
@@ -59,6 +76,8 @@ export type CheckResult =
       action?: string;
       /** Preselects "New customer" / "Been here before" from their history with this business. */
       suggestedStatus: "new" | "returning";
+      /** A typed-in Tikka that still needs the WhatsApp check before it can be confirmed. */
+      whatsappCheck?: { triesLeft: number };
     }
   | { kind: "already_used"; code: string; at: string }
   | { kind: "expired"; code: string; at: string }
@@ -66,6 +85,56 @@ export type CheckResult =
   | { kind: "wrong_business"; code: string }
   | { kind: "unknown"; code: string }
   | { kind: "typo"; code: string };
+
+/** check_whatsapp_digits(): only ever matches or not, never the number. */
+export type DigitsResult =
+  | { kind: "matched"; code: string }
+  | { kind: "no_match"; code: string; triesLeft: number }
+  | { kind: "closed_today"; code: string }
+  | { kind: "not_needed"; code: string }
+  | { kind: "invalid_digits"; code: string };
+
+/** Wrong tries on this Tikka today, in West Africa Time. */
+export function counterFailsToday(state: CounterCheckState, now: Date): number {
+  const today = watDate(now);
+  return state.checks.filter((c) => !c.matched && watDate(new Date(c.at)) === today).length;
+}
+
+/** Whether this Tikka still needs the counter check, and how many tries are left today. */
+export function whatsappCheckOf(claim: Pick<ClaimRecord, "counterCheck">, now: Date): { triesLeft: number } | undefined {
+  const s = claim.counterCheck;
+  if (!s || s.passedAt) return undefined;
+  return { triesLeft: Math.max(COUNTER_TRIES_PER_DAY - counterFailsToday(s, now), 0) };
+}
+
+/**
+ * check_whatsapp_digits: the last 4 digits staff read off the customer's WhatsApp. Returns the
+ * answer and the new state to store (unchanged when nothing was checked). Never uses the Tikka.
+ */
+export function checkDigits(
+  claim: ClaimRecord | undefined,
+  ownerId: string,
+  code: string,
+  digits: string,
+  now: Date,
+): { result: CheckResult | DigitsResult; state?: CounterCheckState } {
+  if (!/^[0-9]{4}$/.test(digits)) return { result: { kind: "invalid_digits", code } };
+  const check = checkClaim(claim, ownerId, code, now);
+  if (check.kind !== "valid" || !claim) return { result: check };
+  const s = claim.counterCheck;
+  if (!s || !check.whatsappCheck) return { result: { kind: "not_needed", code } };
+  const fails = counterFailsToday(s, now);
+  if (fails >= COUNTER_TRIES_PER_DAY) return { result: { kind: "closed_today", code } };
+  const matched = s.last4 === digits;
+  const state: CounterCheckState = {
+    ...s,
+    passedAt: matched ? now.toISOString() : undefined,
+    checks: [...s.checks, { at: now.toISOString(), matched }],
+  };
+  if (matched) return { result: { kind: "matched", code }, state };
+  if (fails + 1 >= COUNTER_TRIES_PER_DAY) return { result: { kind: "closed_today", code }, state };
+  return { result: { kind: "no_match", code, triesLeft: COUNTER_TRIES_PER_DAY - fails - 1 }, state };
+}
 
 /** "Adaeze O." — first name and last initial, never more. */
 export function displayName(first: string, lastInitial?: string): string {
@@ -96,10 +165,13 @@ export function checkClaim(claim: ClaimRecord | undefined, ownerId: string, code
     expiresAt: claim.card.expiresAt,
     action: claim.card.action,
     suggestedStatus: returning || claim.kind === "bounce_back" ? "returning" : "new",
+    whatsappCheck: whatsappCheckOf(claim, now),
   };
 }
 
-export type ConfirmResult = { ok: true; claim: ClaimRecord; name: string } | { ok: false; result: CheckResult | { kind: "needs_action"; code: string } };
+export type ConfirmResult =
+  | { ok: true; claim: ClaimRecord; name: string }
+  | { ok: false; result: CheckResult | { kind: "needs_action" | "needs_whatsapp_check"; code: string } };
 
 /**
  * confirm_redemption: re-checks, needs the staff tick for action cards, then marks the claim
@@ -115,6 +187,7 @@ export function confirmClaim(
   const check = checkClaim(claim, ownerId, code, now);
   const status = input.customerStatus ?? (check.kind === "valid" ? check.suggestedStatus : undefined);
   if (check.kind !== "valid" || !claim) return { ok: false, result: check };
+  if (check.whatsappCheck) return { ok: false, result: { kind: "needs_whatsapp_check", code } };
   if (check.action && !input.actionConfirmed) return { ok: false, result: { kind: "needs_action", code } };
   const bill = input.billKobo && input.billKobo > 0 ? Math.round(input.billKobo) : undefined;
   return {
@@ -150,6 +223,8 @@ export function bounceBackFor(
     kind: "bounce_back",
     parentToken: parent.token,
     lastInitial: parent.lastInitial,
+    // Checked at the counter a moment ago, so the next-visit Tikka isn't checked again.
+    counterCheck: parent.counterCheck ? { ...parent.counterCheck, checks: [] } : undefined,
     claimedAt: now.toISOString(),
     revealedAt: now.toISOString(),
     card: {

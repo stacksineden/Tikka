@@ -27,6 +27,7 @@ export async function POST(request: Request) {
     phone?: string;
     source?: string;
     posterId?: string;
+    futureDrops?: boolean;
     turnstile?: string;
   } | null;
   const jar = await cookies();
@@ -48,8 +49,11 @@ export async function POST(request: Request) {
 
   const source = parseSource(body.source);
   const posterId = source === "qr" ? await posterOf(body.business, body.posterId) : undefined;
-  // Page claims never sign anyone up for drop alerts: the number isn't proven (rule 12).
-  const intent = await dbCreateIntent(found.drop.id, name, false, visitorId, source, posterId);
+  // The future-drops tick is only recorded on drops with the WhatsApp check at the counter: an
+  // unproven number gets no drop alerts until it passes the check (claim_on_page clears the opt-in;
+  // confirm_redemption brings it back). Rule 12.
+  const futureDrops = body.futureDrops === true && found.drop.counterCheck;
+  const intent = await dbCreateIntent(found.drop.id, name, futureDrops, visitorId, source, posterId);
   if (intent.kind !== "intent") return fail(intent.kind);
 
   const r = await dbClaimOnPage(intent.token, phone);

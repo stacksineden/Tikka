@@ -2,6 +2,7 @@ import "server-only";
 
 import { cacheLife, cacheTag } from "next/cache";
 import type { DropPack, DropTier } from "./pricing";
+import { counterCheckFrom, type CounterCheckRow } from "./counter-checks";
 import { adminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
 
@@ -93,6 +94,12 @@ export async function dbAdminOverview(): Promise<AdminOverview> {
     revenue: o.revenue,
     guaranteeVouchers: o.guarantee_vouchers.map((v) => ({ businessName: v.business_name, tierId: v.tier_id, createdAt: v.created_at })),
   };
+}
+
+/** The WhatsApp check at the counter, per business (admin_counter_checks()). Never phone numbers. */
+export async function dbAdminCounterChecks(): Promise<CounterCheckRow[]> {
+  const rows = await call<Record<string, unknown>[]>("admin_counter_checks");
+  return rows.map(counterCheckFrom);
 }
 
 export async function dbAdminBusinesses(query?: string): Promise<AdminBusiness[]> {

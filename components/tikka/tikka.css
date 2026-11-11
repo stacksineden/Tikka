@@ -1275,6 +1275,11 @@
   font: 600 13px/18px var(--font-sans);
   color: var(--danger);
 }
+.tk-hint {
+  margin: 0;
+  font: 500 13px/18px var(--font-sans);
+  color: var(--ink-muted);
+}
 .tk-consent {
   margin: 2px 0 14px;
   font: 400 12px/17px var(--font-sans);

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { claimMode } from "@/lib/claim-mode";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -71,6 +72,7 @@ async function Builder({ searchParams }: { searchParams: PageProps<"/app/drops/n
       pastSuggest={pastSuggest}
       editing={editing}
       spark={spark.dismissed.includes("spark_builder") ? null : { onList: spark.onList }}
+      pageClaims={claimMode() === "page"}
     />
   );
 }

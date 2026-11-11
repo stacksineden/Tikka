@@ -1,14 +1,23 @@
 "use client";
 
-import { Camera, CheckCircle2, Loader2, ScanLine, XCircle } from "lucide-react";
+import { Camera, CheckCircle2, Loader2, ScanLine, Smartphone, XCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { checkCodeAction, confirmRedemptionAction } from "@/app/app/actions";
+import { checkCodeAction, checkDigitsAction, confirmRedemptionAction } from "@/app/app/actions";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
 import { clockTime, shortDate } from "@/lib/format";
 import { offlineCheck, type CheckResult } from "@/lib/redeem";
 
 // The counter screen (PRD B7): scan or type → check (never uses the code) → confirm.
-// Never shows a phone number: check_code doesn't return one.
+// Never shows a phone number: check_code doesn't return one. A Tikka claimed by typing a number
+// also needs the WhatsApp check: staff read the last 4 digits off the customer's WhatsApp, and
+// Tikka only answers matches or not (3 wrong tries a day).
+
+/** The WhatsApp check on a typed-in Tikka. */
+type WaCheck =
+  | { kind: "none" }
+  | { kind: "open"; triesLeft: number; error?: string }
+  | { kind: "closed" }
+  | { kind: "passed" };
 
 type Problem = Exclude<CheckResult, { kind: "valid" }> | { kind: "no_access"; code?: string };
 type View =
@@ -62,6 +71,9 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
   const [customer, setCustomer] = useState<"new" | "returning">("new");
   const [confirming, setConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string>();
+  const [wa, setWa] = useState<WaCheck>({ kind: "none" });
+  const [digits, setDigits] = useState("");
+  const [checkingDigits, setCheckingDigits] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<Scanner | null>(null);
@@ -94,6 +106,14 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
           setBill("");
           setCustomer(r.suggestedStatus);
           setConfirmError(undefined);
+          setDigits("");
+          setWa(
+            !r.whatsappCheck
+              ? { kind: "none" }
+              : r.whatsappCheck.triesLeft > 0
+                ? { kind: "open", triesLeft: r.whatsappCheck.triesLeft }
+                : { kind: "closed" },
+          );
           setView({ kind: "valid", result: r });
           buzz(20);
         } else {
@@ -169,9 +189,53 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
     check(typed, true);
   }
 
+  async function checkDigits(e: FormEvent) {
+    e.preventDefault();
+    if (view.kind !== "valid" || wa.kind !== "open" || checkingDigits) return;
+    if (!/^\d{4}$/.test(digits)) {
+      setWa({ ...wa, error: "Type the last 4 digits of the number on their WhatsApp." });
+      return;
+    }
+    setCheckingDigits(true);
+    try {
+      const r = await checkDigitsAction(view.result.code, digits);
+      switch (r.kind) {
+        case "matched":
+        case "not_needed":
+          setWa({ kind: "passed" });
+          setConfirmError(undefined);
+          buzz(20);
+          break;
+        case "no_match":
+          setDigits("");
+          setWa({ kind: "open", triesLeft: r.triesLeft, error: `Doesn't match. ${r.triesLeft} ${r.triesLeft === 1 ? "try" : "tries"} left today.` });
+          buzz([40, 60, 40]);
+          break;
+        case "closed_today":
+          setDigits("");
+          setWa({ kind: "closed" });
+          buzz([40, 60, 40]);
+          break;
+        case "invalid_digits":
+          setWa({ ...wa, error: "Type the last 4 digits of the number on their WhatsApp." });
+          break;
+        default:
+          setView({ kind: "invalid", problem: { ...r, code: view.result.code } as Problem });
+      }
+    } catch {
+      setWa({ ...wa, error: "No connection. Nothing was used. Try again." });
+    } finally {
+      setCheckingDigits(false);
+    }
+  }
+
   async function confirm() {
     if (view.kind !== "valid") return;
     const r = view.result;
+    if (wa.kind === "open" || wa.kind === "closed") {
+      setConfirmError("Check their WhatsApp first.");
+      return;
+    }
     if (r.action && !ticked) {
       setConfirmError("Tick the box once they've done it.");
       return;
@@ -188,6 +252,9 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
         backTimer.current = setTimeout(scanAgain, res.askReview ? 8000 : 3500);
       } else if (res.result.kind === "needs_action") {
         setConfirmError("Tick the box once they've done it.");
+      } else if (res.result.kind === "needs_whatsapp_check") {
+        setWa({ kind: "open", triesLeft: 1 });
+        setConfirmError("Check their WhatsApp first.");
       } else {
         setView({ kind: "invalid", problem: { ...res.result, code: r.code } as Problem });
       }
@@ -199,6 +266,7 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
   }
 
   const scanning = view.kind === "scan" || view.kind === "checking";
+  const waBlocks = wa.kind === "open" || wa.kind === "closed";
 
   return (
     <div className="mx-auto grid w-full max-w-md gap-4 px-4 pb-8 pt-4 sm:pt-8">
@@ -306,6 +374,65 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
             <dd className="text-code font-mono">{view.result.code}</dd>
           </dl>
 
+          {wa.kind === "open" && (
+            <form onSubmit={checkDigits} className="mt-4 grid gap-3 rounded-md border-2 border-brand bg-surface-raised p-4" noValidate aria-labelledby="wa-h">
+              <h3 id="wa-h" className="text-title flex items-center gap-2 text-[17px] text-brand">
+                <Smartphone size={20} aria-hidden="true" />
+                Check their WhatsApp first
+              </h3>
+              <ol className="text-body grid list-decimal gap-1 pl-5">
+                <li>Ask them to open WhatsApp, go to Settings and tap their name.</li>
+                <li>Read the number on their profile yourself. Don&apos;t type what they tell you, and don&apos;t accept a screenshot.</li>
+                <li>Type the last 4 digits.</li>
+              </ol>
+              <label htmlFor="wa-digits" className="text-label">
+                Last 4 digits
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="wa-digits"
+                  value={digits}
+                  onChange={(e) => {
+                    setDigits(e.target.value.replace(/\D/g, "").slice(0, 4));
+                    if (wa.error) setWa({ kind: "open", triesLeft: wa.triesLeft });
+                  }}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  enterKeyHint="go"
+                  maxLength={4}
+                  className="input w-0 min-w-0 flex-1 text-center font-mono text-[24px] tracking-[0.4em]"
+                  aria-invalid={wa.error ? true : undefined}
+                  aria-describedby="wa-help"
+                />
+                <button type="submit" className="btn shrink-0" disabled={checkingDigits}>
+                  {checkingDigits ? <Loader2 className="animate-spin" /> : null}
+                  Check
+                </button>
+              </div>
+              <p id="wa-help" role={wa.error ? "alert" : undefined} className={`text-caption font-semibold ${wa.error ? "text-danger" : "text-ink-muted"}`}>
+                {wa.error ?? `${wa.triesLeft} ${wa.triesLeft === 1 ? "try" : "tries"} left today. Nothing is used until you confirm.`}
+              </p>
+              <p className="text-caption text-ink-muted">No phone with them? Don&apos;t check. They can come back with it.</p>
+            </form>
+          )}
+
+          {wa.kind === "closed" && (
+            <div className="mt-4 grid gap-1 rounded-md bg-danger-soft p-4" role="alert">
+              <p className="text-title flex items-center gap-2 text-[17px] text-danger">
+                <XCircle size={20} aria-hidden="true" />
+                Doesn&apos;t match. Don&apos;t give the reward.
+              </p>
+              <p className="text-body">Ask them to come back with the phone they claimed with. You can check again tomorrow. Nothing was used.</p>
+            </div>
+          )}
+
+          {wa.kind === "passed" && (
+            <p className="text-label mt-4 flex items-center gap-2 rounded-md bg-surface-raised px-3 py-3 text-success">
+              <CheckCircle2 size={20} aria-hidden="true" />
+              Their WhatsApp matches.
+            </p>
+          )}
+
           {view.result.action && (
             <label className="mt-4 flex min-h-14 cursor-pointer items-center gap-3 rounded-md border-2 border-success bg-surface-raised px-3 py-2">
               <input type="checkbox" checked={ticked} onChange={(e) => setTicked(e.target.checked)} className="size-6 shrink-0 accent-success" />
@@ -313,50 +440,54 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
             </label>
           )}
 
-          <div className="mt-4 grid grid-cols-2 gap-1 rounded-pill bg-surface-raised p-1" role="radiogroup" aria-label="Customer">
-            {(
-              [
-                ["new", "New customer"],
-                ["returning", "Been here before"],
-              ] as const
-            ).map(([v, label]) => (
-              <button
-                key={v}
-                type="button"
-                role="radio"
-                aria-checked={customer === v}
-                onClick={() => setCustomer(v)}
-                className={`text-label min-h-11 rounded-pill px-2 ${customer === v ? "bg-brand text-on-brand" : "text-ink-muted"}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-4 grid gap-1.5">
-            <label htmlFor="redeem-bill" className="text-title text-[17px]">
-              How much did they spend? (₦)
-            </label>
-            <div className="flex items-center rounded-md border-2 border-line-strong bg-surface-raised focus-within:outline-2 focus-within:outline-brand">
-              <span className="pl-4 text-[22px] font-bold text-ink-muted" aria-hidden="true">
-                ₦
-              </span>
-              <input
-                id="redeem-bill"
-                inputMode="numeric"
-                autoComplete="off"
-                value={bill}
-                onChange={(e) => {
-                  const d = e.target.value.replace(/[^\d]/g, "").slice(0, 9);
-                  setBill(d ? Number(d).toLocaleString("en-NG") : "");
-                }}
-                placeholder="25,000"
-                size={1}
-                className="h-14 w-0 min-w-0 flex-1 bg-transparent px-2 text-[24px] font-bold tabular-nums outline-none"
-              />
+          {wa.kind !== "closed" && (
+            <>
+            <div className="mt-4 grid grid-cols-2 gap-1 rounded-pill bg-surface-raised p-1" role="radiogroup" aria-label="Customer">
+              {(
+                [
+                  ["new", "New customer"],
+                  ["returning", "Been here before"],
+                ] as const
+              ).map(([v, label]) => (
+                <button
+                  key={v}
+                  type="button"
+                  role="radio"
+                  aria-checked={customer === v}
+                  onClick={() => setCustomer(v)}
+                  className={`text-label min-h-11 rounded-pill px-2 ${customer === v ? "bg-brand text-on-brand" : "text-ink-muted"}`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
-            <p className="text-caption text-ink-muted">Optional. It shows you what each drop brought in.</p>
-          </div>
+
+            <div className="mt-4 grid gap-1.5">
+              <label htmlFor="redeem-bill" className="text-title text-[17px]">
+                How much did they spend? (₦)
+              </label>
+              <div className="flex items-center rounded-md border-2 border-line-strong bg-surface-raised focus-within:outline-2 focus-within:outline-brand">
+                <span className="pl-4 text-[22px] font-bold text-ink-muted" aria-hidden="true">
+                  ₦
+                </span>
+                <input
+                  id="redeem-bill"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={bill}
+                  onChange={(e) => {
+                    const d = e.target.value.replace(/[^\d]/g, "").slice(0, 9);
+                    setBill(d ? Number(d).toLocaleString("en-NG") : "");
+                  }}
+                  placeholder="25,000"
+                  size={1}
+                  className="h-14 w-0 min-w-0 flex-1 bg-transparent px-2 text-[24px] font-bold tabular-nums outline-none"
+                />
+              </div>
+              <p className="text-caption text-ink-muted">Optional. It shows you what each drop brought in.</p>
+            </div>
+            </>
+          )}
 
           {confirmError && (
             <p role="alert" className="text-caption mt-3 font-semibold text-danger">
@@ -365,7 +496,7 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
           )}
 
           <div className="mt-5 grid gap-2">
-            <button type="button" className="btn btn-lg w-full" onClick={confirm} disabled={confirming || (Boolean(view.result.action) && !ticked)}>
+            <button type="button" className="btn btn-lg w-full" onClick={confirm} disabled={confirming || waBlocks || (Boolean(view.result.action) && !ticked)}>
               {confirming ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
               {confirming ? "Confirming…" : "Confirm redemption"}
             </button>

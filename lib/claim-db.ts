@@ -10,7 +10,7 @@ import type { CardStatus, ClaimedCard, Drop, EventKind, Source } from "./types";
 // activity and cards go through the server's functions (the browser never calls them directly).
 
 const PUBLIC_COLUMNS =
-  "id, slug, title, goal, template_id, total_cards, finish, starts_at, ends_at, validity_days, valid_weekdays, bounce_back, ignored_warnings, status, published_at, show_in_marketplace, tier_id, tier_max_cards, paid_with, payment_status, eligibility, rewards(tier, kind, value, title, action_text, terms, quantity, min_spend_kobo, requires_purchase)";
+  "id, slug, title, goal, template_id, total_cards, finish, starts_at, ends_at, validity_days, valid_weekdays, bounce_back, counter_check, ignored_warnings, status, published_at, show_in_marketplace, tier_id, tier_max_cards, paid_with, payment_status, eligibility, rewards(tier, kind, value, title, action_text, terms, quantity, min_spend_kobo, requires_purchase)";
 
 /** A published drop of this business, with how many have been claimed. */
 export async function dbPublicDrop(businessId: string, dropSlug: string, now: Date): Promise<{ drop: Drop; newOnly: boolean } | null> {
