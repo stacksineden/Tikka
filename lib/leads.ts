@@ -6,6 +6,11 @@ import { WAT } from "./format";
 import { normalizeNgPhone } from "./setup";
 import type { Lead, Source, Tier } from "./types";
 
+/** Verified: claimed through WhatsApp, or typed in and passed the check at the counter. */
+export function leadVerified(l: Pick<Lead, "phoneConfirmed" | "counterChecked">): boolean {
+  return l.phoneConfirmed !== false || l.counterChecked === true;
+}
+
 /** wa.me link with any message, from the owner's own phone. */
 export function waLink(phone: string, text: string): string | null {
   const e164 = normalizeNgPhone(phone);

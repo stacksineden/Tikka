@@ -93,6 +93,8 @@ export function ClaimFlow({
   const [note, setNote] = useState<string>();
   const [futureDrops, setFutureDrops] = useState(false);
   const onPage = claimMode === "page";
+  /** Page claims on a drop with the WhatsApp check at the counter: the page says so up front. */
+  const counterCheck = onPage && initialDrop.counterCheck;
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState<string>();
   const turnstile = useTurnstile(onPage && beat === "claim" ? turnstileSiteKey : undefined);
@@ -277,7 +279,7 @@ export function ClaimFlow({
       const r = (await fetch("/api/claim-page", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ business: businessSlug, drop: drop.slug, name: first, phone, source, posterId, turnstile: turnstile.token }),
+        body: JSON.stringify({ business: businessSlug, drop: drop.slug, name: first, phone, source, posterId, futureDrops, turnstile: turnstile.token }),
       })
         .then((x) => x.json())
         .catch(() => ({ ok: false, reason: "network" }))) as { ok: true; card: ClaimedCard; qr: string; status: CardStatus | null } | { ok: false; reason: string };
@@ -645,6 +647,7 @@ export function ClaimFlow({
                     {qr && <div className="tk-redeem-qr" role="img" aria-label={`QR code for ${card.code}`} dangerouslySetInnerHTML={{ __html: qr }} />}
                   </div>
                   {card.instruction && <p className="tk-redeem-instr">{card.instruction}.</p>}
+                  {card.counterCheck && <p className="tk-redeem-instr">Bring the phone with this WhatsApp. Staff will check it.</p>}
                   {card.confirmed === false ? (
                     <SaveTikka token={card.token} businessName={face.name} />
                   ) : (
@@ -721,7 +724,7 @@ export function ClaimFlow({
               (beat === "revealed"
                 ? `${count(drop.left)} of ${count(drop.total)} left for your friends`
                 : status === "live"
-                  ? `${count(drop.left)} of ${count(drop.total)} left · One per WhatsApp number`
+                  ? `${count(drop.left)} of ${count(drop.total)} left · One per WhatsApp number${counterCheck ? " · checked at the counter" : ""}`
                   : status === "scheduled"
                     ? opensLabel
                     : `${face.name}'s next drop is one tap away`)}
@@ -783,19 +786,24 @@ export function ClaimFlow({
                   placeholder="0803 123 4567"
                   value={phone}
                   aria-invalid={phoneError ? true : undefined}
-                  aria-describedby={phoneError ? "tk-phone-err" : undefined}
+                  aria-describedby={phoneError ? "tk-phone-err" : counterCheck ? "tk-phone-hint" : undefined}
                   onChange={(e) => {
                     setPhone(e.target.value);
                     setPhoneError(undefined);
                   }}
                 />
-                {phoneError && (
+                {phoneError ? (
                   <p className="tk-error" id="tk-phone-err">
                     {phoneError}
                   </p>
-                )}
+                ) : counterCheck ? (
+                  <p className="tk-hint" id="tk-phone-hint">
+                    Staff will check this number on your WhatsApp before you get your reward.
+                  </p>
+                ) : null}
               </div>
-            ) : (
+            ) : null}
+            {(!onPage || counterCheck) && (
               <label className="tk-check">
                 <input type="checkbox" checked={futureDrops} onChange={(e) => setFutureDrops(e.target.checked)} />
                 <span>Send me future drops from {face.name}</span>

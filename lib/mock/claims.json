@@ -153,5 +153,28 @@
     "lastInitial": "K",
     "claimedAt": "2026-09-12T15:30:00+01:00",
     "revealedAt": "2026-09-12T15:30:00+01:00"
+  },
+  {
+    "token": "demo-ngozi",
+    "dropId": "drop_oct",
+    "ownerId": "user_demo",
+    "card": {
+      "token": "demo-ngozi",
+      "tier": "rare",
+      "reward": "Free wash and style",
+      "code": "GS-WK4MA",
+      "serial": "0451",
+      "total": 600,
+      "claimer": "Ngozi",
+      "expiresAt": "2027-06-30T23:59:00+01:00",
+      "confirmed": false,
+      "counterCheck": true
+    },
+    "claimedAt": "2026-10-21T09:12:00+01:00",
+    "revealedAt": "2026-10-21T09:12:00+01:00",
+    "counterCheck": {
+      "last4": "4821",
+      "checks": []
+    }
   }
 ]

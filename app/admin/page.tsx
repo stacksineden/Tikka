@@ -21,6 +21,8 @@ import { koboToNaira } from "@/lib/pricing";
 import { getSessionUser } from "@/lib/session";
 import { isDbId } from "@/lib/business-db";
 import { dbAdminEarlyAccess, dbAdminEnquiries } from "@/lib/studio-db";
+import { dbAdminCounterChecks } from "@/lib/admin-db";
+import { counterCheckTotals } from "@/lib/counter-checks";
 import { STUDIO_CATEGORIES } from "@/lib/studio-shared";
 
 export const metadata: Metadata = { title: "Admin" };
@@ -49,14 +51,16 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const real = isDbId(user.id);
-  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog, enquiries, early] = await Promise.all([
+  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog, enquiries, early, checks] = await Promise.all([
     adminView(user, q),
     getDropTiers(),
     getAllDropPacks(),
     adminPrivacyLog(user),
     real ? dbAdminEnquiries() : Promise.resolve([]),
     real ? dbAdminEarlyAccess() : Promise.resolve({ count: 0, list: [] }),
+    real ? dbAdminCounterChecks().catch(() => []) : Promise.resolve([]),
   ]);
+  const ct = counterCheckTotals(checks);
   const newEnquiries = enquiries.filter((e) => e.status === "new").length;
   const paidTiers = tiers.filter((t) => t.priceKobo > 0);
 
@@ -86,6 +90,42 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
           {o.guaranteeVouchers.length ? `: ${o.guaranteeVouchers.map((v) => `${v.businessName} (${v.tierId}, ${shortDate(v.createdAt)})`).join(", ")}` : ""}.
         </p>
       </Section>
+
+      {checks.length > 0 && (
+        <Section
+          id="check-h"
+          title="WhatsApp check at the counter"
+          note="Tikkas claimed by typing a number, checked at the counter. Came but couldn't redeem: the number didn't match and the Tikka expired. Businesses don't see these numbers."
+        >
+          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              ["Came but couldn't redeem", count(ct.cameNotRedeemed)],
+              ["Share of Tikkas that came in", ct.cheatRate === null ? "–" : `${Math.round(ct.cheatRate * 100)}%`],
+              ["Failed, then passed", count(ct.failedThenPassed)],
+              ["Passed first time", count(ct.passedFirst)],
+            ].map(([k, v]) => (
+              <div key={k} className="rounded-card border border-line bg-surface-raised p-3">
+                <dt className="text-caption text-ink-muted">{k}</dt>
+                <dd className="text-title tabular-nums">{v}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="text-caption text-ink-muted">
+            Still waiting after a failed check {count(ct.failedWaiting)} · never came to the counter {count(ct.neverCame)} · not checked yet {count(ct.notYet)}.
+          </p>
+          <ul className="grid gap-2">
+            {checks.map((r) => (
+              <li key={r.businessId} className={`${card} grid gap-1`}>
+                <span className="text-body font-semibold">{r.businessName}</span>
+                <span className="text-caption tabular-nums text-ink-muted">
+                  Couldn&apos;t redeem {count(r.cameNotRedeemed)} · failed then passed {count(r.failedThenPassed)} · passed first time {count(r.passedFirst)} · waiting{" "}
+                  {count(r.failedWaiting)} · never came {count(r.neverCame)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
 
       <Section id="mod-h" title={`Reported${reports.length ? ` · ${count(reports.length)}` : ""}`} note="Hide takes a drop off the marketplace (its link still works) or takes a review off the business's pages. Keep closes the report.">
         {reports.length === 0 ? (

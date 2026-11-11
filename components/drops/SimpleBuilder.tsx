@@ -72,6 +72,7 @@ export function SimpleBuilder({
   pastSuggest,
   editing,
   spark,
+  pageClaims = false,
 }: {
   initial: DropDraft;
   /** "Run it again" opens on the last screen. */
@@ -87,6 +88,8 @@ export function SimpleBuilder({
   editing: boolean;
   /** Spark's "coming soon" teaser (PRD B12); null once this business has hidden it. */
   spark: { onList: boolean } | null;
+  /** Page-claim mode (lib/claim-mode.ts): show "Check WhatsApp at the counter". */
+  pageClaims?: boolean;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<DropDraft>(initial);
@@ -257,7 +260,19 @@ export function SimpleBuilder({
               />
             )}
             {step === 2 && (
-              <StepSize draft={draft} errors={errors} tiers={tiers} vouchers={vouchers} business={business} pastSuggest={pastSuggest} openedAt={openedAt} update={update} patch={patch} onChangeOffer={() => goTo(1)} />
+              <StepSize
+                draft={draft}
+                errors={errors}
+                tiers={tiers}
+                vouchers={vouchers}
+                business={business}
+                pastSuggest={pastSuggest}
+                openedAt={openedAt}
+                update={update}
+                patch={patch}
+                onChangeOffer={() => goTo(1)}
+                pageClaims={pageClaims}
+              />
             )}
             {step === 3 && (
               <>
@@ -686,6 +701,7 @@ function StepSize({
   update,
   patch,
   onChangeOffer,
+  pageClaims,
 }: {
   draft: DropDraft;
   errors: Errors;
@@ -698,6 +714,7 @@ function StepSize({
   patch: (p: Partial<DropDraft>) => void;
   /** Back to the offer screen, where "Make your own" sets a different split. */
   onChangeOffer: () => void;
+  pageClaims: boolean;
 }) {
   const now = new Date(openedAt);
   const hasFree = vouchers.some((v) => v.source === "signup" && usable(v, now));
@@ -838,12 +855,24 @@ function StepSize({
         )}
       </section>
 
-      <MoreOptions draft={draft} errors={errors} update={update} patch={patch} />
+      <MoreOptions draft={draft} errors={errors} update={update} patch={patch} pageClaims={pageClaims} />
     </>
   );
 }
 
-function MoreOptions({ draft, errors, update, patch }: { draft: DropDraft; errors: Errors; update: (d: DropDraft, t?: string[]) => void; patch: (p: Partial<DropDraft>) => void }) {
+function MoreOptions({
+  draft,
+  errors,
+  update,
+  patch,
+  pageClaims,
+}: {
+  draft: DropDraft;
+  errors: Errors;
+  update: (d: DropDraft, t?: string[]) => void;
+  patch: (p: Partial<DropDraft>) => void;
+  pageClaims: boolean;
+}) {
   const open = !!(errors.startsAt || errors.periodDays || errors.newReservedPct || errors.marketplaceCap || errors.validityDays);
   return (
     <details className="group rounded-card border border-line bg-surface-raised" open={open || undefined}>
@@ -854,6 +883,21 @@ function MoreOptions({ draft, errors, update, patch }: { draft: DropDraft; error
         </span>
       </summary>
       <div className="grid gap-5 border-t border-line p-4">
+        {pageClaims && (
+          <label className="flex min-h-12 cursor-pointer items-center justify-between gap-3">
+            <span className="grid gap-1">
+              <span className="text-label">Check WhatsApp at the counter</span>
+              <span className="text-caption text-ink-muted">While people type their number to claim, staff check it&apos;s really theirs before giving the reward.</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={draft.counterCheck !== false}
+              onChange={(e) => patch({ counterCheck: e.target.checked })}
+              className="size-6 shrink-0 accent-[var(--brand)]"
+            />
+          </label>
+        )}
+
         <fieldset className="grid gap-2">
           <legend className="text-label mb-2">Starts</legend>
           <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Starts">

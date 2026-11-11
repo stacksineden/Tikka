@@ -35,6 +35,8 @@ export interface DropRow {
   validity_days: number;
   valid_weekdays: number[] | null;
   bounce_back: { title: string; validity_days?: number } | null;
+  /** The WhatsApp check at the counter for typed-in claims (page-claim mode). */
+  counter_check?: boolean;
   ignored_warnings: string[];
   status: "draft" | "published" | "ended_early" | "hidden";
   published_at: string | null;
@@ -118,6 +120,7 @@ export function draftTo(d: DropDraft, now: Date, slug: string) {
         }
       : null,
     audience_band: d.audienceBand,
+    counter_check: d.counterCheck !== false,
     ignored_warnings: d.ignoredWarnings,
     copied_from: d.copiedFrom && UUID.test(d.copiedFrom) ? d.copiedFrom : null,
     rewards: d.rewards.map(rewardTo),
@@ -156,6 +159,7 @@ export function dropFrom(row: DropRow, counts: DropCounts, now: Date, pendingPay
     validityDays: row.validity_days,
     validWeekdays: row.valid_weekdays,
     bounceBack: row.bounce_back ? { reward: row.bounce_back.title, validityDays: row.bounce_back.validity_days ?? 30 } : null,
+    counterCheck: row.counter_check !== false,
     ignoredWarnings: row.ignored_warnings,
     publishedAt: row.published_at ?? undefined,
     tierId: row.tier_id ?? undefined,

@@ -16,7 +16,7 @@ import type { Voucher } from "./vouchers";
 export class DropSaveError extends Error {}
 
 const DROP_COLUMNS =
-  "id, slug, title, goal, template_id, total_cards, finish, starts_at, ends_at, validity_days, valid_weekdays, bounce_back, ignored_warnings, status, published_at, show_in_marketplace, tier_id, tier_max_cards, paid_with, payment_status, builder, rewards(tier, kind, value, title, action_text, terms, quantity, min_spend_kobo, requires_purchase)";
+  "id, slug, title, goal, template_id, total_cards, finish, starts_at, ends_at, validity_days, valid_weekdays, bounce_back, counter_check, ignored_warnings, status, published_at, show_in_marketplace, tier_id, tier_max_cards, paid_with, payment_status, builder, rewards(tier, kind, value, title, action_text, terms, quantity, min_spend_kobo, requires_purchase)";
 
 async function mine() {
   const sb = await createClient();

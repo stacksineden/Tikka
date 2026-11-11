@@ -2,7 +2,7 @@
 // show it. Pure, so the mapping is pinned by tests. Never carries a phone number.
 
 import { serialLabel } from "./claim";
-import { reviewState, type CheckResult } from "./redeem";
+import { reviewState, type CheckResult, type DigitsResult } from "./redeem";
 import type { CardStatus, ClaimedCard, Lead, Source, Tier } from "./types";
 import { validDaysLabel, visitOptions } from "./visit";
 
@@ -24,6 +24,8 @@ export interface CardJson {
   valid_weekdays: number[] | null;
   /** False for a page claim with a typed number (lib/claim-mode.ts). */
   phone_confirmed?: boolean;
+  /** Typed in with the counter check on, not checked yet. */
+  counter_check?: boolean;
 }
 
 const TIER: Record<CardJson["tier"], Tier> = { legendary: "legendary", rare: "rare", common: "thank_you" };
@@ -42,6 +44,7 @@ export function cardFrom(j: CardJson): ClaimedCard {
     claimer: j.first_name,
     expiresAt: new Date(j.expires_at).toISOString(),
     confirmed: j.phone_confirmed !== false,
+    counterCheck: j.counter_check === true ? true : undefined,
   };
 }
 
@@ -82,6 +85,9 @@ export function checkFrom(j: Record<string, unknown>): CheckResult {
         expiresAt: new Date(String(j.expires_at)).toISOString(),
         action: typeof j.action === "string" ? j.action : undefined,
         suggestedStatus: j.suggested_status === "returning" ? "returning" : "new",
+        whatsappCheck: j.whatsapp_check && typeof j.whatsapp_check === "object"
+          ? { triesLeft: Number((j.whatsapp_check as { tries_left?: unknown }).tries_left ?? 0) }
+          : undefined,
       };
     case "already_used":
       return { kind: "already_used", code, at: new Date(String(j.at)).toISOString() };
@@ -117,6 +123,7 @@ export interface LeadRow {
   marketing_opt_in: boolean;
   last_followup_at: string | null;
   phone_confirmed?: boolean;
+  counter_checked?: boolean;
 }
 
 const SOURCES: Source[] = ["wa", "ig", "qr", "web", "ads", "market", "direct"];
@@ -143,5 +150,22 @@ export function leadFrom(r: LeadRow): Lead {
     plannedVisitDate: r.planned_visit_date ?? undefined,
     plannedVisitPart: r.planned_visit_part ?? undefined,
     phoneConfirmed: r.phone_confirmed !== false,
+    counterChecked: r.counter_checked === true,
   };
+}
+
+/** The database's answer to the 4-digit check, as the counter screen reads it. */
+export function digitsFrom(j: Record<string, unknown>, fallbackCode: string): CheckResult | DigitsResult {
+  const code = String(j.code ?? fallbackCode);
+  switch (j.kind) {
+    case "matched":
+    case "closed_today":
+    case "not_needed":
+    case "invalid_digits":
+      return { kind: j.kind, code };
+    case "no_match":
+      return { kind: "no_match", code, triesLeft: Number(j.tries_left ?? 0) };
+    default:
+      return checkFrom(j);
+  }
 }

@@ -29,6 +29,7 @@ import {
   adminPersonLookup,
   buyPack,
   checkCode,
+  checkWhatsappDigits,
   completeOwnerPayment,
   confirmRedemption,
   deleteDropDraft,
@@ -63,7 +64,7 @@ import { PORTFOLIO_MAX, slugAlternatives, slugError, suggestSlug } from "@/lib/s
 import { getOwnerUser, getSessionUser } from "@/lib/session";
 import { processQueue } from "@/lib/whatsapp/send";
 import { LIMITS, normalizeNgPhone, prefixAlternatives, validateCard, type CardDraft, type Errors } from "@/lib/setup";
-import type { CheckResult } from "@/lib/redeem";
+import type { CheckResult, DigitsResult } from "@/lib/redeem";
 import type { BusinessPageInput } from "@/lib/page";
 import type { Business, OpeningHours, PortfolioPhoto, ServeMode, ServiceItem } from "@/lib/types";
 import { requestPhone } from "@/lib/privacy";
@@ -578,8 +579,17 @@ export async function checkCodeAction(code: string): Promise<CheckResult | { kin
   return checkCode(user, code);
 }
 
+/** The WhatsApp check at the counter: the last 4 digits staff read off the customer's WhatsApp. Never uses the Tikka. */
+export async function checkDigitsAction(code: string, digits: string): Promise<CheckResult | DigitsResult | { kind: "no_access" }> {
+  const user = await getSessionUser();
+  if (!user) return { kind: "no_access" };
+  return checkWhatsappDigits(user, code, digits.replace(/\D/g, "").slice(0, 4));
+}
+
 /** `askReview`: a page claim, so Tikka can't send the WhatsApp thank-you; staff ask at the counter. */
-export type ConfirmActionResult = { ok: true; name: string; askReview?: boolean } | { ok: false; result: CheckResult | { kind: "needs_action" | "no_access"; code?: string } };
+export type ConfirmActionResult =
+  | { ok: true; name: string; askReview?: boolean }
+  | { ok: false; result: CheckResult | { kind: "needs_action" | "needs_whatsapp_check" | "no_access"; code?: string } };
 
 export async function confirmRedemptionAction(
   code: string,

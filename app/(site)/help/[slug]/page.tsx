@@ -12,9 +12,10 @@ import { HELP_SECTIONS, nextGuide, paragraphs } from "@/lib/help-shared";
 const PAGE_CLAIM_NOTES: Record<string, string> = {
   "what-customers-see":
     "For now, customers claim on the page: they type their first name and WhatsApp number, and their Tikka opens right there. Claiming on WhatsApp is switching on soon, and then their Tikka also arrives in their WhatsApp.",
-  "create-your-first-drop": "For now, customers claim on the page with their WhatsApp number. Claiming on WhatsApp is switching on soon.",
+  "create-your-first-drop":
+    "For now, customers claim on the page with their WhatsApp number. Claiming on WhatsApp is switching on soon. Until then, \"Check WhatsApp at the counter\" (under More options, on by default) makes staff check the last 4 digits on the customer's WhatsApp before giving the reward.",
   "follow-up-with-leads":
-    "For now, customers claim on the page by typing their WhatsApp number, so some leads say \"Number not confirmed\": the number wasn't checked on WhatsApp. Tikka also can't remind them or ask for a review yet, so use Message today to remind them, and Ask for a review once they've been in.",
+    "For now, customers claim on the page by typing their WhatsApp number, so those leads say \"Unverified\" until your staff check the customer's WhatsApp at the counter. Once they pass and redeem, the lead says \"Verified\". Tikka also can't remind them or ask for a review yet, so use Message today to remind them, and Ask for a review once they've been in.",
 };
 
 export function generateStaticParams() {

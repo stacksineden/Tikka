@@ -9,7 +9,7 @@ import { dbAdminBusinesses, dbAdminDecide, dbAdminForgetPerson, dbAdminPersonLoo
 import { dbMarketplaceDrops, dbNotifyIntent, dbReportDrop } from "./market-db";
 import { dbOwnerReviews, dbPublicReviews, dbReportReview, dbReviewPage, dbSubmitReview } from "./reviews-db";
 import { dbDropDashboard, dbDropFeed, dbDropReport } from "./stats-db";
-import { dbAcceptInvite, dbCancelInvite, dbCheckCode, dbConfirm, dbInviteInfo, dbInviteStaff, dbRemoveStaff, dbTeam, type ConfirmDbResult } from "./team-db";
+import { dbAcceptInvite, dbCancelInvite, dbCheckCode, dbCheckDigits, dbConfirm, dbInviteInfo, dbInviteStaff, dbRemoveStaff, dbTeam, type ConfirmDbResult } from "./team-db";
 import { dbCardByViewToken, dbCardImage, dbCardOwner, dbDropExists, dbPlatformTotals, dbPublicDrop, dbRecordEvent, dbRevealCard, dbSetVisitPlan } from "./claim-db";
 import { dbAddTikkas, dbBuyPack, dbCompletePayment, dbDeleteDraft, dbDrops, dbEndEarly, dbExtend, dbPayment, dbPayments, dbPublish, dbSaveDraft, dbVouchers, DropSaveError, type DbPublishResult } from "./drop-db";
 import { BusinessSaveError, dbAddPoster, dbPageDrops, dbPosterByCode, dbPosters, dbSavePosterHook, dbTaken, isDbId, loadBusiness, loadBusinessBySlug, saveBusinessDb } from "./business-db";
@@ -46,6 +46,7 @@ import {
   addRating,
   bounceBackFor,
   checkClaim,
+  checkDigits,
   confirmClaim,
   displayName,
   REVIEW_WINDOW_DAYS,
@@ -54,6 +55,7 @@ import {
   type CheckResult,
   type ClaimRecord,
   type ConfirmResult,
+  type DigitsResult,
 } from "./redeem";
 import { bounceBackLabel, DEFAULT_BOUNCE_BACK, LIMITS, publishWindowProblem, rewardLabel, watToIso, type DraftReward, type DropDraft } from "./drop";
 import { appendCounts } from "./deck";
@@ -1803,6 +1805,20 @@ function hasBeenBefore(c: StoredClaim): boolean {
   }
   const lead = c.ownerId === DEMO_USER ? (leads as Lead[]).find((l) => l.name.split(" ")[0] === c.card.claimer) : undefined;
   return lead ? !lead.isNew : false;
+}
+
+/**
+ * check_whatsapp_digits: the last 4 digits staff read off the customer's WhatsApp, for a Tikka
+ * claimed by typing a number. Only ever answers matches or not; never uses the Tikka.
+ */
+export async function checkWhatsappDigits(user: SessionUser, code: string, digits: string): Promise<CheckResult | DigitsResult | { kind: "no_access" }> {
+  const owner = await memberBusinessId(user);
+  if (!owner) return { kind: "no_access" };
+  if (isDbId(owner)) return dbCheckDigits(owner, code, digits);
+  const claim = findByCode(code);
+  const r = checkDigits(claim, owner, code, digits, new Date());
+  if (claim && r.state) claimStore.set(claim.token, { ...claim, counterCheck: r.state });
+  return r.result;
 }
 
 /** check_code: read-only (rule 5). Owners and staff of the code's business only. */
