@@ -68,8 +68,9 @@ function fitSize(name: string): string {
   // Longer names are sized to fit in about two lines, never by their longest word alone
   // (which let a long name run to five lines of giant type).
   const chars = oneLine ? name.length : Math.max(...words.map((w) => w.length), Math.ceil(name.length / 2), 6);
-  // Fraunces, normal case, light: about 0.5em per letter.
-  return `min(${Math.min(22, 86 / (chars * 0.5)).toFixed(2)}vw, 250px)`;
+  // Fraunces, normal case, light: about 0.5em per letter. The name fills about 60% of the width,
+  // never more than 13vw or 160px, so the line, address and booking link above it still breathe.
+  return `min(${Math.min(13, 60 / (chars * 0.5)).toFixed(2)}vw, 160px)`;
 }
 
 function hoursRows(h: OpeningHours): [string, string][] {
