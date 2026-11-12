@@ -1,7 +1,7 @@
 // "Message today" (PRD B8, TECH_PLAN §10 get_followups): who to message on WhatsApp today, and
 // a prewritten message for each. Pure; owners only (the caller checks, rule 4).
 
-import { dayLabel, dayName, watDate } from "./visit";
+import { dayLabel, dayName, VISIT_PARTS, watDate, type VisitPart } from "./visit";
 
 export type FollowupKind = "today" | "ending" | "just_claimed" | "missed";
 
@@ -86,11 +86,64 @@ export function followups(leads: FollowupLead[], businessName: string, now: Date
     .map(({ lead, kind }) => ({ kind, lead, message: followupMessage(kind, lead, businessName, now) }));
 }
 
+/** "this afternoon" / "tomorrow evening" / "Sat morning": when they said they'd come. */
+export function visitWhen(date: string, part: string | undefined, now: Date): string {
+  const when = dayLabel(date, watDate(now));
+  if (when === "Today") return part ? `this ${part}` : "today";
+  const day = when === "Tomorrow" ? "tomorrow" : when.slice(0, 3);
+  return `${day}${part ? ` ${part}` : ""}`;
+}
+
 /** "Plans to come this afternoon" / "Plans to come tomorrow evening" / "Plans to come Sat morning". */
 export function visitPlanLabel(date: string | undefined, part: string | undefined, now: Date): string | null {
-  if (!date) return null;
-  const when = dayLabel(date, watDate(now));
-  if (when === "Today") return `Plans to come ${part ? `this ${part}` : "today"}`;
-  const day = when === "Tomorrow" ? "tomorrow" : when.slice(0, 3);
-  return `Plans to come ${day}${part ? ` ${part}` : ""}`;
+  return date ? `Plans to come ${visitWhen(date, part, now)}` : null;
+}
+
+export interface ComingInLead {
+  id: string;
+  name: string;
+  reward: string;
+  status: "claimed" | "redeemed";
+  expiresAt?: string;
+  plannedVisitDate?: string;
+  plannedVisitPart?: VisitPart;
+}
+
+export interface ComingInDay {
+  date: string;
+  /** "Today", "Tomorrow", "Sat 24 Oct". */
+  label: string;
+  count: number;
+  /** Morning, afternoon, evening, then anyone who didn't pick a time; empty parts left out. */
+  parts: { part: VisitPart | null; leads: ComingInLead[] }[];
+}
+
+/**
+ * "Coming in": everyone who said when they'd come, from today for `days` days, by day and time
+ * of day. Used or expired Tikkas and past days are left out.
+ */
+export function comingIn(leads: ComingInLead[], now: Date, days = 7): ComingInDay[] {
+  const today = watDate(now);
+  const last = watDate(new Date(now.getTime() + (days - 1) * DAY));
+  const open = leads.filter(
+    (l) =>
+      l.status === "claimed" &&
+      l.plannedVisitDate &&
+      l.plannedVisitDate >= today &&
+      l.plannedVisitDate <= last &&
+      (!l.expiresAt || new Date(l.expiresAt).getTime() > now.getTime()),
+  );
+  const dates = [...new Set(open.map((l) => l.plannedVisitDate!))].sort();
+  const order: (VisitPart | null)[] = [...VISIT_PARTS.map((p) => p.id), null];
+  return dates.map((date) => {
+    const mine = open.filter((l) => l.plannedVisitDate === date);
+    return {
+      date,
+      label: dayLabel(date, today),
+      count: mine.length,
+      parts: order
+        .map((part) => ({ part, leads: mine.filter((l) => (l.plannedVisitPart ?? null) === part).sort((a, b) => a.name.localeCompare(b.name)) }))
+        .filter((g) => g.leads.length > 0),
+    };
+  });
 }

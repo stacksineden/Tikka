@@ -4,6 +4,7 @@
 
 import { clockTime, count, shortDate } from "./format";
 import { dailySummaryParams, dailySummaryText } from "./summary";
+import { visitDayWords } from "./visit";
 
 const TIER_WORD: Record<string, string> = { legendary: "Legendary", rare: "Rare", common: "Thank-you", thank_you: "Thank-you" };
 
@@ -65,7 +66,11 @@ function replyText(p: P, site: string): string {
   }
 }
 
-export function compose(kind: string, p: P, site: string): Composed {
+/**
+ * `template` is the one take_outbound() chose, when there is one: the reminder on the planned
+ * visit day goes as tikka_visit_reminder once Meta approves it, else as tikka_expiry_reminder.
+ */
+export function compose(kind: string, p: P, site: string, template?: string | null): Composed {
   switch (kind) {
     case "card":
       return { text: cardText(p, site) };
@@ -89,6 +94,14 @@ export function compose(kind: string, p: P, site: string): Composed {
     case "expiry_reminder": {
       const url = `${site}/t/${str(p.view_token)}`;
       const ends = shortDate(str(p.expires_at));
+      const part = str(p.visit_part);
+      if (part && template !== "tikka_expiry_reminder") {
+        const when = visitDayWords(part);
+        return {
+          text: `See you ${when} at ${str(p.business_name)}! Your ${str(p.reward)} is ready and ends ${ends}. Show this at the counter: ${url}`,
+          params: [when, str(p.business_name), str(p.reward), ends, url],
+        };
+      }
       return { text: `Your ${str(p.reward)} at ${str(p.business_name)} ends ${ends}. Show this at the counter: ${url}`, params: [str(p.reward), str(p.business_name), ends, url] };
     }
     case "drop_live": {

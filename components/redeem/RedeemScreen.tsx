@@ -4,6 +4,7 @@ import { Camera, CheckCircle2, Loader2, ScanLine, Smartphone, XCircle } from "lu
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { checkCodeAction, checkDigitsAction, confirmRedemptionAction } from "@/app/app/actions";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
+import { visitWhen } from "@/lib/followups";
 import { clockTime, shortDate } from "@/lib/format";
 import { offlineCheck, type CheckResult } from "@/lib/redeem";
 
@@ -370,6 +371,12 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
             </dd>
             <dt className="text-label text-ink-muted">Expires</dt>
             <dd className="text-body">{shortDate(view.result.expiresAt)}</dd>
+            {view.result.plannedVisitDate && (
+              <>
+                <dt className="text-label text-ink-muted">Planned</dt>
+                <dd className="text-body font-semibold">{capitalise(visitWhen(view.result.plannedVisitDate, view.result.plannedVisitPart, new Date()))}</dd>
+              </>
+            )}
             <dt className="text-label text-ink-muted">Code</dt>
             <dd className="text-code font-mono">{view.result.code}</dd>
           </dl>
@@ -539,3 +546,5 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
     </div>
   );
 }
+
+const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

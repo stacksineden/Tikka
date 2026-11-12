@@ -60,7 +60,7 @@ export async function processQueue(limit = 50): Promise<number> {
     try {
       // The card goes as its picture, with the code and link as the caption.
       const claim = (m.kind === "card" || m.kind === "resend") && typeof m.payload.claim_id === "string" ? m.payload.claim_id : null;
-      const wamid = await deliver(m.phone, compose(m.kind, m.payload, siteUrl()), m.template_name, claim ? cardImageUrl(siteUrl(), claim) : undefined);
+      const wamid = await deliver(m.phone, compose(m.kind, m.payload, siteUrl(), m.template_name), m.template_name, claim ? cardImageUrl(siteUrl(), claim) : undefined);
       await admin.rpc("finish_outbound", { p_id: m.id, p_wa_message_id: wamid });
       sent++;
     } catch (e) {

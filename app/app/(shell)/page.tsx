@@ -3,6 +3,8 @@ import { ArrowRight, Check, Share2 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { ComingIn } from "@/components/leads/ComingIn";
+import { comingIn } from "@/lib/followups";
 import {
   ActivityFeed,
   ComingUp,
@@ -77,6 +79,7 @@ async function Home() {
       <div className="grid items-start gap-6 xl:grid-cols-[1.35fr_1fr]">
         <div className="grid gap-6">
           {live && <LiveDropPanel drop={live} business={business} now={now} />}
+          {owner && <ComingIn days={comingIn(leads, now, 2)} more="/app/leads#coming-in" />}
           {owner && <NewLeads leads={leads} businessName={business.name} now={now} />}
         </div>
         <div className="grid gap-6">

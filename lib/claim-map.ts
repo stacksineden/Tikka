@@ -4,7 +4,7 @@
 import { serialLabel } from "./claim";
 import { reviewState, type CheckResult, type DigitsResult } from "./redeem";
 import type { CardStatus, ClaimedCard, Lead, Source, Tier } from "./types";
-import { validDaysLabel, visitOptions } from "./visit";
+import { validDaysLabel, VISIT_PARTS, visitOptions, type VisitPart } from "./visit";
 
 export interface CardJson {
   view_token: string;
@@ -88,6 +88,8 @@ export function checkFrom(j: Record<string, unknown>): CheckResult {
         whatsappCheck: j.whatsapp_check && typeof j.whatsapp_check === "object"
           ? { triesLeft: Number((j.whatsapp_check as { tries_left?: unknown }).tries_left ?? 0) }
           : undefined,
+        plannedVisitDate: typeof j.planned_visit_date === "string" ? j.planned_visit_date : undefined,
+        plannedVisitPart: VISIT_PARTS.some((p) => p.id === j.planned_visit_part) ? (j.planned_visit_part as VisitPart) : undefined,
       };
     case "already_used":
       return { kind: "already_used", code, at: new Date(String(j.at)).toISOString() };

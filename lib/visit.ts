@@ -108,6 +108,16 @@ export function reminderText(reward: string, businessName: string, expiresAt: st
   return `Your ${reward.charAt(0).toLowerCase()}${reward.slice(1)} at ${businessName} ends ${dayName(date)}. Show this at the counter: ${link}`;
 }
 
+/** The reminder on the planned day: "this afternoon", or "today" when no time was picked. */
+export function visitDayWords(part: string | undefined): string {
+  return part && VISIT_PARTS.some((p) => p.id === part) ? `this ${part}` : "today";
+}
+
+/** "See you this afternoon at Glow Studio! Your 20% off any service is ready and ends Sun 15 Dec. Show this at the counter: …" */
+export function visitReminderText(part: string | undefined, reward: string, businessName: string, expiresAt: string, link: string): string {
+  return `See you ${visitDayWords(part)} at ${businessName}! Your ${reward.charAt(0).toLowerCase()}${reward.slice(1)} is ready and ends ${dayName(watDate(new Date(expiresAt)))}. Show this at the counter: ${link}`;
+}
+
 /** "Valid Mon–Thu only". */
 export function validDaysLabel(validWeekdays: number[]): string {
   const s = [...validWeekdays].sort((a, b) => a - b);

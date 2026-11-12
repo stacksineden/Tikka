@@ -5,9 +5,10 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AutoSubmit, FollowUpButton, LiveRefresh } from "@/components/leads/LeadBits";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
+import { ComingIn } from "@/components/leads/ComingIn";
 import { MessageToday } from "@/components/leads/MessageToday";
 import { getBusiness, getDrops, getFollowups, getLeads, getReviewAsks, leadsNow } from "@/lib/data";
-import { visitPlanLabel } from "@/lib/followups";
+import { comingIn, visitPlanLabel } from "@/lib/followups";
 import { naira, shortDate, timeAgo } from "@/lib/format";
 import { filterLeads, followUpLink, reviewAskLink, LEAD_TABS, parseLeadFilters, SOURCE_LABEL, tabCounts, type LeadFilters } from "@/lib/leads";
 import { getOwnerUser } from "@/lib/session";
@@ -66,6 +67,7 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
       </div>
 
       {today.length > 0 && <MessageToday items={today} />}
+      <ComingIn days={comingIn(all, planNow)} />
 
       <nav aria-label="Lead groups" className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
         <ul className="flex gap-1 rounded-md bg-surface-sunken p-1 sm:inline-flex">
