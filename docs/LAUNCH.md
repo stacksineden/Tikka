@@ -52,8 +52,8 @@ Never set `TIKKA_SHOW_DEMO` in production unless you're running a sales demo.
 - [ ] Meta Business verification, and the WhatsApp number added to the app.
 - [ ] Webhook URL `https://usetikka.com/api/whatsapp/webhook`, verify token as above, subscribe
       to **messages**.
-- [ ] Submit the four templates with the wording in `docs/TECH_PLAN.md` §5: `tikka_drop_live`,
-      `tikka_redeemed_thanks`, `tikka_expiry_reminder`, `tikka_owner_daily`.
+- [ ] Submit the five templates with the wording in `docs/TECH_PLAN.md` §5: `tikka_drop_live`,
+      `tikka_redeemed_thanks`, `tikka_expiry_reminder`, `tikka_visit_reminder`, `tikka_owner_daily`.
 - [ ] When Meta approves one, mark it approved (until then Tikka holds those messages back and
       logs them; cards and replies to claimers don't need templates):
 

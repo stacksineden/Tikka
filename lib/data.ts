@@ -40,7 +40,7 @@ import { newPosterCode, posterTarget, validateHook, validateLabel, type Poster }
 import { dropReport, type DropFee, type DropReport, type ReportClaim } from "./report";
 import { seasonalNudge } from "./nudges";
 import { dailySummaryText, summaryCounts, worthSending, type SummaryClaim } from "./summary";
-import { claimExpiry, isPlannable, reminderDue, reminderText, VISIT_PARTS, visitOptions, type VisitPart } from "./visit";
+import { claimExpiry, isPlannable, reminderDue, reminderText, VISIT_PARTS, visitOptions, visitReminderText, watDate, type VisitPart } from "./visit";
 import { SITE } from "./qr";
 import {
   addRating,
@@ -1898,7 +1898,12 @@ export async function runReminders(now: Date): Promise<number> {
     if (c.seed || (c.kind ?? "drop") !== "drop" || !reminderDue({ ...c, expiresAt: c.card.expiresAt }, now)) continue;
     const owner = await getBusiness({ id: c.ownerId });
     claimStore.set(c.token, { ...c, reminderSentAt: now.toISOString() });
-    outbox.push({ token: c.token, kind: "reminder", text: reminderText(c.card.reward, owner?.name ?? "us", c.card.expiresAt, `${SITE}/t/${c.token}`), at: now.toISOString() });
+    const link = `${SITE}/t/${c.token}`;
+    const text =
+      c.plannedVisitDate === watDate(now)
+        ? visitReminderText(c.plannedVisitPart, c.card.reward, owner?.name ?? "us", c.card.expiresAt, link)
+        : reminderText(c.card.reward, owner?.name ?? "us", c.card.expiresAt, link);
+    outbox.push({ token: c.token, kind: "reminder", text, at: now.toISOString() });
     sent++;
   }
   return sent;

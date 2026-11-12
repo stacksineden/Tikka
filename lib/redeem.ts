@@ -78,6 +78,9 @@ export type CheckResult =
       suggestedStatus: "new" | "returning";
       /** A typed-in Tikka that still needs the WhatsApp check before it can be confirmed. */
       whatsappCheck?: { triesLeft: number };
+      /** "When will you come in?", so staff can see they're expected. */
+      plannedVisitDate?: string;
+      plannedVisitPart?: VisitPart;
     }
   | { kind: "already_used"; code: string; at: string }
   | { kind: "expired"; code: string; at: string }
@@ -166,6 +169,8 @@ export function checkClaim(claim: ClaimRecord | undefined, ownerId: string, code
     action: claim.card.action,
     suggestedStatus: returning || claim.kind === "bounce_back" ? "returning" : "new",
     whatsappCheck: whatsappCheckOf(claim, now),
+    plannedVisitDate: claim.plannedVisitDate,
+    plannedVisitPart: claim.plannedVisitPart,
   };
 }
 

@@ -217,11 +217,12 @@ In code: `app/api/whatsapp/webhook/route.ts` checks Meta's signature (`WHATSAPP_
 - `tikka_drop_live`: "{{1}}'s drop is live. {{2}} Tikkas, {{3}} legendary. Claim yours: {{4}}" with a button to the claim page.
 - `tikka_redeemed_thanks`: "Thanks for coming to {{1}}, {{2}}. {{3}} How was it? Rate them here: {{4}}" ({{3}} is the bounce-back line, or empty).
 - `tikka_expiry_reminder`: "Your {{1}} at {{2}} ends {{3}}. Show this at the counter: {{4}}".
+- `tikka_visit_reminder`: "See you {{1}} at {{2}}! Your {{3}} is ready and ends {{4}}. Show this at the counter: {{5}}" ({{1}} is "this morning", "this afternoon", "this evening" or "today"). The same one reminder, when it goes out on the planned visit day; until it's approved that reminder goes as `tikka_expiry_reminder`.
 - `tikka_owner_daily`: "{{1}} today: {{2}}, {{3}} planning to come tomorrow, {{4}} expiring soon. {{5}} Open your list: {{6}}" ({{2}} and {{4}} carry their nouns, "1 new claim", "5 Tikkas"; {{5}} is the seasonal "Run it again" line, or empty).
 If a template isn't approved yet, skip that message and log it.
 
 ### Expiry reminders
-One per claim (`claims.reminder_sent_at`). Due at the earlier of 08:00 WAT on `planned_visit_date`, or 10:00 WAT three days before `expires_at`. The per-minute cron enqueues due reminders (priority 3) and skips claims that are redeemed, expired, or whose phone has opted out. `lib/reminders.ts` computes the due time (unit-tested).
+One per claim (`claims.reminder_sent_at`). Due at the earlier of 08:00 WAT on `planned_visit_date`, or 10:00 WAT three days before `expires_at`. The per-minute cron enqueues due reminders (priority 3) and skips claims that are redeemed, expired, or whose phone has opted out. On the planned day the payload carries `visit_part` and it goes as `tikka_visit_reminder` ("See you this afternoon…") once approved. `check_code` also returns `planned_visit_date` and `planned_visit_part`, so the counter screen shows "Planned: This afternoon". `lib/reminders.ts` computes the due time (unit-tested).
 
 ### Owner daily summary
 Each morning (`/api/cron/daily`), for businesses with `daily_summary` and an `owner_whatsapp`: new claims since yesterday, claims planning to come tomorrow, Tikkas expiring in the next 3 days, and in the seasonal windows one "Run it again" line.
