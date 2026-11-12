@@ -108,9 +108,13 @@ function Heading({ id, n, label, title, center = false }: { id: string; n?: numb
   );
 }
 
-function Mark({ b, size }: { b: Business; size: number }) {
+/** The logo in the top bar: 56px on phones, 64px wider up (the upload is 256px, so it stays sharp). */
+function Mark({ b }: { b: Business }) {
   return (
-    <span className="grid shrink-0 place-items-center overflow-hidden rounded-pill font-extrabold" style={{ width: size, height: size, background: b.brandColor, color: b.onBrandColor, fontSize: size * 0.36 }}>
+    <span
+      className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-pill text-[20px] font-extrabold ring-2 ring-on-night/25 sm:size-16 sm:text-[23px]"
+      style={{ background: b.brandColor, color: b.onBrandColor }}
+    >
       {b.logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={b.logoUrl} alt="" className="size-full object-cover" />
@@ -238,8 +242,8 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
         <div className="biz-hero-scrim absolute inset-0 -z-10" aria-hidden="true" />
 
         <nav className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 pt-4 sm:px-8 sm:pt-6" aria-label={b.name}>
-          <span className="flex min-w-0 items-center gap-2.5">
-            <Mark b={b} size={36} />
+          <span className="flex min-w-0 items-center gap-3">
+            <Mark b={b} />
             <span className="truncate font-display text-[17px] font-extrabold uppercase tracking-[-0.02em]">{b.name}</span>
           </span>
           {nav.length > 0 && (
