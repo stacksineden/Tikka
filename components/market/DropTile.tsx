@@ -19,10 +19,11 @@ export function DropTile({ d, now, wide = false }: { d: MarketDrop; now: Date; w
           <div className="absolute inset-x-0 top-[18px] border-t border-dashed border-on-night/60" />
           <Spark className="absolute left-1/2 top-[30px] size-8 -translate-x-1/2 text-gold" />
           <div
-            className="absolute -right-3 top-[64px] grid size-9 -rotate-12 place-items-center rounded-pill border-2 border-on-night text-[11px] font-extrabold"
+            className={`absolute -right-3 top-[64px] grid size-9 place-items-center overflow-hidden rounded-pill border-2 border-on-night text-[11px] font-extrabold ${d.logoUrl ? "" : "-rotate-12"}`}
             style={{ background: d.brandColor, color: d.onBrandColor }}
           >
-            {d.initials}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {d.logoUrl ? <img src={d.logoUrl} alt="" width={36} height={36} loading="lazy" className="size-full object-cover" /> : d.initials}
           </div>
         </div>
         {d.legendaryLeft > 0 && d.status === "live" && (

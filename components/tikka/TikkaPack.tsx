@@ -8,10 +8,11 @@ export interface PackContents {
   thankYou: number;
 }
 
-/** The sealed wrapper. It never changes between businesses except the seal. */
+/** The sealed wrapper. It never changes between businesses except the seal: their logo, or their initials. */
 export function TikkaPack({
   businessName,
   initials,
+  logoUrl,
   brandColor,
   onBrandColor,
   total,
@@ -23,6 +24,8 @@ export function TikkaPack({
 }: {
   businessName: string;
   initials: string;
+  /** The business's logo, shown in the seal instead of the initials. */
+  logoUrl?: string;
   brandColor: string;
   onBrandColor: string;
   total: number;
@@ -55,8 +58,13 @@ export function TikkaPack({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="tk-pack-word" src="/brand/tikka-wordmark-reversed.svg" alt="" width={128} height={45} />
         <span className="tk-pack-sub">{empty ? `No more Tikkas from ${businessName} in this drop.` : `Something good from ${businessName} is sealed inside.`}</span>
-        <span className="tk-seal">
-          <span className="tk-seal-in">{initials}</span>
+        <span className={`tk-seal${logoUrl ? " has-logo" : ""}`}>
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="tk-seal-logo" src={logoUrl} alt="" width={62} height={62} />
+          ) : (
+            <span className="tk-seal-in">{initials}</span>
+          )}
         </span>
         <span className="tk-limited">Limited drop · {count(total)} Tikkas</span>
         <span className="tk-odds">

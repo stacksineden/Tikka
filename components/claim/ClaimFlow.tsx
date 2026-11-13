@@ -504,6 +504,7 @@ export function ClaimFlow({
             <TikkaPack
               businessName={face.name}
               initials={face.initials}
+              logoUrl={face.logoUrl}
               brandColor={face.brandColor}
               onBrandColor={face.onBrandColor}
               total={drop.total}
