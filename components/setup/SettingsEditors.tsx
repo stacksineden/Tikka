@@ -53,6 +53,7 @@ function previewOf(d: Draft, b: Business): PreviewBusiness {
     reviewCount: b.reviewCount,
     hasVideo: !!d.hasVideo,
     videoPosterUrl: d.videoPosterUrl,
+    videoUrl: d.videoUrl,
   };
 }
 

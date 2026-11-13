@@ -12,7 +12,9 @@ import type { Business, Finish, Tier } from "@/lib/types";
 export type PreviewBusiness = Pick<
   Business,
   "name" | "about" | "hours" | "area" | "city" | "services" | "actions" | "rating" | "reviewCount" | "hasVideo" | "videoPosterUrl"
->;
+> &
+  /** So the owner can play their video in the preview, as customers will. */
+  Partial<Pick<Business, "videoUrl">>;
 
 const SAMPLE_TOTAL = 500;
 const SAMPLE_LEFT = 23;
