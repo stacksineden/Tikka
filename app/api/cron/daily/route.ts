@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cronAllowed } from "@/lib/cron-auth";
 import { runDailySummaries } from "@/lib/data";
 import { removeOrphanMedia } from "@/lib/media-cleanup";
+import { removeOrphanStreamVideos } from "@/lib/stream";
 import { dbQueueDailySummaries } from "@/lib/summary-db";
 import { processQueue } from "@/lib/whatsapp/send";
 
@@ -18,5 +19,7 @@ export async function GET(request: Request) {
   const demo = await runDailySummaries(now);
   // Files nothing points at any more (a week after upload), so storage doesn't fill up.
   const filesRemoved = await removeOrphanMedia().catch(() => -1);
-  return NextResponse.json({ ok: true, queued, sent, demo, filesRemoved });
+  // And videos on Bunny nothing points at, a day after upload.
+  const videosRemoved = await removeOrphanStreamVideos().catch(() => -1);
+  return NextResponse.json({ ok: true, queued, sent, demo, filesRemoved, videosRemoved });
 }
