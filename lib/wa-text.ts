@@ -33,7 +33,7 @@ const str = (v: unknown) => (typeof v === "string" ? v : "");
 /** The card itself: what they got, the code and how long it lasts, and the link to the card. */
 function cardText(p: P, site: string): string {
   const tier = TIER_WORD[str(p.tier)] ?? "";
-  return `🎟 You got a Tikka from ${str(p.business_name)}! ${str(p.reward)}${tier ? ` · ${tier}` : ""} · Code ${str(p.code)} · use by ${shortDate(str(p.expires_at))}. Show this at the counter: ${site}/t/${str(p.view_token)}`;
+  return `🎟 You got a Tikka from ${str(p.business_name)}! ${str(p.reward)}${p.terms ? ` (${str(p.terms)})` : ""}${tier ? ` · ${tier}` : ""} · Code ${str(p.code)} · use by ${shortDate(str(p.expires_at))}. Show this at the counter: ${site}/t/${str(p.view_token)}`;
 }
 
 function replyText(p: P, site: string): string {

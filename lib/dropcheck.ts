@@ -13,8 +13,8 @@ export interface DropWarning {
   fix: string;
 }
 
-/** A Rare or Legendary given a minimum spend by the fix. */
-export const FIX_MIN_SPEND = 10_000;
+/** The condition the fix puts under Rare, so it needs a purchase. */
+export const FIX_RARE_TERMS = "With any paid service";
 export const SUGGESTED_THANK_YOU = "10% off any service";
 
 /** The size the audience answer suggests (about 1 Tikka per 3 viewers), or null if not answered. */
@@ -27,7 +27,7 @@ export function dropCheck(d: DropDraft): DropWarning[] {
   const filled = withThankYouFilled(d);
   const top = filled.rewards.filter((r) => r.tier !== "thank_you" && r.count > 0);
   if (top.length && !top.some(needsPurchase)) {
-    w.push({ id: "no_purchase", text: "You may attract people who only want freebies.", fix: `Add a minimum spend of ₦${count(FIX_MIN_SPEND)} to Rare` });
+    w.push({ id: "no_purchase", text: "You may attract people who only want freebies.", fix: `Add "${FIX_RARE_TERMS}" to Rare` });
   }
   if (d.validityDays === 30) {
     w.push({ id: "long_validity", text: "Shorter deadlines get more people through the door.", fix: "Change to 14 days" });
@@ -58,7 +58,7 @@ export function applyFix(d: DropDraft, id: WarningId): DropDraft {
         rewards: d.rewards.map((r) => {
           if (done || r.tier !== "rare") return r;
           done = true;
-          return { ...r, minSpend: FIX_MIN_SPEND, requiresPurchase: true };
+          return { ...r, terms: FIX_RARE_TERMS, requiresPurchase: true };
         }),
       };
     }

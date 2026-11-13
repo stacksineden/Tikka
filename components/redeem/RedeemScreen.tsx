@@ -365,6 +365,12 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
             <dd className="text-title">{view.result.name}</dd>
             <dt className="text-label text-ink-muted">Reward</dt>
             <dd className="text-body-lg font-semibold">{view.result.reward}</dd>
+            {view.result.terms && (
+              <>
+                <dt className="text-label text-ink-muted">Only if</dt>
+                <dd className="text-body font-semibold">{view.result.terms}</dd>
+              </>
+            )}
             <dt className="text-label text-ink-muted">Tier</dt>
             <dd>
               <RarityBadge tier={view.result.tier} />

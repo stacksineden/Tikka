@@ -149,6 +149,8 @@ export interface Reward {
   type: RewardType;
   label: string;
   action?: string;
+  /** The condition under the reward: "When you book makeup at ₦20,000". */
+  terms?: string;
   count: number;
 }
 
@@ -225,6 +227,8 @@ export interface ClaimedCard {
   instruction?: string;
   /** Action cards: what they do, for the staff tick ("Follow @glowstudio on Instagram"). */
   action?: string;
+  /** The reward's condition, printed under it: "When you book makeup at ₦20,000". */
+  terms?: string;
   code: string;
   serial: string;
   total: number;

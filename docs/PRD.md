@@ -271,27 +271,35 @@ Each drop: status (Draft, Scheduled, Live, Sold out, Ended), goal, dates, cards 
 **Screen 1 · "What do you want this drop to do?"** Three big cards:
 - **Get new customers** · "Bring in people who've never been to you." (Who can claim: new customers only; 70% kept for new customers.)
 - **Bring customers back** · "Remind past customers you're here." (Once per drop.)
-- **Fill quiet days** · "Get people in on your slow days." (Adds "Which days can people use it?" on screen 2; codes only work on those days.)
+- **Fill quiet days** · "Get people in on your slow days." (Adds "Which days can people use it?" to "How many, and when?"; codes only work on those days.)
 
-**Screen 2 · "Pick an offer"**
-- Ready-made offers for the business's category and goal (three each for Beauty & hair and Spa & wellness, one each for the other categories; reviewed in `docs/drop-templates.md` before seeding), each shown as real mini cards (all three tiers and the bounce-back at a glance) with one line on why it works.
-- Tapping one opens it in plain fields: amounts, service names (prefilled from the business's services), minimum spend.
-- "Make my own" opens the full tier editor (Legendary · very few, Rare · some, Thank-you · everyone else; % off, ₦ off, free item, perk, action card; more than one reward per tier).
-- Bounce-back: "When they come in, send them a reason to come back" with the template's default ("10% off your next visit within 30 days"), a toggle and the fields.
-- Quiet-day drops: Mon–Sun chips.
+**Screen 2 · "Start from an offer"**
+- Ready-made offers for the business's category and goal (three each for Beauty & hair and Spa & wellness, one each for the other categories; reviewed in `docs/drop-templates.md` before seeding), each showing its three rewards as they'll read on the card and the bounce-back, with one line on why it works. A ready-made reward written with its condition ("Free deep-conditioning treatment with any service") is split into the reward and its condition, so each sits in its own place on the card.
 - Template rules: Rare and Legendary need a purchase (minimum spend, or a free extra with a paid service) or are a taste of the main service; Thank-you always names a real small benefit; no free full main service with no purchase, except a Legendary limited to 2% or less.
 
-**Screen 3 · "How big, and for how long?"**
+**Picked an offer → "Your three cards"** (one screen): all three cards exactly as customers will see them, with how many of each and a **Change** button on each. Change opens that tier's screen (below) with **Done**, which comes back here. Five steps in all.
+
+**Make my own → Legendary, Rare, Thank-you** (one screen each, seven steps in all): the card at the top on the night stage (beside the fields on desktop), changing as they type, then:
+- **What they get**, written in plain words, at most 44 characters (two lines on the card): "Free lashes", "₦5,000 off makeup", "20% off any service", "Priority booking". The card shows it exactly as typed; the words decide the reward type. Ideas from the category's offers, one tap each.
+- **When does it apply?** One-tap conditions (With any paid service, Book your slot ahead, Weekdays only, First visit only) or their own, at most 40 characters (one line on the card). The condition is printed on the card under the reward, sent with the card on WhatsApp, and shown to staff at the counter ("Only if"). A condition that asks for money ("When you pay ₦20,000", "With any paid service") counts as needing a purchase for the drop check.
+- **How many** with − and + (and the number to type): "2 of 200 · very few". Thank-you is everyone else, counted for them.
+- **Ask them to do something first** (collapsed, Legendary and Rare): makes it an action card; staff tick it before confirming.
+
+**"How many, and when?"**
 - "About how many people see what you post, on WhatsApp, Instagram or anywhere else?" Under 300 · 300–1,000 · 1,000–5,000 · More than 5,000 → a suggested size (about 1 Tikka per 3 viewers, rounded to a tier). After a past drop, suggest from its real numbers.
 - **First drop:** "Free · your first drop · up to 200 (recommended)" is preselected; the paid sizes still show underneath with "With your audience, a bigger drop could fill." If the business pays for a bigger first drop, the free drop stays for later.
 - Size as big cards with the price: "Free · your first drop · up to 200", "Small · up to 300 · ₦5,000", "Medium · up to 1,000 · ₦10,000", "Large · up to 3,000 · ₦20,000"; "Covered by your season pack" when a voucher applies. "Exact number" for a custom size. Over 3,000: "Talk to us".
-- "Drop runs for": 7, 14 or 30 days (default 14).
-- **More options** (collapsed): starts now or on a date; "Each Tikka lasts" 7, 14 or 30 days after it's claimed (default 14); card style; who can claim; share kept for new customers; marketplace on/off and limit.
+- **When does it start?** "As soon as I publish" or "On a date" (then the date and time).
+- **Open for** 3, 5, 7, 14 or 30 days (default 14), with the closing date.
+- **Each Tikka lasts** 7, 14 or 30 days after it's claimed (default 14).
+- Quiet-day drops: Mon–Sun chips.
+- **More options** (collapsed): card style; who can claim; share kept for new customers; marketplace on/off and limit (and "Check WhatsApp at the counter" in page-claim mode).
 
-**Screen 4 · "Check and publish"**
-- The real claim page in a phone frame with a sample reveal.
+**"Check and publish"**
+- All the cards in a row, "At the counter, staff see" (each reward and its condition), the drop name, and the bounce-back ("Give them a reason to come back": a toggle and the reward in plain words).
+- The real claim page in a phone frame with a sample reveal (beside the page on desktop; "See your drop page" on phones).
 - **The drop check**, friendly warnings, each with a one-tap fix (never blocking):
-  - No Rare or Legendary reward needs a purchase → "You may attract people who only want freebies." Fix: add a minimum spend.
+  - No Rare or Legendary reward needs a purchase → "You may attract people who only want freebies." Fix: add "With any paid service" under Rare.
   - Each Tikka lasts 30 days → "Shorter deadlines get more people through the door." Fix: change to 14.
   - Thank-you benefit is empty → "People may feel disappointed." Fix: pick a suggested benefit.
   - Size much bigger than the audience answer → "You may not fill this drop." Fix: use the suggested size.

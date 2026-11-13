@@ -3,7 +3,7 @@
 
 import { apportion } from "./deck";
 import { count, naira, percent, shortDate } from "./format";
-import type { BounceBack, DropTemplate, Goal } from "./templates";
+import { parseReward, type BounceBack, type DropTemplate, type Goal } from "./templates";
 import type { Finish, RewardType, Tier } from "./types";
 
 export type MixId = "generous" | "balanced" | "mostly_thank_you" | "custom";
@@ -43,10 +43,20 @@ export interface DraftReward {
   minSpend: number | null;
   /** Needs a purchase (a minimum spend, or a free extra with a paid service). */
   requiresPurchase: boolean;
+  /** Builder only: exactly what the owner typed in "What they get", spaces and all. */
+  text?: string;
 }
 
+/** "Each Tikka lasts". */
 export type Days = 7 | 14 | 30;
 export const DAY_CHOICES: Days[] = [7, 14, 30];
+/** "Open for": how long the drop runs. */
+export type RunDays = 3 | 5 | 7 | 14 | 30;
+export const RUN_CHOICES: RunDays[] = [3, 5, 7, 14, 30];
+/** The nearest "Open for" choice that covers this many days. */
+export function runDaysFor(days: number): RunDays {
+  return RUN_CHOICES.find((d) => days <= d) ?? 30;
+}
 
 export type AudienceBand = "under_300" | "300_1000" | "1000_5000" | "over_5000";
 /** "About how many people see what you post, on WhatsApp, Instagram or anywhere else?" → about 1 Tikka per 3 viewers. */
@@ -80,8 +90,8 @@ export interface DropDraft {
   newReservedPct: number;
   showOnMarketplace: boolean;
   marketplaceCap: number | null;
-  /** "Drop runs for": the end date follows the start. */
-  durationDays: Days;
+  /** "Open for": the end date follows the start. */
+  durationDays: RunDays;
   /** "Each Tikka lasts": days after it's claimed, even past the drop's end. */
   validityDays: Days;
   /** Quiet-day drops: codes only work on these days (1 = Monday … 7 = Sunday). */
@@ -96,7 +106,8 @@ export interface DropDraft {
 }
 
 /** maxTotal is the largest self-serve tier (drop_tiers); bigger drops are set up with Tikka. */
-export const LIMITS = { name: 40, minTotal: 10, maxTotal: 3_000, maxDays: 30, terms: 60 } as const;
+/** reward and terms are what fits on the card's stub: two lines of reward, one line of terms. */
+export const LIMITS = { name: 40, minTotal: 10, maxTotal: 3_000, maxDays: 30, reward: 44, terms: 40 } as const;
 
 /* ------------------------------------------------------------- dates */
 
@@ -138,10 +149,11 @@ export function newReward(tier: Tier, p: Partial<DraftReward> = {}): DraftReward
   };
 }
 
-/** How the reward reads on the card and in "What's in this drop": "₦3,000 off any service over ₦10,000". */
-export function rewardLabel(r: Pick<DraftReward, "type" | "value" | "what"> & { minSpend?: number | null }): string {
+/** How the reward reads on the card and in "What's in this drop": "₦3,000 off any service over ₦10,000".
+ *  The minimum spend is left out when the terms already say it ("With any service over ₦15,000"). */
+export function rewardLabel(r: Pick<DraftReward, "type" | "value" | "what"> & { minSpend?: number | null; terms?: string }): string {
   const base = baseLabel(r);
-  return r.minSpend && !/ over ₦/.test(base) ? `${base} over ${naira(r.minSpend)}` : base;
+  return r.minSpend && !/ over ₦/.test(base) && !/₦/.test(r.terms ?? "") ? `${base} over ${naira(r.minSpend)}` : base;
 }
 
 /** "10% off your next visit", "₦2,000 off your next visit over ₦8,000". */
@@ -151,10 +163,42 @@ export function bounceBackLabel(b: Pick<DraftBounceBack, "type" | "value" | "wha
 
 /** "Free pedicure with any service": a free extra that still needs a paid service. */
 export const WITH_PURCHASE = /\b(with any|with a|on any|when you book|over ₦|price of)\b/i;
+/** Terms that ask for money ("When you pay ₦20,000", "With any paid service") make it need a purchase too. */
+const TERMS_PURCHASE = /₦|\b(with any|with a|on any|when you (book|pay|spend|buy)|paid|price of)\b/i;
 
 /** After an edit: does this reward still need a purchase? */
-export function purchaseFor(r: Pick<DraftReward, "type" | "what" | "minSpend">): boolean {
-  return !!r.minSpend || r.type === "percent_off" || r.type === "naira_off" || WITH_PURCHASE.test(r.what);
+export function purchaseFor(r: Pick<DraftReward, "type" | "what" | "minSpend"> & { terms?: string }): boolean {
+  return !!r.minSpend || r.type === "percent_off" || r.type === "naira_off" || WITH_PURCHASE.test(r.what) || TERMS_PURCHASE.test(r.terms ?? "");
+}
+
+/** "What they get" as the owner types it: "20% off any service", "₦5,000 off makeup", "Free lashes",
+ *  "Priority booking". The words decide the type; the card shows them as typed. */
+export function rewardFromText(r: DraftReward, text: string): DraftReward {
+  const typed = text.replace(/\s+/g, " ").replace(/^ /, "").slice(0, LIMITS.reward);
+  const words = typed.trim();
+  const next: DraftReward =
+    r.type === "action"
+      ? { ...r, what: words, text: typed }
+      : (() => {
+          const p = parseReward(words);
+          return { ...r, type: p.type, value: p.value, what: p.what, minSpend: p.minSpend, text: typed };
+        })();
+  return { ...next, requiresPurchase: purchaseFor(next) };
+}
+
+/** What the "What they get" field shows: what they typed, unless the reward was changed some other way. */
+export function rewardText(r: DraftReward): string {
+  if (r.text !== undefined && rewardLabel(rewardFromText(r, r.text)) === rewardLabel(r)) return r.text;
+  return r.what.trim() || r.value ? rewardLabel(r) : "";
+}
+
+/** A ready-made reward written with its condition ("Free deep-conditioning treatment with any
+ *  service") becomes the reward and its terms, so the card shows each in its own place. */
+const CONDITION = /\s+((?:with any|with a|with your|on any|on your|when you)\b.*)$/i;
+export function splitCondition(r: Pick<DraftReward, "type" | "what">): { what: string; terms: string } {
+  const m = r.type === "free_item" || r.type === "perk" ? r.what.match(CONDITION) : null;
+  if (!m || m.index === undefined) return { what: r.what, terms: "" };
+  return { what: r.what.slice(0, m.index), terms: m[1].charAt(0).toUpperCase() + m[1].slice(1) };
 }
 
 /** % and ₦ off, and minimum spends, always need a purchase. */
@@ -288,7 +332,7 @@ export function withGoal(d: DropDraft, goal: Goal): DropDraft {
 /** A ready-made offer: its rewards at 2/10/88 of the drop, its bounce-back, days and how long each Tikka lasts. */
 export function draftFromTemplate(d: DropDraft, t: DropTemplate): DropDraft {
   const rewards = t.rewards.map((r) =>
-    newReward(r.tier, { type: r.type, value: r.value, what: r.what, minSpend: r.minSpend, requiresPurchase: r.requiresPurchase }),
+    newReward(r.tier, { type: r.type, value: r.value, ...splitCondition(r), minSpend: r.minSpend, requiresPurchase: r.requiresPurchase }),
   );
   const next: DropDraft = {
     ...withGoal(d, t.goal),
@@ -309,7 +353,7 @@ export function ownOffer(d: DropDraft): DropDraft {
 }
 
 /** The end follows the start and "Drop runs for". */
-export function withDuration(d: DropDraft, days: Days, now: Date): DropDraft {
+export function withDuration(d: DropDraft, days: RunDays, now: Date): DropDraft {
   const start = d.startMode === "now" ? isoToWat(now.toISOString()) : d.startsAt;
   const startDate = new Date(watToIso(start || isoToWat(now.toISOString())));
   return { ...d, durationDays: days, endsAt: addDays(startDate, days, 21) };
@@ -329,6 +373,16 @@ export function copyDraft(from: DropDraft, now: Date, fromId: string): DropDraft
     ignoredWarnings: [],
     copiedFrom: fromId,
   };
+}
+
+/* ---------------------------------------------------- builder steps */
+
+/** The builder's screens. A ready-made offer shows its three cards on one screen ("cards");
+ *  "Make my own" writes each tier on its own screen. */
+export type Screen = "goal" | "offer" | "cards" | Tier | "when" | "review";
+
+export function flowFor(own: boolean): Screen[] {
+  return own ? ["goal", "offer", "legendary", "rare", "thank_you", "when", "review"] : ["goal", "offer", "cards", "when", "review"];
 }
 
 /* -------------------------------------------------------- validation */
@@ -368,7 +422,8 @@ export function validateStep2(d: DropDraft): Errors {
     else if ((r.type === "free_item" || r.type === "perk") && !r.what.trim())
       e[key] = r.tier === "thank_you" ? "Name the small benefit everyone else gets." : "Say what they get.";
     else if (r.type === "action" && (!r.action.trim() || !r.what.trim())) e[key] = "Say what they do, and what they get for it.";
-    if (r.terms.length > LIMITS.terms) e[`terms-${r.id}`] = `Keep terms under ${LIMITS.terms} characters.`;
+    else if (rewardLabel(r).length > LIMITS.reward) e[key] = `Keep it to ${LIMITS.reward} characters so it fits on the card.`;
+    if (r.terms.length > LIMITS.terms) e[`terms-${r.id}`] = `Keep it to ${LIMITS.terms} characters so it fits on the card.`;
   }
   return e;
 }

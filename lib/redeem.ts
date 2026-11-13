@@ -74,6 +74,8 @@ export type CheckResult =
       tier: Tier;
       expiresAt: string;
       action?: string;
+      /** The reward's condition, so staff check it before confirming. */
+      terms?: string;
       /** Preselects "New customer" / "Been here before" from their history with this business. */
       suggestedStatus: "new" | "returning";
       /** A typed-in Tikka that still needs the WhatsApp check before it can be confirmed. */
@@ -167,6 +169,7 @@ export function checkClaim(claim: ClaimRecord | undefined, ownerId: string, code
     tier: claim.card.tier,
     expiresAt: claim.card.expiresAt,
     action: claim.card.action,
+    terms: claim.card.terms,
     suggestedStatus: returning || claim.kind === "bounce_back" ? "returning" : "new",
     whatsappCheck: whatsappCheckOf(claim, now),
     plannedVisitDate: claim.plannedVisitDate,

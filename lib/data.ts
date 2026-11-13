@@ -57,7 +57,7 @@ import {
   type ConfirmResult,
   type DigitsResult,
 } from "./redeem";
-import { bounceBackLabel, DEFAULT_BOUNCE_BACK, LIMITS, publishWindowProblem, rewardLabel, watToIso, type DraftReward, type DropDraft } from "./drop";
+import { bounceBackLabel, DEFAULT_BOUNCE_BACK, LIMITS, publishWindowProblem, rewardLabel, runDaysFor, watToIso, type DraftReward, type DropDraft } from "./drop";
 import { appendCounts } from "./deck";
 import { evaluateGuarantee, guaranteeMessage, type GuaranteeClaim } from "./guarantee";
 import dropPacks from "./mock/drop_packs.json";
@@ -427,7 +427,7 @@ function toDrop(s: StoredDrop, now: Date): Drop {
     finish: d.finish,
     rewards: d.rewards
       .filter((r) => r.count > 0)
-      .map((r) => ({ tier: r.tier, type: r.type, label: rewardLabel(r), action: r.action || undefined, count: r.count })),
+      .map((r) => ({ tier: r.tier, type: r.type, label: rewardLabel(r), action: r.action || undefined, terms: r.terms.trim() || undefined, count: r.count })),
     notifyWaiting: 0,
     showOnMarketplace: d.showOnMarketplace,
     goal: d.goal,
@@ -508,7 +508,7 @@ function mockToDraft(d: Drop): DropDraft {
     newReservedPct: 70,
     showOnMarketplace: true,
     marketplaceCap: null,
-    durationDays: days <= 7 ? 7 : days <= 14 ? 14 : 30,
+    durationDays: runDaysFor(days),
     validityDays: (d.validityDays as 7 | 14 | 30 | undefined) ?? 14,
     validWeekdays: d.validWeekdays ?? null,
     bounceBack: { ...DEFAULT_BOUNCE_BACK },
@@ -1678,6 +1678,7 @@ export async function demoClaim(businessSlug: string, dropSlug: string, name: st
     reward: next.reward.label,
     instruction: actionInstruction(next.reward),
     action: next.reward.type === "action" ? next.reward.action : undefined,
+    terms: next.reward.terms,
     code: generateCode(f.business.codePrefix),
     serial: serialLabel(next.serial, f.drop.total),
     total: f.drop.total,
