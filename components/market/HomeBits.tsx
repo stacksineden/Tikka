@@ -17,17 +17,18 @@ const pct = (d: Pick<MarketDrop, "claimed" | "total">) => Math.round((d.claimed 
 const claimHref = (d: Pick<MarketDrop, "businessSlug" | "dropSlug">) => `/d/${d.businessSlug}/${d.dropSlug}?c=market`;
 
 /** The sealed wrapper in miniature, in the business's colours. `size` is its height in px. */
-export function MiniWrapper({ d, size = 118 }: { d: Pick<MarketDrop, "initials" | "brandColor" | "onBrandColor">; size?: number }) {
+export function MiniWrapper({ d, size = 118 }: { d: Pick<MarketDrop, "initials" | "brandColor" | "onBrandColor" | "logoUrl">; size?: number }) {
   const s = size / 118;
   return (
     <div className="relative shrink-0 rounded-[10px] bg-brand shadow-card" style={{ height: size, width: 86 * s, borderRadius: 10 * s }} aria-hidden="true">
       <div className="absolute inset-x-0 border-t border-dashed border-on-night/60" style={{ top: 18 * s }} />
       <Spark className="absolute left-1/2 -translate-x-1/2 text-gold" style={{ top: 30 * s, width: 32 * s, height: 32 * s }} />
       <div
-        className="absolute grid -rotate-12 place-items-center rounded-pill border-2 border-on-night font-extrabold"
+        className={`absolute grid place-items-center overflow-hidden rounded-pill border-2 border-on-night font-extrabold ${d.logoUrl ? "" : "-rotate-12"}`}
         style={{ right: -12 * s, top: 64 * s, width: 36 * s, height: 36 * s, fontSize: 11 * s, background: d.brandColor, color: d.onBrandColor }}
       >
-        {d.initials}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {d.logoUrl ? <img src={d.logoUrl} alt="" width={36} height={36} loading="lazy" className="size-full object-cover" /> : d.initials}
       </div>
     </div>
   );

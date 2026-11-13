@@ -140,7 +140,8 @@ async function Home({ searchParams }: { searchParams: PageProps<"/drops">["searc
               </Rail>
             )}
 
-            {soon.list.length >= 3 && (
+            {/* Even one: a scheduled drop is only on the marketplace through this row. */}
+            {soon.list.length > 0 && (
               <Rail title="Coming soon" icon={<CalendarClock size={20} className="text-brand" aria-hidden="true" />} subtitle={sub("Get a WhatsApp message when one opens", soon.wide)} href={`/drops/all?${soon.wide ? "city=all" : cityQ}&status=scheduled`}>
                 {soon.list.map((d) => (
                   <li key={d.id}>
