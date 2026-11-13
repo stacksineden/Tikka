@@ -13,6 +13,7 @@ export interface CardJson {
   tier: "legendary" | "rare" | "common";
   reward: string;
   action: string | null;
+  terms?: string | null;
   code: string;
   serial: number | null;
   total: number;
@@ -38,6 +39,7 @@ export function cardFrom(j: CardJson): ClaimedCard {
     reward: j.reward,
     instruction: j.action ? `${j.action} and show it at the counter` : undefined,
     action: j.action ?? undefined,
+    terms: j.terms || undefined,
     code: j.code,
     serial: j.serial === null ? "" : serialLabel(j.serial, j.total),
     total: j.total,
@@ -84,6 +86,7 @@ export function checkFrom(j: Record<string, unknown>): CheckResult {
         tier: TIER[(j.tier as CardJson["tier"]) ?? "common"] ?? "thank_you",
         expiresAt: new Date(String(j.expires_at)).toISOString(),
         action: typeof j.action === "string" ? j.action : undefined,
+        terms: typeof j.terms === "string" && j.terms ? j.terms : undefined,
         suggestedStatus: j.suggested_status === "returning" ? "returning" : "new",
         whatsappCheck: j.whatsapp_check && typeof j.whatsapp_check === "object"
           ? { triesLeft: Number((j.whatsapp_check as { tries_left?: unknown }).tries_left ?? 0) }

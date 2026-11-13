@@ -415,7 +415,7 @@ export function ClaimFlow({
 
 
   const revealedLabel = (c: ClaimedCard) =>
-    `${c.tier === "thank_you" ? "Thank you for coming through." : "You got a Tikka!"} ${TIER_LABEL[c.tier]}: ${c.reward}.${c.instruction ? ` ${c.instruction}.` : ""} Code ${c.code}, valid till ${shortDate(c.expiresAt)}. Issued to ${c.claimer}, number ${c.serial} of ${count(c.total)}.`;
+    `${c.tier === "thank_you" ? "Thank you for coming through." : "You got a Tikka!"} ${TIER_LABEL[c.tier]}: ${c.reward}.${c.terms ? ` Only if: ${c.terms}.` : ""}${c.instruction ? ` ${c.instruction}.` : ""} Code ${c.code}, valid till ${shortDate(c.expiresAt)}. Issued to ${c.claimer}, number ${c.serial} of ${count(c.total)}.`;
 
   const flipped = beat === "flipping" || beat === "revealed";
   const holdBeat = beat === "ready";
@@ -489,7 +489,7 @@ export function ClaimFlow({
                   total={drop.total}
                   finish={drop.finish}
                   claimedBy={card && beat !== "opening" && !profileBeat ? card.claimer : undefined}
-                  reveal={card ? { tier: card.tier, reward: card.reward, instruction: card.instruction, code: card.code, expiry: shortDate(card.expiresAt).replace(/^\w+ /, ""), serial: card.serial, claimer: card.claimer } : undefined}
+                  reveal={card ? { tier: card.tier, reward: card.reward, instruction: card.instruction, terms: card.terms, code: card.code, expiry: shortDate(card.expiresAt).replace(/^\w+ /, ""), serial: card.serial, claimer: card.claimer } : undefined}
                   className={beat === "opening" ? "tk-rising" : ""}
                 />
               </div>
@@ -646,6 +646,7 @@ export function ClaimFlow({
                     </div>
                     {qr && <div className="tk-redeem-qr" role="img" aria-label={`QR code for ${card.code}`} dangerouslySetInnerHTML={{ __html: qr }} />}
                   </div>
+                  {card.terms && <p className="tk-redeem-instr">{card.terms}</p>}
                   {card.instruction && <p className="tk-redeem-instr">{card.instruction}.</p>}
                   {card.counterCheck && <p className="tk-redeem-instr">Bring the phone with this WhatsApp. Staff will check it.</p>}
                   {card.confirmed === false ? (

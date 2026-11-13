@@ -34,7 +34,7 @@ async function Builder({ searchParams }: { searchParams: PageProps<"/app/drops/n
   ]);
 
   let initial = blankDraft(now);
-  let step = 0;
+  let screen: "goal" | "offer" | "review" = "goal";
   let editing = false;
   if (draftId) {
     const found = await getDrop(user, draftId, now);
@@ -42,13 +42,13 @@ async function Builder({ searchParams }: { searchParams: PageProps<"/app/drops/n
     if (found.drop.status !== "draft") redirect(`/app/drops/${draftId}`);
     initial = found.draft;
     editing = true;
-    step = 1;
+    screen = "offer";
   } else if (fromId) {
     // "Run it again": the same offer, fresh dates, straight to the check (PRD B5).
     const found = await getDrop(user, fromId, now);
     if (found) {
       initial = copyDraft(found.draft, now, fromId);
-      step = 3;
+      screen = "review";
     }
   } else {
     // First drop: the free size is preselected (up to 200).
@@ -64,7 +64,7 @@ async function Builder({ searchParams }: { searchParams: PageProps<"/app/drops/n
     <SimpleBuilder
       key={fromId ?? draftId ?? "new"}
       initial={initial}
-      initialStep={step}
+      initialScreen={screen}
       business={business}
       templates={templates}
       tiers={tiers}

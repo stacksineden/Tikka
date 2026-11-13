@@ -151,7 +151,7 @@ export function dropFrom(row: DropRow, counts: DropCounts, now: Date, pendingPay
     finish: row.finish,
     rewards: row.rewards
       .filter((r) => r.quantity > 0)
-      .map((r) => ({ tier: TIER_FROM[r.tier], type: KIND_FROM[r.kind], label: r.title, action: r.action_text ?? undefined, count: r.quantity })),
+      .map((r) => ({ tier: TIER_FROM[r.tier], type: KIND_FROM[r.kind], label: r.title, action: r.action_text ?? undefined, terms: r.terms ?? undefined, count: r.quantity })),
     notifyWaiting: 0,
     showOnMarketplace: row.show_in_marketplace,
     goal: row.goal,

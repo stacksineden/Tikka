@@ -425,7 +425,13 @@
   font: 700 13px/18px var(--font-mono);
   letter-spacing: 0.08em;
 }
-/* Action cards: one line of instruction under the reward. */
+/* Action cards: one line of instruction under the reward; other cards: the reward's condition.
+   With that line, the stub tightens so a two-line reward still fits above the code. */
+.tk-back .tk-stub.has-line {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  gap: 6px;
+}
 .tk-instr {
   font: 600 11.5px/15px var(--font-sans);
   white-space: nowrap;

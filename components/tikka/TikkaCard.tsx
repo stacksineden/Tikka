@@ -48,6 +48,8 @@ export interface CardReveal {
   claimer: string;
   /** Action cards: what to do, e.g. "Follow @glowstudio on Instagram and show it at the counter". */
   instruction?: string;
+  /** The reward's condition, one small line under it: "When you book makeup at ₦20,000". */
+  terms?: string;
 }
 
 export function bizStyle(face: Pick<CardFace, "brandColor" | "onBrandColor">): CSSProperties {
@@ -148,10 +150,10 @@ export function TikkaCard({
                       </span>
                     </div>
                   </div>
-                  <div className="tk-stub">
+                  <div className={`tk-stub ${reveal.instruction || reveal.terms ? "has-line" : ""}`}>
                     <div className="tk-perf" />
                     <div className="tk-reward">{reveal.reward}</div>
-                    {reveal.instruction && <div className="tk-instr">{reveal.instruction}</div>}
+                    {reveal.instruction ? <div className="tk-instr">{reveal.instruction}</div> : reveal.terms && <div className="tk-instr tk-terms">{reveal.terms}</div>}
                     <div className="tk-code">
                       <span>{reveal.code}</span>
                       <span>Till {reveal.expiry}</span>
