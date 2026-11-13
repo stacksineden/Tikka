@@ -2,7 +2,8 @@
 
 import { Film, Loader2, Plus, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { capturePoster, checkPlayable, readVideo, uploadMedia, uploadPhoto } from "@/lib/media-client";
+import { capturePoster, readVideo, uploadPhoto } from "@/lib/media-client";
+import { sendVideo, stageLabel, type VideoStage } from "@/lib/video-upload";
 import { DEFAULT_HOURS, LIMITS, type Errors } from "@/lib/setup";
 import type { Business, DayHours, OpeningHours } from "@/lib/types";
 import { FieldShell } from "./Fields";
@@ -197,6 +198,7 @@ export function VideoField({
   const [problem, setProblem] = useState<string>();
   const [duration, setDuration] = useState<number>();
   const [frame, setFrame] = useState(0);
+  const [stage, setStage] = useState<VideoStage>();
 
   // Capture a new poster when the frame slider moves (only for a clip picked in this session).
   useEffect(() => {
@@ -229,9 +231,8 @@ export function VideoField({
     setProblem(undefined);
     try {
       const info = await readVideo(file);
-      await checkPlayable(file);
-      // Straight to storage (too big for a server action); the card saves its address.
-      onChange({ hasVideo: true, videoUrl: await uploadMedia(file, "video") });
+      // Straight to Bunny Stream or Storage (too big for a server action); the card saves its address.
+      onChange({ hasVideo: true, videoUrl: await sendVideo(file, "card", info.duration, setStage) });
       videoRef.current = info.video;
       const start = Math.min(1, info.duration / 2);
       setFrame(start);
@@ -240,6 +241,7 @@ export function VideoField({
       setProblem((e as Error).message);
     } finally {
       setBusy(false);
+      setStage(undefined);
       if (input.current) input.current.value = "";
     }
   }
@@ -271,7 +273,7 @@ export function VideoField({
           <div className="flex flex-wrap gap-2">
             <button type="button" className="btn btn-secondary" onClick={() => input.current?.click()} disabled={busy}>
               {busy ? <Loader2 className="animate-spin" /> : <Film />}
-              Change video
+              {busy ? (stageLabel(stage) ?? "Reading video…") : "Change video"}
             </button>
             <button
               type="button"
@@ -290,7 +292,7 @@ export function VideoField({
       ) : (
         <button type="button" className="btn btn-secondary justify-self-start" onClick={() => input.current?.click()} disabled={busy}>
           {busy ? <Loader2 className="animate-spin" /> : <Film />}
-          {busy ? "Reading video…" : "Add a video"}
+          {busy ? (stageLabel(stage) ?? "Reading video…") : "Add a video"}
         </button>
       )}
       <input ref={input} type="file" accept="video/mp4,video/quicktime,.mp4,.mov" hidden onChange={(e) => pick(e.target.files?.[0])} />

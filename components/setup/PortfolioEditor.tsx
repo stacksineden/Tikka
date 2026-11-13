@@ -3,7 +3,8 @@
 import { Film, ImagePlus, Loader2, Play, Trash2 } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { addPhoto, addVideoAction, savePortfolio } from "@/app/app/actions";
-import { capturePoster, checkPlayable, preparePortfolio, uploadMedia, uploadPhoto } from "@/lib/media-client";
+import { capturePoster, preparePortfolio, uploadPhoto } from "@/lib/media-client";
+import { sendVideo, stageLabel, type VideoStage } from "@/lib/video-upload";
 import { PAGE_LIMITS, videoProblem } from "@/lib/page";
 import { PORTFOLIO_MAX } from "@/lib/slug";
 import type { PortfolioPhoto } from "@/lib/types";
@@ -33,6 +34,7 @@ export function PortfolioEditor({ initial }: { initial: PortfolioPhoto[] }) {
   const input = useRef<HTMLInputElement>(null);
   const videoInput = useRef<HTMLInputElement>(null);
   const [videoBusy, setVideoBusy] = useState(false);
+  const [stage, setStage] = useState<VideoStage>();
   const videos = photos.filter((p) => p.kind === "video").length;
 
   async function uploadVideo(file?: File) {
@@ -43,9 +45,12 @@ export function PortfolioEditor({ initial }: { initial: PortfolioPhoto[] }) {
       const { video, seconds } = await readClip(file);
       const tooMuch = videoProblem(photos, seconds, file.size);
       if (tooMuch) throw new Error(tooMuch);
-      await checkPlayable(file);
-      // Too big for a server action: the file and its frame go straight to storage, then we save the links.
-      const [url, thumbUrl] = await Promise.all([uploadMedia(file, "video"), capturePoster(video, Math.min(1, seconds / 2)).then((t) => uploadPhoto(t, "portfolio"))]);
+      // Too big for a server action: the file goes straight to Bunny Stream (or Storage) and its frame
+      // to Storage, then we save the links.
+      const [url, thumbUrl] = await Promise.all([
+        sendVideo(file, "portfolio", seconds, setStage),
+        capturePoster(video, Math.min(1, seconds / 2)).then((t) => uploadPhoto(t, "portfolio")),
+      ]);
       const saved = await addVideoAction({ url, thumbUrl, seconds });
       if (!saved.ok) throw new Error(saved.error);
       setPhotos(saved.portfolio);
@@ -53,6 +58,7 @@ export function PortfolioEditor({ initial }: { initial: PortfolioPhoto[] }) {
       setProblem((e as Error).message);
     } finally {
       setVideoBusy(false);
+      setStage(undefined);
       if (videoInput.current) videoInput.current.value = "";
     }
   }
@@ -160,7 +166,7 @@ export function PortfolioEditor({ initial }: { initial: PortfolioPhoto[] }) {
       {VIDEO_UPLOADS && room > 0 && videos < PAGE_LIMITS.videos && (
         <button type="button" className="btn btn-secondary justify-self-start" onClick={() => videoInput.current?.click()} disabled={videoBusy}>
           {videoBusy ? <Loader2 className="animate-spin" /> : <Film />}
-          {videoBusy ? "Adding video…" : "Add a video"}
+          {videoBusy ? (stageLabel(stage) ?? "Adding video…") : "Add a video"}
         </button>
       )}
       {problem && (

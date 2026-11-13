@@ -222,3 +222,65 @@ export async function uploadPhoto(prepared: Prepared, kind: MediaKind): Promise<
 export async function checkPlayable(file: File): Promise<void> {
   if (videoCodec(new Uint8Array(await file.arrayBuffer())) === "hevc") throw new Error(HEVC_PROBLEM);
 }
+
+/* ------------------------------------------------------------ Bunny Stream */
+
+/** What startVideoUploadAction() hands the browser: a pass for one upload, nothing more. */
+export interface StreamPass {
+  guid: string;
+  libraryId: string;
+  expires: number;
+  signature: string;
+  endpoint: string;
+}
+
+const b64 = (s: string) => btoa(unescape(encodeURIComponent(s)));
+
+/**
+ * Sends a video straight to Bunny Stream (the tus upload protocol, in one piece: our videos are
+ * 20 MB at most). `onProgress` gets 0–1. The API key never reaches the browser; the pass is
+ * signed for this one video and expires within the hour.
+ */
+export async function uploadToStream(file: File, pass: StreamPass, onProgress?: (done: number) => void): Promise<void> {
+  const auth = {
+    AuthorizationSignature: pass.signature,
+    AuthorizationExpire: String(pass.expires),
+    VideoId: pass.guid,
+    LibraryId: pass.libraryId,
+    "Tus-Resumable": "1.0.0",
+  };
+  const created = await fetch(pass.endpoint, {
+    method: "POST",
+    headers: { ...auth, "Upload-Length": String(file.size), "Upload-Metadata": `filetype ${b64(file.type || "video/mp4")},title ${b64(pass.guid)}` },
+  }).catch(() => null);
+  const location = created?.headers.get("Location");
+  if (!created?.ok || !location) throw new Error("That upload didn't start. Check your connection and try again.");
+  const url = new URL(location, pass.endpoint).toString();
+  await new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PATCH", url);
+    for (const [k, v] of Object.entries({ ...auth, "Upload-Offset": "0", "Content-Type": "application/offset+octet-stream" })) xhr.setRequestHeader(k, v);
+    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(e.loaded / e.total);
+    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error("That upload didn't go through. Try again.")));
+    xhr.onerror = () => reject(new Error("The upload stopped. Check your connection and try again."));
+    xhr.send(file);
+  });
+}
+
+/**
+ * Waits while Bunny makes the phone copy (usually under a minute for a short clip), asking every
+ * few seconds. Resolves with the video's address; gives up after 10 minutes.
+ */
+export async function waitForStream(
+  guid: string,
+  check: (guid: string) => Promise<{ state: "processing" } | { state: "ready"; url: string } | { state: "failed" }>,
+): Promise<string> {
+  const until = Date.now() + 10 * 60_000;
+  for (let wait = 3000; Date.now() < until; wait = Math.min(wait + 1000, 6000)) {
+    await new Promise((r) => setTimeout(r, wait));
+    const s = await check(guid).catch(() => ({ state: "processing" as const }));
+    if (s.state === "ready") return s.url;
+    if (s.state === "failed") throw new Error("We couldn't prepare that video. Try another file.");
+  }
+  throw new Error("That video is taking too long. Try again, or try a shorter clip.");
+}

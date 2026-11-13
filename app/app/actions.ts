@@ -4,6 +4,10 @@ import { revalidatePath, updateTag } from "next/cache";
 import { PRICES_TAG } from "@/lib/admin-db";
 import { dbRedeemedOnPage } from "@/lib/team-db";
 import { after } from "next/server";
+import { VIDEO_UPLOADS } from "@/lib/features";
+import { fromStored } from "@/lib/media-path";
+import { PAGE_LIMITS } from "@/lib/page";
+import { createUpload, streamConfigured, videoState, type UploadPass } from "@/lib/stream";
 import {
   BusinessSaveError,
   confirmRedemptionDb,
@@ -352,6 +356,44 @@ export async function addVideoAction(v: { url: string; thumbUrl: string; seconds
   const r = await addPortfolioVideo(user, v);
   if (r.ok) revalidatePath("/app", "layout");
   return r;
+}
+
+/* ------------------------------------------------------------ videos on Bunny Stream */
+
+export type VideoUploadStart =
+  | { ok: true; pass: UploadPass }
+  /** Bunny isn't set up here (or the demo business): upload to Storage as before. */
+  | { ok: false; fallback: true }
+  | { ok: false; fallback?: false; error: string };
+
+/**
+ * A one-time pass to upload one video straight to Bunny Stream. The browser checked the length and
+ * size already; the server checks again before Bunny hears of it.
+ */
+export async function startVideoUploadAction(v: { kind: "card" | "portfolio"; seconds: number; bytes: number }): Promise<VideoUploadStart> {
+  const user = await getOwnerUser();
+  if (!user) return { ok: false, error: "Only the owner can add videos." };
+  if (!VIDEO_UPLOADS) return { ok: false, error: "Videos are switched off for now." };
+  if (!isDbId(user.id) || !streamConfigured()) return { ok: false, fallback: true };
+  const [maxSeconds, maxBytes] = v.kind === "card" ? [LIMITS.videoSeconds, LIMITS.videoBytes] : [PAGE_LIMITS.videoSeconds, PAGE_LIMITS.videoMb * 1024 * 1024];
+  if (!(v.seconds > 0) || v.seconds > maxSeconds + 0.5) return { ok: false, error: `Keep it to ${maxSeconds} seconds.` };
+  if (!(v.bytes > 0) || v.bytes > maxBytes) return { ok: false, error: `Keep it under ${Math.round(maxBytes / 1024 / 1024)} MB.` };
+  try {
+    return { ok: true, pass: await createUpload(user.id, `${v.kind} ${new Date().toISOString().slice(0, 10)}`) };
+  } catch {
+    return { ok: false, error: "We couldn't start that upload. Try again in a minute." };
+  }
+}
+
+/** Is the video ready to play yet? Its address when it is. Only your own videos. */
+export async function videoUploadStateAction(guid: string): Promise<{ state: "processing" } | { state: "ready"; url: string } | { state: "failed" }> {
+  const user = await getOwnerUser();
+  if (!user) return { state: "failed" };
+  const s = await videoState(user.id, guid);
+  if (!s || s.kind === "failed") return { state: "failed" };
+  if (s.kind === "processing") return { state: "processing" };
+  const url = fromStored(s.path);
+  return url ? { state: "ready", url } : { state: "failed" };
 }
 
 /* ------------------------------------------------------------ posters */

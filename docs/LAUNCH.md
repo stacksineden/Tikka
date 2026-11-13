@@ -40,7 +40,8 @@ Production values for everything in `.env.example`:
 | `WHATSAPP_VERIFY_TOKEN` | any random string; the same one goes into Meta's webhook settings |
 | `OG_SIGNING_SECRET` | optional; a long random string for card image links |
 | `STUDIO_WA_NUMBER`, `STUDIO_EMAIL` | `+2348022211241` and `studio@usetikka.com` (Tikka Studio's WhatsApp and email). The email needs a mailbox that can receive mail (for example Google Workspace or Zoho); Resend only sends |
-| `NEXT_PUBLIC_TIKKA_VIDEOS` | `off` for the free-plan pilot: owners can't add card or portfolio videos (photos are fine). Remove on Pro |
+| `NEXT_PUBLIC_TIKKA_VIDEOS` | `off` keeps owners from adding card or portfolio videos (photos are fine). With Bunny Stream set up (below), videos don't use Supabase Storage, so this can be removed even on the free plan |
+| `BUNNY_STREAM_LIBRARY_ID`, `BUNNY_STREAM_CDN_HOST`, `BUNNY_STREAM_API_KEY` | Bunny Stream for owners' videos: shrunk for phones (a 15 s clip is usually 1 to 3 MB) and kept out of Supabase. bunny.net → Stream → the Tikka library → API: Video Library ID, CDN hostname, and the **API Key** (not the read-only one; never share it). Library settings are in `docs/TECH_PLAN.md` §14 (MP4 fallback on, "Block direct url file access" off). Needs the `stream_videos` migration. Add a card in Bunny before the 14-day trial ends, or videos stop playing |
 | `TIKKA_CLAIM_MODE` | `page` only while Tikka's WhatsApp number waits for Meta's business verification: customers claim on the page by typing their number instead of on WhatsApp (claims and new leads are marked "Unverified", and Tikka never messages those numbers; Notify me is closed). Staff check the last 4 digits on the customer's WhatsApp at the counter before redeeming ("Check WhatsApp at the counter", on by default per drop); passing makes the lead "Verified". Remove it and redeploy once WhatsApp works: claims go back to WhatsApp. Needs the `page_claims`, `review_asks` and `counter_check` migrations, and `counter_check` must be applied before the code that reads it is deployed |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Optional, for page claims: Cloudflare Turnstile (free) checks a page claim comes from a person, not a script. Cloudflare dashboard → Turnstile → Add widget (domain `usetikka.com`). Set both or neither; the check only runs when both are set |
 | `TIKKA_PRELAUNCH` | `1` until the lawyer-checked privacy policy and terms are in (section 5). The site is online, but only Tikka admins and a business's own team can claim, and Notify me is closed, so no member of the public gives a WhatsApp number under the drafts. While it's on, the production build is allowed with draft legal pages. Remove it (and redeploy) to open claims: the build then fails until the legal pages are final |
@@ -134,8 +135,9 @@ them to message Tikka's WhatsApp from that number.
   string from Supabase → Connect, with your database password; nothing is saved.
 - **Email:** set up your own email provider (section 1) before onboarding businesses; Supabase's
   built-in email sends only about 2 an hour.
-- **Videos:** keep `NEXT_PUBLIC_TIKKA_VIDEOS=off`. Files are limited to 1 GB and about 5 GB served
-  a month, and a few popular videos would use that up.
+- **Videos:** without Bunny Stream, keep `NEXT_PUBLIC_TIKKA_VIDEOS=off`: files are limited to 1 GB and
+  about 5 GB served a month, and a few popular videos would use that up. With Bunny Stream set up,
+  videos live on Bunny and only their small cover pictures use Supabase, so videos can go on.
 - **Pausing:** free projects pause after a week with no activity. The 5-minute schedule keeps it
   busy once the site is live; if it ever pauses, restore it from the Supabase dashboard.
 - **Watch the usage:** Supabase → Project → Usage, weekly. Move to Pro when the database passes

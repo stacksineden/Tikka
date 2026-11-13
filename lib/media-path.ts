@@ -11,17 +11,34 @@ function publicBase(): string {
 
 const STORED = /^(images|videos)\//;
 
-/** For the database: a Storage address becomes its path; anything else (demo files) stays as it is. */
+// Videos on Bunny Stream (lib/stream.ts) are stored as "stream/{guid}/play_480p.mp4". Server only:
+// the address needs BUNNY_STREAM_CDN_HOST.
+const STREAM = /^stream\/([0-9a-f-]{36}\/[A-Za-z0-9_.]+)$/;
+function streamBase(): string | null {
+  const host = process.env.BUNNY_STREAM_CDN_HOST;
+  return host ? `https://${host}/` : null;
+}
+
+/** For the database: a Storage or Bunny address becomes its path; anything else (demo files) stays as it is. */
 export function toStored(url: string | undefined | null): string | null {
   if (!url) return null;
   const base = publicBase();
-  return url.startsWith(base) && STORED.test(url.slice(base.length)) ? url.slice(base.length) : url;
+  if (url.startsWith(base) && STORED.test(url.slice(base.length))) return url.slice(base.length);
+  const stream = streamBase();
+  if (stream && url.startsWith(stream) && STREAM.test(`stream/${url.slice(stream.length)}`)) return `stream/${url.slice(stream.length)}`;
+  return url;
 }
 
 /** For the screens: a stored path becomes its public address; anything else stays as it is. */
 export function fromStored(path: string | undefined | null): string | undefined {
   if (!path) return undefined;
-  return STORED.test(path) ? publicBase() + path : path;
+  if (STORED.test(path)) return publicBase() + path;
+  const m = STREAM.exec(path);
+  if (m) {
+    const stream = streamBase();
+    return stream ? stream + m[1] : undefined;
+  }
+  return path;
 }
 
 /** A photo pasted in as data instead of uploaded: never saved (it would bloat every page). */
