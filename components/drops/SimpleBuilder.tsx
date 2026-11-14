@@ -87,7 +87,18 @@ function tierErrors(e: Errors, d: DropDraft, tier: Tier): Errors {
   return out;
 }
 
-export function SimpleBuilder({
+/**
+ * Next.js keeps a page you leave alive in the background (Cache Components uses React's
+ * <Activity>), so tapping "Create a drop" again would bring back the last builder, still holding
+ * a draft that may since have been deleted, and the next save would fail. Keyed on bfcacheId, each
+ * link tap starts a fresh builder; the phone's back and forward buttons still restore it.
+ */
+export function SimpleBuilder(props: React.ComponentProps<typeof Builder>) {
+  const { bfcacheId } = useRouter();
+  return <Builder key={bfcacheId} {...props} />;
+}
+
+function Builder({
   initial,
   initialScreen,
   business,
