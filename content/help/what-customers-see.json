@@ -8,7 +8,7 @@
   "steps": [
     {
       "title": "They open your link",
-      "body": "They see a sealed Tikka with your name on it and what's inside the drop, like \"2 legendary · 10 rare · 88 thank-you\". They tap to tear it open and see your card."
+      "body": "They see a sealed Tikka with your logo on it and what's inside the drop, like \"2 legendary · 10 rare · 88 thank-you\". They tap to tear it open and see your card."
     },
     {
       "title": "They claim on WhatsApp",
@@ -19,8 +19,16 @@
       "body": "Back on the page, they hold to open and the card flips to show what they got: legendary, rare or thank-you. Every Tikka holds something.\n\nTheir card, with its code, also arrives in their WhatsApp."
     },
     {
+      "title": "They pick a day",
+      "body": "Under their Tikka, \"When will you come in?\" lets them pick a day. You see it in Leads under Coming in, and staff see it at the counter. Tikka reminds them that morning."
+    },
+    {
       "title": "They come to you",
-      "body": "They show the code or QR at your counter, and you or your staff check it on the Redeem screen. Tikka reminds them on WhatsApp before their Tikka ends."
+      "body": "They show the code or QR at your counter, and you or your staff check it on the Redeem screen. Tikka reminds them before their Tikka ends."
+    },
+    {
+      "title": "They review you",
+      "body": "After you redeem their Tikka, they can rate their visit. Only people who redeemed can review, so your reviews come from real customers. They show on your business page."
     }
   ],
   "tips": [

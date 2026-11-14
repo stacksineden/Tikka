@@ -20,16 +20,21 @@
     },
     {
       "title": "Check what they get",
-      "body": "You see their first name, what they get and when it ends. If it's an action Tikka, like \"Follow us on Instagram\", tick the box once they've done it."
+      "body": "You see their first name, what they get, the tier and when it ends. If you see \"Only if\", check the condition first, like \"With any paid service\". \"Planned\" shows the day they said they'd come in.\n\nIf it's an action Tikka, like \"Follow us on Instagram\", tick the box once they've done it."
+    },
+    {
+      "title": "Check their WhatsApp (if asked)",
+      "body": "If you see \"Check their WhatsApp first\", ask them to open WhatsApp, go to Settings and tap their name. Read the number on their profile yourself (not a screenshot, and not what they tell you), and type the last 4 digits.\n\nIf it doesn't match, don't give the reward. They can come back with the phone they claimed with. You get 3 tries a day, and nothing is used."
     },
     {
       "title": "Confirm",
-      "body": "Add the bill amount if you like (it shows you what each drop brought in), then tap \"Confirm redemption\". Tikka thanks them on WhatsApp and asks how it went."
+      "body": "Tap New customer or Been here before, and add how much they spent if you like (it shows you what each drop brought in). Then tap \"Confirm redemption\"."
     }
   ],
   "tips": [
     "If it says a code has a typo, check it with the customer. Codes never use 0, O, 1, I or L, so they're easy to read.",
-    "A code can only be used once. If it was already used, Redeem tells you when."
+    "A code can only be used once. If it was already used, Redeem tells you when.",
+    "Busy? Tap \"Not now, scan another code\". Nothing is used until you confirm."
   ],
   "published": true
 }
