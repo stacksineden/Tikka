@@ -4,7 +4,7 @@
   "section": "drops",
   "order": 1,
   "minutes": 5,
-  "summary": "A drop is a batch of Tikkas behind one link. Your first one is free.",
+  "summary": "A drop is a batch of Tikkas behind one link. Tikka walks you through it one step at a time. Your first one is free.",
   "app": {
     "href": "/app/drops",
     "label": "Open Drops"
@@ -12,23 +12,35 @@
   "steps": [
     {
       "title": "Start a drop",
-      "body": "Go to Drops and tap \"Create a drop\". You need to set up your card first."
+      "body": "Go to Drops and tap \"Create a drop\". You need to set up your card first.\n\nTap Continue to go to the next step, or the arrow at the top to go back."
     },
     {
       "title": "Pick a goal",
-      "body": "Choose what you want the drop to do: Get new customers, Bring customers back, or Fill quiet days. Tikka suggests offers that work for that goal."
+      "body": "\"What do you want this drop to do?\" Choose Get new customers, Bring customers back, or Fill quiet days. Tikka suggests offers that work for that goal."
     },
     {
       "title": "Pick an offer",
-      "body": "Pick one of the ready-made offers for your kind of business, then change the amounts if you want. Or tap \"Make my own\" to choose every reward yourself.\n\nThere are three kinds of Tikka: Legendary (very few), Rare (some) and Thank-you (everyone else). A thank-you Tikka always gives something small, so nobody walks away with nothing."
+      "body": "Pick one of the ready-made offers for your kind of business. Or tap \"Make my own\" to write every reward yourself."
     },
     {
-      "title": "Choose the size and how long",
-      "body": "Tell Tikka about how many people see your posts, and it suggests how many Tikkas to make. Then choose when it starts (as soon as you publish, or a date) and how long each Tikka lasts after someone claims it: 7, 14 or 30 days.\n\n\"Who can claim\" and the marketplace settings are under More options. The usual choices are already set."
+      "title": "Check your three cards",
+      "body": "With a ready-made offer, you see your three cards on one screen: Legendary (very few), Rare (some) and Thank-you (everyone else). Happy with them? Tap Continue. Want different words or numbers? Tap Change under that card.\n\nA thank-you Tikka always gives something small, so nobody walks away with nothing."
+    },
+    {
+      "title": "Or make your own",
+      "body": "With \"Make my own\", you get one screen each for Legendary, Rare and Thank-you. Write what they get in plain words, like \"20% off any facial\" or \"Free nail art\", and see the real card change as you type. Use One more and One fewer to set how many."
+    },
+    {
+      "title": "Add a condition if you need one",
+      "body": "Under each reward, \"When does it apply?\" adds a short condition, like \"With any paid service\" or \"Weekdays only\". Tap an idea or write your own. It shows on the card under the reward, and staff see it at the counter as \"Only if\"."
+    },
+    {
+      "title": "How many, and when",
+      "body": "Tell Tikka about how many people see what you post, and it suggests how many Tikkas to make. Then choose when it opens (as soon as you publish, or on a date), when it ends, and how long each Tikka lasts after someone claims it: 7, 14 or 30 days.\n\n\"Card style\", \"Who can claim\" and the marketplace settings are under More options. The usual choices are already set."
     },
     {
       "title": "Check and publish",
-      "body": "You see your drop the way customers will. Check the rewards, then tap Publish. Your first drop is free; after that, the price shows on the button before you pay."
+      "body": "You see every card the way customers will, and what staff see at the counter. Name your drop (only you see the name), and switch on \"Give them a reason to come back\" if you want people to get a next-visit Tikka after they redeem.\n\nThe drop check suggests fixes if something looks off. Then tap Publish. Your first drop is free; after that, the price shows on the button before you pay."
     },
     {
       "title": "Share it",
@@ -37,6 +49,8 @@
   ],
   "tips": [
     "Make a few more Tikkas than you expect people to claim. Running out turns people away.",
+    "Keep conditions short and clear. A customer should understand them at a glance.",
+    "Once it's published you can extend the end date, add Tikkas or end it early, but not change the rewards.",
     "You can run one drop at a time, and schedule your next one while it runs."
   ],
   "published": true

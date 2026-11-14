@@ -11,7 +11,9 @@ import { HELP_SECTIONS, nextGuide, paragraphs } from "@/lib/help-shared";
 /** While customers claim on the page (TIKKA_CLAIM_MODE=page), guides that describe WhatsApp claiming say so. Gone once WhatsApp is on. */
 const PAGE_CLAIM_NOTES: Record<string, string> = {
   "what-customers-see":
-    "For now, customers claim on the page: they type their first name and WhatsApp number, and their Tikka opens right there. Claiming on WhatsApp is switching on soon, and then their Tikka also arrives in their WhatsApp.",
+    "For now, customers claim on the page: they type their first name and WhatsApp number, and their Tikka opens right there. Claiming on WhatsApp is switching on soon, and then their Tikka also arrives in their WhatsApp. Until then, Tikka can't remind them on WhatsApp, and they rate their visit on their Tikka at your counter: the stars appear on their phone once you redeem.",
+  "redeem-a-tikka":
+    "For now, customers claim on the page by typing their WhatsApp number. So staff check the last 4 digits on the customer's own WhatsApp before giving the reward, as in step 4. After you confirm, ask them to rate you before they go: the stars are on their phone.",
   "create-your-first-drop":
     "For now, customers claim on the page with their WhatsApp number. Claiming on WhatsApp is switching on soon. Until then, \"Check WhatsApp at the counter\" (under More options, on by default) makes staff check the last 4 digits on the customer's WhatsApp before giving the reward.",
   "follow-up-with-leads":
