@@ -49,6 +49,7 @@ A Tikka is co-branded: the business owns the face, Tikka owns the frame.
 
 - **The business provides** its logo, name and one brand colour (`--biz` in components), plus a text colour for it (`--on-biz`). Compute `--on-biz` as white or `ink`, whichever gives 4.5:1 on `--biz`; if neither does, darken `--biz` until one does.
 - **Tikka keeps** the ticket shape, notches, perforation, stub, shine, rarity colours, counter and the night stage. Never tint the stage or the stub with the business colour.
+- **The sealed wrapper on the claim page is the business's own** (since Nov 2026): its body takes `--biz`, with the business's logo, name, place and Verified, and what's inside the drop in plain words. Visitors arrive from the business's own status or bio, so they should see whose it is and why to open it before they tap. Tikka keeps the wrapper's shape, crimps, tear strip, notch and shine, a small "Tikka" with the spark on the wrapper's foot, and the night stage behind it. The landing page, tour and explainer still show the Tikka-branded wrapper with the business's seal.
 - The card front is `--biz`; the back is `night-raised` (so it stands off the night stage); the stub on the back takes the rarity colour.
 - On the Free plan the front stub carries a small "Tikka" lockup and the claim page footer reads "Create Tikkas for your business".
 
