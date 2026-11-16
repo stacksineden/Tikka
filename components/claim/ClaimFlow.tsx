@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent } from "react";
 import { ActionsRow, DropContents, ProfileTabs, type ProfileTab, type ReviewItem } from "@/components/tikka/ClaimProfile";
-import { Spark, Star, Tick } from "@/components/tikka/glyphs";
+import { Lock, Spark, Star, Tick } from "@/components/tikka/glyphs";
 import { TIER_LABEL, TIER_VAR } from "@/components/tikka/RarityBadge";
 import { TikkaCard, type CardFace } from "@/components/tikka/TikkaCard";
 import { TikkaPack } from "@/components/tikka/TikkaPack";
 import { NotifyMe, ReportDrop } from "@/components/market/NotifyMe";
 import { firstName } from "@/lib/claim";
-import { clockTime, count, shortDate } from "@/lib/format";
+import { clockTime, count, place, shortDate } from "@/lib/format";
 import { VISIT_PARTS, type VisitPart } from "@/lib/visit";
 import type { Business, CardStatus, ClaimedCard, EventKind, PublicDrop, Source } from "@/lib/types";
 
@@ -513,6 +513,10 @@ export function ClaimFlow({
               empty={beat === "closed"}
               as={beat === "closed" ? "div" : "button"}
               onTear={tear}
+              items={drop.items}
+              meta={[face.category, place(face.area, face.city)].filter(Boolean).join(" · ")}
+              verified={face.verified}
+              nudge={beat === "sealed"}
             />
           )}
           {beat === "revealed" && flippedHere && (
@@ -537,11 +541,11 @@ export function ClaimFlow({
 
         {(beat === "sealed" || beat === "opening") && (
           <div className="tk-copy">
-            <h1 className="tk-h">A Tikka from {face.name}</h1>
+            <h1 className="tk-h">{face.name} has something for you</h1>
             <p className="tk-p">
               {status === "scheduled"
                 ? `This drop opens ${shortDate(drop.startsAt)}, ${clockTime(drop.startsAt)}. Tear it open to meet them now.`
-                : "Tear it open to meet them. Every Tikka holds something, and you see yours after you claim."}
+                : "Tear it open. Every Tikka holds something."}
             </p>
           </div>
         )}
@@ -599,7 +603,8 @@ export function ClaimFlow({
           </div>
         )}
 
-        {view === "drop" && (profileBeat || beat === "closed" || beat === "sealed") && <ReportDrop dropId={drop.id} />}
+        {/* Not on the sealed screen: a first-time visitor meets the business before anything else. */}
+        {view === "drop" && (profileBeat || beat === "closed") && <ReportDrop dropId={drop.id} />}
 
         {beat === "revealed" && card && (
           <>
@@ -725,11 +730,13 @@ export function ClaimFlow({
             {note ??
               (beat === "revealed"
                 ? `${count(drop.left)} of ${count(drop.total)} left for your friends`
-                : status === "live"
-                  ? `${count(drop.left)} of ${count(drop.total)} left · One per WhatsApp number${counterCheck ? " · checked at the counter" : ""}`
-                  : status === "scheduled"
-                    ? opensLabel
-                    : `${face.name}'s next drop is one tap away`)}
+                : beat === "sealed" && status === "live"
+                  ? "Free · takes a minute"
+                  : status === "live"
+                    ? `${count(drop.left)} of ${count(drop.total)} left · One per WhatsApp number${counterCheck ? " · checked at the counter" : ""}`
+                    : status === "scheduled"
+                      ? opensLabel
+                      : `${face.name}'s next drop is one tap away`)}
           </p>
         </div>
       )}
@@ -805,6 +812,12 @@ export function ClaimFlow({
                 ) : null}
               </div>
             ) : null}
+            <p className="tk-trust">
+              <Lock />
+              <span>
+                <b>Only {face.name} sees your number.</b> Tikka never sells it or gives it to other businesses.
+              </span>
+            </p>
             {(!onPage || counterCheck) && (
               <label className="tk-check">
                 <input type="checkbox" checked={futureDrops} onChange={(e) => setFutureDrops(e.target.checked)} />
