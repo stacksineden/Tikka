@@ -82,13 +82,15 @@ describe("editing the page", () => {
     expect(validateServices([{ name: "Facial", price: null, priceKind: "fixed" }])["service-0"]).toMatch(/Add a price/);
     expect(validateServices([{ name: "Consultation", price: null, priceKind: "ask" }])).toEqual({});
   });
-  it("allows 12 portfolio items with at most 3 videos of 15 s / 15 MB", async () => {
+  it("allows 20 portfolio items with at most 3 videos of 15 s / 15 MB on the free page, more when open", async () => {
     const { videoProblem } = await import("./page");
     const three = [{ kind: "video" }, { kind: "video" }, { kind: "video" }];
     expect(videoProblem(three, 10, 1000)).toMatch(/Up to 3 videos/);
     expect(videoProblem([], 20, 1000)).toMatch(/15 seconds/);
     expect(videoProblem([], 10, 16 * 1024 * 1024)).toMatch(/15 MB/);
-    expect(videoProblem(Array.from({ length: 12 }, () => ({ kind: "photo" })), 5, 100)).toMatch(/Up to 12/);
+    expect(videoProblem(Array.from({ length: 20 }, () => ({ kind: "photo" })), 5, 100)).toMatch(/Up to 20/);
+    expect(videoProblem(Array.from({ length: 20 }, () => ({ kind: "photo" })), 5, 100, { items: 60, videos: 8 })).toBeNull();
+    expect(videoProblem(three, 10, 1000, { items: 60, videos: 8 })).toBeNull();
     expect(videoProblem([{ kind: "video" }], 14, 5_000_000)).toBeNull();
   });
 });

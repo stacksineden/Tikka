@@ -37,4 +37,5 @@ export function slugAlternatives(slug: string, city: string, taken: Set<string>,
   return pool.filter((s): s is string => !!s && !taken.has(s) && !slugError(s)).slice(0, count);
 }
 
-export const PORTFOLIO_MAX = 12;
+/** The free page's portfolio limit; a paid drop opens more (lib/portfolio.ts). */
+export const PORTFOLIO_MAX = 20;

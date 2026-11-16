@@ -367,6 +367,52 @@
   }
 }
 
+/* ------------------------------------------------- portfolio collections */
+/* A cover per collection: two across on phones (an odd one out leads, full width), then three
+   and four. The name sits on the photo over a dark foot, like the masonry captions. */
+.biz-covers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.biz-covers-odd > li:first-child {
+  grid-column: 1 / -1;
+}
+.biz-cover {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--surface-sunken);
+}
+.biz-covers-odd > li:first-child .biz-cover {
+  aspect-ratio: 16 / 10;
+}
+.biz-cover-cap {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 56px 14px 14px;
+  color: var(--on-night);
+  background: linear-gradient(to top, color-mix(in srgb, var(--ink) 82%, transparent), transparent);
+}
+@media (min-width: 640px) {
+  .biz-covers {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .biz-covers-odd > li:first-child {
+    grid-column: auto;
+  }
+  .biz-covers-odd > li:first-child .biz-cover {
+    aspect-ratio: 4 / 5;
+  }
+}
+@media (min-width: 1024px) {
+  .biz-covers {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 /* ------------------------------------------------- the services rail */
 /* One row of cards at every width: most of one card on phones (the next peeks in), two on
    tablets, three on desktop. Snap to each card; no scrollbar, the progress line shows place. */

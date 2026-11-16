@@ -5,7 +5,7 @@
 
 import { fromStored, toStored } from "./media-path";
 import { initialsFrom } from "./setup";
-import type { Business, BusinessPage, CardBackground, PatternId, PortfolioPhoto, ServiceItem, TeamMember, FaqItem } from "./types";
+import type { Business, BusinessPage, CardBackground, PatternId, PortfolioCollection, PortfolioPhoto, ServiceItem, TeamMember, FaqItem } from "./types";
 
 export interface BusinessRow {
   id: string;
@@ -78,6 +78,16 @@ export interface PortfolioRow {
   thumb_path: string;
   caption: string | null;
   duration_s: number | string | null;
+  /** Added by the portfolio_collections migration; absent on rows read before it. */
+  collection_id?: string | null;
+}
+
+export interface CollectionRow {
+  id: string;
+  name: string;
+  slug: string;
+  service_name: string | null;
+  cover_id: string | null;
 }
 
 export interface TeamRow {
@@ -155,7 +165,12 @@ export function portfolioFrom(r: PortfolioRow): PortfolioPhoto {
     thumbUrl: fromStored(r.thumb_path)!,
     caption: opt(r.caption),
     seconds: r.duration_s === null ? undefined : Number(r.duration_s),
+    collectionId: opt(r.collection_id),
   };
+}
+
+export function collectionFrom(r: CollectionRow): PortfolioCollection {
+  return { id: r.id, name: r.name, slug: r.slug, serviceName: opt(r.service_name), coverId: opt(r.cover_id) };
 }
 
 export function pageFrom(p: PageRow | null, team: TeamRow[], faqs: FaqRow[]): BusinessPage | undefined {
@@ -200,6 +215,7 @@ export function businessFrom(
   portfolio: PortfolioRow[],
   team: TeamRow[],
   faqs: FaqRow[],
+  collections: CollectionRow[] = [],
 ): Business {
   return {
     id: b.id,
@@ -230,6 +246,7 @@ export function businessFrom(
     videoPosterUrl: fromStored(b.video_poster_path),
     address: opt(b.address),
     portfolio: portfolio.map(portfolioFrom),
+    collections: collections.map(collectionFrom),
     foundingMember: !!priv?.founding_member,
     ownerWhatsapp: opt(priv?.owner_whatsapp),
     dailySummary: priv ? priv.daily_summary : undefined,

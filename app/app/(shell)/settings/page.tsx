@@ -27,7 +27,7 @@ async function Hub() {
     { href: "/app/settings/profile#services", label: "Services and prices", meta: b.services.length ? `${b.services.length} listed` : "Not added yet", Icon: ListChecks },
     { href: "/app/settings/profile#basics", label: "Name, tagline and location", meta: `${b.name} · ${place(b.area, b.city)}`, Icon: Store },
     { href: "/app/settings/profile#about", label: "About and opening hours", meta: b.about || b.hours ? "Added" : "Not added yet", Icon: Clock },
-    { href: "/app/settings/profile#photos", label: "Portfolio photos", meta: b.portfolio.length ? `${b.portfolio.length} of 12` : "Not added yet", Icon: Images },
+    { href: "/app/settings/profile#photos", label: "Portfolio photos", meta: b.portfolio.length ? `${b.portfolio.length} added` : "Not added yet", Icon: Images },
     { href: "/app/settings/profile#video", label: "Video", meta: b.hasVideo ? "Added" : "Not added yet", Icon: Film },
     { href: "/app/settings/profile#codes", label: "Page address", meta: `usetikka.com/${b.slug}`, Icon: Globe },
   ];

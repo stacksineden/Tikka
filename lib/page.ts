@@ -7,7 +7,8 @@ import type { Business, BusinessPage, Drop, ServiceItem } from "./types";
 
 export const PAGE_LIMITS = {
   services: 12,
-  portfolio: 12,
+  /** The free page; a paid drop opens more (lib/portfolio.ts). */
+  portfolio: 20,
   videos: 3,
   videoSeconds: 15,
   videoMb: 15,
@@ -163,10 +164,10 @@ export function validateServices(services: ServiceItem[]): PageErrors {
   return e;
 }
 
-/** Portfolio limits: 12 items, of which 3 videos of up to 15 s and 15 MB. */
-export function videoProblem(existing: { kind?: string }[], seconds: number, bytes: number): string | null {
-  if (existing.length >= PAGE_LIMITS.portfolio) return `Up to ${PAGE_LIMITS.portfolio} photos and videos.`;
-  if (existing.filter((x) => x.kind === "video").length >= PAGE_LIMITS.videos) return `Up to ${PAGE_LIMITS.videos} videos. Remove one to add another.`;
+/** Portfolio limits: 20 items and 3 videos on the free page (60 and 8 with a paid drop), each video up to 15 s and 15 MB. */
+export function videoProblem(existing: { kind?: string }[], seconds: number, bytes: number, caps: { items: number; videos: number } = { items: PAGE_LIMITS.portfolio, videos: PAGE_LIMITS.videos }): string | null {
+  if (existing.length >= caps.items) return `Up to ${caps.items} photos and videos.`;
+  if (existing.filter((x) => x.kind === "video").length >= caps.videos) return `Up to ${caps.videos} videos. Remove one to add another.`;
   if (seconds > PAGE_LIMITS.videoSeconds + 0.5) return `Keep videos to ${PAGE_LIMITS.videoSeconds} seconds. This one is ${Math.round(seconds)}.`;
   if (bytes > PAGE_LIMITS.videoMb * 1024 * 1024) return `Keep videos under ${PAGE_LIMITS.videoMb} MB.`;
   return null;

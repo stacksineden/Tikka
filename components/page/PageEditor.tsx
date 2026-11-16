@@ -7,6 +7,7 @@ import { savePageAction, saveServicesAction } from "@/app/app/actions";
 import { PortfolioEditor } from "@/components/setup/PortfolioEditor";
 import { prepareAbout, prepareCropped, prepareHero, prepareService, uploadPhoto, type MediaKind, type Prepared } from "@/lib/media-client";
 import { focalPosition, heroHeadline, heroLine, PAGE_LIMITS, priceText } from "@/lib/page";
+import type { PortfolioPlan } from "@/lib/portfolio";
 import type { Business, BusinessPage, FaqItem, ServeMode, ServiceItem, TeamMember } from "@/lib/types";
 
 type Errors = Record<string, string | undefined>;
@@ -623,7 +624,7 @@ function TextCard({ page }: { page: BusinessPage }) {
 
 /* ---------------------------------------------------------------- page */
 
-export function PageEditor({ business: b }: { business: Business }) {
+export function PageEditor({ business: b, plan }: { business: Business; plan: PortfolioPlan }) {
   const page = b.page ?? {};
   const inStore = (b.serveMode ?? "in_store") === "in_store";
   return (
@@ -632,8 +633,15 @@ export function PageEditor({ business: b }: { business: Business }) {
       <ModeCard b={b} />
       <AboutCard b={b} />
       <ServicesCard b={b} />
-      <Card title="Portfolio" status={b.portfolio.length ? `${b.portfolio.length} of ${PAGE_LIMITS.portfolio}` : "Show your best work"}>
-        <PortfolioEditor initial={b.portfolio} />
+      <Card
+        title="Portfolio"
+        status={
+          b.portfolio.length
+            ? `${b.portfolio.length} of ${Math.max(plan.items, b.portfolio.length)}${b.collections?.length ? ` · ${b.collections.length} collection${b.collections.length === 1 ? "" : "s"}` : ""}`
+            : "Show your best work"
+        }
+      >
+        <PortfolioEditor initial={b.portfolio} initialCollections={b.collections ?? []} plan={plan} services={b.services} slug={b.slug} />
       </Card>
       <TeamCard page={page} />
       <FaqCard page={page} />

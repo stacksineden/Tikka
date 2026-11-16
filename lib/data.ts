@@ -12,7 +12,7 @@ import { dbDropDashboard, dbDropFeed, dbDropReport } from "./stats-db";
 import { dbAcceptInvite, dbCancelInvite, dbCheckCode, dbCheckDigits, dbConfirm, dbInviteInfo, dbInviteStaff, dbRemoveStaff, dbTeam, type ConfirmDbResult } from "./team-db";
 import { dbCardByViewToken, dbCardImage, dbCardOwner, dbDropExists, dbPlatformTotals, dbPublicDrop, dbRecordEvent, dbRevealCard, dbSetVisitPlan } from "./claim-db";
 import { dbAddTikkas, dbBuyPack, dbCompletePayment, dbDeleteDraft, dbDrops, dbEndEarly, dbExtend, dbPayment, dbPayments, dbPublish, dbSaveDraft, dbVouchers, DropSaveError, type DbPublishResult } from "./drop-db";
-import { BusinessSaveError, dbAddPoster, dbPageDrops, dbPosterByCode, dbPosters, dbSavePosterHook, dbTaken, isDbId, loadBusiness, loadBusinessBySlug, saveBusinessDb } from "./business-db";
+import { BusinessSaveError, dbAddPoster, dbFilePhotos, dbOrderCollections, dbPortfolioPlan, dbRemoveCollection, dbSaveCollection, dbPageDrops, dbPosterByCode, dbPosters, dbSavePosterHook, dbTaken, isDbId, loadBusiness, loadBusinessBySlug, loadBusinessFresh, saveBusinessDb } from "./business-db";
 
 // Dummy data until Supabase is wired up (M1). Every function here becomes an RPC/view call;
 // keep the signatures so the pages don't change.
@@ -67,7 +67,7 @@ import vouchers from "./mock/vouchers.json";
 import { abandonStale, assertCanReadLeads, completePayment, newReference, type Payment } from "./payments";
 import { quoteAddTikkas, quoteDrop, type DropPack, type DropQuote, type DropTier } from "./pricing";
 import { adminVoucher, guaranteeVoucher, packVouchers, signupVoucher, usable, type Voucher } from "./vouchers";
-import { PORTFOLIO_MAX } from "./slug";
+import { collectionSlug, portfolioPlan, PORTFOLIO_FREE, PORTFOLIO_OPEN, type PortfolioPlan } from "./portfolio";
 import { platformStats, statsFromTotals, type PlatformStats, type StatsInput } from "./stats";
 
 /** The database calls the Thank-you tier "common". */
@@ -205,11 +205,101 @@ export async function takenSlugs(user: Pick<SessionUser, "id">): Promise<Set<str
 
 /* ------------------------------------------------------------ portfolio */
 
+/** Is the portfolio open (a paid drop, a season pack, a founding member), and the limits right now. */
+export async function getPortfolioPlan(user: Pick<SessionUser, "id">): Promise<PortfolioPlan> {
+  if (isDbId(user.id)) return (await dbPortfolioPlan(user.id)) ?? { open: false, ...PORTFOLIO_FREE };
+  const b = await getBusiness(user);
+  const now = await requestNow();
+  return portfolioPlan({ founding: b?.foundingMember ?? false, vouchers: await getVouchers(user), drops: await getDrops(user, now), now });
+}
+
+/** After a collection change: real accounts re-read the database (the request's cached copy is stale). */
+async function getBusinessFresh(user: Pick<SessionUser, "id">): Promise<Business | null> {
+  const db = await loadBusinessFresh(user.id);
+  return db ? normalize(db) : null;
+}
+
+const COLLECTIONS_LOCKED = "Your collections are locked. Run a drop to add and sort again.";
+
 export async function addPortfolioPhoto(user: Pick<SessionUser, "id">, photo: Omit<PortfolioPhoto, "id">): Promise<PortfolioPhoto[] | null> {
   const b = await getBusiness(user);
-  if (!b || b.portfolio.length >= PORTFOLIO_MAX) return null;
-  const portfolio = [...b.portfolio, { ...photo, id: `ph_${Date.now().toString(36)}` }];
+  if (!b) return null;
+  // Real accounts: the database counts and decides. The demo store mirrors it.
+  if (!isDbId(user.id)) {
+    const plan = await getPortfolioPlan(user);
+    if (b.portfolio.length >= plan.items) return null;
+    if (photo.collectionId && !plan.open) throw new BusinessSaveError(COLLECTIONS_LOCKED);
+  }
+  const portfolio = [...b.portfolio, { ...photo, id: `ph_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}` }];
   return (await putBusiness(user.id, { ...b, portfolio })).portfolio;
+}
+
+/* ------------------------------------------------------------ collections */
+
+/** The demo store's guard, as private.collections_guard() does it for real accounts. */
+async function demoCollections(user: Pick<SessionUser, "id">): Promise<Business> {
+  const b = await getBusiness(user);
+  if (!b) throw new BusinessSaveError("Set up your card first.");
+  if (!(await getPortfolioPlan(user)).open) throw new BusinessSaveError(COLLECTIONS_LOCKED);
+  return b;
+}
+
+/** Creates (no id) or changes a collection: its name, the service its Book button asks for, its cover. */
+export async function saveCollection(user: Pick<SessionUser, "id">, c: { id?: string; name: string; serviceName?: string; coverId?: string }): Promise<Business | null> {
+  if (isDbId(user.id)) {
+    await dbSaveCollection(user.id, c);
+    return getBusinessFresh(user);
+  }
+  const b = await demoCollections(user);
+  const all = b.collections ?? [];
+  if (!c.id) {
+    if (all.length >= PORTFOLIO_OPEN.collections) throw new BusinessSaveError(`Up to ${PORTFOLIO_OPEN.collections} collections.`);
+    const added = { id: newId("col"), name: c.name.trim(), slug: collectionSlug(c.name, all.map((x) => x.slug)), serviceName: c.serviceName?.trim() || undefined };
+    return putBusiness(user.id, { ...b, collections: [...all, added] });
+  }
+  const cover = b.portfolio.find((p) => p.id === c.coverId && p.collectionId === c.id)?.id;
+  return putBusiness(user.id, { ...b, collections: all.map((x) => (x.id === c.id ? { ...x, name: c.name.trim(), serviceName: c.serviceName?.trim() || undefined, coverId: cover } : x)) });
+}
+
+/** Removes a collection; its photos stay on the page under "More work". */
+export async function removeCollection(user: Pick<SessionUser, "id">, id: string): Promise<Business | null> {
+  if (isDbId(user.id)) {
+    await dbRemoveCollection(user.id, id);
+    return getBusinessFresh(user);
+  }
+  const b = await demoCollections(user);
+  return putBusiness(user.id, {
+    ...b,
+    collections: (b.collections ?? []).filter((x) => x.id !== id),
+    portfolio: b.portfolio.map((p) => (p.collectionId === id ? { ...p, collectionId: undefined } : p)),
+  });
+}
+
+export async function orderCollections(user: Pick<SessionUser, "id">, ids: string[]): Promise<Business | null> {
+  if (isDbId(user.id)) {
+    await dbOrderCollections(user.id, ids);
+    return getBusinessFresh(user);
+  }
+  const b = await demoCollections(user);
+  const all = b.collections ?? [];
+  const sorted = [...ids.flatMap((id) => all.filter((x) => x.id === id)), ...all.filter((x) => !ids.includes(x.id))];
+  return putBusiness(user.id, { ...b, collections: sorted });
+}
+
+/** Moves photos into a collection, or out of every collection (null). */
+export async function filePhotos(user: Pick<SessionUser, "id">, ids: string[], collectionId: string | null): Promise<Business | null> {
+  if (isDbId(user.id)) {
+    await dbFilePhotos(user.id, ids, collectionId);
+    return getBusinessFresh(user);
+  }
+  const b = await demoCollections(user);
+  if (collectionId && !(b.collections ?? []).some((x) => x.id === collectionId)) throw new BusinessSaveError("That collection is gone. Refresh the page.");
+  return putBusiness(user.id, {
+    ...b,
+    portfolio: b.portfolio.map((p) => (ids.includes(p.id) ? { ...p, collectionId: collectionId ?? undefined } : p)),
+    // A cover that moved out stops being the cover.
+    collections: (b.collections ?? []).map((x) => (x.coverId && ids.includes(x.coverId) && x.id !== collectionId ? { ...x, coverId: undefined } : x)),
+  });
 }
 
 /* ------------------------------------------------------- your page */
@@ -279,14 +369,16 @@ export async function saveServices(user: Pick<SessionUser, "id" | "role">, servi
   }
 }
 
-/** A portfolio video: 3 at most, 15 s and 15 MB each (checked in the browser and here). */
-export async function addPortfolioVideo(user: Pick<SessionUser, "id" | "role">, v: { url: string; thumbUrl: string; seconds: number }): Promise<{ ok: true; portfolio: PortfolioPhoto[] } | { ok: false; error: string }> {
+/** A portfolio video: 3 at most on the free page (8 when open), 15 s and 15 MB each (checked in the browser and here). */
+export async function addPortfolioVideo(user: Pick<SessionUser, "id" | "role">, v: { url: string; thumbUrl: string; seconds: number; collectionId?: string }): Promise<{ ok: true; portfolio: PortfolioPhoto[] } | { ok: false; error: string }> {
   if (user.role !== "owner") return { ok: false, error: "Only the owner can add videos." };
   const b = await getBusiness(user);
   if (!b) return { ok: false, error: "Set up your card first." };
-  const problem = videoProblem(b.portfolio, v.seconds, 0);
+  const plan = await getPortfolioPlan(user);
+  const problem = videoProblem(b.portfolio, v.seconds, 0, plan);
   if (problem) return { ok: false, error: problem };
-  const portfolio = [...b.portfolio, { id: newId("pf"), kind: "video" as const, url: v.url, thumbUrl: v.thumbUrl, seconds: Math.round(v.seconds) }];
+  if (v.collectionId && !plan.open) return { ok: false, error: COLLECTIONS_LOCKED };
+  const portfolio = [...b.portfolio, { id: newId("pf"), kind: "video" as const, url: v.url, thumbUrl: v.thumbUrl, seconds: Math.round(v.seconds), collectionId: v.collectionId }];
   try {
     return { ok: true, portfolio: (await putBusiness(user.id, { ...b, portfolio })).portfolio };
   } catch (e) {
@@ -298,7 +390,8 @@ export async function addPortfolioVideo(user: Pick<SessionUser, "id" | "role">, 
 export async function updatePortfolio(user: Pick<SessionUser, "id">, portfolio: PortfolioPhoto[]): Promise<PortfolioPhoto[]> {
   const b = await getBusiness(user);
   if (!b) return [];
-  return (await putBusiness(user.id, { ...b, portfolio: portfolio.slice(0, PORTFOLIO_MAX) })).portfolio;
+  // Captions and removals only: never more than is already there.
+  return (await putBusiness(user.id, { ...b, portfolio: portfolio.slice(0, b.portfolio.length) })).portfolio;
 }
 
 /* ---------------------------------------------------------------- tiers */

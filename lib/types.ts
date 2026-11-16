@@ -49,8 +49,10 @@ export interface Business {
   videoUrl?: string;
   /** Street address for Directions and the business page's map link. */
   address?: string;
-  /** Up to 12 photos on the business page. */
+  /** Photos and short videos on the business page: 20 on the free page, 60 with a paid drop (lib/portfolio.ts). */
   portfolio: PortfolioPhoto[];
+  /** Portfolio collections ("Bridal", "Gele"), in the owner's order. Opened by a paid drop. */
+  collections?: PortfolioCollection[];
   /** One of the first 20 businesses: founding prices on single drops, for life (set by Tikka). */
   foundingMember: boolean;
   /** Tikka's alerts and the daily summary go here (E.164 or local format); defaults to the Chat button's number. */
@@ -74,6 +76,19 @@ export interface PortfolioPhoto {
   caption?: string;
   /** Videos: length in seconds (15 at most). */
   seconds?: number;
+  /** The collection it sits in; none means "More work". */
+  collectionId?: string;
+}
+
+export interface PortfolioCollection {
+  id: string;
+  name: string;
+  /** Its link: usetikka.com/<business>/work/<slug>. Set once, so shared links keep working. */
+  slug: string;
+  /** The service its Book button asks for, by name. */
+  serviceName?: string;
+  /** One of its own photos; the first when unset. */
+  coverId?: string;
 }
 
 export type ServeMode = "in_store" | "online" | "come_to_you";

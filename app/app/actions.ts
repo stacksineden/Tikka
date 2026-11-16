@@ -16,6 +16,11 @@ import {
   isDbId,
   publishInDb,
   addPortfolioPhoto,
+  filePhotos,
+  getPortfolioPlan,
+  orderCollections,
+  removeCollection,
+  saveCollection,
   addPortfolioVideo,
   addPoster,
   addTikkas,
@@ -64,13 +69,14 @@ import { validateDraft, watToIso, withThankYouFilled, type DropDraft } from "@/l
 import { dropCheck } from "@/lib/dropcheck";
 import { templateCategory } from "@/lib/templates";
 import { paymentPlace, type Payment } from "@/lib/payments";
-import { PORTFOLIO_MAX, slugAlternatives, slugError, suggestSlug } from "@/lib/slug";
+import { slugAlternatives, slugError, suggestSlug } from "@/lib/slug";
+import { collectionNameProblem } from "@/lib/portfolio";
 import { getOwnerUser, getSessionUser } from "@/lib/session";
 import { processQueue } from "@/lib/whatsapp/send";
 import { LIMITS, normalizeNgPhone, prefixAlternatives, validateCard, type CardDraft, type Errors } from "@/lib/setup";
 import type { CheckResult, DigitsResult } from "@/lib/redeem";
 import type { BusinessPageInput } from "@/lib/page";
-import type { Business, OpeningHours, PortfolioPhoto, ServeMode, ServiceItem } from "@/lib/types";
+import type { Business, OpeningHours, PortfolioCollection, PortfolioPhoto, ServeMode, ServiceItem } from "@/lib/types";
 import { requestPhone } from "@/lib/privacy";
 import type { PersonRecord } from "@/lib/data";
 import { dbAdminSetEnquiryStatus } from "@/lib/studio-db";
@@ -172,9 +178,52 @@ export async function addPhoto(photo: Omit<PortfolioPhoto, "id">): Promise<{ ok:
     if (e instanceof BusinessSaveError) return { ok: false, error: e.message };
     throw e;
   }
-  if (!portfolio) return { ok: false, error: `Up to ${PORTFOLIO_MAX} photos.` };
+  if (!portfolio) return { ok: false, error: `Up to ${(await getPortfolioPlan(user)).items} photos and videos.` };
   revalidatePath("/app", "layout");
   return { ok: true, portfolio };
+}
+
+/* ------------------------------------------------------------ collections */
+
+export type CollectionsResult = { ok: true; portfolio: PortfolioPhoto[]; collections: PortfolioCollection[] } | { ok: false; error: string };
+
+/** Owner only; the data layer (and the database) decide whether collections are open. */
+async function changeCollections(change: (user: NonNullable<Awaited<ReturnType<typeof getOwnerUser>>>) => Promise<Business | null>): Promise<CollectionsResult> {
+  const user = await getOwnerUser();
+  if (!user || user.role !== "owner") return { ok: false, error: "Only the business owner can change the page." };
+  try {
+    const b = await change(user);
+    if (!b) return { ok: false, error: "Set up your card first." };
+    revalidatePath("/app", "layout");
+    revalidatePath(`/${b.slug}`, "layout");
+    return { ok: true, portfolio: b.portfolio, collections: b.collections ?? [] };
+  } catch (e) {
+    if (e instanceof BusinessSaveError) return { ok: false, error: e.message };
+    throw e;
+  }
+}
+
+/** Create (no id) or change a collection: name, the service its Book button asks for, its cover. */
+export async function saveCollectionAction(c: { id?: string; name: string; serviceName?: string; coverId?: string }): Promise<CollectionsResult> {
+  return changeCollections(async (user) => {
+    const b = await getBusiness(user);
+    const problem = collectionNameProblem(c.name, (b?.collections ?? []).filter((x) => x.id !== c.id).map((x) => x.name));
+    if (problem) throw new BusinessSaveError(problem);
+    return saveCollection(user, { id: c.id, name: c.name.trim(), serviceName: c.serviceName?.trim().slice(0, 40) || undefined, coverId: c.coverId });
+  });
+}
+
+export async function removeCollectionAction(id: string): Promise<CollectionsResult> {
+  return changeCollections((user) => removeCollection(user, id));
+}
+
+export async function orderCollectionsAction(ids: string[]): Promise<CollectionsResult> {
+  return changeCollections((user) => orderCollections(user, ids.slice(0, 20)));
+}
+
+/** Move photos into a collection, or out of every collection (null). */
+export async function filePhotosAction(ids: string[], collectionId: string | null): Promise<CollectionsResult> {
+  return changeCollections((user) => filePhotos(user, ids.slice(0, 100), collectionId));
 }
 
 /** Remove, reorder or caption photos (ids must already exist). */
@@ -350,7 +399,7 @@ export async function saveServicesAction(services: ServiceItem[]): Promise<PageS
   return { ok: true };
 }
 
-export async function addVideoAction(v: { url: string; thumbUrl: string; seconds: number }): Promise<{ ok: true; portfolio: PortfolioPhoto[] } | { ok: false; error: string }> {
+export async function addVideoAction(v: { url: string; thumbUrl: string; seconds: number; collectionId?: string }): Promise<{ ok: true; portfolio: PortfolioPhoto[] } | { ok: false; error: string }> {
   const user = await getOwnerUser();
   if (!user) return { ok: false, error: "Only the owner can add videos." };
   const r = await addPortfolioVideo(user, v);

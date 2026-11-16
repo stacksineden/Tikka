@@ -4,7 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { PageEditor } from "@/components/page/PageEditor";
-import { getBusiness } from "@/lib/data";
+import { getBusiness, getPortfolioPlan } from "@/lib/data";
 import { pageChecklist } from "@/lib/page";
 import { getOwnerUser } from "@/lib/session";
 
@@ -15,6 +15,7 @@ async function Editor() {
   if (!user) redirect("/app/redeem");
   const b = await getBusiness(user);
   if (!b) redirect("/app/setup");
+  const plan = await getPortfolioPlan(user);
   const steps = pageChecklist(b);
   const done = steps.filter((x) => x.done).length;
   return (
@@ -45,7 +46,7 @@ async function Editor() {
           </ul>
         </div>
       )}
-      <PageEditor key={b.slug} business={b} />
+      <PageEditor key={b.slug} business={b} plan={plan} />
     </>
   );
 }

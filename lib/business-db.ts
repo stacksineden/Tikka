@@ -10,6 +10,7 @@ import {
   privateTo,
   serviceTo,
   type BusinessRow,
+  type CollectionRow,
   type FaqRow,
   type PageRow,
   type PortfolioRow,
@@ -20,6 +21,7 @@ import {
   teamTo,
 } from "./business-map";
 import { isInline, toStored } from "./media-path";
+import type { PortfolioPlan } from "./portfolio";
 import type { Poster } from "./posters";
 import { createClient } from "./supabase/server";
 import type { Business } from "./types";
@@ -56,15 +58,16 @@ export async function ownedBusinessId(sb: SupabaseClient, ownerId: string): Prom
 async function loadById(sb: SupabaseClient, id: string): Promise<Business | null> {
   const { data: card } = await sb.from("businesses").select(CARD_COLUMNS).eq("id", id).maybeSingle<BusinessRow>();
   if (!card) return null;
-  const [priv, page, services, portfolio, team, faqs] = await Promise.all([
+  const [priv, page, services, portfolio, team, faqs, collections] = await Promise.all([
     sb.from("business_private").select("owner_whatsapp, daily_summary, founding_member, guarantee_used").eq("business_id", id).maybeSingle<PrivateRow>(),
     sb.from("business_page").select("*").eq("business_id", id).maybeSingle<PageRow>(),
     sb.from("business_services").select("*").eq("business_id", id).order("position").returns<ServiceRow[]>(),
     sb.from("business_portfolio").select("*").eq("business_id", id).order("position").order("created_at").returns<PortfolioRow[]>(),
     sb.from("business_team").select("*").eq("business_id", id).order("position").returns<TeamRow[]>(),
     sb.from("business_faqs").select("*").eq("business_id", id).order("position").returns<FaqRow[]>(),
+    sb.from("business_collections").select("id, name, slug, service_name, cover_id").eq("business_id", id).order("position").order("created_at").returns<CollectionRow[]>(),
   ]);
-  return businessFrom(card, priv.data, page.data, services.data ?? [], portfolio.data ?? [], team.data ?? [], faqs.data ?? []);
+  return businessFrom(card, priv.data, page.data, services.data ?? [], portfolio.data ?? [], team.data ?? [], faqs.data ?? [], collections.data ?? []);
 }
 
 /**
@@ -77,6 +80,13 @@ export const loadBusiness = cache(async (id: string): Promise<Business | null> =
   const owned = await ownedBusinessId(sb, id);
   return loadById(sb, owned ?? id);
 });
+
+/** The owner's business straight from the database, after a change made in this same request. */
+export async function loadBusinessFresh(ownerId: string): Promise<Business | null> {
+  const sb = await createClient();
+  const id = await ownedBusinessId(sb, ownerId);
+  return id ? loadById(sb, id) : null;
+}
 
 export async function loadBusinessBySlug(slug: string): Promise<Business | null> {
   const sb = await createClient();
@@ -187,11 +197,64 @@ async function savePortfolioDb(sb: SupabaseClient, id: string, prev: Business["p
         caption: p.caption?.trim() || null,
         duration_s: p.kind === "video" ? (p.seconds ?? 0) : null,
         position,
+        // Straight into a collection (the database refuses when collections are locked).
+        ...(p.collectionId && isDbId(p.collectionId) ? { collection_id: p.collectionId } : {}),
       });
-      if (error?.code === "23514") throw new BusinessSaveError("Up to 12 photos and 3 videos.");
+      if (error?.code === "23514") throw new BusinessSaveError(/locked/i.test(error.message) ? LOCKED : limitMessage(error.message));
       check(error, "your portfolio");
     }
   }
+}
+
+/* ------------------------------------------------------------ collections */
+
+const LOCKED = "Your collections are locked. Run a drop to add and sort again.";
+/** "Up to 20 photos and videos on your page" / "Up to 3 videos", as the database said it. */
+function limitMessage(message: string): string {
+  return /^Up to \d+ /.test(message) ? `${message.replace(/ on your page$/, "")}.` : "That's the most your page can hold.";
+}
+
+function collectionCheck(error: { message: string; code?: string } | null) {
+  if (!error) return;
+  if (error.code === "23514" && /locked/i.test(error.message)) throw new BusinessSaveError(LOCKED);
+  if (error.code === "23514" && /^Up to/.test(error.message)) throw new BusinessSaveError(`${error.message}.`);
+  if (error.code === "23514") throw new BusinessSaveError("Avoid words like win or luck in the name.");
+  throw new BusinessSaveError("We couldn't save your collections. Try again.");
+}
+
+/** portfolio_plan(): is the portfolio open, why, until when, and the limits right now. Null before the migration. */
+export async function dbPortfolioPlan(ownerId: string): Promise<PortfolioPlan | null> {
+  const sb = await createClient();
+  const id = await ownedBusinessId(sb, ownerId);
+  if (!id) return null;
+  const { data, error } = await sb.rpc("portfolio_plan", { p_business: id });
+  if (error || !data) return null;
+  const p = data as { open: boolean; reason: PortfolioPlan["reason"] | null; until: string | null; items: number; videos: number; collections: number };
+  return { open: p.open, reason: p.reason ?? undefined, until: p.until ?? undefined, items: p.items, videos: p.videos, collections: p.collections };
+}
+
+async function ownerCall(ownerId: string, fn: string, args: Record<string, unknown>): Promise<unknown> {
+  const sb = await createClient();
+  const id = await ownedBusinessId(sb, ownerId);
+  if (!id) throw new BusinessSaveError("Set up your card first.");
+  const { data, error } = await sb.rpc(fn, { p_business: id, ...args });
+  collectionCheck(error);
+  return data;
+}
+
+/** Creates (no id) or changes a collection; returns its id. */
+export async function dbSaveCollection(ownerId: string, c: { id?: string; name: string; serviceName?: string; coverId?: string }): Promise<string> {
+  return (await ownerCall(ownerId, "save_collection", { p_id: c.id ?? null, p_name: c.name, p_service: c.serviceName ?? null, p_cover: c.coverId ?? null })) as string;
+}
+export async function dbRemoveCollection(ownerId: string, id: string): Promise<void> {
+  await ownerCall(ownerId, "remove_collection", { p_id: id });
+}
+export async function dbOrderCollections(ownerId: string, ids: string[]): Promise<void> {
+  await ownerCall(ownerId, "order_collections", { p_ids: ids });
+}
+/** Moves photos into a collection, or out of every collection (null). */
+export async function dbFilePhotos(ownerId: string, ids: string[], collectionId: string | null): Promise<void> {
+  await ownerCall(ownerId, "file_portfolio", { p_ids: ids, p_collection: collectionId });
 }
 
 /* ---------------------------------------------------------------- posters */

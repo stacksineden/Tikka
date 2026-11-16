@@ -18,6 +18,7 @@ import { getBusinessBySlug, getBusinessReviews, getPageDrops } from "@/lib/data"
 import { clockTime, count, place, shortDate } from "@/lib/format";
 import { bookingLink, bookingNumber, focalPosition, heroHeadline, serviceGroups, showsLocation, visibleSections, whereLine, type PageDrop } from "@/lib/page";
 import { photoSrcSet } from "@/lib/media-path";
+import { collectionLine, portfolioView } from "@/lib/portfolio";
 import { SITE } from "@/lib/qr";
 import { formatTime } from "@/lib/setup";
 import type { Business, OpeningHours } from "@/lib/types";
@@ -190,6 +191,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
   const next = drops.find((d) => d.status === "scheduled");
   const sections = new Set(visibleSections(b, { reviews: reviews.length }));
   const page = b.page ?? {};
+  const work = portfolioView(b);
   // Every Book opens the booking sheet (PRD A5), unless the owner set their own booking link on
   // the Book action: then every Book goes there. The sheet's links keep the plain WhatsApp
   // message as their href, so Book works before the script loads.
@@ -370,9 +372,42 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
         <section id="work" aria-labelledby="work-h" className="scroll-mt-4 bg-surface px-4 py-24 sm:px-8 sm:py-32">
           <div className="mx-auto max-w-7xl">
             <Heading id="work-h" n={n("portfolio")} label="Portfolio" title="Our work" />
-            <div data-reveal="up" className="mt-12">
-              <Gallery photos={b.portfolio} businessName={b.name} editorial />
-            </div>
+            {/* Collections first: a cover each, opening that collection's own page. */}
+            {work.collections.length > 0 && (
+              <ul data-reveal="up" className={`biz-covers mt-12 ${work.collections.length % 2 ? "biz-covers-odd" : ""}`}>
+                {work.collections.map((c) => (
+                  <li key={c.id}>
+                    <Link href={`/${b.slug}/work/${c.slug}`} className="biz-cover group">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={c.cover.thumbUrl}
+                        srcSet={c.cover.kind === "video" ? undefined : photoSrcSet(c.cover.url)}
+                        sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                      />
+                      <span className="biz-cover-cap">
+                        <span className="biz-serif block text-[22px] leading-tight sm:text-[26px]">{c.name}</span>
+                        <span className="mt-1 block text-[12px] opacity-85">{collectionLine(c)}</span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {work.rest.length > 0 && (
+              <div data-reveal="up" className="mt-12">
+                {work.collections.length > 0 && (
+                  <h3 className="biz-label mb-6">
+                    <span className="biz-label-rule" aria-hidden="true" />
+                    More work
+                  </h3>
+                )}
+                <Gallery photos={work.rest} businessName={b.name} editorial />
+              </div>
+            )}
           </div>
         </section>
       )}

@@ -16,9 +16,9 @@ const MASONRY_FIRST = 6;
  * two columns on phones, three on desktop, tiles in a varied rhythm of tall and square shapes,
  * the first six with "See all" for the rest, so the page stays short.
  */
-export function Gallery({ photos, businessName, editorial = false }: { photos: PortfolioPhoto[]; businessName: string; editorial?: boolean }) {
+export function Gallery({ photos, businessName, editorial = false, showAll = false }: { photos: PortfolioPhoto[]; businessName: string; editorial?: boolean; /** Every tile from the start (a collection's own page). */ showAll?: boolean }) {
   const [open, setOpen] = useState<number | null>(null);
-  const [all, setAll] = useState(false);
+  const [all, setAll] = useState(showAll);
   const dialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {

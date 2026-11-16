@@ -96,7 +96,7 @@ begin
   exception when check_violation then null;
   end;
 
-  -- Portfolio: 12 items, 3 videos of up to 15 seconds and 15 MB.
+  -- Portfolio on the free page: 20 items, 3 videos of up to 15 seconds and 15 MB (037 covers collections).
   insert into public.business_portfolio (business_id, kind, image_path, thumb_path, duration_s, bytes)
   select biz, 'video', 'v' || g || '.mp4', 'v' || g || '.webp', 14.9, 10000000 from generate_series(1, 3) g;
   begin
@@ -110,10 +110,10 @@ begin
   exception when check_violation then null;
   end;
   insert into public.business_portfolio (business_id, image_path, thumb_path, position)
-  select biz, 'p' || g || '.webp', 'p' || g || '-t.webp', g from generate_series(1, 9) g;
+  select biz, 'p' || g || '.webp', 'p' || g || '-t.webp', g from generate_series(1, 17) g;
   begin
-    insert into public.business_portfolio (business_id, image_path, thumb_path) values (biz, 'p13.webp', 'p13-t.webp');
-    raise exception 'a thirteenth item';
+    insert into public.business_portfolio (business_id, image_path, thumb_path) values (biz, 'p21.webp', 'p21-t.webp');
+    raise exception 'a twenty-first item';
   exception when check_violation then null;
   end;
   select array_agg(id order by image_path desc) into ids from public.business_portfolio where business_id = biz;
@@ -142,7 +142,7 @@ begin
   exception when insufficient_privilege then null;
   end;
   delete from public.business_portfolio where business_id = biz;
-  assert (select count(*) from public.business_portfolio where business_id = biz) = 12, 'staff can''t delete photos';
+  assert (select count(*) from public.business_portfolio where business_id = biz) = 20, 'staff can''t delete photos';
 end $$;
 
 -- --------------------------------------------------------- the public page
@@ -157,7 +157,7 @@ begin
   assert pg -> 'page' ->> 'headline' = 'Winter glow in Lekki' and (pg -> 'page' -> 'hero_focal' ->> 'x')::numeric = 0.3, 'hero';
   assert pg -> 'page' -> 'text' ->> 'title' = 'Our promise', 'the text section is on';
   assert jsonb_array_length(pg -> 'services') = 3 and pg -> 'services' -> 0 ->> 'name' = 'Silk press', 'services in order';
-  assert jsonb_array_length(pg -> 'portfolio') = 12, 'portfolio';
+  assert jsonb_array_length(pg -> 'portfolio') = 20, 'portfolio';
   assert pg -> 'team' = 'null'::jsonb, 'team hidden while switched off';
   assert jsonb_array_length(pg -> 'faqs') = 1, 'faqs shown';
   assert pg -> 'business' ->> 'address' = '12 Admiralty Way', 'in-store shows the address';
