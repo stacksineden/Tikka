@@ -333,7 +333,7 @@ One transaction:
 
 ## 15. Images
 - `/api/og/card?claim=…&sig=…`: the revealed card (signed HMAC so it can't be enumerated), used in WhatsApp and "Share my Tikka".
-- `/api/og/drop?drop=…`: the sealed wrapper with the business seal (link previews, marketplace sharing).
+- `/api/og/drop?drop=…`: the business's own sealed wrapper, drawn like `TikkaPack` with `items` (link previews, marketplace sharing; `Wrapper` in `lib/og-art.tsx`, wording from `lib/pack.ts`). The seal shows initials: the image renderer can't draw the WebP logos.
 - `/api/og/status?drop=…`: 1080×1920 WhatsApp status image; `/api/og/square?drop=…`: 1080×1080 post.
 
 ## 16. Admin

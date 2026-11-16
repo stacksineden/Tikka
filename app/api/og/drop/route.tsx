@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { getPublicDrop } from "@/lib/data";
 import { dropImage } from "@/lib/og-art";
 
-// The link preview for a drop (PRD A1): the sealed wrapper with the business seal.
+// The link preview for a drop (PRD A1): the business's own sealed wrapper, as on the claim page.
 // What people see when the link is pasted into WhatsApp, Instagram or X.
 export async function GET(request: NextRequest) {
   const b = request.nextUrl.searchParams.get("b") ?? "";

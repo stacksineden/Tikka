@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { count, place } from "./format";
+import { packCountLabel, packLines } from "./pack";
 import { TOKENS } from "./tokens";
 import type { Business, PublicDrop } from "./types";
 
@@ -39,63 +40,128 @@ function loadWordmark() {
 
 const mono = { fontFamily: "monospace", letterSpacing: 3, textTransform: "uppercase" as const };
 
-/** The sealed wrapper with the business seal, drawn at `s` × the link-preview size. */
-function Wrapper({ b, drop, wordmark, s }: { b: Business; drop: PublicDrop; wordmark: string; s: number }) {
+/** A colour from a hex with some transparency: the image renderer has no color-mix(). */
+function alpha(hex: string, a: number): string {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? [...h].map((c) => c + c).join("") : h.slice(0, 6), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+const DOT = { legendary: TOKENS.rarityLegendary, rare: TOKENS.gold, thank_you: TOKENS.rarityCommon } as const;
+
+/**
+ * The sealed wrapper as the claim page shows it (components/tikka/TikkaPack.tsx, `items`): the
+ * business's colour, seal, name and place, and what's inside the drop. Tikka keeps the shape,
+ * the tear strip and the stub. Drawn at `s` × the link-preview size.
+ */
+function Wrapper({ b, drop, s }: { b: Business; drop: PublicDrop; s: number }) {
+  const on = b.onBrandColor;
+  const { lines, more } = packLines(drop.items);
+  const meta = [b.category, place(b.area, b.city)].filter(Boolean).join(" · ");
   return (
-    <div style={{ position: "relative", display: "flex", flexDirection: "column", width: 340 * s, height: 476 * s, flexShrink: 0 }}>
-      <div style={{ display: "flex", height: 66 * s, background: TOKENS.brand, borderRadius: `${26 * s}px ${26 * s}px 0 0`, borderBottom: `${3 * s}px dashed ${TOKENS.onNight}` }} />
-      <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", flex: 1, background: TOKENS.brand, borderRadius: `0 0 ${26 * s}px ${26 * s}px` }}>
-        <svg width={118 * s} height={118 * s} viewBox="0 0 24 24" style={{ marginTop: 26 * s }}>
-          <path d={SPARK} fill={TOKENS.gold} />
-        </svg>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={wordmark} width={146 * s} height={51 * s} alt="" style={{ marginTop: 22 * s }} />
-        <div style={{ display: "flex", marginTop: "auto", marginBottom: 34 * s, fontSize: 15 * s, color: TOKENS.onNightMuted, ...mono }}>
-          Limited drop · {count(drop.total)} Tikkas
-        </div>
+    <div style={{ position: "relative", display: "flex", flexDirection: "column", width: 340 * s, height: 476 * s, flexShrink: 0, color: on }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          height: 58 * s,
+          padding: `0 ${22 * s}px`,
+          background: b.brandColor,
+          borderRadius: `${26 * s}px ${26 * s}px 0 0`,
+          borderBottom: `${3 * s}px dashed ${alpha(on, 0.6)}`,
+          fontSize: 13 * s,
+          fontWeight: 800,
+          ...mono,
+          letterSpacing: 3 * s,
+        }}
+      >
+        ← Tear here
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          flex: 1,
+          padding: `${18 * s}px ${22 * s}px ${16 * s}px`,
+          background: b.brandColor,
+          borderRadius: `0 0 ${26 * s}px ${26 * s}px`,
+        }}
+      >
         <div
           style={{
-            position: "absolute",
-            right: 16 * s,
-            top: 40 * s,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: 84 * s,
-            height: 84 * s,
-            borderRadius: 84 * s,
-            background: b.brandColor,
-            color: b.onBrandColor,
-            border: `${4 * s}px solid ${TOKENS.onNight}`,
-            fontSize: 28 * s,
+            width: 76 * s,
+            height: 76 * s,
+            borderRadius: 76 * s,
+            background: on,
+            color: b.brandColor,
+            fontSize: 26 * s,
             fontWeight: 800,
-            transform: "rotate(-10deg)",
           }}
         >
           {b.initials}
         </div>
-      </div>
-    </div>
-  );
-}
-
-function Contents({ drop, size, center = false }: { drop: PublicDrop; size: number; center?: boolean }) {
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: center ? "center" : "flex-start", gap: size * 1.4, fontSize: size, ...mono }}>
-      {(
-        [
-          [drop.contents.legendary, "legendary", TOKENS.rarityLegendary],
-          [drop.contents.rare, "rare", TOKENS.gold],
-          [drop.contents.thankYou, "thank-you", TOKENS.rarityCommon],
-        ] as const
-      )
-        .filter(([n]) => n > 0)
-        .map(([n, label, color]) => (
-          <div key={label} style={{ display: "flex", alignItems: "center", gap: size * 0.55 }}>
-            <div style={{ width: size * 0.8, height: size * 0.8, borderRadius: size, background: color }} />
-            {count(n)} {label}
+        <div style={{ display: "flex", marginTop: 10 * s, fontSize: 28 * s, fontWeight: 800, letterSpacing: -0.5 * s, textAlign: "center", lineHeight: 1.1 }}>{b.name}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 * s, marginTop: 6 * s, fontSize: 14 * s, fontWeight: 500, color: alpha(on, 0.86) }}>
+          {meta}
+          {b.verified && (
+            <div style={{ display: "flex", padding: `${2 * s}px ${9 * s}px`, borderRadius: 99 * s, background: alpha(on, 0.16), color: on, fontWeight: 800, alignItems: "center", gap: 4 * s }}>
+              <svg width={11 * s} height={11 * s} viewBox="0 0 24 24">
+                <path d="M4 12.5l5 5L20 6.5" fill="none" stroke={on} strokeWidth={3.2} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Verified
+            </div>
+          )}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            width: "100%",
+            marginTop: 14 * s,
+            padding: `${12 * s}px ${14 * s}px`,
+            gap: 8 * s,
+            borderRadius: 14 * s,
+            background: alpha(on, 0.12),
+          }}
+        >
+          <div style={{ display: "flex", fontSize: 11 * s, fontWeight: 800, color: alpha(on, 0.8), ...mono, letterSpacing: 2 * s }}>Inside this drop</div>
+          {lines.map((it) => (
+            <div key={it.tier + it.reward} style={{ display: "flex", alignItems: "center", gap: 9 * s, fontSize: 16 * s, fontWeight: 800 }}>
+              <div style={{ display: "flex", width: 10 * s, height: 10 * s, borderRadius: 10 * s, background: DOT[it.tier], flexShrink: 0 }} />
+              <div style={{ display: "flex", flex: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{it.reward}</div>
+              <div style={{ display: "flex", fontSize: 12 * s, fontWeight: 500, color: alpha(on, 0.8), flexShrink: 0 }}>{packCountLabel(it, drop.items)}</div>
+            </div>
+          ))}
+          {more > 0 && <div style={{ display: "flex", paddingLeft: 19 * s, fontSize: 12 * s, color: alpha(on, 0.8) }}>and {count(more)} more inside</div>}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            width: "100%",
+            marginTop: "auto",
+            paddingTop: 10 * s,
+            borderTop: `${1.5 * s}px dashed ${alpha(on, 0.4)}`,
+            fontSize: 11 * s,
+            fontWeight: 800,
+            ...mono,
+            letterSpacing: 2 * s,
+          }}
+        >
+          <div style={{ display: "flex" }}>{count(drop.total)} Tikkas · limited</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 * s }}>
+            <svg width={12 * s} height={12 * s} viewBox="0 0 24 24">
+              <path d={SPARK} fill={TOKENS.gold} />
+            </svg>
+            Tikka
           </div>
-        ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -108,38 +174,32 @@ const SIZES: Record<Layout, { width: number; height: number }> = {
 };
 
 export async function dropImage(b: Business, drop: PublicDrop, layout: Layout, link: string, download?: string): Promise<ImageResponse> {
-  const [wordmark, loadedFonts] = await Promise.all([loadWordmark(), loadFonts()]);
+  const loadedFonts = await loadFonts();
   const label = drop.status === "scheduled" ? "Coming soon" : "Limited drop";
   const base = { width: "100%", height: "100%", display: "flex", background: TOKENS.night, color: TOKENS.onNight, fontFamily: "Bricolage" } as const;
 
   const art =
     layout === "preview" ? (
       <div style={{ ...base, alignItems: "center", padding: "0 90px", gap: 80 }}>
-        <Wrapper b={b} drop={drop} wordmark={wordmark} s={1} />
+        <Wrapper b={b} drop={drop} s={1} />
         <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
           <div style={{ display: "flex", fontSize: 20, color: TOKENS.gold, ...mono }}>{label}</div>
-          <div style={{ display: "flex", fontSize: 66, fontWeight: 800, lineHeight: 1.05, letterSpacing: -2, marginTop: 18 }}>A Tikka from {b.name}</div>
+          <div style={{ display: "flex", fontSize: 66, fontWeight: 800, lineHeight: 1.05, letterSpacing: -2, marginTop: 18 }}>{b.name} has something for you</div>
           <div style={{ display: "flex", fontSize: 28, fontWeight: 500, color: TOKENS.onNightMuted, marginTop: 18 }}>
             {b.category} · {place(b.area, b.city)}
           </div>
-          <div style={{ display: "flex", marginTop: 40 }}>
-            <Contents drop={drop} size={18} />
-          </div>
-          <div style={{ display: "flex", fontSize: 26, fontWeight: 500, marginTop: 40 }}>Tear it open. Every Tikka holds something.</div>
+          <div style={{ display: "flex", fontSize: 26, fontWeight: 500, marginTop: 44 }}>Tear it open. Every Tikka holds something.</div>
         </div>
       </div>
     ) : (
       // Status and square: stacked and centred, with the link written out (images can't hold a tap).
       <div style={{ ...base, flexDirection: "column", alignItems: "center", justifyContent: "center", padding: layout === "status" ? "120px 80px" : "70px 80px", textAlign: "center" }}>
         <div style={{ display: "flex", fontSize: layout === "status" ? 30 : 24, color: TOKENS.gold, ...mono }}>{label}</div>
-        <div style={{ display: "flex", fontSize: layout === "status" ? 92 : 64, fontWeight: 800, lineHeight: 1.04, letterSpacing: -2, marginTop: 24, justifyContent: "center" }}>
-          A Tikka from {b.name}
+        <div style={{ display: "flex", fontSize: layout === "status" ? 92 : 58, fontWeight: 800, lineHeight: 1.04, letterSpacing: -2, marginTop: 24, justifyContent: "center" }}>
+          {b.name} has something for you
         </div>
         <div style={{ display: "flex", marginTop: layout === "status" ? 70 : 36 }}>
-          <Wrapper b={b} drop={drop} wordmark={wordmark} s={layout === "status" ? 1.75 : 1.02} />
-        </div>
-        <div style={{ display: "flex", marginTop: layout === "status" ? 70 : 34 }}>
-          <Contents drop={drop} size={layout === "status" ? 28 : 20} center />
+          <Wrapper b={b} drop={drop} s={layout === "status" ? 1.75 : 1.02} />
         </div>
         <div
           style={{

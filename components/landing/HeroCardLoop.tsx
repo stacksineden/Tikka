@@ -6,6 +6,7 @@ import { Spark } from "@/components/tikka/glyphs";
 import { TikkaCard, type CardFace, type CardReveal } from "@/components/tikka/TikkaCard";
 import { TikkaPack } from "@/components/tikka/TikkaPack";
 import { TIER_VAR } from "@/components/tikka/RarityBadge";
+import { place } from "@/lib/format";
 import { ExampleTag } from "./ExampleTag";
 
 type Beat = "sealed" | "opening" | "front" | "charging" | "flipping" | "revealed" | "out";
@@ -45,6 +46,13 @@ const OUTCOMES: CardReveal[] = [
   { tier: "rare", reward: "20% off any service", code: "GS-7X4QP", expiry: "31 Oct", serial: "0412", claimer: "Adaeze" },
   { tier: "legendary", reward: "Free signature facial", code: "GS-K9MWA", expiry: "31 Oct", serial: "0087", claimer: "Kemi" },
   { tier: "thank_you", reward: "Priority booking", code: "GS-RT6CE", expiry: "31 Oct", serial: "0533", claimer: "Tunde" },
+];
+
+// What's inside the example drop, as the sealed wrapper shows it (the same rewards as the cards).
+const ITEMS = [
+  { tier: "legendary" as const, count: 10, reward: "Free signature facial" },
+  { tier: "rare" as const, count: 50, reward: "20% off any service" },
+  { tier: "thank_you" as const, count: 540, reward: "Priority booking" },
 ];
 
 const RAYS = Array.from({ length: 8 }, (_, i) => ({ angle: i * 45 + 22, delay: 0.5 + (i % 2) * 0.08, alt: i % 2 === 1 }));
@@ -134,6 +142,9 @@ export function HeroCardLoop() {
               total={600}
               contents={{ legendary: 10, rare: 50, thankYou: 540 }}
               opening={shown === "opening"}
+              items={ITEMS}
+              meta={`${FACE.category} · ${place(FACE.area, FACE.city)}`}
+              verified={FACE.verified}
             />
           )}
           {shown !== "sealed" && (

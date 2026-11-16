@@ -8,6 +8,7 @@ import { Spark, Tick } from "@/components/tikka/glyphs";
 import { SoloCard } from "@/components/tikka/SoloCard";
 import { TikkaCard, type CardFace } from "@/components/tikka/TikkaCard";
 import { TikkaPack } from "@/components/tikka/TikkaPack";
+import { place } from "@/lib/format";
 
 const FACE: CardFace = {
   name: "Glow Studio",
@@ -22,6 +23,13 @@ const FACE: CardFace = {
   reviewCount: 126,
   tagline: "Facials, peels and glow-ups since 2019.",
 };
+
+// What's inside the example drop, as the sealed wrapper shows it (the same rewards as the cards).
+const ITEMS = [
+  { tier: "legendary" as const, count: 10, reward: "Free signature facial" },
+  { tier: "rare" as const, count: 50, reward: "20% off any service" },
+  { tier: "thank_you" as const, count: 540, reward: "Priority booking" },
+];
 
 /* 1 · This is a Tikka: tap to tear it open */
 function TearDemo() {
@@ -49,6 +57,10 @@ function TearDemo() {
             contents={{ legendary: 10, rare: 50, thankYou: 540 }}
             opening={beat === "opening"}
             onTear={tear}
+            items={ITEMS}
+            meta={`${FACE.category} · ${place(FACE.area, FACE.city)}`}
+            verified={FACE.verified}
+            nudge={beat === "sealed"}
           />
         )}
         {beat !== "sealed" && (

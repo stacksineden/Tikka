@@ -68,7 +68,7 @@ The card experience is approved: build it to match `design/card-reference/` (loo
 - `prefers-reduced-motion`: no shine, tilt, shake or confetti; the flip becomes a 200ms crossfade.
 - The video tab loads nothing until tapped (poster image first, `preload="none"`).
 - Text alternatives on the card, before and after the reveal.
-- The link preview (Open Graph image) is the sealed wrapper with the business seal.
+- The link preview (Open Graph image) is the business's own sealed wrapper, as on the claim page (its colour, initials, name, place, Verified and what's inside), beside "{business} has something for you". The WhatsApp status image and the square post use the same wrapper. The landing page hero and the welcome tour show the same wrapper for the Glow Studio example.
 - Every step is logged for link activity (B6).
 - The future-drops checkbox is never ticked by default.
 
