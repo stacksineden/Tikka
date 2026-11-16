@@ -484,8 +484,9 @@ function CollectionCard({
 
       <div className="grid gap-1.5">
         <span className="text-label">Its own link</span>
-        <div className="flex items-center gap-2">
-          <span className="text-caption min-w-0 flex-1 truncate rounded-sm border border-line bg-surface-raised px-3 py-3 font-mono">
+        <div className="flex items-start gap-2">
+          {/* The whole link, wrapping on a phone: unbroken, it would push the page wider than the screen. */}
+          <span className="text-caption min-w-0 flex-1 break-all rounded-sm border border-line bg-surface-raised px-3 py-2.5 font-mono">
             usetikka.com/{slug}/work/{c.slug}
           </span>
           <button type="button" className="btn btn-secondary shrink-0" onClick={onCopy}>
