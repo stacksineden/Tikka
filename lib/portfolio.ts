@@ -1,6 +1,6 @@
 // Portfolio collections (PRD A5). Pure rules shared by the editor, the business page, the demo
 // store and the tests. The database decides for real accounts (portfolio_plan(), the limits and
-// the collection functions in supabase/migrations/20261116120000_portfolio_collections.sql);
+// the collection functions in supabase/migrations/20261116130000_portfolio_collections.sql);
 // this mirrors it for the demo and for what the screens say.
 
 import { shortDate } from "./format";

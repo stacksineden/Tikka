@@ -96,7 +96,7 @@ begin
   exception when check_violation then null;
   end;
 
-  -- Portfolio on the free page: 20 items, 3 videos of up to 15 seconds and 15 MB (037 covers collections).
+  -- Portfolio on the free page: 20 items, 3 videos of up to 15 seconds and 15 MB (038 covers collections).
   insert into public.business_portfolio (business_id, kind, image_path, thumb_path, duration_s, bytes)
   select biz, 'video', 'v' || g || '.mp4', 'v' || g || '.webp', 14.9, 10000000 from generate_series(1, 3) g;
   begin

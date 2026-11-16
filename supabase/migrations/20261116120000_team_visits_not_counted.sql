@@ -4,7 +4,16 @@
 -- customers only. The server passes the signed-in user's id; the team check is here, in SQL.
 -- From now on only: visits already saved weren't stored with who made them.
 
-drop function public.record_drop_event(uuid, text, text, text, uuid);
+-- Safe to run again: whatever version of the function is there (the old one, or this one if it
+-- was already put in by hand) is removed first.
+do $$
+declare
+  f record;
+begin
+  for f in select p.oid::regprocedure as sig from pg_proc p where p.proname = 'record_drop_event' and p.pronamespace = 'public'::regnamespace loop
+    execute 'drop function ' || f.sig;
+  end loop;
+end $$;
 
 create function public.record_drop_event(p_drop uuid, p_type text, p_source text, p_visitor_hash text, p_poster uuid default null, p_user uuid default null)
 returns void
