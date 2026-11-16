@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Spark, Tick } from "@/components/tikka/glyphs";
+import { OPEN_DAYS_AFTER, PORTFOLIO_FREE, PORTFOLIO_OPEN } from "@/lib/portfolio";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
 import { SoloCard } from "@/components/tikka/SoloCard";
 import type { CardFace } from "@/components/tikka/TikkaCard";
@@ -437,7 +438,7 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
             </p>
             <ul className="text-body mt-6 grid gap-3">
               {[
-                "Free business page for your Instagram and WhatsApp bio",
+                `Free business page for your Instagram and WhatsApp bio, with ${PORTFOLIO_FREE.items} photos of your work`,
                 "Your first drop free",
                 "Ready-made offers for your business",
                 "Redeem codes at the counter, with staff logins",
@@ -473,8 +474,12 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
                 </li>
               ))}
             </ul>
+            <p className="text-body mt-4">
+              <span className="font-semibold">Your full portfolio:</span> every paid drop opens {PORTFOLIO_OPEN.items} photos and videos on your page,
+              sorted into up to {PORTFOLIO_OPEN.collections} collections like Bridal or Gele. Each one gets its own link to share.
+            </p>
             {pack && (
-              <p className="text-body mt-4">
+              <p className="text-body mt-3">
                 <span className="font-semibold">Season pack:</span> {count(pack.drops)} drops from {priceLabel(pack.priceKobo)}. Use them for Black
                 Friday, December and Valentine&apos;s.
               </p>
@@ -541,7 +546,7 @@ function faqs(tiers: DropTier[], packs: DropPack[]): { id?: string; q: string; a
     },
     {
       q: "What's the business page?",
-      a: "Every business gets a free page at usetikka.com/yourname: your services, prices, photos, reviews, hours and location, plus your live drop. Put it in your Instagram and WhatsApp bio. It's free, always.",
+      a: `Every business gets a free page at usetikka.com/yourname: your services, prices, photos, reviews, hours and location, plus your live drop. Put it in your Instagram and WhatsApp bio. It's free, always, with up to ${PORTFOLIO_FREE.items} photos and videos of your work. A paid drop opens ${PORTFOLIO_OPEN.items}, sorted into up to ${PORTFOLIO_OPEN.collections} collections like Bridal or Gele, each with its own link. They stay open until ${OPEN_DAYS_AFTER} days after the drop ends (all season with a season pack), and nothing is hidden when they close.`,
     },
     {
       q: "What's the QR poster?",
