@@ -2,10 +2,22 @@
 // (TECH_PLAN §6); until M5 the demo claim in lib/data.ts uses these to serve the same deck.
 
 import { buildDeck, seededRng, serials } from "./deck";
-import type { Business, Drop, PublicDrop, Reward, Source, Tier } from "./types";
+import type { Business, Drop, EventKind, PublicDrop, Reward, Source, Tier } from "./types";
 
 /** Anonymous visitor id, set by proxy.ts on claim pages. */
 export const VISITOR_COOKIE = "tk_vid";
+
+/** The link activity a visitor makes on the claim page: opened, tore, tapped Claim, continued. */
+export const VISITOR_STEPS: EventKind[] = ["view", "unwrap", "claim_tap", "claim_continue"];
+
+/**
+ * The business's own visits don't count (TECH_PLAN §12): the owner or staff, signed in, checking
+ * their own link. Claims, redeems and reviews always count. Mirrors record_drop_event() in SQL.
+ */
+export function isOwnTeamVisit(kind: EventKind, userId: string | undefined, ownerId: string | undefined, staffOf: string | null): boolean {
+  if (!userId || !ownerId || !VISITOR_STEPS.includes(kind)) return false;
+  return userId === ownerId || staffOf === ownerId;
+}
 
 /** The card this browser claimed from a drop ("This browser already claimed"). */
 export function claimCookie(dropId: string): string {

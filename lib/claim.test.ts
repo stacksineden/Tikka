@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { actionInstruction, cardAt, dealtCounts, firstName, parseSource, publicStatus, serialLabel, toPublicDrop } from "./claim";
+import { actionInstruction, cardAt, dealtCounts, firstName, isOwnTeamVisit, parseSource, publicStatus, serialLabel, toPublicDrop } from "./claim";
 import type { Drop, Reward } from "./types";
 
 const rewards: Reward[] = [
@@ -87,5 +87,21 @@ describe("claim helpers", () => {
     expect(serialLabel(7, 600)).toBe("0007");
     expect(serialLabel(412, 12000)).toBe("00412");
     expect(firstName("  adaeze okafor ")).toBe("Adaeze");
+  });
+});
+
+describe("the business's own visits", () => {
+  it("skips the owner's and staff's visitor steps, nobody else's", () => {
+    expect(isOwnTeamVisit("view", "owner1", "owner1", null)).toBe(true);
+    expect(isOwnTeamVisit("unwrap", "staff1", "owner1", "owner1")).toBe(true);
+    expect(isOwnTeamVisit("claim_tap", "staff1", "owner1", "owner1")).toBe(true);
+    expect(isOwnTeamVisit("claim_continue", "owner1", "owner1", null)).toBe(true);
+    // Customers, signed out or signed in elsewhere.
+    expect(isOwnTeamVisit("view", undefined, "owner1", null)).toBe(false);
+    expect(isOwnTeamVisit("view", "owner2", "owner1", null)).toBe(false);
+    expect(isOwnTeamVisit("view", "staff2", "owner1", "owner2")).toBe(false);
+    // Real cards always count.
+    expect(isOwnTeamVisit("claim_completed", "owner1", "owner1", null)).toBe(false);
+    expect(isOwnTeamVisit("redeemed", "staff1", "owner1", "owner1")).toBe(false);
   });
 });

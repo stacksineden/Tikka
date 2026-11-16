@@ -336,6 +336,8 @@ Season packs: 3 Small drops ₦12,000; 3 Medium drops ₦25,000. Pack drops can 
 
 **Link funnel** (counts and % of the step before): opened the link · tore open the wrapper · tapped Claim · continued to WhatsApp · claimed · redeemed · followed up. Plus "Opened but didn't claim", new vs returning claimers, "Opened after it sold out" with a suggested next size, and Notify-me subscribers waiting.
 
+**The business's own visits don't count.** When the owner or staff open their own drop link while signed in on that phone or browser, their opens, tears, Claim taps and continues aren't recorded, so the funnel, the live feed and the report count customers only. A visit made while signed out still counts (Tikka can't tell who it is). Claims, redemptions and reviews always count, because they are real cards. From 16 Nov 2026 on; visits before then weren't stored with who made them.
+
 **Live activity feed** (updates in real time): opens (grouped bursts), claims, redemptions with amounts, reviews. First names only after a claim.
 
 **By source:** opens, claims and claim rate per channel (WhatsApp status, Instagram, QR, website, ads, marketplace), QR broken down by poster, with copy link and QR for each.

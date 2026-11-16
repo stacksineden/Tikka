@@ -25,7 +25,7 @@ import marketPins from "./mock/market_pins.json";
 import reviews from "./mock/reviews.json";
 import seedClaims from "./mock/claims.json";
 import dropTiers from "./mock/drop_tiers.json";
-import { actionInstruction, cardAt, dealtCounts, firstName, serialLabel, toPublicDrop } from "./claim";
+import { actionInstruction, cardAt, dealtCounts, firstName, isOwnTeamVisit, serialLabel, toPublicDrop } from "./claim";
 import { funnel, groupViews, suggestNextSize, type FunnelStep } from "./dashboard";
 import { clockTime, place, shortDate } from "./format";
 import type { CardArt } from "./og-art";
@@ -2184,12 +2184,15 @@ function visitorHash(visitorId: string, now: Date): string {
 
 /**
  * Link activity. A `view` counts once per visitor per drop per day; every view also bumps
- * view_total. Other kinds come from the page's beacons and the claim.
+ * view_total. Other kinds come from the page's beacons and the claim. `userId` is whoever is
+ * signed in: the business's own team checking their link isn't counted (record_drop_event()).
  */
-export async function recordEvent(dropId: string, kind: EventKind, source: Source, visitorId: string, posterId?: string): Promise<void> {
+export async function recordEvent(dropId: string, kind: EventKind, source: Source, visitorId: string, posterId?: string, userId?: string): Promise<void> {
   const now = new Date();
   const hash = visitorHash(visitorId, now);
-  if (isDbId(dropId)) return dbRecordEvent(dropId, kind, source, hash, source === "qr" ? posterId : undefined);
+  if (isDbId(dropId)) return dbRecordEvent(dropId, kind, source, hash, source === "qr" ? posterId : undefined, userId);
+  // DEMO: the same rule as the database.
+  if (userId && isOwnTeamVisit(kind, userId, findDropById(dropId)?.ownerId, demoStaffOwner(userId))) return;
   const list = eventStore.get(dropId) ?? [];
   if (kind === "view") {
     viewTotals.set(dropId, (viewTotals.get(dropId) ?? 0) + 1);

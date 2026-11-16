@@ -33,9 +33,13 @@ export async function dbDropExists(dropId: string): Promise<boolean> {
   return (count ?? 0) > 0;
 }
 
-/** Link activity; the visitor id arrives already hashed with a daily salt. */
-export async function dbRecordEvent(dropId: string, kind: EventKind, source: Source, visitorHash: string, posterId?: string): Promise<void> {
-  await adminClient().rpc("record_drop_event", { p_drop: dropId, p_type: kind, p_source: source, p_visitor_hash: visitorHash, p_poster: posterId ?? null });
+/**
+ * Link activity; the visitor id arrives already hashed with a daily salt. `userId` is whoever is
+ * signed in: record_drop_event() skips the visit when they're on the business's team.
+ */
+export async function dbRecordEvent(dropId: string, kind: EventKind, source: Source, visitorHash: string, posterId?: string, userId?: string): Promise<void> {
+  const user = userId && /^[0-9a-f-]{36}$/i.test(userId) ? userId : null;
+  await adminClient().rpc("record_drop_event", { p_drop: dropId, p_type: kind, p_source: source, p_visitor_hash: visitorHash, p_poster: posterId ?? null, p_user: user });
 }
 
 export type IntentResult = { kind: "intent"; token: string; expiresAt: string } | { kind: "scheduled" | "ended" | "sold_out" | "not_found" };

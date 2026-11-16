@@ -9,6 +9,7 @@ import { claimCookie, claimProfile, parseSource, VISITOR_COOKIE } from "@/lib/cl
 import { getBrowserClaim, getBusinessBySlug, getBusinessReviews, getPublicDrop, posterOf, recordEvent } from "@/lib/data";
 import { count, place } from "@/lib/format";
 import { qrSvg } from "@/lib/qr";
+import { getSessionUser } from "@/lib/session";
 
 // The claim page (PRD A1). Server-rendered: the sealed wrapper is in the first HTML, before
 // any JavaScript runs. The client only drives the beats (components/claim/ClaimFlow.tsx).
@@ -45,7 +46,8 @@ async function Claim({ params, searchParams }: PageProps<"/d/[business]/[drop]">
   const visitorId = jar.get(VISITOR_COOKIE)?.value;
   // QR visits from a poster: kept only if it's this business's poster.
   const posterId = source === "qr" ? await posterOf(businessSlug, typeof query.p === "string" ? query.p : undefined) : undefined;
-  if (visitorId) await recordEvent(drop.id, "view", source, visitorId, posterId);
+  // The business's own team, signed in, isn't counted (the check is in record_drop_event()).
+  if (visitorId) await recordEvent(drop.id, "view", source, visitorId, posterId, (await getSessionUser())?.id);
 
   const owner = await getBusinessBySlug(businessSlug);
   const [reviews, card] = await Promise.all([

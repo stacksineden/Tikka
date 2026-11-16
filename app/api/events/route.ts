@@ -3,6 +3,7 @@ import { parseSource, VISITOR_COOKIE } from "@/lib/claim";
 import { dropExists, recordEvent } from "@/lib/data";
 import type { EventKind } from "@/lib/types";
 import { tooMany } from "@/lib/rate-limit";
+import { getSessionUser } from "@/lib/session";
 
 // Link activity beacons from the claim page (TECH_PLAN §12). `view` is written by the page
 // itself and `claim_completed` by the claim, so only these three come from the browser.
@@ -16,6 +17,7 @@ export async function POST(request: Request) {
   if (!visitorId || !body?.dropId || !BEACONS.includes(kind) || !(await dropExists(body.dropId))) {
     return new Response(null, { status: 204 });
   }
-  await recordEvent(body.dropId, kind, parseSource(body.source), visitorId);
+  // The business's own team, signed in, isn't counted (the check is in record_drop_event()).
+  await recordEvent(body.dropId, kind, parseSource(body.source), visitorId, undefined, (await getSessionUser())?.id);
   return new Response(null, { status: 204 });
 }
