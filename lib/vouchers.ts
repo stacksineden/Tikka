@@ -28,13 +28,17 @@ export function usable(v: Voucher, now: Date): boolean {
   return !v.usedByDropId && (!v.expiresAt || new Date(v.expiresAt) > now);
 }
 
-/** The smallest usable voucher whose tier fits `total` Tikkas (ties: the one that expires first). */
+/**
+ * The usable voucher that fits `total` Tikkas: the free first drop first, then the smallest, then
+ * the one that expires first. Mirrors private.pick_voucher().
+ */
 export function pickVoucher(vouchers: Voucher[], tiers: DropTier[], total: number, now: Date): Voucher | null {
   const size = (v: Voucher) => tiers.find((t) => t.id === v.tierId)?.maxCards ?? 0;
+  const first = (v: Voucher) => (v.source === "signup" ? 0 : 1);
   return (
     vouchers
       .filter((v) => usable(v, now) && size(v) >= total)
-      .sort((a, b) => size(a) - size(b) || (a.expiresAt ?? "9999").localeCompare(b.expiresAt ?? "9999"))[0] ?? null
+      .sort((a, b) => first(a) - first(b) || size(a) - size(b) || (a.expiresAt ?? "9999").localeCompare(b.expiresAt ?? "9999"))[0] ?? null
   );
 }
 
@@ -73,25 +77,21 @@ export function adminVoucher(businessId: string, tierId: string, now: Date, expi
 }
 
 /**
- * Plain lines for the owner: "Your first drop is free", "Drops left in your season pack:
- * 2 Small", "You've earned a free Medium drop", "Tikka gave you a free Small drop".
+ * Plain lines for the owner: "Your first drop is free", "Drops left in your season pack: 2",
+ * "You've earned a free drop", "Tikka gave you a free drop". No sizes: every drop is one price.
  */
-export function voucherLines(vouchers: Voucher[], tiers: DropTier[], now: Date): string[] {
+export function voucherLines(vouchers: Voucher[], now: Date): string[] {
   const left = vouchers.filter((v) => usable(v, now));
-  const name = (tierId: string) => tiers.find((t) => t.id === tierId)?.label.replace(/ drop$/, "") ?? tierId;
   const lines: string[] = [];
-  if (left.some((v) => v.source === "signup")) lines.push(`Your first drop is free (up to ${count(tiers.find((t) => t.id === "free")?.maxCards ?? 200)} Tikkas)`);
+  if (left.some((v) => v.source === "signup")) lines.push("Your first drop is free");
   const packs = left.filter((v) => v.source === "pack");
   if (packs.length) {
-    const byTier = new Map<string, number>();
-    for (const v of packs) byTier.set(v.tierId, (byTier.get(v.tierId) ?? 0) + 1);
     const soonest = packs.map((v) => v.expiresAt!).sort()[0];
-    lines.push(
-      `Drops left in your season pack: ${[...byTier].map(([t, n]) => `${count(n)} ${name(t)}`).join(", ")} (use by ${dayMonthYear(soonest)})`,
-    );
+    lines.push(`Drops left in your season pack: ${count(packs.length)} (use by ${dayMonthYear(soonest)})`);
   }
-  for (const v of left.filter((x) => x.source === "guarantee")) lines.push(`You've earned a free ${name(v.tierId)} drop`);
-  for (const v of left.filter((x) => x.source === "admin")) lines.push(`Tikka gave you a free ${name(v.tierId)} drop${v.expiresAt ? ` (use by ${dayMonthYear(v.expiresAt)})` : ""}`);
+  lines.push(...left.filter((x) => x.source === "guarantee").map(() => "You've earned a free drop"));
+  for (const v of left.filter((x) => x.source === "admin")) lines.push(`Tikka gave you a free drop${v.expiresAt ? ` (use by ${dayMonthYear(v.expiresAt)})` : ""}`);
+  lines.push(...left.filter((x) => x.source === "paid").map(() => "A drop you've already paid for"));
   return lines;
 }
 

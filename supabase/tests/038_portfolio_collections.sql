@@ -79,7 +79,7 @@ end $$;
 
 reset role;
 do $$ begin
-  assert public.complete_payment((select r from ref), 500000) ->> 'kind' in ('published', 'paid'), 'paid';
+  assert public.complete_payment((select r from ref), 1000000) ->> 'kind' in ('published', 'paid'), 'paid';
 end $$;
 
 -- ------------------------------------------------- open
@@ -281,14 +281,14 @@ end $$;
 
 -- ------------------------------------------------- a season pack, and founding members
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-b700-000000000001","role":"authenticated"}', true);
-create temp table packref on commit drop as select public.buy_pack((select v from t where k = 'biz'), 'small3') ->> 'reference' as r;
+create temp table packref on commit drop as select public.buy_pack((select v from t where k = 'biz'), 'medium3') ->> 'reference' as r;
 reset role;
 do $$
 declare
   biz uuid := (select v from t where k = 'biz');
   plan jsonb;
 begin
-  perform public.complete_payment((select r from packref), 1200000);
+  perform public.complete_payment((select r from packref), 2500000);
   select * into plan from to_jsonb(private.portfolio_window(biz));
   assert (plan ->> 'is_open')::boolean and plan ->> 'reason' = 'pack', 'a season pack keeps it open: ' || plan::text;
   -- A pack that ran out of time opens nothing.

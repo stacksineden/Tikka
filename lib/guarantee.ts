@@ -54,7 +54,7 @@ export function evaluateGuarantee(i: GuaranteeInput, now: Date): GuaranteeResult
   return { earned: true, redemptions };
 }
 
-/** "Your drop brought fewer customers than we promised. Your next Medium drop is on us." */
-export function guaranteeMessage(tierLabel: string): string {
-  return `Your drop brought fewer customers than we promised. Your next ${tierLabel.replace(/ drop$/, "")} drop is on us.`;
+/** "Your drop brought fewer customers than we promised. Your next drop is on us." */
+export function guaranteeMessage(): string {
+  return "Your drop brought fewer customers than we promised. Your next drop is on us.";
 }

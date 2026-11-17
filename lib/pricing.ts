@@ -1,6 +1,8 @@
-// Pay per drop (TECH_PLAN §11). Pure: tiers and packs come from the database (drop_tiers,
-// drop_packs, read through lib/data.ts); this file only decides what a drop costs. The server
-// prices every drop; the browser never sends an amount.
+// Pay per drop (TECH_PLAN §11, docs/REVENUE_PLAN.md item 2). Pure: tiers and packs come from the
+// database (drop_tiers, drop_packs, read through lib/data.ts); this file only decides what a drop
+// costs. The server prices every drop; the browser never sends an amount. One paid level ("Drop":
+// ₦10,000, founding ₦5,000) for any drop up to 1,000 Tikkas; the old Small and Large tiers are
+// switched off (`active: false`) but kept, so old drops and payments still read right.
 
 import { count, naira } from "./format";
 import { pickVoucher, type Voucher } from "./vouchers";
@@ -15,6 +17,8 @@ export interface DropTier {
   /** The guarantee: fewer redemptions than this earns a free drop of the same size. */
   guaranteeMinRedemptions: number | null;
   sort: number;
+  /** Switched-off tiers (Small, Large) are never quoted; old drops on them still show. Default true. */
+  active?: boolean;
 }
 
 export interface DropPack {
@@ -22,6 +26,8 @@ export interface DropPack {
   tierId: string;
   drops: number;
   priceKobo: number;
+  /** What founding members pay for the pack, when set. */
+  foundingPriceKobo?: number | null;
   active: boolean;
 }
 
@@ -36,13 +42,34 @@ export function priceLabel(kobo: number): string {
   return kobo === 0 ? "Free" : naira(koboToNaira(kobo));
 }
 
-/** Single-drop price. Founding prices apply to single drops only, never to packs. */
+/** Single-drop price, at the founding price for founding members. */
 export function priceFor(tier: DropTier, founding: boolean): number {
   return founding ? tier.foundingPriceKobo : tier.priceKobo;
 }
 
+/** A season pack's price, at the founding price for founding members (when the pack has one). */
+export function packPrice(pack: DropPack, founding: boolean): number {
+  return founding && pack.foundingPriceKobo ? pack.foundingPriceKobo : pack.priceKobo;
+}
+
+/** The paid levels on sale (today, just "Drop"). */
 export function paidTiers(tiers: DropTier[]): DropTier[] {
-  return tiers.filter((t) => t.priceKobo > 0).sort((a, b) => a.maxCards - b.maxCards);
+  return tiers.filter((t) => t.priceKobo > 0 && t.active !== false).sort((a, b) => a.maxCards - b.maxCards);
+}
+
+/** The one paid level on sale. */
+export function paidTier(tiers: DropTier[]): DropTier | undefined {
+  return paidTiers(tiers).at(-1);
+}
+
+/** The most Tikkas one drop can have without talking to Tikka (1,000). */
+export function maxSelfServe(tiers: DropTier[]): number {
+  return paidTier(tiers)?.maxCards ?? 1000;
+}
+
+/** "For more than 1,000 Tikkas in one drop, talk to us." */
+export function overMaxLine(tiers: DropTier[]): string {
+  return `For more than ${count(maxSelfServe(tiers))} Tikkas in one drop, talk to us.`;
 }
 
 export interface QuoteContext {
@@ -76,11 +103,11 @@ export function quoteDrop(tiers: DropTier[], ctx: QuoteContext, total: number): 
   return { kind: "paid", tier, amountKobo: priceFor(tier, ctx.founding), freeMax: freeLeft && free ? free.maxCards : undefined };
 }
 
-/** "600 Tikkas · Medium drop · ₦10,000" / "200 Tikkas · Free (your first drop)". */
-export function quoteLine(q: DropQuote, total: number): string {
-  if (q.kind === "contact") return `For drops over ${count(q.maxSelfServe)} Tikkas, talk to us`;
-  if (q.kind === "voucher") return `${count(total)} Tikkas · ${coveredBy(q.voucher)}`;
-  return `${count(total)} Tikkas · ${q.tier.label} · ${priceLabel(q.amountKobo)}`;
+/** "Drop · ₦10,000" / "Free (your first drop)". Never a number of Tikkas next to a price. */
+export function quoteLine(q: DropQuote): string {
+  if (q.kind === "contact") return `For more than ${count(q.maxSelfServe)} Tikkas in one drop, talk to us`;
+  if (q.kind === "voucher") return coveredBy(q.voucher);
+  return `${q.tier.label} · ${priceLabel(q.amountKobo)}`;
 }
 
 /** How a covered drop reads, never "voucher". */
@@ -112,45 +139,35 @@ export function guaranteeLine(q: DropQuote): string | null {
   return `If this drop brings fewer than ${count(q.tier.guaranteeMinRedemptions)} customers, your next one is free.`;
 }
 
-export type AddQuote =
-  | { kind: "free" }
-  | { kind: "upgrade"; from: DropTier; to: DropTier; amountKobo: number }
-  | { kind: "contact"; maxSelfServe: number };
+export type AddQuote = { kind: "free" } | { kind: "contact"; maxSelfServe: number };
 
-/**
- * Mirrors add_tikkas(): adding to a live drop is free while the new total fits the drop's tier;
- * otherwise pay the difference to the tier that fits. A drop that was covered without paying
- * (free, season pack, earned or gifted) pays the full price of the new tier.
- */
-export function quoteAddTikkas(
-  tiers: DropTier[],
-  current: DropTier,
-  currentTotal: number,
-  extra: number,
-  opts: { paidWithVoucher: boolean; founding: boolean } = { paidWithVoucher: false, founding: false },
-): AddQuote {
-  const total = currentTotal + extra;
-  if (total <= current.maxCards) return { kind: "free" };
-  const to = paidTiers(tiers).find((t) => total <= t.maxCards);
-  if (!to) return { kind: "contact", maxSelfServe: paidTiers(tiers).at(-1)?.maxCards ?? 0 };
-  const newPrice = priceFor(to, opts.founding);
-  const amountKobo = opts.paidWithVoucher || current.priceKobo === 0 ? newPrice : Math.max(0, newPrice - priceFor(current, opts.founding));
-  return { kind: "upgrade", from: current, to, amountKobo };
+/** How many Tikkas a live drop can grow to: 1,000, or its own size if an old Large drop is bigger. */
+export function addCap(tiers: DropTier[], current: Pick<DropTier, "maxCards"> | undefined): number {
+  return Math.max(current?.maxCards ?? 0, maxSelfServe(tiers));
 }
 
-/** "from ₦5,000": the cheapest paid tier. */
+/**
+ * Mirrors add_tikkas(): adding to a live drop is free up to 1,000 Tikkas (or an old Large drop's
+ * own size). Past that, talk to us. There's no paying between sizes any more.
+ */
+export function quoteAddTikkas(tiers: DropTier[], current: Pick<DropTier, "maxCards"> | undefined, currentTotal: number, extra: number): AddQuote {
+  const cap = addCap(tiers, current);
+  return currentTotal + extra <= cap ? { kind: "free" } : { kind: "contact", maxSelfServe: cap };
+}
+
+/** "₦10,000": the price of a drop (the cheapest paid level on sale; today there's one). */
 export function fromPrice(tiers: DropTier[]): string {
   const cheapest = paidTiers(tiers).sort((a, b) => a.priceKobo - b.priceKobo)[0];
   return cheapest ? priceLabel(cheapest.priceKobo) : "";
 }
 
-/** "3 Small drops · ₦12,000 · ₦4,000 each (save ₦3,000)". */
-export function packLine(pack: DropPack, tier: DropTier): { title: string; price: string; saving: string | null } {
-  const single = tier.priceKobo * pack.drops;
-  const save = single - pack.priceKobo;
+/** "3 drops · ₦25,000 · ₦8,333 each · save ₦5,000", at the founding prices for founding members. */
+export function packLine(pack: DropPack, tier: DropTier, founding = false): { title: string; price: string; saving: string | null } {
+  const price = packPrice(pack, founding);
+  const save = priceFor(tier, founding) * pack.drops - price;
   return {
-    title: `${count(pack.drops)} ${tier.label.replace(/ drop$/, "")} drops`,
-    price: priceLabel(pack.priceKobo),
-    saving: save > 0 ? `${priceLabel(Math.round(pack.priceKobo / pack.drops))} each · save ${priceLabel(save)}` : null,
+    title: `${count(pack.drops)} drops`,
+    price: priceLabel(price),
+    saving: save > 0 ? `${priceLabel(Math.round(price / pack.drops))} each · save ${priceLabel(save)}` : null,
   };
 }

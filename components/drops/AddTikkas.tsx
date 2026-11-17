@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { addTikkasAction } from "@/app/app/actions";
 import { count } from "@/lib/format";
-import { priceLabel, quoteAddTikkas, type DropTier } from "@/lib/pricing";
+import { addCap, quoteAddTikkas, type DropTier } from "@/lib/pricing";
 
 const PRESETS = [100, 250, 500];
 
 /**
- * "Add more Tikkas" (TECH_PLAN §11): free while the drop's tier has room, otherwise an upgrade
- * for the difference. The quote here is a preview; the server prices it again.
+ * "Add more Tikkas" (TECH_PLAN §11): free up to 1,000 Tikkas in the drop (flat pricing); past that,
+ * talk to us. The check here is a preview; the server checks again.
  */
-export function AddTikkas({ dropId, total, tier, tiers }: { dropId: string; total: number; tier: DropTier; tiers: DropTier[] }) {
+export function AddTikkas({ dropId, total, tier, tiers }: { dropId: string; total: number; tier?: DropTier; tiers: DropTier[] }) {
   const router = useRouter();
   const ref = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
@@ -29,7 +29,8 @@ export function AddTikkas({ dropId, total, tier, tiers }: { dropId: string; tota
   }, [open]);
 
   const q = extra >= 1 ? quoteAddTikkas(tiers, tier, total, extra) : null;
-  const room = tier.maxCards - total;
+  const cap = addCap(tiers, tier);
+  const room = cap - total;
 
   function submit() {
     setError(undefined);
@@ -66,7 +67,7 @@ export function AddTikkas({ dropId, total, tier, tiers }: { dropId: string; tota
                 Add more Tikkas
               </h2>
               <p className="text-body mt-1 text-ink-muted">
-                They join the end of the drop in the same mix. Your {tier.label.toLowerCase()} has room for {count(Math.max(0, room))} more free.
+                They join the end of the drop in the same mix, free. Room for {count(Math.max(0, room))} more.
               </p>
             </div>
             <button type="button" onClick={() => setOpen(false)} className="grid size-11 shrink-0 place-items-center rounded-pill bg-surface-sunken text-ink-muted" aria-label="Close">
@@ -107,10 +108,8 @@ export function AddTikkas({ dropId, total, tier, tiers }: { dropId: string; tota
             {!q
               ? "Enter how many to add."
               : q.kind === "free"
-                ? `${count(total + extra)} Tikkas in all. Free: it fits your ${tier.label.toLowerCase()}.`
-                : q.kind === "contact"
-                  ? `For drops over ${count(q.maxSelfServe)} Tikkas, talk to us.`
-                  : `${count(total + extra)} Tikkas in all · ${q.from.label} → ${q.to.label} · ${priceLabel(q.amountKobo)} more`}
+                ? `${count(total + extra)} Tikkas in all. Free.`
+                : `For more than ${count(q.maxSelfServe)} Tikkas in one drop, talk to us.`}
           </div>
 
           {error && (
@@ -121,7 +120,7 @@ export function AddTikkas({ dropId, total, tier, tiers }: { dropId: string; tota
 
           <button type="button" className="btn btn-lg mt-5 w-full" onClick={submit} disabled={pending || !q || q.kind === "contact" || extra < 10}>
             {pending && <Loader2 className="animate-spin" />}
-            {q?.kind === "upgrade" ? `Pay ${priceLabel(q.amountKobo)} and add ${count(extra)}` : `Add ${count(extra)} Tikkas`}
+            {`Add ${count(extra)} Tikkas`}
           </button>
           {extra > 0 && extra < 10 && <p className="text-caption mt-2 text-ink-muted">Add at least 10.</p>}
         </div>

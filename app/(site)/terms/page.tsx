@@ -103,12 +103,11 @@ const sections: LegalSection[] = [
     title: "B. Paying for drops",
     body: (
       <ul>
-        <li>Your first drop is free (up to 200 Tikkas). After that you pay per drop by its size, or buy a season pack of 3 drops. Prices are shown before you pay, in naira (₦).</li>
+        <li>Your first drop is free. After that you pay a set price for each drop, whatever its size, or buy a season pack of 3 drops. Prices are shown before you pay, in naira (₦).</li>
         <li>Payments go through Paystack. A drop goes live once its payment is confirmed.</li>
-        <li>Founding members keep their founding price for single drops for as long as they use Tikka.</li>
+        <li>Founding members keep their founding prices for drops and season packs for as long as they use Tikka.</li>
         <li>
-          The guarantee: if a paid drop of a size that has one brings fewer redemptions than the number shown when you bought it, your next drop of that size is
-          free. It applies once per business, to drops you paid for (not free, pack or gifted drops), and only if your drop was seen from at least 3 different places (for example your WhatsApp status, your Instagram and a QR poster) and was built from a ready-made offer or with no drop-check warnings ignored. We check once the drop has ended and every claimed Tikka is used or past its date.
+          The guarantee: if a paid drop brings fewer redemptions than the number shown when you bought it, your next drop is free. It applies once per business, to drops you paid for (not free, pack or gifted drops), and only if your drop was seen from at least 3 different places (for example your WhatsApp status, your Instagram and a QR poster) and was built from a ready-made offer or with no drop-check warnings ignored. We check once the drop has ended and every claimed Tikka is used or past its date.
         </li>
         <li>Refunds: if you paid for a drop and never published it, ask us within 7 days of paying and we&apos;ll refund it. Once a drop is published, it isn&apos;t refunded, including if you end it early.</li>
       </ul>

@@ -71,10 +71,8 @@ begin
   q := public.quote_drop(biz, 150);
   assert q ->> 'kind' = 'voucher' and q ->> 'tier' = 'free' and q ->> 'source' = 'signup', 'the first drop is free: ' || q::text;
   q := public.quote_drop(biz, 250);
-  assert q ->> 'kind' = 'paid' and q ->> 'tier' = 'small' and (q ->> 'amount_kobo')::int = 500000 and (q ->> 'free_max')::int = 200, 'too big for free: ' || q::text;
-  q := public.quote_drop(biz, 1001);
-  assert q ->> 'tier' = 'large' and (q ->> 'amount_kobo')::int = 2000000, 'large';
-  assert public.quote_drop(biz, 3001) ->> 'kind' = 'contact', 'over 3,000: talk to us';
+  assert q ->> 'kind' = 'voucher' and q ->> 'source' = 'signup', 'free up to 1,000 (flat pricing): ' || q::text;
+  assert public.quote_drop(biz, 1001) ->> 'kind' = 'contact', 'over 1,000: talk to us';
 
   -- Publishing checks the rewards add up.
   perform public.save_drop_draft(biz, d, (select j || '{"title": "Glow week", "total_cards": 160}' from drafts where k = 'first'));
@@ -83,7 +81,7 @@ begin
 
   q := public.publish_drop(d);
   assert q ->> 'kind' = 'published' and q ->> 'source' = 'signup', 'published free: ' || q::text;
-  assert (select status = 'published' and paid_with = 'voucher' and payment_status = 'free' and tier_id = 'free' and tier_max_cards = 200
+  assert (select status = 'published' and paid_with = 'voucher' and payment_status = 'free' and tier_id = 'free' and tier_max_cards = 1000
           and published_at = now() from public.drops where id = d), 'stored';
   assert (select used_by_drop_id = d from public.drop_vouchers where business_id = biz and source = 'signup'), 'the free drop is used';
   assert public.publish_drop(d) ->> 'problem' = 'already_published', 'once';
@@ -119,17 +117,17 @@ begin
   d := public.save_drop_draft(biz, null, (select j from drafts where k = 'overlap'));
   assert public.publish_drop(d) ->> 'problem' = 'overlaps_live', 'not before the live one ends';
 
-  -- The next drop: too big for free, so it's paid.
+  -- The next drop: the free one is used, so it's paid.
   d := public.save_drop_draft(biz, null, (select j from drafts where k = 'next'));
   insert into t values ('next', d);
   q := public.publish_drop(d);
-  assert q ->> 'kind' = 'payment' and (q ->> 'amount_kobo')::int = 500000 and q ->> 'tier' = 'small', 'pay for the next one: ' || q::text;
+  assert q ->> 'kind' = 'payment' and (q ->> 'amount_kobo')::int = 1000000 and q ->> 'tier' = 'medium', 'pay for the next one: ' || q::text;
   assert (select status = 'draft' and payment_status = 'pending' from public.drops where id = d), 'still a draft until paid';
   q2 := public.publish_drop(d);
   assert q2 ->> 'payment_id' = q ->> 'payment_id', 'tapping Pay again reuses the payment';
   insert into refs values ('next', q ->> 'reference');
   begin
-    perform public.complete_payment(q ->> 'reference', 500000);
+    perform public.complete_payment(q ->> 'reference', 1000000);
     raise exception 'an owner completed their own payment';
   exception when insufficient_privilege then null;
   end;
@@ -144,11 +142,11 @@ declare
 begin
   assert (select count(*) from public.cards where drop_id = (select v from t where k = 'first')) = 150, 'the free drop''s deck was built';
   assert (select count(*) from public.cards where drop_id = d) = 0, 'no deck until paid';
-  assert public.complete_payment('tk_nope', 500000) ->> 'kind' = 'unknown', 'unknown reference';
+  assert public.complete_payment('tk_nope', 1000000) ->> 'kind' = 'unknown', 'unknown reference';
   assert public.complete_payment((select ref from refs where k = 'next'), 100) ->> 'kind' = 'failed', 'a wrong amount fails';
   assert (select status from public.payments where paystack_reference = (select ref from refs where k = 'next')) = 'failed', 'marked failed';
   assert (select status = 'draft' and payment_status is null from public.drops where id = d), 'nothing published';
-  assert public.complete_payment((select ref from refs where k = 'next'), 500000) ->> 'kind' = 'already', 'a failed payment stays failed';
+  assert public.complete_payment((select ref from refs where k = 'next'), 1000000) ->> 'kind' = 'already', 'a failed payment stays failed';
 end $$;
 
 set local role authenticated;
@@ -161,16 +159,17 @@ declare
   q jsonb;
 begin
   assert (select ref from refs where k = 'next2') <> (select ref from refs where k = 'next'), 'a new payment after a failed one';
-  q := public.complete_payment((select ref from refs where k = 'next2'), 500000);
+  q := public.complete_payment((select ref from refs where k = 'next2'), 1000000);
   assert q ->> 'kind' = 'published', 'paid and published: ' || q::text;
-  assert (select status = 'published' and paid_with = 'payment' and payment_status = 'paid' and tier_id = 'small' and tier_max_cards = 300
+  assert (select status = 'published' and paid_with = 'payment' and payment_status = 'paid' and tier_id = 'medium' and tier_max_cards = 1000
           from public.drops where id = d), 'stored';
   assert (select count(*) from public.cards where drop_id = d) = 250, 'deck built';
-  assert public.complete_payment((select ref from refs where k = 'next2'), 500000) ->> 'kind' = 'already', 'Paystack''s repeat changes nothing';
+  assert public.complete_payment((select ref from refs where k = 'next2'), 1000000) ->> 'kind' = 'already', 'Paystack''s repeat changes nothing';
   assert (select count(*) from public.cards where drop_id = d) = 250, 'no second deck';
   assert (select status = 'paid' and paid_at = now() from public.payments where paystack_reference = (select ref from refs where k = 'next2')), 'payment paid';
 
-  -- Paid for, but it can't go out any more (a drop is already scheduled): it becomes a drop for later.
+  -- Paid for (an old Small payment), but it can't go out any more (a drop is already scheduled): it
+  -- becomes a drop for later, filed under the one paid level.
   insert into public.drops (business_id, slug, title, total_cards, starts_at, ends_at)
   select (select v from t where k = 'biz'), 'late', 'Late', 250, now() + interval '30 days', now() + interval '33 days' returning id into d;
   insert into public.rewards (drop_id, tier, kind, title, quantity) values (d, 'common', 'perk', 'Perk', 250);
@@ -178,7 +177,7 @@ begin
   values ((select v from t where k = 'biz'), 'drop', d, 'small', 500000, 'tk_late');
   q := public.complete_payment('tk_late', 500000);
   assert q ->> 'kind' = 'credited', 'credited: ' || q::text;
-  assert (select count(*) from public.drop_vouchers where business_id = (select v from t where k = 'biz') and source = 'paid' and tier_id = 'small') = 1, 'kept as a drop for later';
+  assert (select count(*) from public.drop_vouchers where business_id = (select v from t where k = 'biz') and source = 'paid' and tier_id = 'medium') = 1, 'kept as a drop for later';
   assert (select status from public.drops where id = d) = 'draft', 'the late drop stays a draft';
 end $$;
 
@@ -195,22 +194,20 @@ begin
   d := public.save_drop_draft(biz, null, (select j from drafts where k = 'third'));
   assert public.publish_drop(d) ->> 'problem' = 'scheduled_exists', 'one scheduled drop at a time';
 
-  -- More Tikkas, free while it fits the drop's size (the free drop's 200).
+  -- More Tikkas, free up to 1,000 (flat pricing).
   q := public.add_tikkas(first, 50);
   assert q ->> 'kind' = 'added' and (q ->> 'total')::int = 200, 'added free: ' || q::text;
   assert (select total_cards from public.drops where id = first) = 200, 'total grows';
   assert (select sum(quantity) from public.rewards where drop_id = first) = 200, 'rewards grow to match';
-  -- Past the free size: the full price of the size that fits (it was a free drop).
   q := public.add_tikkas(first, 10);
-  assert q ->> 'kind' = 'payment' and (q ->> 'amount_kobo')::int = 500000 and q ->> 'tier' = 'small', 'upgrade: ' || q::text;
-  insert into refs values ('upgrade', q ->> 'reference');
-  -- The paid drop going from 250 to 400: the difference, Medium minus Small.
+  assert q ->> 'kind' = 'added' and (q ->> 'total')::int = 210, 'still free past the old 200: ' || q::text;
   q := public.add_tikkas((select v from t where k = 'next'), 150);
-  assert (q ->> 'amount_kobo')::int = 500000 and q ->> 'tier' = 'medium', 'pay the difference: ' || q::text;
+  assert q ->> 'kind' = 'added' and (q ->> 'total')::int = 400, 'the paid drop too: ' || q::text;
+  assert public.add_tikkas((select v from t where k = 'next'), 601) ->> 'kind' = 'contact', 'past 1,000: talk to us';
   assert public.add_tikkas((select v from t where k = 'next'), 0) ->> 'problem' = 'not_live', 'nothing to add';
 
-  q := public.buy_pack(biz, 'small3');
-  assert (q ->> 'amount_kobo')::int = 1200000, 'the pack''s price';
+  q := public.buy_pack(biz, 'medium3');
+  assert (q ->> 'amount_kobo')::int = 2500000, 'the pack''s price';
   insert into refs values ('pack', q ->> 'reference');
 
   assert public.extend_drop((select v from t where k = 'next'), (select starts_at + interval '31 days' from public.drops where id = (select v from t where k = 'next'))) ->> 'problem' = 'too_long', '30 days at most';
@@ -224,19 +221,17 @@ declare
   first uuid := (select v from t where k = 'first');
   biz uuid := (select v from t where k = 'biz');
 begin
-  assert (select count(distinct position) = 200 and max(position) = 199 and count(distinct serial) = 200 and max(serial) = 200
-          from public.cards where drop_id = first), 'the 50 added cards carry on positions and serials';
+  assert (select count(distinct position) = 210 and max(position) = 209 and count(distinct serial) = 210 and max(serial) = 210
+          from public.cards where drop_id = first), 'the 60 added cards carry on positions and serials';
   assert (select count(*) from public.cards c join public.rewards r on r.id = c.reward_id where c.drop_id = first group by r.tier having r.tier = 'legendary') = 1, 'still one legendary';
-  assert public.complete_payment((select ref from refs where k = 'upgrade'), 500000) ->> 'kind' = 'upgraded', 'upgrade paid';
-  assert (select total_cards = 210 and tier_id = 'small' and tier_max_cards = 300 and paid_with = 'payment' from public.drops where id = first), 'bigger drop';
-  assert (select count(*) from public.cards where drop_id = first) = 210, 'ten more cards';
+  assert (select total_cards = 210 and tier_id = 'free' and paid_with = 'voucher' from public.drops where id = first), 'bigger drop, still free';
 
   -- An abandoned payment that Paystack later confirms still counts.
   update public.payments set created_at = now() - interval '2 hours' where paystack_reference = (select ref from refs where k = 'pack');
   assert public.abandon_stale_payments() >= 1, 'stale payments abandoned';
   assert (select status from public.payments where paystack_reference = (select ref from refs where k = 'pack')) = 'abandoned', 'abandoned';
-  assert public.complete_payment((select ref from refs where k = 'pack'), 1200000) ->> 'kind' = 'pack', 'the money arrived anyway';
-  assert (select count(*) from public.drop_vouchers where business_id = biz and source = 'pack' and tier_id = 'small'
+  assert public.complete_payment((select ref from refs where k = 'pack'), 2500000) ->> 'kind' = 'pack', 'the money arrived anyway';
+  assert (select count(*) from public.drop_vouchers where business_id = biz and source = 'pack' and tier_id = 'medium'
           and expires_at = now() + interval '12 months' and used_by_drop_id is null) = 3, 'three drops, for a year';
 end $$;
 
@@ -277,7 +272,7 @@ declare
   g2 uuid;
   w uuid;
 begin
-  assert (select count(*) from public.drop_vouchers where business_id = biz and source = 'admin' and tier_id = 'large') = 1, 'Tikka''s gift';
+  assert (select count(*) from public.drop_vouchers where business_id = biz and source = 'admin' and tier_id = 'medium') = 1, 'Tikka''s gift (an old Large one, filed as a drop)';
 
   -- A paid Small drop that ended with no visits, views from three places: earned.
   insert into public.drops (business_id, slug, title, total_cards, starts_at, ends_at, status, paid_with, tier_id, tier_max_cards)
@@ -297,7 +292,7 @@ begin
   -- Time passes: the free drop that ended early is over.
   update public.drops set starts_at = now() - interval '5 days', ends_at = now() - interval '1 hour' where id = (select v from t where k = 'first');
   assert public.evaluate_due_guarantees() = 1, 'one earned';
-  assert (select count(*) from public.drop_vouchers where business_id = biz and source = 'guarantee' and tier_id = 'small') = 1, 'a free Small drop';
+  assert (select count(*) from public.drop_vouchers where business_id = biz and source = 'guarantee' and tier_id = 'medium') = 1, 'a free drop (from an old Small one)';
   assert (select guarantee_used from public.business_private where business_id = biz), 'used for this business';
   assert (select guarantee_checked_at = now() from public.drops where id = g), 'checked once';
   assert (select guarantee_checked_at is null from public.drops where id = w), 'not while a Tikka can still be used';

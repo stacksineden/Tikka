@@ -18,7 +18,7 @@ const base: GuaranteeInput = {
 describe("the guarantee", () => {
   it("is earned when every condition holds", () => {
     expect(evaluateGuarantee(base, after)).toEqual({ earned: true, redemptions: 1 });
-    expect(guaranteeMessage("Medium drop")).toBe("Your drop brought fewer customers than we promised. Your next Medium drop is on us.");
+    expect(guaranteeMessage()).toBe("Your drop brought fewer customers than we promised. Your next drop is on us.");
   });
 
   it("is never earned for a drop that wasn't paid for", () => {

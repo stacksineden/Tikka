@@ -147,7 +147,7 @@ function CostDemo({ from }: { from: string }) {
       </div>
       <div className="rounded-md bg-on-night p-5 text-night">
         <div className="text-serial font-mono uppercase opacity-70">After that</div>
-        <p className="text-body-lg mt-2 font-semibold">Pay per drop, from {from}.</p>
+        <p className="text-body-lg mt-2 font-semibold">{from} a drop, big or small.</p>
         <p className="text-body mt-1 opacity-75">Every person who claims is yours to follow up.</p>
       </div>
     </div>

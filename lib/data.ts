@@ -65,7 +65,7 @@ import dropTemplates from "./mock/drop_templates.json";
 import type { DropTemplate, TemplateCategory } from "./templates";
 import vouchers from "./mock/vouchers.json";
 import { abandonStale, assertCanReadLeads, completePayment, newReference, type Payment } from "./payments";
-import { quoteAddTikkas, quoteDrop, type DropPack, type DropQuote, type DropTier } from "./pricing";
+import { packPrice, paidTier, quoteAddTikkas, quoteDrop, type DropPack, type DropQuote, type DropTier } from "./pricing";
 import { adminVoucher, guaranteeVoucher, packVouchers, signupVoucher, usable, type Voucher } from "./vouchers";
 import { collectionSlug, portfolioPlan, PORTFOLIO_FREE, PORTFOLIO_OPEN, type PortfolioPlan } from "./portfolio";
 import { platformStats, statsFromTotals, type PlatformStats, type StatsInput } from "./stats";
@@ -731,7 +731,7 @@ export async function startDropPayment(user: Pick<SessionUser, "id">, draft: Dro
   return { dropId, payment };
 }
 
-/** buy_pack: a pending payment for a season pack, at the pack's price (founding prices don't apply). */
+/** buy_pack: a pending payment for a season pack, at the founding price for founding members. */
 export async function buyPack(user: Pick<SessionUser, "id" | "role">, packId: string): Promise<{ ok: true; payment: Payment } | { ok: false; error: string }> {
   if (user.role !== "owner") return { ok: false, error: "Only the owner can buy season packs." };
   if (isDbId(user.id)) {
@@ -744,7 +744,8 @@ export async function buyPack(user: Pick<SessionUser, "id" | "role">, packId: st
   }
   const pack = (await getDropPacks()).find((p) => p.id === packId);
   if (!pack) return { ok: false, error: "That season pack isn't available." };
-  return { ok: true, payment: newPayment(user.id, { kind: "pack", packId: pack.id, toTier: pack.tierId, amountKobo: pack.priceKobo }) };
+  const b = await getBusiness(user);
+  return { ok: true, payment: newPayment(user.id, { kind: "pack", packId: pack.id, toTier: pack.tierId, amountKobo: packPrice(pack, b?.foundingMember ?? false) }) };
 }
 
 /**
@@ -802,10 +803,7 @@ export type AddTikkasResult =
   | { ok: true; kind: "payment"; paymentId: string }
   | { ok: false; error: string };
 
-/**
- * add_tikkas: free while the new total fits the drop's tier; otherwise an 'upgrade' payment for
- * the difference (a drop covered without paying pays the new tier's full price), appended once paid.
- */
+/** add_tikkas: free up to 1,000 Tikkas (or an old Large drop's own size); past that, talk to us. */
 export async function addTikkas(user: Pick<SessionUser, "id" | "role">, dropId: string, extra: number): Promise<AddTikkasResult> {
   if (user.role !== "owner") return { ok: false, error: "Only the owner can add Tikkas." };
   if (isDbId(user.id)) {
@@ -814,7 +812,7 @@ export async function addTikkas(user: Pick<SessionUser, "id" | "role">, dropId: 
       const r = await dbAddTikkas(dropId, extra);
       if (r.kind === "added") return { ok: true, kind: "added", extra };
       if (r.kind === "payment") return { ok: true, kind: "payment", paymentId: r.paymentId };
-      if (r.kind === "contact") return { ok: false, error: `For drops over ${r.max.toLocaleString("en-NG")} Tikkas, talk to us.` };
+      if (r.kind === "contact") return { ok: false, error: `For more than ${r.max.toLocaleString("en-NG")} Tikkas in one drop, talk to us.` };
       return { ok: false, error: "This drop isn't running, so you can't add Tikkas." };
     } catch (e) {
       if (e instanceof DropSaveError) return { ok: false, error: e.message };
@@ -827,16 +825,11 @@ export async function addTikkas(user: Pick<SessionUser, "id" | "role">, dropId: 
   if (drop.status === "ended") return { ok: false, error: "This drop has ended. Run it again as a new drop." };
   if (!Number.isInteger(extra) || extra < 10) return { ok: false, error: "Add at least 10 Tikkas." };
   const tiers = await getDropTiers();
-  const b = await getBusiness(user);
-  const current = tiers.find((t) => t.id === drop.tierId) ?? tiers.find((t) => t.maxCards >= drop.total)!;
-  const q = quoteAddTikkas(tiers, current, drop.total, extra, { paidWithVoucher: drop.paidWith === "voucher", founding: b?.foundingMember ?? false });
-  if (q.kind === "contact") return { ok: false, error: `For drops over ${q.maxSelfServe.toLocaleString("en-NG")} Tikkas, talk to us.` };
-  if (q.kind === "free") {
-    appendTikkas(dropId, extra);
-    return { ok: true, kind: "added", extra };
-  }
-  const payment = newPayment(user.id, { kind: "upgrade", dropId, fromTier: current.id, toTier: q.to.id, extraCards: extra, amountKobo: q.amountKobo });
-  return { ok: true, kind: "payment", paymentId: payment.id };
+  const current = tiers.find((t) => t.id === drop.tierId);
+  const q = quoteAddTikkas(tiers, current, drop.total, extra);
+  if (q.kind === "contact") return { ok: false, error: `For more than ${q.maxSelfServe.toLocaleString("en-NG")} Tikkas in one drop, talk to us.` };
+  appendTikkas(dropId, extra);
+  return { ok: true, kind: "added", extra };
 }
 
 /* ------------------------------------------------------------ guarantee */
@@ -877,9 +870,10 @@ async function runGuaranteeChecks(ownerId: string, drops: Drop[], now: Date) {
     if (r.earned === false && r.reason === "not_due") continue;
     guaranteeChecked.add(d.id);
     if (r.earned && tier) {
-      addVouchers(ownerId, [guaranteeVoucher(ownerId, tier.id, now)]);
+      // Filed under the one paid level, like the database's file_voucher_tier().
+      addVouchers(ownerId, [guaranteeVoucher(ownerId, tier.active === false ? (paidTier(tierStore)?.id ?? tier.id) : tier.id, now)]);
       store.set(ownerId, { ...b, guaranteeUsed: true });
-      guaranteeNotices.set(ownerId, { message: guaranteeMessage(tier.label), at: now.toISOString() });
+      guaranteeNotices.set(ownerId, { message: guaranteeMessage(), at: now.toISOString() });
       return;
     }
   }
@@ -1240,8 +1234,9 @@ export async function adminSetBusiness(user: AdminUser, id: string, patch: { ver
 
 export async function adminGrantDrop(user: AdminUser, id: string, tierId: string, expiresAt?: string): Promise<void> {
   if (isDbId(user.id)) return dbAdminGrantDrop(id, tierId, expiresAt);
-  if (!tierStore.some((t) => t.id === tierId)) return;
-  addVouchers(id, [adminVoucher(id, tierId, new Date(), expiresAt)]);
+  const tier = tierStore.find((t) => t.id === tierId);
+  if (!tier) return;
+  addVouchers(id, [adminVoucher(id, tier.active === false ? (paidTier(tierStore)?.id ?? tierId) : tierId, new Date(), expiresAt)]);
 }
 
 export async function adminSaveTier(user: AdminUser, id: string, patch: { priceKobo: number; foundingPriceKobo: number; guaranteeMinRedemptions: number | null }): Promise<void> {
@@ -1250,10 +1245,10 @@ export async function adminSaveTier(user: AdminUser, id: string, patch: { priceK
   if (t && id !== "free") Object.assign(t, patch);
 }
 
-export async function adminSavePack(user: AdminUser, id: string, priceKobo: number, active: boolean): Promise<void> {
-  if (isDbId(user.id)) return dbAdminSavePack(id, priceKobo, active);
+export async function adminSavePack(user: AdminUser, id: string, priceKobo: number, active: boolean, foundingKobo?: number): Promise<void> {
+  if (isDbId(user.id)) return dbAdminSavePack(id, priceKobo, active, foundingKobo);
   const p = packStore.find((x) => x.id === id);
-  if (p) Object.assign(p, { priceKobo, active });
+  if (p) Object.assign(p, { priceKobo, active, ...(foundingKobo && { foundingPriceKobo: foundingKobo }) });
 }
 
 /** The moderation queue: hide or keep a reported drop or review. */

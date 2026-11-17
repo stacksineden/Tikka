@@ -34,14 +34,15 @@ describe("drops without paying", () => {
     expect(adminVoucher("b1", "small", now).expiresAt).toBeUndefined();
   });
 
-  it("speaks plainly, never 'voucher'", () => {
-    const pack: DropPack = { id: "small3", tierId: "small", drops: 3, priceKobo: 1_200_000, active: true };
-    const vs = [signupVoucher("b1", now), ...packVouchers(pack, "b1", "p", now).slice(0, 2), guaranteeVoucher("b1", "medium", now), adminVoucher("b1", "small", now)];
-    const lines = voucherLines(vs, TIERS, now);
-    expect(lines[0]).toBe("Your first drop is free (up to 200 Tikkas)");
-    expect(lines[1]).toMatch(/^Drops left in your season pack: 2 Small \(use by \d+ Oct \d{4}\)$/);
-    expect(lines).toContain("You've earned a free Medium drop");
-    expect(lines).toContain("Tikka gave you a free Small drop");
+  it("speaks plainly, never 'voucher', and never a size (every drop is one price)", () => {
+    const pack: DropPack = { id: "medium3", tierId: "medium", drops: 3, priceKobo: 2_500_000, active: true };
+    const vs = [signupVoucher("b1", now), ...packVouchers(pack, "b1", "p", now).slice(0, 2), guaranteeVoucher("b1", "medium", now), adminVoucher("b1", "medium", now)];
+    const lines = voucherLines(vs, now);
+    expect(lines[0]).toBe("Your first drop is free");
+    expect(lines[1]).toMatch(/^Drops left in your season pack: 2 \(use by \d+ Oct \d{4}\)$/);
+    expect(lines).toContain("You've earned a free drop");
+    expect(lines).toContain("Tikka gave you a free drop");
+    expect(lines.join(" ")).not.toMatch(/Small|Medium|Large|Tikkas/);
     expect(lines.join(" ").toLowerCase()).not.toContain("voucher");
     expect(dropsReady(vs, now)).toBe(5);
   });

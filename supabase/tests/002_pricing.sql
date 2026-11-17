@@ -70,9 +70,9 @@ select set_config('request.jwt.claims', '', true);
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 do $$ begin
   assert (select count(*) from public.drop_tiers) = 4, 'anyone reads the tiers';
-  assert (select count(*) from public.drop_packs) = 2, 'anyone reads the season packs';
+  assert (select count(*) from public.drop_packs) = 1, 'anyone reads the season pack on sale (flat pricing, 040)';
   assert (select count(*) from public.payments) = 0, 'anonymous visitors never see payments';
-  assert (select price_kobo from public.drop_tiers where id = 'medium') = 1000000, 'Medium is ₦10,000';
+  assert (select price_kobo from public.drop_tiers where id = 'medium') = 1000000, 'a drop is ₦10,000';
 end $$;
 
 reset role;

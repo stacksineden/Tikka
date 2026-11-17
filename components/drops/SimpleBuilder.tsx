@@ -43,13 +43,16 @@ import {
 } from "@/lib/drop";
 import { applyFix, dropCheck, suggestedSize } from "@/lib/dropcheck";
 import { clockTime, count, shortDate } from "@/lib/format";
-import { coveredBy, guaranteeLine, priceLabel, publishLabel, quoteDrop, type DropTier } from "@/lib/pricing";
+import { coveredBy, guaranteeLine, maxSelfServe, priceLabel, publishLabel, quoteDrop, quoteLine, type DropTier } from "@/lib/pricing";
 import { daysLabel, GOALS, type DropTemplate, type Goal } from "@/lib/templates";
 import type { Business, Tier } from "@/lib/types";
-import { usable, type Voucher } from "@/lib/vouchers";
+import type { Voucher } from "@/lib/vouchers";
 import { faceFromBusiness } from "@/components/tikka/TikkaCard";
 import { SparkCard } from "@/components/spark/SparkTeaser";
 import { LiveCard } from "./LiveCard";
+
+/** Quick picks for how many Tikkas. Any size is one price (flat pricing), so these aren't price levels. */
+const SIZE_PICKS = [50, 100, 200, 500, 1000];
 import { TierStep, TIER_COPY } from "./TierStep";
 
 /**
@@ -660,13 +663,13 @@ function StepWhen({
   pageClaims: boolean;
 }) {
   const now = new Date(openedAt);
-  const hasFree = vouchers.some((v) => v.source === "signup" && usable(v, now));
-  const sizes = tiers.filter((t) => t.priceKobo > 0 || (t.id === "free" && hasFree)).sort((a, b) => a.maxCards - b.maxCards);
   const suggest = suggestedSize(draft) ?? pastSuggest?.suggest ?? null;
-  const exact = !sizes.some((t) => t.maxCards === draft.total);
-  const [showExact, setShowExact] = useState(exact);
+  // Flat pricing: any size is one price, so these are just quick picks, never price levels.
+  const picks = [...new Set([...SIZE_PICKS, ...(suggest && suggest <= maxSelfServe(tiers) ? [suggest] : [])])].sort((a, b) => a - b);
+  const [showExact, setShowExact] = useState(!picks.includes(draft.total));
   const setSize = (n: number) => update(setTotal(draft, n), ["total", "counts"]);
   const ctx = { vouchers, founding: business.foundingMember, now };
+  const q = draft.total >= LIMITS.minTotal ? quoteDrop(tiers, ctx, draft.total) : null;
   const restart = (d: DropDraft) => update(withDuration(d, d.durationDays, new Date()), ["startsAt", "endsAt"]);
 
   return (
@@ -689,33 +692,25 @@ function StepWhen({
         <h2 id="size-h" className="text-title text-[17px]">
           How many Tikkas?
         </h2>
-        <div className="grid gap-2" role="radiogroup" aria-labelledby="size-h">
-          {sizes.map((t) => {
-            const q = quoteDrop(tiers, ctx, t.maxCards);
-            const on = !showExact && draft.total === t.maxCards;
-            const free = t.id === "free";
-            const price = q.kind === "voucher" ? coveredBy(q.voucher) : q.kind === "paid" ? priceLabel(q.amountKobo) : "";
-            const recommended = free ? !suggest || suggest <= t.maxCards : suggest !== null && suggest > (sizes[sizes.indexOf(t) - 1]?.maxCards ?? 0) && suggest <= t.maxCards;
+        <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="size-h">
+          {picks.map((n) => {
+            const on = !showExact && draft.total === n;
             return (
               <button
-                key={t.id}
+                key={n}
                 type="button"
                 role="radio"
                 aria-checked={on}
                 onClick={() => {
                   setShowExact(false);
-                  setSize(t.maxCards);
+                  setSize(n);
                 }}
-                className={`flex min-h-16 items-center gap-3 rounded-card border p-4 text-left ${on ? "border-brand bg-brand-soft" : "border-line bg-surface-raised"}`}
+                className={`inline-flex min-h-12 min-w-16 items-center justify-center gap-1.5 rounded-pill border px-4 text-label tabular-nums ${
+                  on ? "border-brand bg-brand-soft text-brand" : "border-line bg-surface-raised text-ink"
+                }`}
               >
-                <span className="min-w-0 flex-1">
-                  <span className="text-body block font-semibold">
-                    {free ? "Free · your first drop" : t.label.replace(/ drop$/, "")} · up to {count(t.maxCards)}
-                    {recommended && <span className="text-caption ml-2 rounded-pill bg-success-soft px-2 py-0.5 font-semibold text-success">Recommended</span>}
-                  </span>
-                  {hasFree && !free && suggest !== null && suggest > 200 && <span className="text-caption block text-ink-muted">With your audience, a bigger drop could fill.</span>}
-                </span>
-                <span className="text-label max-w-[9.5rem] shrink-0 text-right tabular-nums">{price}</span>
+                {count(n)}
+                {n === suggest && <span className="text-caption font-semibold text-success">· suggested</span>}
               </button>
             );
           })}
@@ -724,30 +719,35 @@ function StepWhen({
             role="radio"
             aria-checked={showExact}
             onClick={() => setShowExact(true)}
-            className={`flex min-h-14 items-center rounded-card border p-4 text-left ${showExact ? "border-brand bg-brand-soft" : "border-line bg-surface-raised"}`}
+            className={`inline-flex min-h-12 items-center rounded-pill border px-4 text-label ${showExact ? "border-brand bg-brand-soft text-brand" : "border-line bg-surface-raised text-ink"}`}
           >
-            <span className="text-body font-semibold">Exact number</span>
+            Another number
           </button>
-          {showExact && (
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                className="input w-32 text-center text-[18px] font-semibold tabular-nums"
-                inputMode="numeric"
-                aria-label="Number of Tikkas"
-                value={draft.total || ""}
-                aria-invalid={!!errors.total}
-                onChange={(e) => setSize(Number(e.target.value.replace(/\D/g, "").slice(0, 5)) || 0)}
-              />
-              <span className="text-body text-ink-muted">Tikkas</span>
-            </div>
-          )}
         </div>
+        {showExact && (
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              className="input w-32 text-center text-[18px] font-semibold tabular-nums"
+              inputMode="numeric"
+              aria-label="Number of Tikkas"
+              value={draft.total || ""}
+              aria-invalid={!!errors.total}
+              onChange={(e) => setSize(Number(e.target.value.replace(/\D/g, "").slice(0, 5)) || 0)}
+            />
+            <span className="text-body text-ink-muted">Tikkas</span>
+          </div>
+        )}
         {errors.total && (
           <p role="alert" className="text-caption font-semibold text-danger">
             {errors.total}
           </p>
         )}
-        <p className="text-caption text-ink-muted">Over 3,000? Talk to us and we&apos;ll set it up with you.</p>
+        {q && q.kind !== "contact" && (
+          <p className="text-body flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-card border border-line bg-surface-raised p-3">
+            <span className="font-semibold">{quoteLine(q)}</span>
+            <span className="text-caption text-ink-muted">{q.kind === "voucher" ? "Any size up to 1,000" : "The same price for any size"}</span>
+          </p>
+        )}
         {draft.total >= LIMITS.minTotal && !errors.total && (
           <p className="text-body flex flex-wrap items-center gap-x-3 gap-y-1 rounded-card border border-line bg-surface-sunken p-3">
             <span className="font-semibold">{count(draft.total)} Tikkas:</span>

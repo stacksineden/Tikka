@@ -103,16 +103,16 @@ Unique (phone, business_id, coalesce(drop_id, '00000000-0000-0000-0000-000000000
 
 **wa_messages** `id, direction, phone, wa_message_id unique, body jsonb, related_id, created_at` (audit log; inbound messages also set `last_inbound_at` per phone in `wa_contacts (phone pk, profile_name, last_inbound_at)` so we know whether the 24-hour window is open)
 
-**drop_tiers** `id text pk, label, max_cards int, price_kobo int, founding_price_kobo int, guarantee_min_redemptions int null, sort` (seeded; admin can edit prices)
-| id | label | max_cards | price_kobo | founding_price_kobo | guarantee_min_redemptions |
-| --- | --- | --- | --- | --- | --- |
-| free | First drop | 200 | 0 | 0 | null |
-| small | Small drop | 300 | 500000 (₦5,000) | 500000 | 5 |
-| medium | Medium drop | 1000 | 1000000 (₦10,000) | 1000000 | 10 |
-| large | Large drop | 3000 | 2000000 (₦20,000) | 2000000 | 20 |
-Over 3,000 Tikkas can't self-publish ("Talk to us").
+**drop_tiers** `id text pk, label, max_cards int, price_kobo int, founding_price_kobo int, guarantee_min_redemptions int null, sort, active bool` (seeded; admin can edit prices). Flat pricing (`20261117140000_flat_pricing.sql`): one active paid level.
+| id | label | max_cards | price_kobo | founding_price_kobo | guarantee_min_redemptions | active |
+| --- | --- | --- | --- | --- | --- | --- |
+| free | First drop | 1000 | 0 | 0 | null | yes |
+| medium | Drop | 1000 | 1000000 (₦10,000) | 500000 (₦5,000) | 10 | yes |
+| small | Small drop | 300 | 500000 | 500000 | 5 | no (old drops only) |
+| large | Large drop | 3000 | 2000000 | 2000000 | 20 | no (old drops only) |
+Over 1,000 Tikkas can't self-publish ("Talk to us"). Switched-off tiers are never quoted; a trigger (`private.file_voucher_tier()`) files any new drop-without-paying on a switched-off tier (an old payment credited, the guarantee on an old drop, an admin grant) under the active paid level, and the migration moved unused ones there.
 
-**drop_packs** `id text pk, tier_id references drop_tiers, drops int, price_kobo int, active bool` (seeded: small × 3 · 1200000; medium × 3 · 2500000)
+**drop_packs** `id text pk, tier_id references drop_tiers, drops int, price_kobo int, founding_price_kobo int null, active bool` (on sale: medium × 3 · 2500000, founding 1200000; small × 3 switched off)
 
 **drop_vouchers** `id, business_id, tier_id references drop_tiers, source ('signup'|'pack'|'guarantee'|'admin'), pack_payment_id null, used_by_drop_id null, expires_at null, created_at, used_at`
 A voucher pays for one drop up to its tier's size. Sign-up creates one 'free' voucher. Source 'paid': a drop paid for that couldn't go out when the money arrived (another drop was scheduled meanwhile, or its dates passed) becomes a voucher of that tier ("Already paid for"). One table covers the free first drop, season packs, guarantee refunds and admin grants. Expiry: pack vouchers 12 months after purchase; sign-up and guarantee vouchers never; admin grants never unless an expiry date is set when granting. Expired vouchers are never used. **The UI never says "voucher"** (`lib/vouchers.ts` holds the wording).
@@ -157,7 +157,7 @@ Publishing goes through `publish_drop` (§11): drops covered by a voucher publis
 4. Insert `cards` with `position` = index and `serial` = a separate random permutation of 1..N.
 5. `status = 'published'`, `published_at = now()`.
 
-**Add more Tikkas** (live drop): append K cards in the same reward proportions, spread-shuffled, positions after the current maximum, new serials after N; `total_cards += K`; reward quantities increase to match. Free while the new total fits `tier_max_cards`; otherwise only after an 'upgrade' payment (§11).
+**Add more Tikkas** (live drop): append K cards in the same reward proportions, spread-shuffled, positions after the current maximum, new serials after N; `total_cards += K`; reward quantities increase to match. Free up to 1,000 Tikkas (or the drop's own `tier_max_cards` if an old Large drop is bigger); past that, talk to us. No 'upgrade' payments any more (old ones still complete).
 
 **Extend end date:** up to `starts_at + 30 days`. **End early:** allowed, no refund.
 
@@ -285,11 +285,11 @@ One transaction:
 **The server prices every drop**: the browser never sends an amount. `lib/pricing.ts` reads `drop_tiers` and `drop_packs` (cached); nothing hard-codes prices in the UI. Founding members pay `founding_price_kobo` for single drops; season packs are the same price for everyone.
 
 **Functions** (security definer, owner only unless noted):
-- `quote_drop(p_business, p_total_cards)` → the smallest tier whose `max_cards` fits, its price (founding price for founding members), and the smallest unused voucher whose tier fits, if any. Over 3,000 → `contact_us`.
+- `quote_drop(p_business, p_total_cards)` → the active paid level (the same price for any size up to 1,000; founding price for founding members), and an unused voucher that fits, if any (the free first drop first, then the smallest, then the one that expires first). Over 1,000 → `contact_us`.
 - `publish_drop(p_drop)` → checks the one-live-plus-one-scheduled rule and the 30-day maximum; if a voucher covers it, marks the voucher used, builds the deck (§4) and publishes (one transaction, `paid_with = 'voucher'`); otherwise creates a pending `payments` row (kind 'drop') and returns it; the drop stays a draft.
-- `buy_pack(p_business, p_pack)` → a pending payment (kind 'pack').
+- `buy_pack(p_business, p_pack)` → a pending payment (kind 'pack'), at the pack's founding price for founding members.
 - `complete_payment(p_reference, p_amount_kobo)` → called only by the webhook and the verify fallback (service role); one transaction; idempotent. Unknown or already settled → no change. Amount ≠ payment amount → mark failed, publish nothing. 'drop' → build the deck and publish (`paid_with = 'payment'`). 'upgrade' → raise `tier_max_cards` and append the extra Tikkas. 'pack' → create one voucher per drop in the pack.
-- `add_tikkas(p_drop, p_extra)` → free if the new total fits `tier_max_cards`; otherwise an 'upgrade' payment for (new tier price − current tier price); a voucher drop upgrading pays the full price of the new tier. Append only after payment.
+- `add_tikkas(p_drop, p_extra)` → free (appended at once) up to 1,000, or the drop's own size if bigger; past that `contact`. Never a payment.
 - `evaluate_guarantee(p_drop)` (cron; sets `guarantee_checked_at`) runs once the last Tikka from the drop can no longer be redeemed: after the drop has ended and the latest `claims.expires_at` has passed, or earlier once the drop has ended and every claimed Tikka is redeemed or expired. It creates a 'guarantee' voucher for the same tier and sets `businesses.guarantee_used` when **all** hold: the drop was paid (`paid_with = 'payment'`); the business hasn't used the guarantee; redeemed claims of kind 'drop' (all tiers; bounce-backs excluded) < the tier's `guarantee_min_redemptions`; views came from at least 3 different sources (counting each poster as a source); and the drop has a `template_id` or no `ignored_warnings`. Shows "Your drop brought fewer customers than we promised. Your next Medium drop is on us."
 - Pending payments older than 1 hour become 'abandoned' (`abandon_stale_payments()`, in the per-minute cron). An abandoned payment that Paystack later confirms still completes.
 - Also: `save_drop_draft(business, drop|null, draft jsonb)` (the builder's Save: the drop's fields plus its rewards; only drafts change; `drops.builder` keeps the builder's own copy so a draft reopens exactly as it was left, and drafts get a `draft-xxxxxxxx` address until they publish under one made from the name), `delete_drop_draft` (unpaid drafts only), `end_drop_early`, `extend_drop` (30 days from the start, never into the scheduled next drop), `grant_drop` (admin). Owners never write `drops` directly. `publish_drop` and `extend_drop` answer `{kind: 'problem', problem}` with `rewards_dont_add_up`, `already_published`, `live_exists`, `overlaps_live`, `scheduled_exists`, `ended`, `too_long`, `overlaps_next` or `not_live`, for the builder to word. `publish_drop` locks the business row so two tabs can't both pass the window check, and reuses the drop's open payment when the price hasn't changed. If the drop can't go out when its payment completes, `complete_payment` credits a 'paid' voucher instead. The guarantee cron is `evaluate_due_guarantees()`.

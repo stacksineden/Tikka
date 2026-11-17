@@ -86,7 +86,7 @@ describe("validation", () => {
     expect(validateStep1(draft({ endsAt: "2026-10-20T10:30" }), NOW).endsAt).toBeDefined();
     expect(validateStep1(draft({ endsAt: "2026-11-25T10:00" }), NOW).endsAt).toMatch(/30 days/);
     expect(validateStep1(draft({ endsAt: "2026-11-19T09:00" }), NOW).endsAt).toBeUndefined();
-    expect(validateStep1(draft({ total: 3001 }), NOW).total).toBe("For drops over 3,000 Tikkas, talk to us.");
+    expect(validateStep1(draft({ total: 1001 }), NOW).total).toBe("For more than 1,000 Tikkas in one drop, talk to us.");
   });
 
   it("step 2: every reward that's given out needs its details", () => {

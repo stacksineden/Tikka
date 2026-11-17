@@ -63,8 +63,8 @@ export type AudienceBand = "under_300" | "300_1000" | "1000_5000" | "over_5000";
 export const AUDIENCE: { id: AudienceBand; label: string; suggest: number }[] = [
   { id: "under_300", label: "Under 300", suggest: 100 },
   { id: "300_1000", label: "300–1,000", suggest: 300 },
-  { id: "1000_5000", label: "1,000–5,000", suggest: 1000 },
-  { id: "over_5000", label: "More than 5,000", suggest: 3000 },
+  { id: "1000_5000", label: "1,000–5,000", suggest: 500 },
+  { id: "over_5000", label: "More than 5,000", suggest: 1000 },
 ];
 
 export interface DraftBounceBack extends BounceBack {
@@ -105,9 +105,9 @@ export interface DropDraft {
   copiedFrom?: string;
 }
 
-/** maxTotal is the largest self-serve tier (drop_tiers); bigger drops are set up with Tikka. */
+/** maxTotal is the most Tikkas in one drop without talking to Tikka (the paid level's max_cards, 1,000). */
 /** reward and terms are what fits on the card's stub: two lines of reward, one line of terms. */
-export const LIMITS = { name: 40, minTotal: 10, maxTotal: 3_000, maxDays: 30, reward: 44, terms: 40 } as const;
+export const LIMITS = { name: 40, minTotal: 10, maxTotal: 1_000, maxDays: 30, reward: 44, terms: 40 } as const;
 
 /* ------------------------------------------------------------- dates */
 
@@ -394,7 +394,7 @@ export function validateStep1(d: DropDraft, now: Date): Errors {
   if (!d.name.trim()) e.name = "Name your drop, e.g. December Glow.";
   else if (d.name.trim().length > LIMITS.name) e.name = `Keep it under ${LIMITS.name} characters.`;
   if (!Number.isInteger(d.total) || d.total < LIMITS.minTotal) e.total = `A drop needs at least ${LIMITS.minTotal} Tikkas.`;
-  else if (d.total > LIMITS.maxTotal) e.total = `For drops over ${count(LIMITS.maxTotal)} Tikkas, talk to us.`;
+  else if (d.total > LIMITS.maxTotal) e.total = `For more than ${count(LIMITS.maxTotal)} Tikkas in one drop, talk to us.`;
 
   const start = d.startMode === "now" ? now : new Date(watToIso(d.startsAt));
   if (d.startMode === "later") {

@@ -8,7 +8,7 @@ import { SettingsPage } from "@/components/settings/SettingsPage";
 import { getBusiness, getDropPacks, getDrops, getDropTiers, getPayments, getVouchers } from "@/lib/data";
 import { clockTime, count, shortDate } from "@/lib/format";
 import type { Payment } from "@/lib/payments";
-import { fromPrice, packLine, priceFor, priceLabel, type DropTier } from "@/lib/pricing";
+import { packLine, paidTier, priceFor, priceLabel, type DropTier } from "@/lib/pricing";
 import { getSessionUser } from "@/lib/session";
 import { PACK_MONTHS, voucherLines } from "@/lib/vouchers";
 
@@ -21,12 +21,13 @@ const STATUS: Record<string, { label: string; cls: string }> = {
   abandoned: { label: "Not completed", cls: "bg-surface-sunken text-ink-muted" },
 };
 
+/** No Tikka counts next to prices: old Small, Medium and Large payments read as what they were. */
 function what(p: Payment, tiers: DropTier[], dropName: Map<string, string>): { title: string; detail: string } {
   const tier = tiers.find((t) => t.id === p.toTier);
-  const size = tier ? `${tier.label}, up to ${count(tier.maxCards)}` : (p.toTier ?? "");
-  if (p.kind === "pack") return { title: "Season pack", detail: size };
+  const size = tier?.label ?? "Drop";
+  if (p.kind === "pack") return { title: "Season pack", detail: "3 drops" };
   const title = (p.dropId && dropName.get(p.dropId)) || "Drop";
-  return { title, detail: p.kind === "upgrade" ? `+${count(p.extraCards ?? 0)} Tikkas · upgrade to ${size}` : size };
+  return { title, detail: p.kind === "upgrade" ? `More Tikkas · ${size}` : size };
 }
 
 async function Payments({ searchParams }: { searchParams: PageProps<"/app/settings/payments">["searchParams"] }) {
@@ -44,9 +45,9 @@ async function Payments({ searchParams }: { searchParams: PageProps<"/app/settin
   ]);
   if (!business) redirect("/app/setup");
   const now = new Date();
-  const ready = voucherLines(vouchers, tiers, now);
+  const ready = voucherLines(vouchers, now);
   const dropName = new Map(drops.map((d) => [d.id, d.name]));
-  const paid = tiers.filter((t) => t.priceKobo > 0);
+  const drop = paidTier(tiers);
 
   return (
     <div className="grid gap-4">
@@ -72,30 +73,26 @@ async function Payments({ searchParams }: { searchParams: PageProps<"/app/settin
               ))}
             </ul>
           ) : (
-            <p className="text-body mt-1 text-ink-muted">None right now. Each drop is paid when you publish, from {fromPrice(tiers)}, by card or transfer.</p>
+            <p className="text-body mt-1 text-ink-muted">None right now. Each drop is paid when you publish{drop ? `, ${priceLabel(priceFor(drop, business.foundingMember))}` : ""}, by card or transfer.</p>
           )}
           <p className="text-caption mt-2 text-ink-muted">Your business page is always free.</p>
         </div>
       </section>
 
       <section className="rounded-card border border-line bg-surface-raised p-4 sm:p-6" aria-labelledby="price-h">
-        <h2 id="price-h" className="text-title text-[17px] leading-6">
-          Single drops
-        </h2>
-        {business.foundingMember && <p className="text-caption mt-1 text-ink-muted">Founding member prices, for life.</p>}
-        <ul className="mt-3 divide-y divide-line">
-          {paid.map((t) => (
-            <li key={t.id} className="flex items-baseline justify-between gap-3 py-2.5">
-              <span className="text-body">
-                {t.label} <span className="text-ink-muted">· up to {count(t.maxCards)} Tikkas</span>
-              </span>
-              <span className="text-title text-[17px] tabular-nums">{priceLabel(priceFor(t, business.foundingMember))}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="text-caption mt-2 text-ink-muted">
-          Paid drops come with a promise: if one brings fewer customers than its size promises, your next drop of that size is free (once).
-        </p>
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 id="price-h" className="text-title text-[17px] leading-6">
+            Each drop
+          </h2>
+          {drop && <span className="text-title text-[17px] tabular-nums">{priceLabel(priceFor(drop, business.foundingMember))}</span>}
+        </div>
+        <p className="text-body mt-1 text-ink-muted">The same price for any drop, big or small.</p>
+        {business.foundingMember && <p className="text-caption mt-1 text-ink-muted">Founding member price, for life.</p>}
+        {drop?.guaranteeMinRedemptions && (
+          <p className="text-caption mt-2 text-ink-muted">
+            Paid drops come with a promise: if one brings fewer than {count(drop.guaranteeMinRedemptions)} customers, your next drop is free (once).
+          </p>
+        )}
       </section>
 
       {packs.length > 0 && (
@@ -110,7 +107,7 @@ async function Payments({ searchParams }: { searchParams: PageProps<"/app/settin
             {packs.map((p) => {
               const tier = tiers.find((t) => t.id === p.tierId);
               if (!tier) return null;
-              const line = packLine(p, tier);
+              const line = packLine(p, tier, business.foundingMember);
               return (
                 <article key={p.id} className="grid gap-3 rounded-card border border-line bg-surface-raised p-4">
                   <div className="flex items-start gap-3">
@@ -119,7 +116,7 @@ async function Payments({ searchParams }: { searchParams: PageProps<"/app/settin
                     </span>
                     <div className="min-w-0">
                       <h3 className="text-title text-[17px] leading-6">{line.title}</h3>
-                      <p className="text-caption text-ink-muted">Up to {count(tier.maxCards)} Tikkas each</p>
+                      <p className="text-caption text-ink-muted">For Black Friday, December and Valentine&apos;s</p>
                     </div>
                     <span className="text-title ml-auto text-[17px] tabular-nums">{line.price}</span>
                   </div>

@@ -83,7 +83,7 @@ async function Dashboard({ params, searchParams }: { params: PageProps<"/app/dro
   const now = new Date();
   const justPublished = sp.published === "1";
   const added = Number(sp.added) || 0;
-  const tier = tiers.find((t) => t.id === drop.tierId) ?? tiers.find((t) => t.maxCards >= drop.total);
+  const tier = tiers.find((t) => t.id === drop.tierId);
   const running = drop.status === "live" || drop.status === "scheduled";
   const left = Math.max(0, drop.total - drop.claimed);
   const maxEndsAt = new Date(new Date(drop.startsAt).getTime() + LIMITS.maxDays * 86_400_000).toISOString();
@@ -140,7 +140,7 @@ async function Dashboard({ params, searchParams }: { params: PageProps<"/app/dro
             {drop.status === "live" ? "Live" : drop.status === "scheduled" ? "Scheduled" : drop.status === "sold_out" ? "Sold out" : "Ended"}
           </span>
           <span className="text-caption text-ink-muted">
-            {tier ? `${tier.label} · up to ${count(tier.maxCards)}` : ""}
+            {count(drop.total)} Tikkas
           </span>
         </div>
         <h1 className="text-heading mt-2">{drop.name}</h1>
@@ -157,7 +157,7 @@ async function Dashboard({ params, searchParams }: { params: PageProps<"/app/dro
       </section>
 
       <div className="flex flex-wrap items-center gap-2">
-        {drop.status !== "ended" && tier && <AddTikkas dropId={drop.id} total={drop.total} tier={tier} tiers={tiers} />}
+        {drop.status !== "ended" && <AddTikkas dropId={drop.id} total={drop.total} tier={tier} tiers={tiers} />}
         {running && <DropActions dropId={drop.id} startsAt={drop.startsAt} endsAt={drop.endsAt} maxEndsAt={maxEndsAt} />}
         <Link href={`/app/drops/new?from=${drop.id}`} className="btn btn-ghost">
           <RotateCcw />

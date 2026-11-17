@@ -25,8 +25,8 @@ The pitch: drops turn people who see a business into customers who come in, and 
 | Staff logins | In version one. Staff can only use the redeem screen |
 | Leads | Owners see every claimer in full (first name, WhatsApp number, reward, status, visit plan), with no per-person fees. Export includes all leads |
 | Consent | The claim sheet covers this drop only. Future drops on WhatsApp need a separate, unticked checkbox |
-| Payments | Free first drop (up to 200 Tikkas). Then pay per drop by size, or buy a **season pack** of 3 drops. Paystack (card or transfer). No subscription |
-| Founding price | The first 20 businesses (admin flag) keep founding prices for life |
+| Payments | Free first drop. Then **one price per drop, whatever its size**: ₦10,000 (founding ₦5,000), up to 1,000 Tikkas; or a **season pack** of 3 drops, ₦25,000 (founding ₦12,000). Paystack (card or transfer). No subscription. Flat pricing from 17 Nov 2026 (docs/REVENUE_PLAN.md item 2) |
+| Founding price | The first 20 businesses (admin flag) keep founding prices for life, on drops and season packs |
 | Guarantee | A paid drop that brings too few confirmed redemptions earns a free drop of the same size, once per business (B5) |
 | Business page | Free mini website at usetikka.com/[slug], for the business's Instagram and WhatsApp bio. Always free |
 | QR poster | One permanent QR per business that always leads to the current drop, with printable posters |
@@ -234,7 +234,7 @@ Plain language everywhere: one decision per screen, big buttons, no jargon.
 - **Example results**, labelled "Example" with "An illustration of how a drop works, not a promise of results.": the funnel (with "People to follow up"), "Spent by the 76 who came in", then "Tikka cost · ₦10,000 (Medium drop)" (from `drop_tiers`).
 - **Live on Tikka now** marketplace strip: real live drops only, shown when there are at least 6.
 - **Pricing** (amounts from `drop_tiers` and `drop_packs`, never hard-coded):
-  - **Start free:** ₦0. "Your business page and your first drop (up to 200 Tikkas)." Bullets: a free page for your bio, with 20 photos of your work; your first drop free; ready-made offers for your business; redeem at the counter with staff logins; live link activity; listed on the Tikka marketplace; every person who claims is yours to follow up. Button "Start free".
+  - **Start free:** ₦0. "Your business page and your first drop." Bullets: a free page for your bio, with 20 photos of your work; your first drop free; ready-made offers for your business; redeem at the counter with staff logins; live link activity; listed on the Tikka marketplace; every person who claims is yours to follow up. Button "Start free".
   - **Pay per drop:** from the cheapest tier, the tiers listed. Under it: "Your full portfolio: every paid drop opens 60 photos and videos on your page, sorted into up to 8 collections like Bridal or Gele. Each one gets its own link to share." then "Season pack: 3 drops from ₦12,000. Use them for Black Friday, December and Valentine's." and "If a paid drop brings fewer customers than we promise, your next one is free." with a "How it works" link to the guarantee FAQ.
   - Footnote: "Pay by card or transfer. No subscription. During the pilot, Tikka pays for every WhatsApp message."
 - **FAQs** (answers match the product; amounts and thresholds from the database): no app needed; how people claim; one per number; what a thank-you gives; other cities; staff; business page; **What does it cost?**; **What if my drop doesn't bring customers?** (the guarantee: fewer than 5 / 10 / 20 customers through the door, shared in at least 3 places, once per business); **How long do Tikkas last?** (usually 14 days from claiming, or 7 or 30; the full time even if the drop ends first); **Who sees my customers' numbers?** (only the owner; staff never); **Can I message people about my next drop?** (about their Tikka, anyone who claimed; about future drops, only people who ticked "Send me future drops"); **What's the QR poster?**
@@ -295,8 +295,7 @@ Each drop: status (Draft, Scheduled, Live, Sold out, Ended), goal, dates, cards 
 
 **"How many, and when?"**
 - "About how many people see what you post, on WhatsApp, Instagram or anywhere else?" Under 300 · 300–1,000 · 1,000–5,000 · More than 5,000 → a suggested size (about 1 Tikka per 3 viewers, rounded to a tier). After a past drop, suggest from its real numbers.
-- **First drop:** "Free · your first drop · up to 200 (recommended)" is preselected; the paid sizes still show underneath with "With your audience, a bigger drop could fill." If the business pays for a bigger first drop, the free drop stays for later.
-- Size as big cards with the price: "Free · your first drop · up to 200", "Small · up to 300 · ₦5,000", "Medium · up to 1,000 · ₦10,000", "Large · up to 3,000 · ₦20,000"; "Covered by your season pack" when a voucher applies. "Exact number" for a custom size. Over 3,000: "Talk to us".
+- **How many Tikkas:** quick picks 50 · 100 · 200 · 500 · 1,000 (the suggested size marked "suggested") and "Another number". Under them one price line, never with a number of Tikkas: "Free (your first drop) · Any size up to 1,000", "Drop · ₦10,000 · The same price for any size", or "Covered by your season pack". A first drop starts at 200. Over 1,000: "For more than 1,000 Tikkas in one drop, talk to us" (only shown when they type more).
 - **When does it start?** "As soon as I publish" or "On a date" (then the date and time).
 - **Open for** 3, 5, 7, 14 or 30 days (default 14), with the closing date.
 - **Each Tikka lasts** 7, 14 or 30 days after it's claimed (default 14).
@@ -317,18 +316,19 @@ Each drop: status (Draft, Scheduled, Live, Sold out, Ended), goal, dates, cards 
 - One button: **"Publish free"**, **"Publish with your season pack"** or **"Pay ₦10,000 and publish"** (owner only). Paid drops go to Paystack and stay a draft until the payment completes.
 - After publishing: the drop link, the counter poster ("Your counter poster now opens this drop", a preview, Print, and one tap to put this drop's best reward on it, offered only when no other drop is live), the status and square images, a small "QR for this drop only (for flyers)" link, channel links, and "Your drop is on the marketplace". No poster to create per drop.
 
-| Size | Up to | Price | Guarantee (confirmed redemptions) |
-| --- | --- | --- | --- |
-| First drop | 200 | Free (one voucher at sign-up) | — |
-| Small | 300 | ₦5,000 | 5 |
-| Medium | 1,000 | ₦10,000 | 10 |
-| Large | 3,000 | ₦20,000 | 20 |
+**Flat pricing** (from 17 Nov 2026, docs/REVENUE_PLAN.md item 2):
 
-Season packs: 3 Small drops ₦12,000; 3 Medium drops ₦25,000. Pack drops can be used for 12 months after purchase. Founding members keep founding prices for life on single drops (packs are the normal price). Prices live in `drop_tiers` and `drop_packs`; nothing hard-codes them in the UI.
+| | Up to | Price | Founding | Guarantee (confirmed redemptions) |
+| --- | --- | --- | --- | --- |
+| First drop | 1,000 | Free (one voucher at sign-up) | Free | — |
+| Drop | 1,000 | ₦10,000 | ₦5,000 | 10 |
+| Season pack (3 drops) | 1,000 each | ₦25,000 | ₦12,000 | 10 each |
 
-**Never say "voucher" in the UI.** Say "Your first drop is free", "Drops left in your season pack: 2 Small", "You've earned a free Medium drop", "Tikka gave you a free Small drop".
+The same price for 40 Tikkas or 900; no screen shows a number of Tikkas next to a price. Over 1,000 in one drop: talk to us (Studio). Adding Tikkas to a live drop is free up to 1,000. The old Small (300, ₦5,000) and Large (3,000, ₦20,000) sizes are switched off, not deleted: drops and payments on them keep showing as they were, and their unused drops-without-paying became drops of the one paid level. Pack drops can be used for 12 months after purchase. Founding members keep founding prices for life, on drops and packs. Prices live in `drop_tiers` and `drop_packs`; nothing hard-codes them in the UI.
 
-**The guarantee:** when a paid drop (not one covered by a free, pack, earned or gifted drop) brings fewer confirmed redemptions than its size promises (every redeemed Tikka from the drop, all tiers including thank-you; bounce-backs don't count), checked once the last Tikka from the drop can no longer be redeemed (or earlier, when every claimed Tikka is already used or expired), and the business hasn't used the guarantee, and the drop had views from at least 3 different sources (link sources and posters), and it was published from a template or with no ignored drop-check warnings → a free drop voucher of the same size, once per business: "Your drop brought fewer customers than we promised. Your next Medium drop is on us."
+**Never say "voucher" in the UI.** Say "Your first drop is free", "Drops left in your season pack: 2", "You've earned a free drop", "Tikka gave you a free drop".
+
+**The guarantee:** when a paid drop (not one covered by a free, pack, earned or gifted drop) brings fewer confirmed redemptions than its price level promises (10) (every redeemed Tikka from the drop, all tiers including thank-you; bounce-backs don't count), checked once the last Tikka from the drop can no longer be redeemed (or earlier, when every claimed Tikka is already used or expired), and the business hasn't used the guarantee, and the drop had views from at least 3 different sources (link sources and posters), and it was published from a template or with no ignored drop-check warnings → a free drop voucher, once per business: "Your drop brought fewer customers than we promised. Your next drop is on us."
 
 **Run it again** opens Screen 4 prefilled from the old drop, with an updated size suggestion. It's a new drop, priced normally.
 
@@ -451,7 +451,7 @@ Spark is Tikka's AI drop strategist. **Not built in version one.** It shows only
 - Platform numbers: businesses, live drops, claims today, redemptions, WhatsApp messages sent and their cost.
 - **Studio enquiries:** the list, newest first, with each one's status (new, contacted, converted, closed), changed by an admin.
 - **Spark early access:** how many signed up, and the list.
-- Money: **grant free drops** of a chosen size (pilot and done-for-you businesses; optional expiry date), view payments and revenue (drops, upgrades, packs), edit tier prices, founding prices and pack prices, see guarantee vouchers issued.
+- Money: **grant free drops** (pilot and done-for-you businesses; optional expiry date), view payments and revenue (drops, packs, and old upgrades), edit the drop price, its founding price, and the pack's price and founding price, see guarantee vouchers issued.
 
 ---
 

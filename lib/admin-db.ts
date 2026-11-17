@@ -194,8 +194,8 @@ export async function dbAdminSaveTier(id: string, t: { priceKobo: number; foundi
   await call("admin_save_tier", { p_tier: id, p_price_kobo: t.priceKobo, p_founding_kobo: t.foundingPriceKobo, p_guarantee_min: t.guaranteeMinRedemptions });
 }
 
-export async function dbAdminSavePack(id: string, priceKobo: number, active: boolean): Promise<void> {
-  await call("admin_save_pack", { p_pack: id, p_price_kobo: priceKobo, p_active: active });
+export async function dbAdminSavePack(id: string, priceKobo: number, active: boolean, foundingKobo?: number): Promise<void> {
+  await call("admin_save_pack", { p_pack: id, p_price_kobo: priceKobo, p_active: active, p_founding_kobo: foundingKobo ?? null });
 }
 
 /** Prices change only when an admin saves them (which clears this tag), so pages can be prerendered. */
@@ -207,7 +207,7 @@ export async function dbTiers(): Promise<DropTier[] | null> {
   cacheTag(PRICES_TAG);
   cacheLife("hours");
   const sb = adminClient();
-  const { data, error } = await sb.from("drop_tiers").select("id, label, max_cards, price_kobo, founding_price_kobo, guarantee_min_redemptions, sort").order("sort");
+  const { data, error } = await sb.from("drop_tiers").select("id, label, max_cards, price_kobo, founding_price_kobo, guarantee_min_redemptions, sort, active").order("sort");
   if (error || !data?.length) return null;
   return data.map((t) => ({
     id: t.id,
@@ -217,6 +217,7 @@ export async function dbTiers(): Promise<DropTier[] | null> {
     foundingPriceKobo: t.founding_price_kobo,
     guaranteeMinRedemptions: t.guarantee_min_redemptions,
     sort: t.sort,
+    active: t.active,
   }));
 }
 
@@ -226,9 +227,9 @@ export async function dbPacks(): Promise<DropPack[] | null> {
   cacheTag(PRICES_TAG);
   cacheLife("hours");
   const sb = adminClient();
-  const { data, error } = await sb.from("drop_packs").select("id, tier_id, drops, price_kobo, active").order("price_kobo");
+  const { data, error } = await sb.from("drop_packs").select("id, tier_id, drops, price_kobo, founding_price_kobo, active").order("price_kobo");
   if (error || !data?.length) return null;
-  return data.map((p) => ({ id: p.id, tierId: p.tier_id, drops: p.drops, priceKobo: p.price_kobo, active: p.active }));
+  return data.map((p) => ({ id: p.id, tierId: p.tier_id, drops: p.drops, priceKobo: p.price_kobo, foundingPriceKobo: p.founding_price_kobo, active: p.active }));
 }
 
 /** The featured carousel. */

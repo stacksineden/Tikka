@@ -18,7 +18,7 @@ import { RarityBadge } from "@/components/tikka/RarityBadge";
 import { SoloCard } from "@/components/tikka/SoloCard";
 import type { CardFace } from "@/components/tikka/TikkaCard";
 import { count, nairaShort } from "@/lib/format";
-import { fromPrice, priceLabel, type DropPack, type DropTier } from "@/lib/pricing";
+import { overMaxLine, paidTier, priceLabel, type DropPack, type DropTier } from "@/lib/pricing";
 import { DropTile } from "@/components/market/DropTile";
 import type { MarketDrop } from "@/lib/types";
 import { ExampleTag } from "./ExampleTag";
@@ -419,8 +419,7 @@ function cheapestPack(packs: DropPack[]): DropPack | undefined {
 }
 
 export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[] }) {
-  const free = tiers.find((t) => t.priceKobo === 0);
-  const paid = tiers.filter((t) => t.priceKobo > 0).sort((x, y) => x.maxCards - y.maxCards);
+  const drop = paidTier(tiers);
   const pack = cheapestPack(packs);
   return (
     <section id="pricing" className="scroll-mt-6 border-t border-line bg-surface-sunken py-16 sm:py-24">
@@ -433,9 +432,7 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
           <div className="flex flex-col rounded-card border border-line bg-surface-raised p-6 sm:p-8">
             <h3 className="text-title">Start free</h3>
             <p className="mt-2 text-display-lg">₦0</p>
-            <p className="text-body mt-1 text-ink-muted">
-              Your business page and your first drop (up to {count(free?.maxCards ?? 200)} Tikkas).
-            </p>
+            <p className="text-body mt-1 text-ink-muted">Your business page and your first drop.</p>
             <ul className="text-body mt-6 grid gap-3">
               {[
                 `Free business page for your Instagram and WhatsApp bio, with ${PORTFOLIO_FREE.items} photos of your work`,
@@ -458,21 +455,19 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
           </div>
           <div className="flex flex-col rounded-card border border-line bg-surface-raised p-6 sm:p-8">
             <h3 className="text-title">Pay per drop</h3>
-            <p className="mt-2 text-display-lg">
-              <span className="text-title text-ink-muted">from </span>
-              {fromPrice(tiers)}
+            <p className="mt-2 text-display-lg">{drop ? priceLabel(drop.priceKobo) : ""}</p>
+            <p className="text-body mt-1 text-ink-muted">
+              For each drop after your first, big or small. Pay by card or transfer when you publish. No subscription.
             </p>
-            <p className="text-body mt-1 text-ink-muted">Pay by card or transfer when you publish. No subscription.</p>
-            <ul className="mt-6 divide-y divide-line overflow-hidden rounded-md border border-line">
-              {paid.map((t) => (
-                <li key={t.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                  <span>
-                    <span className="text-body block font-semibold">{t.label}</span>
-                    <span className="text-caption block text-ink-muted">Up to {count(t.maxCards)} Tikkas</span>
-                  </span>
-                  <span className="text-title tabular-nums">{priceLabel(t.priceKobo)}</span>
-                </li>
-              ))}
+            <ul className="text-body mt-6 grid gap-3">
+              {["The drop, as many Tikkas as you need", "Your results: what the drop brought in, in naira", "Our promise: a free drop if it doesn't bring customers"].map(
+                (t) => (
+                  <li key={t} className="flex gap-2.5">
+                    <Tick className="mt-0.5 size-5 shrink-0 text-success" />
+                    {t}
+                  </li>
+                ),
+              )}
             </ul>
             <p className="text-body mt-4">
               <span className="font-semibold">Your full portfolio:</span> every paid drop opens {PORTFOLIO_OPEN.items} photos and videos on your page,
@@ -480,15 +475,15 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
             </p>
             {pack && (
               <p className="text-body mt-3">
-                <span className="font-semibold">Season pack:</span> {count(pack.drops)} drops from {priceLabel(pack.priceKobo)}. Use them for Black
+                <span className="font-semibold">Season pack:</span> {count(pack.drops)} drops for {priceLabel(pack.priceKobo)}. Use them for Black
                 Friday, December and Valentine&apos;s.
               </p>
             )}
             <p className="text-body mt-3">
-              If a paid drop brings fewer customers than we promise, your next one is free.{" "}
+              If a paid drop brings fewer than {count(drop?.guaranteeMinRedemptions ?? 10)} customers, your next one is free.{" "}
               <FaqLink id="faq-guarantee">How it works</FaqLink>
             </p>
-            <p className="text-caption mt-4 text-ink-muted">Need more than {count(paid.at(-1)?.maxCards ?? 3000)} Tikkas in one drop? Talk to us.</p>
+            <p className="text-caption mt-4 text-ink-muted">{overMaxLine(tiers)}</p>
             <p className="text-caption mt-auto pt-6 text-ink-muted">During the pilot, Tikka pays for every WhatsApp message.</p>
           </div>
         </div>
@@ -500,13 +495,8 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
 /* ----------------------------------------------------------------- FAQs */
 
 function faqs(tiers: DropTier[], packs: DropPack[]): { id?: string; q: string; a: string }[] {
-  const free = tiers.find((t) => t.priceKobo === 0);
-  const paid = tiers.filter((t) => t.priceKobo > 0).sort((x, y) => x.maxCards - y.maxCards);
+  const drop = paidTier(tiers);
   const pack = cheapestPack(packs);
-  const list = (parts: string[]) => (parts.length > 1 ? `${parts.slice(0, -1).join(", ")} or ${parts.at(-1)}` : parts[0] ?? "");
-  const prices = paid.map((t) => `${priceLabel(t.priceKobo)} for up to ${count(t.maxCards)}`);
-  const promised = paid.filter((t) => t.guaranteeMinRedemptions);
-  const thresholds = promised.map((t, i) => `${count(t.guaranteeMinRedemptions!)}${i === 0 ? " customers" : ""} (${t.label.replace(/ drop$/, "")})`);
   return [
     {
       q: "Do my customers need to download anything?",
@@ -554,7 +544,7 @@ function faqs(tiers: DropTier[], packs: DropPack[]): { id?: string; q: string; a
     },
     {
       q: "What does it cost?",
-      a: `Your business page and your first drop (up to ${count(free?.maxCards ?? 200)} Tikkas) are free. After that you pay per drop: ${list(prices)}.${pack ? ` Or buy a season pack of ${count(pack.drops)} drops.` : ""} Pay by card or transfer. No subscription.`,
+      a: `Your business page and your first drop are free. After that, each drop is ${drop ? priceLabel(drop.priceKobo) : ""}, whatever its size.${pack ? ` Or buy a season pack of ${count(pack.drops)} drops for ${priceLabel(pack.priceKobo)}.` : ""} Pay by card or transfer. No subscription.`,
     },
     {
       q: "Does Tikka use AI?",
@@ -563,7 +553,7 @@ function faqs(tiers: DropTier[], packs: DropPack[]): { id?: string; q: string; a
     {
       id: "faq-guarantee",
       q: "What if my drop doesn't bring customers?",
-      a: `If a paid drop brings fewer than ${list(thresholds)} through your door, your next drop of the same size is free. You just need to share it in at least 3 places, like your Instagram bio, your status and the QR at your counter. Once per business.`,
+      a: `If a paid drop brings fewer than ${count(drop?.guaranteeMinRedemptions ?? 10)} customers through your door, your next drop is free. You just need to share it in at least 3 places, like your Instagram bio, your status and the QR at your counter. Once per business.`,
     },
   ];
 }

@@ -62,7 +62,10 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
   ]);
   const ct = counterCheckTotals(checks);
   const newEnquiries = enquiries.filter((e) => e.status === "new").length;
-  const paidTiers = tiers.filter((t) => t.priceKobo > 0);
+  // Flat pricing: one paid level on sale ("Drop"), and the packs that are on sale.
+  const paidTiers = tiers.filter((t) => t.priceKobo > 0 && t.active !== false);
+  const grantable = tiers.filter((t) => t.active !== false && t.id !== "free");
+  const salePacks = packs.filter((p) => p.active);
 
   return (
     <div className="grid gap-8">
@@ -350,10 +353,10 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
               <form action={adminGrantDropAction.bind(null, b.id)} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
                 <label className="grid gap-1">
                   <span className="text-caption text-ink-muted">Give a free drop</span>
-                  <select name="tier" className={field} defaultValue="small">
-                    {tiers.map((t) => (
+                  <select name="tier" className={field} defaultValue={grantable[0]?.id}>
+                    {grantable.map((t) => (
                       <option key={t.id} value={t.id}>
-                        {t.label} (up to {count(t.maxCards)})
+                        {t.label}
                       </option>
                     ))}
                   </select>
@@ -377,7 +380,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
             <li key={t.id} className={card}>
               <form action={adminSaveTierAction.bind(null, t.id)} className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
                 <p className="text-body font-semibold sm:col-span-4">
-                  {t.label} <span className="font-normal text-ink-muted">· up to {count(t.maxCards)} Tikkas</span>
+                  {t.label} <span className="font-normal text-ink-muted">· any size up to {count(t.maxCards)} Tikkas</span>
                 </p>
                 <label className="grid gap-1">
                   <span className="text-caption text-ink-muted">Price (₦)</span>
@@ -397,15 +400,17 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
               </form>
             </li>
           ))}
-          {packs.map((p) => (
+          {salePacks.map((p) => (
             <li key={p.id} className={card}>
-              <form action={adminSavePackAction.bind(null, p.id)} className="grid gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-end">
-                <p className="text-body font-semibold sm:col-span-3">
-                  Season pack · {count(p.drops)} {tiers.find((t) => t.id === p.tierId)?.label ?? p.tierId}s
-                </p>
+              <form action={adminSavePackAction.bind(null, p.id)} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
+                <p className="text-body font-semibold sm:col-span-4">Season pack · {count(p.drops)} drops</p>
                 <label className="grid gap-1">
                   <span className="text-caption text-ink-muted">Price (₦)</span>
                   <input name="price" inputMode="numeric" defaultValue={koboToNaira(p.priceKobo)} className={field} />
+                </label>
+                <label className="grid gap-1">
+                  <span className="text-caption text-ink-muted">Founding price (₦)</span>
+                  <input name="founding" inputMode="numeric" defaultValue={p.foundingPriceKobo ? koboToNaira(p.foundingPriceKobo) : ""} className={field} />
                 </label>
                 <label className="flex min-h-11 items-center gap-2">
                   <input type="checkbox" name="active" defaultChecked={p.active} className="size-5" />

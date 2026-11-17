@@ -521,8 +521,9 @@ export async function adminSavePackAction(id: string, form: FormData): Promise<v
   const admin = await getAdmin();
   if (!admin) return;
   const price = naira(form, "price");
+  const founding = naira(form, "founding");
   if (!Number.isFinite(price) || price <= 0) return;
-  await adminSavePack(admin, id, Math.round(price * 100), form.get("active") === "on");
+  await adminSavePack(admin, id, Math.round(price * 100), form.get("active") === "on", Number.isFinite(founding) && founding > 0 ? Math.round(founding * 100) : undefined);
   updateTag(PRICES_TAG);
   revalidatePath("/admin");
 }

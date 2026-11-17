@@ -51,9 +51,8 @@ async function Builder({ searchParams }: { searchParams: PageProps<"/app/drops/n
       screen = "review";
     }
   } else {
-    // First drop: the free size is preselected (up to 200).
-    const free = tiers.find((t) => t.id === "free");
-    if (free && vouchers.some((v) => v.source === "signup" && usable(v, now))) initial = setTotal(initial, free.maxCards);
+    // First drop: 200 Tikkas to start with (any size up to 1,000 is free; the owner can change it).
+    if (vouchers.some((v) => v.source === "signup" && usable(v, now))) initial = setTotal(initial, 200);
   }
 
   // A size suggested from the most recent drop that has finished (or nearly sold out).

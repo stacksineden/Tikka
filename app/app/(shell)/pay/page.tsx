@@ -9,12 +9,11 @@ import { count } from "@/lib/format";
 import { paymentPlace } from "@/lib/payments";
 import { paystackConfigured } from "@/lib/paystack";
 import { PACK_MONTHS } from "@/lib/vouchers";
-import { packLine, priceLabel, type DropTier } from "@/lib/pricing";
+import { packLine, priceLabel } from "@/lib/pricing";
 import { getSessionUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Pay" };
 
-const tierName = (tiers: DropTier[], id?: string) => tiers.find((t) => t.id === id)?.label ?? id ?? "";
 
 async function Pay({ searchParams }: { searchParams: PageProps<"/app/pay">["searchParams"] }) {
   const user = await getSessionUser();
@@ -38,16 +37,14 @@ async function Pay({ searchParams }: { searchParams: PageProps<"/app/pay">["sear
 
   const rows: [string, string][] =
     payment.kind === "pack"
-      ? [["Season pack", `${pack && tier ? packLine(pack, tier).title : tierName(tiers, payment.toTier)}${tier ? ` · up to ${count(tier.maxCards)} Tikkas each` : ""}`]]
+      ? [["Season pack", pack && tier ? packLine(pack, tier).title : "Season pack"]]
       : payment.kind === "upgrade"
         ? [
+            // An old payment from before flat pricing: adding Tikkas is free now.
             ["Drop", found?.drop.name ?? ""],
-            ["Adding", `${count(payment.extraCards ?? 0)} Tikkas · ${tierName(tiers, payment.fromTier)} → ${tierName(tiers, payment.toTier)}${tier ? ` (up to ${count(tier.maxCards)})` : ""}`],
+            ["Adding", `${count(payment.extraCards ?? 0)} Tikkas`],
           ]
-        : [
-            ["Drop", found?.drop.name ?? ""],
-            ["Size", `${count(found?.drop.total ?? 0)} Tikkas · ${tierName(tiers, payment.toTier)}${tier ? ` (up to ${count(tier.maxCards)})` : ""}`],
-          ];
+        : [["Drop", found?.drop.name ?? ""]];
   rows.push(["Reference", payment.reference]);
 
   return (

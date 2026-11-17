@@ -4,7 +4,7 @@
   "section": "money",
   "order": 1,
   "minutes": 2,
-  "summary": "Your first drop is free. After that you pay per drop, by size, or buy a season pack.",
+  "summary": "Your first drop is free. After that, each drop is ₦10,000, whatever its size, or buy a season pack.",
   "app": {
     "href": "/app/settings/payments",
     "label": "Open Payments"
@@ -12,11 +12,11 @@
   "steps": [
     {
       "title": "Your first drop is free",
-      "body": "Your first drop is free, up to 200 Tikkas. Your business page is always free."
+      "body": "Your first drop is free, up to 1,000 Tikkas. Your business page is always free."
     },
     {
-      "title": "After that, pay per drop",
-      "body": "The price depends on how many Tikkas are in the drop. You see it on the publish button before you pay, like \"Pay ₦… and publish\"."
+      "title": "After that, one price per drop",
+      "body": "Each drop after your first is ₦10,000, for 40 Tikkas or 900. Founding members pay ₦5,000. You see the price on the publish button before you pay, like \"Pay ₦10,000 and publish\". Adding more Tikkas to a running drop is free, up to 1,000. For more than 1,000 Tikkas in one drop, talk to us."
     },
     {
       "title": "Pay by card or bank transfer",
@@ -24,11 +24,12 @@
     },
     {
       "title": "Season packs",
-      "body": "A season pack is 3 drops paid at once. Buy one in Payments (on a phone: More, then Payments). Each drop you publish after that uses one, and the button says \"Publish with your season pack\"."
+      "body": "A season pack is 3 drops paid at once: ₦25,000, or ₦12,000 for founding members. Buy one in Payments (on a phone: More, then Payments). Each drop you publish after that uses one, and the button says \"Publish with your season pack\"."
     }
   ],
   "tips": [
-    "Every payment you've made is listed in Payments."
+    "Every payment you've made is listed in Payments.",
+    "If a paid drop brings fewer than 10 customers, your next drop is free (once)."
   ],
   "published": true
 }
