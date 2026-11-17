@@ -164,6 +164,7 @@ export function digitsFrom(j: Record<string, unknown>, fallbackCode: string): Ch
   const code = String(j.code ?? fallbackCode);
   switch (j.kind) {
     case "matched":
+    case "used_by_this_whatsapp":
     case "closed_today":
     case "not_needed":
     case "invalid_digits":

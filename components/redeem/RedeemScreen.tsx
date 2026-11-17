@@ -10,14 +10,17 @@ import { offlineCheck, type CheckResult } from "@/lib/redeem";
 
 // The counter screen (PRD B7): scan or type → check (never uses the code) → confirm.
 // Never shows a phone number: check_code doesn't return one. A Tikka claimed by typing a number
-// also needs the WhatsApp check: staff read the last 4 digits off the customer's WhatsApp, and
-// Tikka only answers matches or not (3 wrong tries a day).
+// also needs the WhatsApp check: staff read the last 6 digits off the customer's WhatsApp, and
+// Tikka only answers matches or not (3 wrong tries a day). A WhatsApp that already used a Tikka from
+// the same drop (through another typed number) can't use a second one.
 
 /** The WhatsApp check on a typed-in Tikka. */
 type WaCheck =
   | { kind: "none" }
   | { kind: "open"; triesLeft: number; error?: string }
   | { kind: "closed" }
+  /** The right WhatsApp, but it already used a Tikka from this drop. */
+  | { kind: "repeat" }
   | { kind: "passed" };
 
 type Problem = Exclude<CheckResult, { kind: "valid" }> | { kind: "no_access"; code?: string };
@@ -193,8 +196,8 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
   async function checkDigits(e: FormEvent) {
     e.preventDefault();
     if (view.kind !== "valid" || wa.kind !== "open" || checkingDigits) return;
-    if (!/^\d{4}$/.test(digits)) {
-      setWa({ ...wa, error: "Type the last 4 digits of the number on their WhatsApp." });
+    if (!/^\d{6}$/.test(digits)) {
+      setWa({ ...wa, error: "Type the last 6 digits of the number on their WhatsApp." });
       return;
     }
     setCheckingDigits(true);
@@ -217,8 +220,13 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
           setWa({ kind: "closed" });
           buzz([40, 60, 40]);
           break;
+        case "used_by_this_whatsapp":
+          setDigits("");
+          setWa({ kind: "repeat" });
+          buzz([40, 60, 40]);
+          break;
         case "invalid_digits":
-          setWa({ ...wa, error: "Type the last 4 digits of the number on their WhatsApp." });
+          setWa({ ...wa, error: "Type the last 6 digits of the number on their WhatsApp." });
           break;
         default:
           setView({ kind: "invalid", problem: { ...r, code: view.result.code } as Problem });
@@ -233,8 +241,8 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
   async function confirm() {
     if (view.kind !== "valid") return;
     const r = view.result;
-    if (wa.kind === "open" || wa.kind === "closed") {
-      setConfirmError("Check their WhatsApp first.");
+    if (wa.kind === "open" || wa.kind === "closed" || wa.kind === "repeat") {
+      setConfirmError(wa.kind === "repeat" ? "This WhatsApp has already used a Tikka from this drop." : "Check their WhatsApp first.");
       return;
     }
     if (r.action && !ticked) {
@@ -256,6 +264,9 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
       } else if (res.result.kind === "needs_whatsapp_check") {
         setWa({ kind: "open", triesLeft: 1 });
         setConfirmError("Check their WhatsApp first.");
+      } else if (res.result.kind === "used_by_this_whatsapp") {
+        setWa({ kind: "repeat" });
+        setConfirmError(undefined);
       } else {
         setView({ kind: "invalid", problem: { ...res.result, code: r.code } as Problem });
       }
@@ -267,7 +278,7 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
   }
 
   const scanning = view.kind === "scan" || view.kind === "checking";
-  const waBlocks = wa.kind === "open" || wa.kind === "closed";
+  const waBlocks = wa.kind === "open" || wa.kind === "closed" || wa.kind === "repeat";
 
   return (
     <div className="mx-auto grid w-full max-w-md gap-4 px-4 pb-8 pt-4 sm:pt-8">
@@ -396,24 +407,25 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
               <ol className="text-body grid list-decimal gap-1 pl-5">
                 <li>Ask them to open WhatsApp, go to Settings and tap their name.</li>
                 <li>Read the number on their profile yourself. Don&apos;t type what they tell you, and don&apos;t accept a screenshot.</li>
-                <li>Type the last 4 digits.</li>
+                <li>Type the last 6 digits.</li>
               </ol>
               <label htmlFor="wa-digits" className="text-label">
-                Last 4 digits
+                Last 6 digits
               </label>
               <div className="flex gap-2">
                 <input
                   id="wa-digits"
                   value={digits}
                   onChange={(e) => {
-                    setDigits(e.target.value.replace(/\D/g, "").slice(0, 4));
+                    setDigits(e.target.value.replace(/\D/g, "").slice(0, 6));
                     if (wa.error) setWa({ kind: "open", triesLeft: wa.triesLeft });
                   }}
                   inputMode="numeric"
                   autoComplete="off"
                   enterKeyHint="go"
-                  maxLength={4}
-                  className="input w-0 min-w-0 flex-1 text-center font-mono text-[24px] tracking-[0.4em]"
+                  maxLength={6}
+                  placeholder="••••••"
+                  className="input w-0 min-w-0 flex-1 text-center font-mono text-[22px] tracking-[0.3em]"
                   aria-invalid={wa.error ? true : undefined}
                   aria-describedby="wa-help"
                 />
@@ -436,6 +448,16 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
                 Doesn&apos;t match. Don&apos;t give the reward.
               </p>
               <p className="text-body">Ask them to come back with the phone they claimed with. You can check again tomorrow. Nothing was used.</p>
+            </div>
+          )}
+
+          {wa.kind === "repeat" && (
+            <div className="mt-4 grid gap-1 rounded-md bg-danger-soft p-4" role="alert">
+              <p className="text-title flex items-center gap-2 text-[17px] text-danger">
+                <XCircle size={20} aria-hidden="true" />
+                This WhatsApp has already used a Tikka from this drop.
+              </p>
+              <p className="text-body">Don&apos;t give the reward. One Tikka per person per drop. Nothing was used.</p>
             </div>
           )}
 

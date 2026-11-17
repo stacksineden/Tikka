@@ -16,6 +16,8 @@ export interface CounterCheckRow {
   neverCame: number;
   /** Never checked, still time left. */
   notYet: number;
+  /** Stopped because that WhatsApp already used a Tikka from the same drop (counted on its own too). */
+  usedByThisWhatsapp: number;
 }
 
 export type CounterCheckTotals = Omit<CounterCheckRow, "businessId" | "businessName"> & {
@@ -36,6 +38,7 @@ export function counterCheckFrom(j: Record<string, unknown>): CounterCheckRow {
     failedWaiting: n("failed_waiting"),
     neverCame: n("never_came"),
     notYet: n("not_yet"),
+    usedByThisWhatsapp: n("used_by_this_whatsapp"),
   };
 }
 
@@ -48,6 +51,7 @@ export function counterCheckTotals(rows: CounterCheckRow[]): CounterCheckTotals 
     failedWaiting: sum("failedWaiting"),
     neverCame: sum("neverCame"),
     notYet: sum("notYet"),
+    usedByThisWhatsapp: sum("usedByThisWhatsapp"),
   };
   const settled = t.passedFirst + t.failedThenPassed + t.cameNotRedeemed;
   return { ...t, settled, cheatRate: settled ? t.cameNotRedeemed / settled : null };

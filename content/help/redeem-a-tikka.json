@@ -24,7 +24,7 @@
     },
     {
       "title": "Check their WhatsApp (if asked)",
-      "body": "If you see \"Check their WhatsApp first\", ask them to open WhatsApp, go to Settings and tap their name. Read the number on their profile yourself (not a screenshot, and not what they tell you), and type the last 4 digits.\n\nIf it doesn't match, don't give the reward. They can come back with the phone they claimed with. You get 3 tries a day, and nothing is used."
+      "body": "If you see \"Check their WhatsApp first\", ask them to open WhatsApp, go to Settings and tap their name. Read the number on their profile yourself (not a screenshot, and not what they tell you), and type the last 6 digits.\n\nIf it doesn't match, don't give the reward. They can come back with the phone they claimed with. You get 3 tries a day, and nothing is used.\n\nIf it says \"This WhatsApp has already used a Tikka from this drop\", don't give the reward: it's one Tikka per person per drop, even if they claimed with other numbers."
     },
     {
       "title": "Confirm",

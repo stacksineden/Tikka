@@ -1902,7 +1902,7 @@ function hasBeenBefore(c: StoredClaim): boolean {
 }
 
 /**
- * check_whatsapp_digits: the last 4 digits staff read off the customer's WhatsApp, for a Tikka
+ * check_whatsapp_digits: the last 6 digits staff read off the customer's WhatsApp, for a Tikka
  * claimed by typing a number. Only ever answers matches or not; never uses the Tikka.
  */
 export async function checkWhatsappDigits(user: SessionUser, code: string, digits: string): Promise<CheckResult | DigitsResult | { kind: "no_access" }> {
@@ -1910,9 +1910,14 @@ export async function checkWhatsappDigits(user: SessionUser, code: string, digit
   if (!owner) return { kind: "no_access" };
   if (isDbId(owner)) return dbCheckDigits(owner, code, digits);
   const claim = findByCode(code);
-  const r = checkDigits(claim, owner, code, digits, new Date());
+  const r = checkDigits(claim, owner, code, digits, new Date(), claim ? sameDropClaims(claim.dropId) : []);
   if (claim && r.state) claimStore.set(claim.token, { ...claim, counterCheck: r.state });
   return r.result;
+}
+
+/** DEMO: the other Tikkas from the same drop, for the one-used-per-WhatsApp rule. */
+function sameDropClaims(dropId: string): ClaimRecord[] {
+  return [...claimStore.values()].filter((x) => x.dropId === dropId);
 }
 
 /** check_code: read-only (rule 5). Owners and staff of the code's business only. */
@@ -1957,7 +1962,7 @@ export async function confirmRedemption(
   if (!owner) return { ok: false, result: { kind: "no_access" } };
   const claim = findByCode(code);
   const now = new Date();
-  const r = confirmClaim(claim, owner, code, { ...input, by: user.id }, now);
+  const r = confirmClaim(claim, owner, code, { ...input, by: user.id }, now, claim ? sameDropClaims(claim.dropId) : []);
   if (!r.ok || !claim) return r;
   const redeemed = { ...claim, ...r.claim };
   claimStore.set(claim.token, redeemed);

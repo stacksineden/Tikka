@@ -10,17 +10,23 @@ export const REVIEW_MAX = 140;
 /** The WhatsApp check at the counter: wrong tries allowed per Tikka per day (WAT). */
 export const COUNTER_TRIES_PER_DAY = 3;
 
+/** Digits staff read off the customer's WhatsApp at the counter. */
+export const COUNTER_DIGITS = 6;
+
 /**
  * The WhatsApp check at the counter, for a Tikka claimed by typing a number (page-claim mode).
- * The demo store keeps the number's last 4 digits so the check can run without a phone number;
- * the database compares against the claim's number and keeps neither.
+ * The demo store keeps the number's last 6 digits and an opaque id for the number typed, so the
+ * check can run without a phone number; the database compares against the claim's number and
+ * keeps neither.
  */
 export interface CounterCheckState {
-  last4: string;
+  last6: string;
+  /** Which typed number this is (opaque): two Tikkas with the same id are the same number. */
+  number: string;
   /** Set when the digits matched. */
   passedAt?: string;
   /** Every check: when, and whether it matched. Never the digits typed. */
-  checks: { at: string; matched: boolean }[];
+  checks: { at: string; matched: boolean; repeat?: boolean }[];
 }
 
 /** One claim as the server keeps it. Phone numbers never live here (rule 4). */
@@ -95,6 +101,8 @@ export type CheckResult =
 export type DigitsResult =
   | { kind: "matched"; code: string }
   | { kind: "no_match"; code: string; triesLeft: number }
+  /** The right WhatsApp, but it already used a Tikka from this drop through another typed number. */
+  | { kind: "used_by_this_whatsapp"; code: string }
   | { kind: "closed_today"; code: string }
   | { kind: "not_needed"; code: string }
   | { kind: "invalid_digits"; code: string };
@@ -113,8 +121,22 @@ export function whatsappCheckOf(claim: Pick<ClaimRecord, "counterCheck">, now: D
 }
 
 /**
- * check_whatsapp_digits: the last 4 digits staff read off the customer's WhatsApp. Returns the
+ * One used Tikka per WhatsApp per drop: true when another Tikka from this drop, claimed with a
+ * different number ending in the same 6 digits, has already been used. The customer's own
+ * next-visit Tikka is the same number, so it never counts. Mirrors private.whatsapp_used_in_drop().
+ */
+export function whatsappUsedInDrop(claim: ClaimRecord, others: ClaimRecord[]): boolean {
+  const s = claim.counterCheck;
+  if (!s) return false;
+  return others.some(
+    (o) => o.token !== claim.token && o.dropId === claim.dropId && !!o.redeemedAt && !!o.counterCheck && o.counterCheck.number !== s.number && o.counterCheck.last6 === s.last6,
+  );
+}
+
+/**
+ * check_whatsapp_digits: the last 6 digits staff read off the customer's WhatsApp. Returns the
  * answer and the new state to store (unchanged when nothing was checked). Never uses the Tikka.
+ * `others`: the Tikkas from the same drop (for the one-used-per-WhatsApp rule).
  */
 export function checkDigits(
   claim: ClaimRecord | undefined,
@@ -122,15 +144,20 @@ export function checkDigits(
   code: string,
   digits: string,
   now: Date,
+  others: ClaimRecord[] = [],
 ): { result: CheckResult | DigitsResult; state?: CounterCheckState } {
-  if (!/^[0-9]{4}$/.test(digits)) return { result: { kind: "invalid_digits", code } };
+  if (!new RegExp(`^[0-9]{${COUNTER_DIGITS}}$`).test(digits)) return { result: { kind: "invalid_digits", code } };
   const check = checkClaim(claim, ownerId, code, now);
   if (check.kind !== "valid" || !claim) return { result: check };
   const s = claim.counterCheck;
   if (!s || !check.whatsappCheck) return { result: { kind: "not_needed", code } };
   const fails = counterFailsToday(s, now);
   if (fails >= COUNTER_TRIES_PER_DAY) return { result: { kind: "closed_today", code } };
-  const matched = s.last4 === digits;
+  const matched = s.last6 === digits;
+  if (matched && whatsappUsedInDrop(claim, others)) {
+    // The right WhatsApp, but it already used a Tikka from this drop. Counts as a wrong try.
+    return { result: { kind: "used_by_this_whatsapp", code }, state: { ...s, checks: [...s.checks, { at: now.toISOString(), matched: false, repeat: true }] } };
+  }
   const state: CounterCheckState = {
     ...s,
     passedAt: matched ? now.toISOString() : undefined,
@@ -179,7 +206,7 @@ export function checkClaim(claim: ClaimRecord | undefined, ownerId: string, code
 
 export type ConfirmResult =
   | { ok: true; claim: ClaimRecord; name: string }
-  | { ok: false; result: CheckResult | { kind: "needs_action" | "needs_whatsapp_check"; code: string } };
+  | { ok: false; result: CheckResult | { kind: "needs_action" | "needs_whatsapp_check" | "used_by_this_whatsapp"; code: string } };
 
 /**
  * confirm_redemption: re-checks, needs the staff tick for action cards, then marks the claim
@@ -191,11 +218,14 @@ export function confirmClaim(
   code: string,
   input: { billKobo?: number; actionConfirmed: boolean; by: string; customerStatus?: "new" | "returning" },
   now: Date,
+  others: ClaimRecord[] = [],
 ): ConfirmResult {
   const check = checkClaim(claim, ownerId, code, now);
   const status = input.customerStatus ?? (check.kind === "valid" ? check.suggestedStatus : undefined);
   if (check.kind !== "valid" || !claim) return { ok: false, result: check };
   if (check.whatsappCheck) return { ok: false, result: { kind: "needs_whatsapp_check", code } };
+  // Passed, but the same WhatsApp used another Tikka from this drop since (two tills, or a pass left waiting).
+  if (claim.counterCheck?.passedAt && whatsappUsedInDrop(claim, others)) return { ok: false, result: { kind: "used_by_this_whatsapp", code } };
   if (check.action && !input.actionConfirmed) return { ok: false, result: { kind: "needs_action", code } };
   const bill = input.billKobo && input.billKobo > 0 ? Math.round(input.billKobo) : undefined;
   return {

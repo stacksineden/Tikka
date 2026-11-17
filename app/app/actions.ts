@@ -670,17 +670,17 @@ export async function checkCodeAction(code: string): Promise<CheckResult | { kin
   return checkCode(user, code);
 }
 
-/** The WhatsApp check at the counter: the last 4 digits staff read off the customer's WhatsApp. Never uses the Tikka. */
+/** The WhatsApp check at the counter: the last 6 digits staff read off the customer's WhatsApp. Never uses the Tikka. */
 export async function checkDigitsAction(code: string, digits: string): Promise<CheckResult | DigitsResult | { kind: "no_access" }> {
   const user = await getSessionUser();
   if (!user) return { kind: "no_access" };
-  return checkWhatsappDigits(user, code, digits.replace(/\D/g, "").slice(0, 4));
+  return checkWhatsappDigits(user, code, digits.replace(/\D/g, "").slice(0, 6));
 }
 
 /** `askReview`: a page claim, so Tikka can't send the WhatsApp thank-you; staff ask at the counter. */
 export type ConfirmActionResult =
   | { ok: true; name: string; askReview?: boolean }
-  | { ok: false; result: CheckResult | { kind: "needs_action" | "needs_whatsapp_check" | "no_access"; code?: string } };
+  | { ok: false; result: CheckResult | { kind: "needs_action" | "needs_whatsapp_check" | "used_by_this_whatsapp" | "no_access"; code?: string } };
 
 export async function confirmRedemptionAction(
   code: string,

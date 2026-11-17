@@ -111,7 +111,8 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
             ))}
           </dl>
           <p className="text-caption text-ink-muted">
-            Still waiting after a failed check {count(ct.failedWaiting)} · never came to the counter {count(ct.neverCame)} · not checked yet {count(ct.notYet)}.
+            Stopped as a second Tikka from the same WhatsApp {count(ct.usedByThisWhatsapp)} · still waiting after a failed check {count(ct.failedWaiting)} · never came to the
+            counter {count(ct.neverCame)} · not checked yet {count(ct.notYet)}.
           </p>
           <ul className="grid gap-2">
             {checks.map((r) => (
@@ -119,7 +120,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                 <span className="text-body font-semibold">{r.businessName}</span>
                 <span className="text-caption tabular-nums text-ink-muted">
                   Couldn&apos;t redeem {count(r.cameNotRedeemed)} · failed then passed {count(r.failedThenPassed)} · passed first time {count(r.passedFirst)} · waiting{" "}
-                  {count(r.failedWaiting)} · never came {count(r.neverCame)}
+                  {count(r.failedWaiting)} · never came {count(r.neverCame)} · second from same WhatsApp {count(r.usedByThisWhatsapp)}
                 </span>
               </li>
             ))}

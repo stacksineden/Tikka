@@ -173,7 +173,8 @@
     "claimedAt": "2026-10-21T09:12:00+01:00",
     "revealedAt": "2026-10-21T09:12:00+01:00",
     "counterCheck": {
-      "last4": "4821",
+      "last6": "334821",
+      "number": "demo-ngozi",
       "checks": []
     }
   }

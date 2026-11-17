@@ -1,5 +1,5 @@
--- The WhatsApp check at the counter, for Tikkas claimed by typing a number: staff type the last 4
--- digits off the customer's WhatsApp; Tikka only says matches or not, never the number, and never
+-- The WhatsApp check at the counter, for Tikkas claimed by typing a number: staff type the last 6
+-- digits (4 until 20261117120000_counter_six_digits.sql; 039 covers the rest) off the customer's WhatsApp; Tikka only says matches or not, never the number, and never
 -- stores the digits; 3 wrong tries a day; confirming needs a pass; passing makes the lead confirmed
 -- for this business (and brings back the future-drops tick they chose); the check belongs to each
 -- Tikka, decided when it's claimed; Tikka admin sees the outcomes.
@@ -94,16 +94,16 @@ begin
   r := public.confirm_redemption(biz, code);
   assert r ->> 'kind' = 'needs_whatsapp_check', 'confirming without the check is refused: ' || r::text;
 
-  assert public.check_whatsapp_digits(biz, code, '12a4') ->> 'kind' = 'invalid_digits', 'only 4 digits';
-  assert public.check_whatsapp_digits(biz, code, '123') ->> 'kind' = 'invalid_digits', 'exactly 4';
-  r := public.check_whatsapp_digits(biz, code, '0000');
+  assert public.check_whatsapp_digits(biz, code, '12a456') ->> 'kind' = 'invalid_digits', 'only digits';
+  assert public.check_whatsapp_digits(biz, code, '1234') ->> 'kind' = 'invalid_digits', 'exactly 6';
+  r := public.check_whatsapp_digits(biz, code, '000000');
   assert r ->> 'kind' = 'no_match' and (r ->> 'tries_left')::int = 2, 'wrong: 2 tries left: ' || r::text;
   assert r::text !~ '803112' and r::text !~ '0001', 'a wrong answer never hints at the number';
-  r := public.check_whatsapp_digits(biz, code, '1111');
+  r := public.check_whatsapp_digits(biz, code, '111111');
   assert r ->> 'kind' = 'no_match' and (r ->> 'tries_left')::int = 1, 'wrong again: 1 left';
-  r := public.check_whatsapp_digits(biz, code, '2222');
+  r := public.check_whatsapp_digits(biz, code, '222222');
   assert r ->> 'kind' = 'closed_today', 'the third wrong try closes it for today: ' || r::text;
-  r := public.check_whatsapp_digits(biz, code, '0001');
+  r := public.check_whatsapp_digits(biz, code, '120001');
   assert r ->> 'kind' = 'closed_today', 'even the right digits wait until tomorrow';
   assert (public.check_code(biz, code) -> 'whatsapp_check' ->> 'tries_left')::int = 0, 'the screen knows it''s closed';
   assert public.confirm_redemption(biz, code) ->> 'kind' = 'needs_whatsapp_check', 'and still can''t be confirmed';
@@ -124,24 +124,24 @@ declare
 begin
   r := public.check_code(biz, codes ->> 'c1');
   assert (r -> 'whatsapp_check' ->> 'tries_left')::int = 3, 'a new day, 3 tries again: ' || r::text;
-  r := public.check_whatsapp_digits(biz, codes ->> 'c1', '0001');
+  r := public.check_whatsapp_digits(biz, codes ->> 'c1', '120001');
   assert r ->> 'kind' = 'matched', 'the right digits match: ' || r::text;
   assert not (public.check_code(biz, codes ->> 'c1') ? 'whatsapp_check'), 'passed: the check box goes away';
-  assert public.check_whatsapp_digits(biz, codes ->> 'c1', '9999') ->> 'kind' = 'not_needed', 'checking again isn''t needed';
+  assert public.check_whatsapp_digits(biz, codes ->> 'c1', '999999') ->> 'kind' = 'not_needed', 'checking again isn''t needed';
   r := public.confirm_redemption(biz, codes ->> 'c1');
   assert r ->> 'kind' = 'redeemed' and r -> 'bounce_back' ->> 'reward' is not null, 'confirmed, with the next-visit Tikka: ' || r::text;
   insert into res values ('bb1', r -> 'bounce_back');
 
   -- Claim 2 passes on the first try.
-  assert public.check_whatsapp_digits(biz, codes ->> 'c2', '0002') ->> 'kind' = 'matched', 'claim 2 matches first time';
+  assert public.check_whatsapp_digits(biz, codes ->> 'c2', '120002') ->> 'kind' = 'matched', 'claim 2 matches first time';
   assert public.confirm_redemption(biz, codes ->> 'c2') ->> 'kind' = 'redeemed', 'claim 2 redeemed';
 
   -- Claim 3 fails once, then never comes back.
-  assert public.check_whatsapp_digits(biz, codes ->> 'c3', '7777') ->> 'kind' = 'no_match', 'claim 3 fails once';
+  assert public.check_whatsapp_digits(biz, codes ->> 'c3', '777777') ->> 'kind' = 'no_match', 'claim 3 fails once';
 
   -- The check off, and WhatsApp claims: nothing to check.
   assert not (public.check_code(biz, codes ->> 'c5') ? 'whatsapp_check'), 'check off: no box';
-  assert public.check_whatsapp_digits(biz, codes ->> 'c5', '0005') ->> 'kind' = 'not_needed', 'check off: not needed';
+  assert public.check_whatsapp_digits(biz, codes ->> 'c5', '120005') ->> 'kind' = 'not_needed', 'check off: not needed';
   assert public.confirm_redemption(biz, codes ->> 'c5') ->> 'kind' = 'redeemed', 'check off: redeems as before';
   assert not (public.check_code(biz, codes ->> 'c6') ? 'whatsapp_check'), 'WhatsApp claim: no box';
 end $$;
@@ -198,7 +198,7 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-c033-000000000003","role":"authenticated"}', true);
 do $$
 begin
-  perform public.check_whatsapp_digits((select v from t where k = 'biz'), (select v ->> 'c3' from res where k = 'codes'), '0003');
+  perform public.check_whatsapp_digits((select v from t where k = 'biz'), (select v ->> 'c3' from res where k = 'codes'), '120003');
   raise exception 'someone outside the business ran the check';
 exception when insufficient_privilege then null;
 end $$;
@@ -213,7 +213,7 @@ reset role;
 set local role anon;
 do $$
 begin
-  perform public.check_whatsapp_digits((select v from t where k = 'biz'), 'CC-AAAAA', '0000');
+  perform public.check_whatsapp_digits((select v from t where k = 'biz'), 'CC-AAAAA', '000000');
   raise exception 'a visitor ran the check';
 exception when insufficient_privilege then null;
 end $$;
