@@ -2,10 +2,11 @@
 
 import { Camera, CheckCircle2, Loader2, ScanLine, Smartphone, XCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { checkCodeAction, checkDigitsAction, confirmRedemptionAction } from "@/app/app/actions";
+import { checkCodeAction, checkDigitsAction, confirmRedemptionAction, giveMoreTimeAction } from "@/app/app/actions";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
 import { visitWhen } from "@/lib/followups";
 import { clockTime, shortDate } from "@/lib/format";
+import { MORE_TIME_DAYS, noMoreTimeReason } from "@/lib/more-time";
 import { offlineCheck, type CheckResult } from "@/lib/redeem";
 
 // The counter screen (PRD B7): scan or type → check (never uses the code) → confirm.
@@ -65,7 +66,8 @@ function reason(p: Problem, businessName: string): string {
   }
 }
 
-export function RedeemScreen({ businessName, prefix }: { businessName: string; prefix: string }) {
+/** `isOwner`: only the owner can give an expired Tikka its one extra week ("Give more time"). */
+export function RedeemScreen({ businessName, prefix, isOwner = false }: { businessName: string; prefix: string; isOwner?: boolean }) {
   const [view, setView] = useState<View>({ kind: "scan" });
   const [typed, setTyped] = useState("");
   const [typedError, setTypedError] = useState<string>();
@@ -78,6 +80,7 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
   const [wa, setWa] = useState<WaCheck>({ kind: "none" });
   const [digits, setDigits] = useState("");
   const [checkingDigits, setCheckingDigits] = useState(false);
+  const [moreTime, setMoreTime] = useState<{ saving: boolean; error?: string }>({ saving: false });
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<Scanner | null>(null);
@@ -121,6 +124,7 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
           setView({ kind: "valid", result: r });
           buzz(20);
         } else {
+          setMoreTime({ saving: false });
           setView({ kind: "invalid", problem: { ...r, code: offline.code } as Problem });
           buzz([40, 60, 40]);
         }
@@ -177,6 +181,7 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
 
   function scanAgain() {
     clearTimeout(backTimer.current);
+    setMoreTime({ saving: false });
     setTyped("");
     setTypedError(undefined);
     setView({ kind: "scan" });
@@ -553,6 +558,57 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
             Not valid
           </h2>
           <p className="text-body-lg mt-3">{reason(view.problem, businessName)}</p>
+          {view.problem.kind === "expired" && view.problem.name && (
+            <p className="text-body mt-1 opacity-90">
+              {view.problem.name}
+              {view.problem.reward ? ` · ${view.problem.reward}` : ""}
+            </p>
+          )}
+          {view.problem.kind === "expired" &&
+            view.problem.moreTime &&
+            (isOwner ? (
+              <div className="mt-4 grid gap-2 rounded-md bg-surface-raised p-4 text-ink">
+                <p className="text-body">
+                  You can give it {MORE_TIME_DAYS} more days, until <span className="font-semibold">{shortDate(view.problem.moreTime)}</span>. Only once.
+                </p>
+                {moreTime.error && (
+                  <p role="alert" className="text-caption font-semibold text-danger">
+                    {moreTime.error}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-lg w-full"
+                  disabled={moreTime.saving}
+                  onClick={async () => {
+                    const code = view.problem.code;
+                    if (!code) return;
+                    setMoreTime({ saving: true });
+                    try {
+                      const r = await giveMoreTimeAction({ code });
+                      if (r.kind === "extended") {
+                        setMoreTime({ saving: false });
+                        setView({ kind: "scan" });
+                        await check(code);
+                      } else setMoreTime({ saving: false, error: noMoreTimeReason(r.kind) });
+                    } catch {
+                      setMoreTime({ saving: false, error: "No connection. Check your data and try again." });
+                    }
+                  }}
+                >
+                  {moreTime.saving ? "Saving…" : "Give more time"}
+                </button>
+              </div>
+            ) : (
+              <p className="text-body mt-4 rounded-md bg-surface-raised p-4 text-ink">
+                Only the owner can give more time. Ask them to open Leads and find {view.problem.name ?? "this customer"}, then check the code again.
+              </p>
+            ))}
+          {view.problem.kind === "expired" && view.problem.moreTime && !isOwner && view.problem.code && (
+            <button type="button" className="btn btn-secondary btn-lg mt-3 w-full" onClick={() => check(view.problem.code!)}>
+              Check again
+            </button>
+          )}
           <button type="button" className="btn btn-secondary btn-lg mt-5 w-full" onClick={scanAgain}>
             <ScanLine />
             Scan another code

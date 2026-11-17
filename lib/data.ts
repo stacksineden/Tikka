@@ -4,7 +4,8 @@ import { createHash, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
-import { dbLeads, dbReviewAsks, dbLogFollowup, dbNewClaims } from "./leads-db";
+import { dbGiveMoreTime, dbLeads, dbReviewAsks, dbLogFollowup, dbNewClaims } from "./leads-db";
+import { moreTimeUntil } from "./more-time";
 import { dbAdminBusinesses, dbAdminDecide, dbAdminForgetPerson, dbAdminPersonLookup, dbAdminPrivacyLog, type PersonRecord, type PrivacyLogEntry, dbAdminDrops, dbAdminGrantDrop, dbAdminOverview, dbAdminPayments, dbAdminPinDrop, dbAdminReports, dbAdminSaveTier, dbAdminSavePack, dbAdminSetBusiness, dbAdminSetDropShown, dbPacks, dbPins, dbTiers, type AdminBusiness, type AdminDrop, type AdminOverview, type AdminPayment, type AdminReport } from "./admin-db";
 import { dbMarketplaceDrops, dbNotifyIntent, dbReportDrop } from "./market-db";
 import { dbOwnerReviews, dbPublicReviews, dbReportReview, dbReviewPage, dbSubmitReview } from "./reviews-db";
@@ -1311,7 +1312,9 @@ export async function getLeads(user: Pick<SessionUser, "id" | "role">): Promise<
       const first = l.name.split(" ")[0];
       const lead = l.status === "claimed" && used.has(first) ? { ...l, status: "redeemed" as const, spent: (used.get(first) ?? 0) / 100 || undefined } : l;
       const tapped = followups.get(l.id);
-      return tapped ? { ...lead, lastFollowupAt: tapped } : lead;
+      const more = moreTimeDemo.get(l.id);
+      const withMore = more ? { ...lead, expiresAt: more.expiresAt, extendedAt: more.extendedAt } : lead;
+      return tapped ? { ...withMore, lastFollowupAt: tapped } : withMore;
     })
     .sort((a, b) => b.claimedAt.localeCompare(a.claimedAt));
 }
@@ -1356,6 +1359,52 @@ export async function getFollowups(user: Pick<SessionUser, "id" | "role">): Prom
 export async function leadsNow(user: Pick<SessionUser, "id">): Promise<Date> {
   await connection();
   return isDbId(user.id) ? new Date() : DEMO_NOW;
+}
+
+// DEMO: "Give more time" on the demo leads (the counter's demo codes change the claim store).
+const moreTimeDemo: Map<string, { expiresAt: string; extendedAt: string }> = ((globalThis as { __tikkaMoreTime?: Map<string, { expiresAt: string; extendedAt: string }> }).__tikkaMoreTime ??= new Map());
+
+export type MoreTimeResult =
+  | { kind: "extended"; expiresAt: string; name: string }
+  | { kind: "already_used" | "already_extended" | "no_more_time" | "unknown" };
+
+/**
+ * give_more_time: one extra week on one Tikka, once, never past 30 days from the claim. Owners
+ * only (staff and anyone else get "unknown"). From Leads by the claim, or at the counter by code.
+ */
+export async function giveMoreTime(user: Pick<SessionUser, "id" | "role">, target: { claimId: string } | { code: string }): Promise<MoreTimeResult> {
+  if (user.role !== "owner") return { kind: "unknown" };
+  if (isDbId(user.id)) {
+    const b = await getBusiness(user);
+    if (!b) return { kind: "unknown" };
+    const r = await dbGiveMoreTime(b.id, target);
+    if (r.kind === "extended") return { kind: "extended", expiresAt: new Date(String(r.expires_at)).toISOString(), name: String(r.name ?? "") };
+    return { kind: r.kind === "already_used" || r.kind === "already_extended" || r.kind === "no_more_time" ? r.kind : "unknown" };
+  }
+  if (user.id !== DEMO_USER) return { kind: "unknown" };
+  if ("code" in target) {
+    // The demo counter checks codes against the real clock (checkCode), so this does too.
+    const now = new Date();
+    const c = findByCode(target.code.trim().toUpperCase());
+    if (!c || c.ownerId !== user.id) return { kind: "unknown" };
+    if (c.redeemedAt) return { kind: "already_used" };
+    if (c.extendedAt) return { kind: "already_extended" };
+    const until = moreTimeUntil({ claimedAt: c.claimedAt, expiresAt: c.card.expiresAt }, now);
+    if (!until) return { kind: "no_more_time" };
+    c.card = { ...c.card, expiresAt: until };
+    c.extendedAt = now.toISOString();
+    return { kind: "extended", expiresAt: until, name: c.card.claimer };
+  }
+  // Demo leads live at DEMO_NOW, like the Leads page.
+  const now = DEMO_NOW;
+  const lead = (await getLeads(user)).find((l) => l.id === target.claimId);
+  if (!lead || !lead.expiresAt) return { kind: "unknown" };
+  if (lead.status === "redeemed") return { kind: "already_used" };
+  if (lead.extendedAt) return { kind: "already_extended" };
+  const until = moreTimeUntil({ claimedAt: lead.claimedAt, expiresAt: lead.expiresAt }, now);
+  if (!until) return { kind: "no_more_time" };
+  moreTimeDemo.set(lead.id, { expiresAt: until, extendedAt: now.toISOString() });
+  return { kind: "extended", expiresAt: until, name: lead.name.split(" ")[0] };
 }
 
 /** "Message on WhatsApp" was tapped: a followup_tap for the funnel and leads.last_followup_at. */

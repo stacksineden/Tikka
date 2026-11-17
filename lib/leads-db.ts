@@ -22,6 +22,18 @@ export async function dbReviewAsks(businessId: string): Promise<Map<string, stri
   return new Map(((data ?? []) as { claim_id: string; view_token: string }[]).map((r) => [r.claim_id, r.view_token]));
 }
 
+/** give_more_time(): one extra week on one Tikka, once (owner only, checked in SQL). By claim (Leads) or code (counter). */
+export async function dbGiveMoreTime(businessId: string, target: { claimId: string } | { code: string }): Promise<Record<string, unknown>> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("give_more_time", {
+    p_business: businessId,
+    p_claim: "claimId" in target ? target.claimId : null,
+    p_code: "code" in target ? target.code : null,
+  });
+  if (error) throw new Error("Only the owner can give more time.");
+  return (data ?? { kind: "unknown" }) as Record<string, unknown>;
+}
+
 /** "Message on WhatsApp" was tapped. */
 export async function dbLogFollowup(claimId: string): Promise<boolean> {
   const sb = await createClient();

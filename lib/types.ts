@@ -300,6 +300,8 @@ export interface Lead {
   phoneConfirmed?: boolean;
   /** A typed number that passed the WhatsApp check at the counter. */
   counterChecked?: boolean;
+  /** When the owner gave this Tikka its one extra week ("Give more time"). */
+  extendedAt?: string;
 }
 
 export type ActivityEvent =

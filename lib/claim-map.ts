@@ -97,7 +97,14 @@ export function checkFrom(j: Record<string, unknown>): CheckResult {
     case "already_used":
       return { kind: "already_used", code, at: new Date(String(j.at)).toISOString() };
     case "expired":
-      return { kind: "expired", code, at: new Date(String(j.at)).toISOString() };
+      return {
+        kind: "expired",
+        code,
+        at: new Date(String(j.at)).toISOString(),
+        name: typeof j.name === "string" ? j.name : undefined,
+        reward: typeof j.reward === "string" ? j.reward : undefined,
+        moreTime: typeof j.more_time === "string" ? new Date(j.more_time).toISOString() : undefined,
+      };
     case "wrong_day":
       return { kind: "wrong_day", code, days: validDaysLabel((j.days as number[]) ?? []) };
     case "wrong_business":
@@ -129,6 +136,7 @@ export interface LeadRow {
   last_followup_at: string | null;
   phone_confirmed?: boolean;
   counter_checked?: boolean;
+  extended_at?: string | null;
 }
 
 const SOURCES: Source[] = ["wa", "ig", "qr", "web", "ads", "market", "direct"];
@@ -156,6 +164,7 @@ export function leadFrom(r: LeadRow): Lead {
     plannedVisitPart: r.planned_visit_part ?? undefined,
     phoneConfirmed: r.phone_confirmed !== false,
     counterChecked: r.counter_checked === true,
+    extendedAt: iso(r.extended_at ?? null),
   };
 }
 

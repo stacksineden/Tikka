@@ -7,10 +7,12 @@ import { AutoSubmit, FollowUpButton, LiveRefresh } from "@/components/leads/Lead
 import { RarityBadge } from "@/components/tikka/RarityBadge";
 import { ComingIn } from "@/components/leads/ComingIn";
 import { MessageToday } from "@/components/leads/MessageToday";
+import { MoreTime } from "@/components/leads/MoreTime";
 import { getBusiness, getDrops, getFollowups, getLeads, getReviewAsks, leadsNow } from "@/lib/data";
 import { comingIn, visitPlanLabel } from "@/lib/followups";
 import { naira, shortDate, timeAgo } from "@/lib/format";
-import { filterLeads, followUpLink, reviewAskLink, LEAD_TABS, parseLeadFilters, SOURCE_LABEL, tabCounts, type LeadFilters } from "@/lib/leads";
+import { filterLeads, followUpLink, reviewAskLink, LEAD_TABS, parseLeadFilters, SOURCE_LABEL, tabCounts, waLink, type LeadFilters } from "@/lib/leads";
+import { moreTimeUntil } from "@/lib/more-time";
 import { getOwnerUser } from "@/lib/session";
 import { siteUrl } from "@/lib/supabase/env";
 import type { Source, Tier } from "@/lib/types";
@@ -156,6 +158,10 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
               const ask = asks.get(l.id);
               const wa = ask ? reviewAskLink(l, b.name, `${siteUrl()}/t/${ask}/review`) : followUpLink(l, b.name, planNow);
               const plan = l.status === "claimed" ? visitPlanLabel(l.plannedVisitDate, l.plannedVisitPart, planNow) : null;
+              // "Give more time": owner only (this page), once, never past 30 days from the claim.
+              const expired = l.status === "claimed" && !!l.expiresAt && new Date(l.expiresAt) <= planNow;
+              const moreUntil = l.status === "claimed" && l.expiresAt ? moreTimeUntil({ claimedAt: l.claimedAt, expiresAt: l.expiresAt, extendedAt: l.extendedAt }, planNow) : null;
+              const waTo = moreUntil || l.extendedAt ? (waLink(l.phone, "")?.split("?")[0] ?? null) : null;
               return (
                 <li key={l.id} className="grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto] lg:items-center">
                   <div className="min-w-0">
@@ -190,12 +196,21 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
                       <span className="tag justify-self-start bg-surface-sunken text-ink-muted">Claimed</span>
                     )}
                     {plan && <span className="font-semibold text-ink">{plan}</span>}
+                    {l.status === "claimed" && l.expiresAt && (
+                      <span className={expired ? "font-semibold text-danger" : undefined}>
+                        {expired ? "Expired" : "Use by"} {shortDate(l.expiresAt)}
+                        {l.extendedAt ? " · given more time" : ""}
+                      </span>
+                    )}
                     <span>
                       {drop?.name ?? "Drop"} · {SOURCE_LABEL[l.source]} · {shortDate(l.claimedAt)}
                     </span>
                     {l.lastFollowupAt && <span className="text-success">Messaged {timeAgo(l.lastFollowupAt, now)}</span>}
                   </div>
                   {wa && <FollowUpButton href={wa} leadId={l.id} name={l.name} review={!!ask} />}
+                  {l.status === "claimed" && (moreUntil || l.extendedAt) && (
+                    <MoreTime key={`more-${l.id}`} claimId={l.id} name={l.name} businessName={b.name} until={moreUntil} waTo={waTo} />
+                  )}
                 </li>
               );
             })}

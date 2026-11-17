@@ -41,6 +41,7 @@ import {
   type DropDraft,
   type Errors,
   type Screen,
+  shortValidityHint,
 } from "@/lib/drop";
 import { applyFix, dropCheck, suggestedSize } from "@/lib/dropcheck";
 import { clockTime, count, shortDate } from "@/lib/format";
@@ -872,6 +873,9 @@ function StepWhen({
           ))}
         </div>
         <p className="text-caption text-ink-muted">Counted from when each person claims, even after the drop closes.</p>
+        {shortValidityHint(business.category, draft.validityDays) && (
+          <p className="text-caption rounded-md bg-brand-soft px-3 py-2 text-ink">{shortValidityHint(business.category, draft.validityDays)}</p>
+        )}
       </section>
 
       {draft.goal === "quiet_days" && (

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  shortValidityHint,
   publishWindowProblem,
   applyMix,
   blankDraft,
@@ -241,5 +242,14 @@ describe("the reward mix by drop size", () => {
     const own = setTierCount({ ...setTotal(applyMix(blankDraft(new Date("2026-11-17T10:00:00+01:00")), "balanced"), 40), mix: "custom" }, "legendary", 5);
     expect(tierCount(own, "legendary")).toBe(5);
     expect(tierCount(setTotal(own, 60), "legendary")).toBe(5);
+  });
+});
+
+describe("shortValidityHint", () => {
+  it("nudges 7 days towards 14 where people book ahead", () => {
+    expect(shortValidityHint("Beauty", 7)).toMatch(/14 days/);
+    expect(shortValidityHint("Wellness", 7)).not.toBeNull();
+    expect(shortValidityHint("Beauty", 14)).toBeNull();
+    expect(shortValidityHint("Food & drinks", 7)).toBeNull();
   });
 });

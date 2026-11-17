@@ -21,7 +21,7 @@ async function Redeem() {
       </div>
     );
   }
-  return <RedeemScreen businessName={b.name} prefix={b.codePrefix} />;
+  return <RedeemScreen businessName={b.name} prefix={b.codePrefix} isOwner={user.role === "owner"} />;
 }
 
 export default function Page() {

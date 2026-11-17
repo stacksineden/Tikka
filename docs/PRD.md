@@ -15,7 +15,7 @@ The pitch: drops turn people who see a business into customers who come in, and 
 | Drop goal | Every drop has one: **Get new customers**, **Bring customers back** or **Fill quiet days** |
 | Builder | Four plain-language screens, starting from ready-made offers for the business's category and goal. A first-time owner publishes in under 2 minutes |
 | Drops | One live drop per business at a time, plus at most one scheduled next drop. At most 30 days long |
-| Tikka expiry | Each Tikka lasts 7, 14 or 30 days after it's claimed (default 14), even past the drop's end: a claim on the last day gets its full time |
+| Tikka expiry | Each Tikka lasts 7, 14 or 30 days after it's claimed (default 14), even past the drop's end: a claim on the last day gets its full time. The owner can give one Tikka one extra week, once, never past 30 days from the claim ("Give more time", B8); customers are never told it exists |
 | Bounce-back | Optional: redeeming a Tikka issues a "next visit" Tikka automatically |
 | Card look | Business sets logo, brand colour and card background (colour, pattern or photo). Card styles: Matte, Foil, Holo (Holo free during the pilot) |
 | Business profile on the card | Overview, Services, **Reviews** and **Video** tabs, plus action buttons |
@@ -299,7 +299,7 @@ Each drop: status (Draft, Scheduled, Live, Sold out, Ended), goal, dates, cards 
 - **How many Tikkas:** quick picks 50 · 100 · 200 · 500 · 1,000 (the suggested size marked "suggested") and "Another number". Under them one price line, never with a number of Tikkas: "Free (your first drop) · Any size up to 1,000", "Drop · ₦10,000 · The same price for any size", or "Covered by your season pack". A first drop starts at 200. Over 1,000: "For more than 1,000 Tikkas in one drop, talk to us" (only shown when they type more).
 - **When does it start?** "As soon as I publish" or "On a date" (then the date and time).
 - **Open for** 3, 5, 7, 14 or 30 days (default 14), with the closing date.
-- **Each Tikka lasts** 7, 14 or 30 days after it's claimed (default 14).
+- **Each Tikka lasts** 7, 14 or 30 days after it's claimed (default 14). Choosing 7 days for Beauty, Wellness, Fashion, Events or Health shows "Most clients book a week or two ahead. 14 days gives them time to come."
 - Quiet-day drops: Mon–Sun chips.
 - **More options** (collapsed): card style; who can claim; share kept for new customers; marketplace on/off and limit (and "Check WhatsApp at the counter" in page-claim mode).
 
@@ -361,7 +361,7 @@ The same price for 40 Tikkas or 900; no screen shows a number of Tikkas next to 
 For owners and staff, on a phone at the counter.
 - Opens to the camera scanner, with "Type the code" below. Typed codes are checked offline first ("That code has a typo").
 - **Valid** (light panel): first name + initial, reward, tier, "Use by"; for an action card, the staff tick; **"New customer" / "Been here before"** (preselected from the lead's history); **"What did they spend? This adds to your drop's results."** (₦, optional; never blocks confirming) shown prominently (optional); "Confirm redemption".
-- **Not valid** (dark panel) with one reason: already used (when), expired (when), not valid today ("Valid Mon–Thu only"), from another business, not a Tikka code. "Scan another code".
+- **Not valid** (dark panel) with one reason: already used (when), expired (when; with the customer's name and reward, and for the owner "Give more time" when the Tikka can still have it, then the code is checked again; staff see "Only the owner can give more time. Ask them to open Leads…" and "Check again"), not valid today ("Valid Mon–Thu only"), from another business, not a Tikka code. "Scan another code".
 - After confirming: "Done. Adaeze's Tikka is used." Tikka sends the thank-you, with the bounce-back if the drop has one.
 - Never shows phone numbers. Scan to confirmed in under 5 seconds; two staff confirming at once give one success.
 - **WhatsApp check at the counter** (page-claim mode only, while Tikka's WhatsApp waits for Meta). A Tikka claimed by typing a number on a drop with "Check WhatsApp at the counter" on (More options, on by default) shows "Check their WhatsApp first": staff ask the customer to open WhatsApp → Settings → their name, read the number off the customer's own screen (never what they're told, never a screenshot) and type the last 6 digits. Tikka only answers matches or not. **One used Tikka per WhatsApp per drop:** if that WhatsApp has already used a Tikka from the same drop (someone who typed several numbers ending in their own digits), staff see "This WhatsApp has already used a Tikka from this drop" and don't give the reward; it counts as a wrong try. Their own next-visit Tikka is never blocked. "Confirm redemption" stays locked until it matches. Three wrong tries a day, then "Come back with the phone you claimed with", and it can be checked again tomorrow. No phone with them: don't check; they come back before it expires. Nothing is ever cancelled or put back; unused Tikkas expire as usual. The same for owners and staff, with no override. The claim page warns three times (under the claim button, at the number box, on the card). Passing and redeeming makes the lead **Verified** for that business only (Leads shows Verified / Unverified on typed-in numbers) and turns on future drops if they ticked the box. Tikka admin sees per business how many came but couldn't redeem, failed then passed, passed first time, never came, and stopped as a repeat; businesses don't.
@@ -375,6 +375,7 @@ Every person who claims is the owner's to follow up, in full, with no per-person
   - Expired, never came: "Hi Adaeze, we missed you! Our next drop is coming soon."
 - A live "Adaeze just claimed a Rare Tikka. Message her now?" prompt on the dashboard when a claim completes.
 - The full list: tabs All, New, Redeemed, Not yet redeemed; filter by drop, source and tier; search by name. Row: full name, WhatsApp number, tier, reward, status, visit plan ("Plans to come Sat morning"), tags (New, From marketplace), claim date, amount spent, and "Message on WhatsApp". Each tap logs a `followup_tap`.
+- **Give more time** (owner only): an unused Tikka shows "Use by Tue 25 Nov" (or "Expired") on its row. For a customer who can't come in time, "Give more time" asks "Give Adaeze 7 more days? Their Tikka will last until Tue 2 Dec. You can only do this once." Yes moves the date (same card and code), shows "given more time", and offers "Tell Adaeze on WhatsApp" from the owner's phone: "Hi Adaeze, I've kept your Glow Studio Tikka for you until Tue 2 Dec. See you then!" Rules: once per Tikka; 7 more days; never past 30 days from the claim (a 30-day Tikka can't have more); an expired Tikka comes back if the new date is still ahead; never a used one. Never mentioned to customers.
 - **Export** (owner only): CSV of all leads for the chosen drop or all drops.
 - Staff can't open this page and never see a phone number.
 

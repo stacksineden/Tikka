@@ -46,6 +46,7 @@ import {
   getBusiness,
   getDropTemplates,
   getPayment,
+  giveMoreTime,
   inviteStaff,
   publishProblem,
   publishWithVoucher,
@@ -78,7 +79,7 @@ import type { CheckResult, DigitsResult } from "@/lib/redeem";
 import type { BusinessPageInput } from "@/lib/page";
 import type { Business, OpeningHours, PortfolioCollection, PortfolioPhoto, ServeMode, ServiceItem } from "@/lib/types";
 import { requestPhone } from "@/lib/privacy";
-import type { PersonRecord } from "@/lib/data";
+import type { MoreTimeResult, PersonRecord } from "@/lib/data";
 import { dbAdminSetEnquiryStatus } from "@/lib/studio-db";
 
 export type Extras = Partial<Pick<Business, "tagline" | "about" | "hours" | "services" | "hasVideo" | "videoUrl" | "videoPosterUrl" | "address" | "slug">>;
@@ -669,6 +670,18 @@ export async function checkCodeAction(code: string): Promise<CheckResult | { kin
   const user = await getSessionUser();
   if (!user) return { kind: "no_access" };
   return checkCode(user, code);
+}
+
+/**
+ * "Give more time": one extra week on one Tikka, once, never past 30 days from the claim. Owners
+ * only (the database checks again). From Leads by the claim, or at the counter by the code.
+ */
+export async function giveMoreTimeAction(target: { claimId: string } | { code: string }): Promise<MoreTimeResult> {
+  const user = await getOwnerUser();
+  if (!user) return { kind: "unknown" };
+  const r = await giveMoreTime(user, target).catch((): MoreTimeResult => ({ kind: "unknown" }));
+  if (r.kind === "extended") revalidatePath("/app/leads");
+  return r;
 }
 
 /** The WhatsApp check at the counter: the last 6 digits staff read off the customer's WhatsApp. Never uses the Tikka. */

@@ -3,6 +3,7 @@
 
 import { isWellFormed, normalize } from "./codes";
 import type { ClaimedCard, Tier } from "./types";
+import { moreTimeUntil } from "./more-time";
 import { claimExpiry, validDaysLabel, validOn, watDate, type VisitPart } from "./visit";
 
 export const REVIEW_WINDOW_DAYS = 30;
@@ -54,6 +55,8 @@ export interface ClaimRecord {
   /** Set once the card has been flipped (in the browser or from the WhatsApp link). */
   revealedAt?: string;
   redeemedAt?: string;
+  /** "Give more time": the one extra week the owner gave it. */
+  extendedAt?: string;
   billKobo?: number;
   /** "New customer" / "Been here before", as marked at the counter. */
   customerStatus?: "new" | "returning";
@@ -91,7 +94,8 @@ export type CheckResult =
       plannedVisitPart?: VisitPart;
     }
   | { kind: "already_used"; code: string; at: string }
-  | { kind: "expired"; code: string; at: string }
+  /** `moreTime`: the date "Give more time" would move it to (owners only), when it can have more time. */
+  | { kind: "expired"; code: string; at: string; name?: string; reward?: string; moreTime?: string }
   | { kind: "wrong_day"; code: string; days: string }
   | { kind: "wrong_business"; code: string }
   | { kind: "unknown"; code: string }
@@ -186,7 +190,10 @@ export function checkClaim(claim: ClaimRecord | undefined, ownerId: string, code
   if (!claim) return { kind: "unknown", code };
   if (claim.ownerId !== ownerId) return { kind: "wrong_business", code };
   if (claim.redeemedAt) return { kind: "already_used", code, at: claim.redeemedAt };
-  if (new Date(claim.card.expiresAt) <= now) return { kind: "expired", code, at: claim.card.expiresAt };
+  if (new Date(claim.card.expiresAt) <= now) {
+    const moreTime = moreTimeUntil({ claimedAt: claim.claimedAt, expiresAt: claim.card.expiresAt, extendedAt: claim.extendedAt }, now);
+    return { kind: "expired", code, at: claim.card.expiresAt, name: displayName(claim.card.claimer, claim.lastInitial), reward: claim.card.reward, moreTime: moreTime ?? undefined };
+  }
   if (!validOn(claim.validWeekdays, now)) return { kind: "wrong_day", code, days: validDaysLabel(claim.validWeekdays!) };
   return {
     kind: "valid",

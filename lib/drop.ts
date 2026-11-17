@@ -331,6 +331,17 @@ export function blankDraft(now: Date): DropDraft {
   return applyMix(base, "balanced");
 }
 
+/** Categories where people plan a visit ahead (hair, events, clinics), so 7 days is often too short. */
+const PLAN_AHEAD = new Set(["Beauty", "Wellness", "Fashion", "Events", "Health"]);
+
+/**
+ * The builder's nudge when an owner picks 7 days in a category where people book ahead: a short
+ * Tikka loses the customer whose hair isn't ready yet. Null otherwise.
+ */
+export function shortValidityHint(category: string, validityDays: number): string | null {
+  return validityDays === 7 && PLAN_AHEAD.has(category) ? "Most clients book a week or two ahead. 14 days gives them time to come." : null;
+}
+
 /**
  * The size the builder suggests from how many people see the owner's posts: half of them,
  * rounded to the nearest 10, at least 20 and at most 1,000 (docs/REVENUE_PLAN.md item 3). A drop

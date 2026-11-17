@@ -268,6 +268,9 @@ General rules for every item:
 
 ---
 
+### Item 8. Give more time (built 18 Nov 2026)
+From the pilot: customers who can't come before a 7-day Tikka runs out (their hair isn't ready). The owner can give one Tikka one extra week, once, never past 30 days from the claim, from Leads or at the counter; customers are never told it exists, so the deadline still works. Migration `20261118120000_more_time.sql`, database test 043, `lib/more-time.ts`. The builder nudges 7 days towards 14 where people book ahead.
+
 ## 4. NOW: things the owner does (no code)
 
 | What | Details |
