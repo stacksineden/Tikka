@@ -374,7 +374,7 @@ STUDIO_WA_NUMBER (+2348022211241: the Studio team's own WhatsApp, separate from 
 19. Builder: a template drop publishes with correct reward rows for 200, 300 and 1,000 Tikkas.
 20. Staff can't create, pay for or publish drops, or read `payments`.
 21. Studio: every content file in `content/studio/` passes the schema (unit); a case study renders with only the required fields; enquiries insert only through `submit_studio_enquiry()`, are rate-limited, and only admins read them.
-22. Spark early access: signing up twice leaves one row (per business and per contact); dismissals are per business; nobody but an admin reads the list.
+22. Spark and payments early access: signing up twice leaves one row (per feature, per business and per contact); dismissals are per business; nobody but an admin reads the lists (`supabase/tests/042_payments_early_access.sql`).
 
 ## 19. Tikka Studio and Spark
 - **Pages** are server-rendered under `app/(studio)/studio/` with their own header and footer, Tikka's tokens and the light layout. Every page links to `/studio/contact`. Case studies get `generateMetadata` and an Open Graph image (`/api/og/studio?slug=…`) from their cover.

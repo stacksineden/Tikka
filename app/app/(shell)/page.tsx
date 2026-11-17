@@ -15,6 +15,8 @@ import {
   TopStats,
 } from "@/components/dashboard/Home";
 import { BioCard } from "@/components/business/BioCard";
+import { PaymentsCard } from "@/components/payments/PaymentsTeaser";
+import { earlyAccessState } from "@/lib/studio-db";
 import { SoloCard } from "@/components/tikka/SoloCard";
 import { faceFromBusiness } from "@/components/tikka/TikkaCard";
 import {
@@ -51,10 +53,11 @@ async function Home() {
 
   // Staff never see leads (rule 4); getLeads refuses them.
   const owner = user.role === "owner";
-  const [leads, activity, guarantee] = await Promise.all([
+  const [leads, activity, guarantee, payments] = await Promise.all([
     owner ? getLeads(user) : Promise.resolve([]),
     getActivity(user),
     owner ? getGuaranteeNotice(user) : Promise.resolve(null),
+    owner ? earlyAccessState(business.id, "payments") : Promise.resolve(null),
   ]);
   const live = drops.find((d) => d.status === "live");
   const renderedAt = new Date().toISOString();
@@ -84,6 +87,7 @@ async function Home() {
         </div>
         <div className="grid gap-6">
           <ActivityFeed events={activity} now={now} />
+          {payments && !payments.dismissed.includes("payments_dashboard") && <PaymentsCard onList={payments.onList} canAct />}
           <BioCard slug={business.slug} name={business.name} />
           {scheduled && <ComingUp drop={scheduled} />}
           <FinishPageChecklist business={business} />

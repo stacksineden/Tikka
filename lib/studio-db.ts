@@ -39,38 +39,54 @@ export async function dbJoinEarlyAccessContact(contact: string): Promise<boolean
   return !error;
 }
 
-export type Teaser = "spark_builder" | "spark_dashboard";
+/** What a business can ask to hear about first: Spark, and payments and deposits (revenue plan item 6). */
+export type Feature = "spark" | "payments";
+export type Teaser = "spark_builder" | "spark_dashboard" | "payments_dashboard";
 export interface SparkState {
   onList: boolean;
   dismissed: Teaser[];
 }
 
-// DEMO: Spark state for demo businesses, which aren't in the database.
-const demoSpark: Map<string, SparkState> = ((globalThis as { __tikkaSpark?: Map<string, SparkState> }).__tikkaSpark ??= new Map());
+// DEMO: early-access state for demo businesses, which aren't in the database.
+type DemoState = { lists: Feature[]; dismissed: Teaser[] };
+const demoSpark: Map<string, DemoState> = ((globalThis as { __tikkaEarly?: Map<string, DemoState> }).__tikkaEarly ??= new Map());
+const demoOf = (id: string): DemoState => demoSpark.get(id) ?? { lists: [], dismissed: [] };
 
-export async function sparkState(businessId: string): Promise<SparkState> {
-  if (!isDbId(businessId)) return demoSpark.get(businessId) ?? { onList: false, dismissed: [] };
+/** Whether this business is on a feature's early-access list, and which teasers it has hidden. */
+export async function earlyAccessState(businessId: string, feature: Feature): Promise<SparkState> {
+  if (!isDbId(businessId)) {
+    const s = demoOf(businessId);
+    return { onList: s.lists.includes(feature), dismissed: s.dismissed };
+  }
   const sb = await createClient();
-  const { data, error } = await sb.rpc("spark_state", { p_business: businessId });
+  const { data, error } = await sb.rpc("early_access_state", { p_business: businessId, p_feature: feature });
   const row = (data as { on_list: boolean; dismissed: Teaser[] }[] | null)?.[0];
   return error || !row ? { onList: false, dismissed: [] } : { onList: row.on_list, dismissed: row.dismissed ?? [] };
 }
 
+export async function sparkState(businessId: string): Promise<SparkState> {
+  return earlyAccessState(businessId, "spark");
+}
+
 /** The owner signs their own business up (the database checks it's theirs). */
-export async function joinSparkForBusiness(businessId: string): Promise<boolean> {
+export async function joinEarlyAccess(businessId: string, feature: Feature): Promise<boolean> {
   if (!isDbId(businessId)) {
-    const s = await sparkState(businessId);
-    demoSpark.set(businessId, { ...s, onList: true });
+    const s = demoOf(businessId);
+    demoSpark.set(businessId, { ...s, lists: [...new Set([...s.lists, feature])] });
     return true;
   }
   const sb = await createClient();
-  const { error } = await sb.rpc("join_early_access", { p_feature: "spark", p_business: businessId });
+  const { error } = await sb.rpc("join_early_access", { p_feature: feature, p_business: businessId });
   return !error;
+}
+
+export async function joinSparkForBusiness(businessId: string): Promise<boolean> {
+  return joinEarlyAccess(businessId, "spark");
 }
 
 export async function dismissTeaser(businessId: string, teaser: Teaser): Promise<boolean> {
   if (!isDbId(businessId)) {
-    const s = await sparkState(businessId);
+    const s = demoOf(businessId);
     demoSpark.set(businessId, { ...s, dismissed: [...new Set([...s.dismissed, teaser])] });
     return true;
   }
@@ -119,9 +135,11 @@ export async function dbAdminSetEnquiryStatus(id: string, status: AdminEnquiry["
   await sb.rpc("admin_set_enquiry_status", { p_enquiry: id, p_status: status });
 }
 
-export async function dbAdminEarlyAccess(): Promise<{ count: number; list: { businessName?: string; businessSlug?: string; contact?: string; createdAt: string }[] }> {
+export async function dbAdminEarlyAccess(
+  feature: Feature = "spark",
+): Promise<{ count: number; list: { businessName?: string; businessSlug?: string; contact?: string; createdAt: string }[] }> {
   const sb = await createClient();
-  const { data, error } = await sb.rpc("admin_early_access", { p_feature: "spark" });
+  const { data, error } = await sb.rpc("admin_early_access", { p_feature: feature });
   if (error || !data) return { count: 0, list: [] };
   const j = data as { count: number; list: Record<string, unknown>[] };
   return {

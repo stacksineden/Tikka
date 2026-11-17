@@ -51,7 +51,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const real = isDbId(user.id);
-  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog, enquiries, early, checks] = await Promise.all([
+  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog, enquiries, early, checks, earlyPay] = await Promise.all([
     adminView(user, q),
     getDropTiers(),
     getAllDropPacks(),
@@ -59,6 +59,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
     real ? dbAdminEnquiries() : Promise.resolve([]),
     real ? dbAdminEarlyAccess() : Promise.resolve({ count: 0, list: [] }),
     real ? dbAdminCounterChecks().catch(() => []) : Promise.resolve([]),
+    real ? dbAdminEarlyAccess("payments") : Promise.resolve({ count: 0, list: [] }),
   ]);
   const ct = counterCheckTotals(checks);
   const newEnquiries = enquiries.filter((e) => e.status === "new").length;
@@ -214,6 +215,28 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                     Save
                   </button>
                 </form>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
+
+      <Section
+        id="pay-early-h"
+        title={`Payments and deposits early access · ${count(earlyPay.count)}`}
+        note="Payments aren't built yet; these businesses asked to hear first. Call them first when deposits are ready."
+      >
+        {earlyPay.list.length === 0 ? (
+          <p className="text-body text-ink-muted">Nobody has signed up yet.</p>
+        ) : (
+          <ul className="grid gap-2">
+            {earlyPay.list.map((r, i) => (
+              <li key={i} className={`${card} flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1`}>
+                <span className="text-body font-semibold">{r.businessName ?? r.contact}</span>
+                <span className="text-caption text-ink-muted">
+                  {r.businessSlug ? `usetikka.com/${r.businessSlug} · ` : ""}
+                  {shortDate(r.createdAt)}
+                </span>
               </li>
             ))}
           </ul>

@@ -423,6 +423,13 @@ Tikka Studio is Tikka's tailor-made, done-for-you service: websites, WhatsApp sy
 - Drops list empty state: "Want us to plan and launch it for you? Talk to Tikka Studio."
 - Settings: "Get help from Tikka Studio".
 
+### B12a. Payments and deposits (coming soon)
+A teaser only (docs/REVENUE_PLAN.md item 6; the real thing is section 5 of that plan). Never shown as working: no checkout, no sample payments.
+- **Pricing section:** a strip under the two price cards: "Coming soon: take deposits when customers book, so no-shows don't cost you. A small fee only when customers pay you." with **Get early access**. Signed in as an owner it joins at once ("Joined. We'll tell you first."); signed out it goes to sign-up.
+- **Dashboard Home:** the same words in a dismissible card (owners only), with Get early access.
+- **Admin:** how many businesses joined, and which (to call them first).
+- Same list and dismissals as Spark (`early_access` feature `'payments'`, teaser `'payments_dashboard'`, `early_access_state()`).
+
 ### B12. Spark (coming soon)
 Spark is Tikka's AI drop strategist. **Not built in version one.** It shows only as teasers: a Spark mark in the brand purple (never gold) with a "Coming soon" badge, and a "Get early access" button. Never an input box, a sample answer or anything that looks like it works.
 
@@ -450,7 +457,7 @@ Spark is Tikka's AI drop strategist. **Not built in version one.** It shows only
 - Marketplace: hide a drop, pin a drop to a section (featured carousel).
 - Platform numbers: businesses, live drops, claims today, redemptions, WhatsApp messages sent and their cost.
 - **Studio enquiries:** the list, newest first, with each one's status (new, contacted, converted, closed), changed by an admin.
-- **Spark early access:** how many signed up, and the list.
+- **Spark early access:** how many signed up, and the list. **Payments and deposits early access:** the same, per business.
 - Money: **grant free drops** (pilot and done-for-you businesses; optional expiry date), view payments and revenue (drops, packs, and old upgrades), edit the drop price, its founding price, and the pack's price and founding price, see guarantee vouchers issued.
 
 ---

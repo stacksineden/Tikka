@@ -9,9 +9,11 @@ import {
   Scissors,
   Stethoscope,
   UtensilsCrossed,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { PaymentsJoin } from "@/components/payments/PaymentsTeaser";
 import { Spark, Tick } from "@/components/tikka/glyphs";
 import { OPEN_DAYS_AFTER, PORTFOLIO_FREE, PORTFOLIO_OPEN } from "@/lib/portfolio";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
@@ -486,6 +488,17 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
             <p className="text-caption mt-4 text-ink-muted">{overMaxLine(tiers)}</p>
             <p className="text-caption mt-auto pt-6 text-ink-muted">During the pilot, Tikka pays for every WhatsApp message.</p>
           </div>
+        </div>
+        {/* A teaser only (revenue plan item 6): payments aren't built, so nothing here looks like it works. */}
+        <div className="mt-4 flex flex-col gap-3 rounded-card border border-dashed border-brand/40 bg-surface-raised p-5 sm:flex-row sm:items-center sm:gap-5 sm:p-6">
+          <span className="grid size-10 shrink-0 place-items-center rounded-md bg-brand-soft text-brand">
+            <Wallet size={20} aria-hidden="true" />
+          </span>
+          <p className="text-body min-w-0 flex-1">
+            <span className="font-semibold">Coming soon: take deposits when customers book,</span> so no-shows don&apos;t cost you. A small fee only when
+            customers pay you.
+          </p>
+          <PaymentsJoin />
         </div>
       </div>
     </section>
