@@ -499,8 +499,11 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
 
             <div className="mt-4 grid gap-1.5">
               <label htmlFor="redeem-bill" className="text-title text-[17px]">
-                How much did they spend? (₦)
+                What did they spend?
               </label>
+              <p id="redeem-bill-help" className="text-body -mt-1 text-ink-muted">
+                This adds to your drop&apos;s results.
+              </p>
               <div className="flex items-center rounded-md border-2 border-line-strong bg-surface-raised focus-within:outline-2 focus-within:outline-brand">
                 <span className="pl-4 text-[22px] font-bold text-ink-muted" aria-hidden="true">
                   ₦
@@ -515,11 +518,12 @@ export function RedeemScreen({ businessName, prefix }: { businessName: string; p
                     setBill(d ? Number(d).toLocaleString("en-NG") : "");
                   }}
                   placeholder="25,000"
+                  aria-describedby="redeem-bill-help"
                   size={1}
                   className="h-14 w-0 min-w-0 flex-1 bg-transparent px-2 text-[24px] font-bold tabular-nums outline-none"
                 />
               </div>
-              <p className="text-caption text-ink-muted">Optional. It shows you what each drop brought in.</p>
+              <p className="text-caption text-ink-muted">Optional. Skip it if you don&apos;t know.</p>
             </div>
             </>
           )}

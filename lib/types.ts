@@ -178,6 +178,8 @@ export interface Drop {
   claimed: number;
   redeemed: number;
   revenue: number;
+  /** Redemptions where staff typed what the customer spent (the rest add nothing to `revenue`). */
+  spendLogged?: number;
   startsAt: string;
   endsAt: string;
   finish: Finish;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { foldOldViews, funnel, groupViews, rate, suggestNextSize } from "./dashboard";
+import { broughtInNote, foldOldViews, funnel, groupViews, rate, suggestNextSize } from "./dashboard";
 
 describe("drop dashboard", () => {
   it("gives each funnel step as % of the one before", () => {
@@ -47,5 +47,14 @@ describe("drop dashboard", () => {
     expect(feed.map((e) => e.id)).toEqual(["a", "e", "b", "vd_2026-11-08", "vd_2026-11-07"]);
     expect(feed[3]).toMatchObject({ kind: "views", count: 4, source: undefined, day: true, at: "2026-11-08T19:00:00Z" });
     expect(feed[4]).toMatchObject({ count: 4, source: "qr", day: true });
+  });
+});
+
+describe("what a drop brought in", () => {
+  it("says how many visits the naira is from, and how many had a spend typed in", () => {
+    expect(broughtInNote({ redeemed: 9, spendLogged: 6 })).toBe("from 6 of 9 visits");
+    expect(broughtInNote({ redeemed: 9, spendLogged: 9 })).toBe("from 9 visits");
+    expect(broughtInNote({ redeemed: 1, spendLogged: 1 })).toBe("from 1 visit");
+    expect(broughtInNote({ redeemed: 4 })).toBe("from 4 visits");
   });
 });

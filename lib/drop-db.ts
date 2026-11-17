@@ -39,11 +39,12 @@ export async function dbDrops(now: Date, rebuild: (d: Drop) => DropDraft): Promi
   const counts = new Map<string, DropCounts>();
   for (const c of claims ?? []) {
     if (c.kind !== "drop") continue;
-    const n = counts.get(c.drop_id) ?? { claimed: 0, redeemed: 0, revenue: 0 };
+    const n = counts.get(c.drop_id) ?? { claimed: 0, redeemed: 0, revenue: 0, spendLogged: 0 };
     n.claimed++;
     if (c.redeemed_at) {
       n.redeemed++;
       n.revenue += (c.bill_amount_kobo ?? 0) / 100;
+      if ((c.bill_amount_kobo ?? 0) > 0) n.spendLogged = (n.spendLogged ?? 0) + 1;
     }
     counts.set(c.drop_id, n);
   }

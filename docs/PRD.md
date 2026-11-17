@@ -359,7 +359,7 @@ The same price for 40 Tikkas or 900; no screen shows a number of Tikkas next to 
 ### B7. Redeem screen `/app/redeem`
 For owners and staff, on a phone at the counter.
 - Opens to the camera scanner, with "Type the code" below. Typed codes are checked offline first ("That code has a typo").
-- **Valid** (light panel): first name + initial, reward, tier, "Use by"; for an action card, the staff tick; **"New customer" / "Been here before"** (preselected from the lead's history); **"How much did they spend? (₦)"** shown prominently (optional); "Confirm redemption".
+- **Valid** (light panel): first name + initial, reward, tier, "Use by"; for an action card, the staff tick; **"New customer" / "Been here before"** (preselected from the lead's history); **"What did they spend? This adds to your drop's results."** (₦, optional; never blocks confirming) shown prominently (optional); "Confirm redemption".
 - **Not valid** (dark panel) with one reason: already used (when), expired (when), not valid today ("Valid Mon–Thu only"), from another business, not a Tikka code. "Scan another code".
 - After confirming: "Done. Adaeze's Tikka is used." Tikka sends the thank-you, with the bounce-back if the drop has one.
 - Never shows phone numbers. Scan to confirmed in under 5 seconds; two staff confirming at once give one success.

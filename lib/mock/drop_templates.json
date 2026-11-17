@@ -27,9 +27,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 10,
-        "what": "any service",
+        "type": "free_item",
+        "value": null,
+        "what": "Free hair wash with any service",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -73,9 +73,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 10,
-        "what": "any service",
+        "type": "free_item",
+        "value": null,
+        "what": "Free nail polish change with any service",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -165,10 +165,10 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "naira_off",
-        "value": 1000,
-        "what": "any service",
-        "minSpend": 5000,
+        "type": "free_item",
+        "value": null,
+        "what": "Free scalp massage with any service",
+        "minSpend": null,
         "requiresPurchase": true
       }
     ],
@@ -257,11 +257,11 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 10,
-        "what": "when you come with a friend",
+        "type": "free_item",
+        "value": null,
+        "what": "Free wash for you and a friend when you both book a service",
         "minSpend": null,
-        "requiresPurchase": true
+        "requiresPurchase": false
       }
     ],
     "bounceBack": {
@@ -303,9 +303,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 15,
-        "what": "any service",
+        "type": "free_item",
+        "value": null,
+        "what": "Free hair treatment with any service",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -404,9 +404,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 10,
-        "what": "any service",
+        "type": "free_item",
+        "value": null,
+        "what": "Free polish change with any service",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -500,9 +500,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 10,
-        "what": "any treatment",
+        "type": "free_item",
+        "value": null,
+        "what": "Free 10-minute head massage with any treatment",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -546,9 +546,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 10,
-        "what": "any treatment",
+        "type": "free_item",
+        "value": null,
+        "what": "Free foot soak with any treatment",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -592,10 +592,10 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "naira_off",
-        "value": 2000,
-        "what": "any treatment",
-        "minSpend": 10000,
+        "type": "free_item",
+        "value": null,
+        "what": "Free aromatherapy upgrade with any massage",
+        "minSpend": null,
         "requiresPurchase": true
       }
     ],
@@ -684,9 +684,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 10,
-        "what": "any treatment",
+        "type": "free_item",
+        "value": null,
+        "what": "Free 10-minute foot massage with any treatment",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -730,9 +730,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 15,
-        "what": "any treatment",
+        "type": "free_item",
+        "value": null,
+        "what": "Free steam session with any treatment",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -831,9 +831,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 10,
-        "what": "any treatment",
+        "type": "free_item",
+        "value": null,
+        "what": "Free herbal tea and foot soak with any treatment",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -927,9 +927,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "naira_off",
-        "value": 2000,
-        "what": "any plan",
+        "type": "free_item",
+        "value": null,
+        "what": "Free class for a friend with any plan",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -1023,9 +1023,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 10,
-        "what": "your order",
+        "type": "free_item",
+        "value": null,
+        "what": "Free soft drink with any meal",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -1211,10 +1211,10 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "naira_off",
-        "value": 2000,
-        "what": "orders",
-        "minSpend": 10000,
+        "type": "free_item",
+        "value": null,
+        "what": "Free alterations on any purchase",
+        "minSpend": null,
         "requiresPurchase": true
       }
     ],
@@ -1257,9 +1257,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 10,
-        "what": "any item",
+        "type": "free_item",
+        "value": null,
+        "what": "Free gift wrapping on any purchase",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -1353,10 +1353,10 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "naira_off",
-        "value": 2000,
-        "what": "any service",
-        "minSpend": 10000,
+        "type": "free_item",
+        "value": null,
+        "what": "Free blood pressure check with any visit",
+        "minSpend": null,
         "requiresPurchase": true
       }
     ],
@@ -1399,9 +1399,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 10,
-        "what": "any service",
+        "type": "free_item",
+        "value": null,
+        "what": "Free sugar check with any consultation",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -1495,9 +1495,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "naira_off",
-        "value": 3000,
-        "what": "any course",
+        "type": "free_item",
+        "value": null,
+        "what": "Free study pack with any course",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -1541,9 +1541,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 10,
-        "what": "any class",
+        "type": "free_item",
+        "value": null,
+        "what": "Free extra class with any class pack",
         "minSpend": null,
         "requiresPurchase": true
       }
@@ -1591,9 +1591,9 @@
       {
         "tier": "thank_you",
         "share": 88,
-        "type": "percent_off",
-        "value": 10,
-        "what": "your first order",
+        "type": "free_item",
+        "value": null,
+        "what": "Free pickup or delivery with any order",
         "minSpend": null,
         "requiresPurchase": true
       }

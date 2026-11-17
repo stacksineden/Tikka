@@ -11,7 +11,7 @@ import { LiveFeed } from "@/components/drops/LiveFeed";
 import { ShareKit } from "@/components/drops/ShareKit";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
 import { claimMode } from "@/lib/claim-mode";
-import { rate } from "@/lib/dashboard";
+import { broughtInNote, rate } from "@/lib/dashboard";
 import { ResultsCard } from "@/components/drops/ResultsCard";
 import { getBusiness, getDrop, getDropDashboard, getDropFeed, getDropReport, getDropTiers, getDrops, getPosters } from "@/lib/data";
 import { LIMITS } from "@/lib/drop";
@@ -95,7 +95,7 @@ async function Dashboard({ params, searchParams }: { params: PageProps<"/app/dro
   const maxStep = Math.max(1, ...stats.funnel.map((s) => s.count));
 
   const headline: [string, string, string?][] = [
-    drop.revenue > 0 ? ["This drop brought in", nairaShort(drop.revenue), `from ${count(drop.redeemed)} redemptions`] : ["Redeemed", count(drop.redeemed), "No spend logged yet"],
+    drop.revenue > 0 ? ["This drop brought in", nairaShort(drop.revenue), broughtInNote(drop)] : ["Redeemed", count(drop.redeemed), "No spend logged yet"],
     ["Claims", count(drop.claimed), `${percent(drop.claimed, drop.total)} of the drop`],
     ["Tikkas left", drop.status === "scheduled" ? count(drop.total) : `${count(left)} of ${count(drop.total)}`],
     drop.status === "scheduled"

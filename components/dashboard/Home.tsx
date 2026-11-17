@@ -8,6 +8,7 @@ import {
 import Link from "next/link";
 import { FollowUpButton } from "@/components/leads/LeadBits";
 import { RarityBadge, TIER_LABEL } from "@/components/tikka/RarityBadge";
+import { broughtInNote } from "@/lib/dashboard";
 import { clockTime, count, left, naira, nairaShort, percent, shortDate, timeAgo, timeLeft, WAT } from "@/lib/format";
 import { followUpLink } from "@/lib/leads";
 import type { ActivityEvent, Business, Drop, Lead, Tier } from "@/lib/types";
@@ -312,7 +313,7 @@ export function TopStats({ drop, newToday, leadsTotal }: { drop?: Drop; newToday
       <Stat
         label="This drop brought in"
         value={drop && drop.redeemed > 0 ? nairaShort(drop.revenue) : "₦0"}
-        note={drop ? `from ${count(drop.redeemed)} redemptions` : undefined}
+        note={drop ? broughtInNote(drop) : undefined}
         tone="gold"
       />
       <Stat label="Claims" value={drop ? count(drop.claimed) : "0"} note={drop ? left(drop.total - drop.claimed, drop.total) : undefined} />
