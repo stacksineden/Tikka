@@ -8,12 +8,16 @@ The ready-made offers on screen 2 of the drop builder ("Pick an offer"). This fi
 
 ## How every template works
 
-- **Shares:**
-  - Legendary · very few: **2%**.
-  - Rare · some: **10%**.
-  - Thank-you · everyone else: **88%**.
-  - These scale to any drop size, with at least 1 Legendary and 1 Rare when the size allows.
-  - On a 200 drop that's 4 Legendary, 20 Rare and 176 Thank-you.
+- **Shares, by the drop's size** (docs/REVENUE_PLAN.md item 4; the column headers below show the large-drop shares):
+
+  | Drop size | Legendary · very few | Rare · some | Thank-you · everyone else |
+  |---|---|---|---|
+  | Up to 100 | 4% | 16% | 80% |
+  | 101–300 | 3% | 12% | 85% |
+  | Over 300 | 2% | 10% | 88% |
+
+  - At least 1 Legendary and 1 Rare whenever the size allows. The owner can still change the counts.
+  - On a 40 drop that's 2 Legendary, 6 Rare and 32 Thank-you; on 200, 6 Legendary, 24 Rare and 170 Thank-you.
 - **Rare and Legendary need a purchase** (a % or ₦ off, a minimum spend, or a free extra with a paid service), or are a taste of the main service.
   - Only a Legendary (2%) may be a free full service with no purchase. Those are marked **no purchase**.
 - **Thank-you always names a real small benefit.** Nobody leaves with nothing.

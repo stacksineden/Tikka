@@ -25,6 +25,7 @@ import {
   suggestDropSize,
 } from "./drop";
 import { suggestedSize } from "./dropcheck";
+import { shareCounts, sharesFor } from "./templates";
 
 const NOW = new Date("2026-10-20T10:00:00+01:00");
 
@@ -197,5 +198,48 @@ describe("the size suggestion from the audience", () => {
     expect(suggestedSize({ audienceBand: null, audienceViews: 80 })).toBe(40);
     expect(suggestedSize({ audienceBand: "under_300", audienceViews: null })).toBe(100);
     expect(suggestedSize({ audienceBand: null, audienceViews: null })).toBeNull();
+  });
+});
+
+describe("the reward mix by drop size", () => {
+  const counts = (total: number) => {
+    const d = setTotal(applyMix(blankDraft(new Date("2026-11-17T10:00:00+01:00")), "balanced"), total);
+    return [tierCount(d, "legendary"), tierCount(d, "rare"), tierCount(d, "thank_you")];
+  };
+
+  it("gives small drops more Rare and Legendary", () => {
+    expect(counts(10)).toEqual([1, 2, 7]);
+    expect(counts(20)).toEqual([1, 3, 16]);
+    expect(counts(40)).toEqual([2, 6, 32]);
+    expect(counts(100)).toEqual([4, 16, 80]);
+  });
+
+  it("steps down for 101 to 300, and stays as before over 300", () => {
+    expect(counts(101)).toEqual([3, 12, 86]);
+    expect(counts(300)).toEqual([9, 36, 255]);
+    expect(counts(301)).toEqual([6, 30, 265]);
+    expect(counts(1000)).toEqual([20, 100, 880]);
+  });
+
+  it("always adds up, with at least one Legendary and one Rare", () => {
+    for (const n of [10, 11, 37, 99, 150, 299, 512, 999]) {
+      const [l, r, t] = counts(n);
+      expect(l + r + t).toBe(n);
+      expect(l).toBeGreaterThanOrEqual(1);
+      expect(r).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it("matches the ready-made offers' shares", () => {
+    expect(sharesFor(40)).toEqual([4, 16, 80]);
+    expect(sharesFor(200)).toEqual([3, 12, 85]);
+    expect(sharesFor(600)).toEqual([2, 10, 88]);
+    expect(shareCounts(40)).toEqual([2, 6, 32]);
+  });
+
+  it("leaves the owner's own counts alone", () => {
+    const own = setTierCount({ ...setTotal(applyMix(blankDraft(new Date("2026-11-17T10:00:00+01:00")), "balanced"), 40), mix: "custom" }, "legendary", 5);
+    expect(tierCount(own, "legendary")).toBe(5);
+    expect(tierCount(setTotal(own, 60), "legendary")).toBe(5);
   });
 });

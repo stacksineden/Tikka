@@ -59,10 +59,11 @@ describe("days and shares", () => {
     expect(daysLabel([1, 3])).toBe("Mon, Wed");
     expect(daysLabel(null)).toBe("Any day");
   });
-  it("scales 2/10/88 to any size, at least one legendary and rare", () => {
-    expect(shareCounts(200)).toEqual([4, 20, 176]);
-    expect(shareCounts(250)).toEqual([5, 25, 220]);
-    expect(shareCounts(10)).toEqual([1, 1, 8]);
+  it("scales the shares by size (4/16/80 up to 100, 3/12/85 to 300, 2/10/88 over), at least one legendary and rare", () => {
+    expect(shareCounts(200)).toEqual([6, 24, 170]);
+    expect(shareCounts(600)).toEqual([12, 60, 528]);
+    expect(shareCounts(40)).toEqual([2, 6, 32]);
+    expect(shareCounts(10)).toEqual([1, 2, 7]);
     expect(shareCounts(3)).toEqual([1, 1, 1]);
     expect(shareCounts(333).reduce((a, b) => a + b)).toBe(333);
   });

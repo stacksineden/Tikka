@@ -29,6 +29,17 @@ export function goalLabel(goal: Goal): string {
 /** Every template's share of the drop, legendary · rare · thank-you. */
 export const TEMPLATE_SHARES: Record<Tier, number> = { legendary: 2, rare: 10, thank_you: 88 };
 
+/**
+ * The share of each tier, by the drop's size (docs/REVENUE_PLAN.md item 4). Small drops get more
+ * Rare and Legendary, so the first claimers have something worth talking about: up to 100
+ * Tikkas 4 / 16 / 80, 101–300 3 / 12 / 85, over 300 2 / 10 / 88 (TEMPLATE_SHARES).
+ */
+export function sharesFor(total: number): [number, number, number] {
+  if (total <= 100) return [4, 16, 80];
+  if (total <= 300) return [3, 12, 85];
+  return [TEMPLATE_SHARES.legendary, TEMPLATE_SHARES.rare, TEMPLATE_SHARES.thank_you];
+}
+
 export interface TemplateReward {
   tier: Tier;
   /** Percent of the drop. */
@@ -189,8 +200,8 @@ export function templateProblems(t: DropTemplate): string[] {
   return p;
 }
 
-/** Tier counts for a drop of `total` from the shares: largest remainder, at least 1 legendary and rare when it fits. */
-export function shareCounts(total: number, shares: [number, number, number] = [TEMPLATE_SHARES.legendary, TEMPLATE_SHARES.rare, TEMPLATE_SHARES.thank_you]): [number, number, number] {
+/** Tier counts for a drop of `total` from the shares (by size): largest remainder, at least 1 legendary and rare when it fits. */
+export function shareCounts(total: number, shares: [number, number, number] = sharesFor(total)): [number, number, number] {
   const [l, r, t] = apportion(total, shares);
   if (total < 3) return [l, r, t];
   let legendary = l;

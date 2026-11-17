@@ -3,7 +3,7 @@
 
 import { apportion } from "./deck";
 import { count, naira, percent, shortDate } from "./format";
-import { parseReward, type BounceBack, type DropTemplate, type Goal } from "./templates";
+import { parseReward, sharesFor, type BounceBack, type DropTemplate, type Goal } from "./templates";
 import type { Finish, RewardType, Tier } from "./types";
 
 export type MixId = "generous" | "balanced" | "mostly_thank_you" | "custom";
@@ -11,6 +11,7 @@ export type Eligibility = "once_per_drop" | "once_per_period" | "new_only";
 
 export const MIXES: { id: Exclude<MixId, "custom">; label: string; pct: [number, number, number] }[] = [
   { id: "generous", label: "Generous", pct: [5, 25, 70] },
+  // The large-drop shares; smaller drops get more Rare and Legendary (mixPct, sharesFor in lib/templates.ts).
   { id: "balanced", label: "Balanced", pct: [2, 10, 88] },
   { id: "mostly_thank_you", label: "Mostly thank-you", pct: [1, 4, 95] },
 ];
@@ -264,10 +265,16 @@ export function setTierCount(d: DropDraft, tier: Tier, n: number): DropDraft {
   return { ...d, rewards: d.rewards.map((r) => (r.tier === tier ? { ...r, count: split[i++] } : r)) };
 }
 
+/** A mix's percentages for a drop of this size: "Balanced" follows the size (sharesFor), the others are fixed. */
+export function mixPct(mix: Exclude<MixId, "custom">, total: number): [number, number, number] {
+  if (mix === "balanced") return sharesFor(total);
+  return MIXES.find((x) => x.id === mix)!.pct;
+}
+
 export function applyMix(d: DropDraft, mix: MixId): DropDraft {
   const m = MIXES.find((x) => x.id === mix);
   if (!m) return { ...d, mix };
-  const [legendary, rare] = mixCounts(d.total, m.pct);
+  const [legendary, rare] = mixCounts(d.total, mixPct(m.id, d.total));
   return withThankYouFilled(setTierCount(setTierCount({ ...d, mix }, "legendary", legendary), "rare", rare));
 }
 
