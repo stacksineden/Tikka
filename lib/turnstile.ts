@@ -2,7 +2,9 @@ import "server-only";
 
 // Cloudflare Turnstile: a free, mostly invisible check that a page claim comes from a person, not a
 // script. It runs only when both keys are set (NEXT_PUBLIC_TURNSTILE_SITE_KEY for the claim sheet,
-// TURNSTILE_SECRET_KEY here), so half a setup never blocks real claims; the rate limits apply either way.
+// TURNSTILE_SECRET_KEY here). It never blocks a claim: it fails in some in-app browsers and older
+// phones, so a claim without a pass still goes through, under tighter limits (claim_page_unchecked in
+// lib/rate-limit.ts). The other rate limits apply either way.
 
 const VERIFY = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 

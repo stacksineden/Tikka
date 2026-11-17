@@ -40,7 +40,8 @@ export async function POST(request: Request) {
   if (!name) return fail("name", 400);
   const phone = normalizeNgPhone(String(body.phone ?? ""));
   if (!phone) return fail("phone", 400);
-  if (!(await verifyTurnstile(body.turnstile, clientIp(request)))) return fail("check", 403);
+  // The robot check helps but never blocks a real customer: without a pass, tighter limits instead.
+  if (!(await verifyTurnstile(body.turnstile, clientIp(request))) && (await tooMany(request, "claim_page_unchecked", visitorId))) return fail("slow_down", 429);
 
   const found = await getPublicDrop(body.business, body.drop);
   if (!found || !isDbId(found.drop.id)) return fail("not_found", 404);

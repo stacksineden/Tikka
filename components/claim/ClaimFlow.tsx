@@ -270,16 +270,15 @@ export function ClaimFlow({
         setPhoneError("Add your WhatsApp number, like 0803 123 4567.");
         return;
       }
-      if (turnstileSiteKey && !turnstile.token) {
-        setPhoneError("One moment, we're checking you're not a robot. Then tap Claim again.");
-        return;
-      }
       beacon("claim_continue");
       go("verifying");
+      // The robot check never blocks a claim: a few seconds at most, then the claim goes without it
+      // (the server gives those tighter limits). In-app browsers and older phones often can't run it.
+      const pass = turnstileSiteKey ? await turnstile.waitForPass(4000) : undefined;
       const r = (await fetch("/api/claim-page", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ business: businessSlug, drop: drop.slug, name: first, phone, source, posterId, futureDrops, turnstile: turnstile.token }),
+        body: JSON.stringify({ business: businessSlug, drop: drop.slug, name: first, phone, source, posterId, futureDrops, turnstile: pass }),
       })
         .then((x) => x.json())
         .catch(() => ({ ok: false, reason: "network" }))) as { ok: true; card: ClaimedCard; qr: string; status: CardStatus | null } | { ok: false; reason: string };
@@ -291,14 +290,12 @@ export function ClaimFlow({
         return go("closed");
       }
       if (r.reason === "scheduled") setStatus("scheduled");
-      if (r.reason === "phone" || r.reason === "invalid_phone" || r.reason === "number_taken" || r.reason === "check") {
+      if (r.reason === "phone" || r.reason === "invalid_phone" || r.reason === "number_taken") {
         go("claim");
         return setPhoneError(
           r.reason === "number_taken"
             ? "That number already has a Tikka from this drop. Check the number, or use your own."
-            : r.reason === "check"
-              ? "We couldn't check you're not a robot. Wait a moment and tap Claim again."
-              : "That doesn't look like a Nigerian mobile number. Check it and try again.",
+            : "That doesn't look like a Nigerian mobile number. Check it and try again.",
         );
       }
       go("front");
@@ -824,7 +821,8 @@ export function ClaimFlow({
                 <span>Send me future drops from {face.name}</span>
               </label>
             )}
-            {onPage && turnstileSiteKey && <div ref={turnstile.ref} className="min-h-[65px]" />}
+            {/* Takes no room unless Cloudflare needs the person to tick a box. */}
+            {onPage && turnstileSiteKey && <div ref={turnstile.ref} />}
             <p className="tk-consent">
               {`${face.name} will be able to message you on WhatsApp about this drop.`}{" "}
               By continuing you agree to Tikka&apos;s{" "}
@@ -980,11 +978,16 @@ type TurnstileApi = {
   remove: (id: string) => void;
 };
 
-/** Cloudflare Turnstile on the page claim: loads its script only when the sheet opens. */
+/**
+ * Cloudflare Turnstile on the page claim: loads its script only when the sheet opens. It helps and
+ * never blocks: `waitForPass()` gives up after a few seconds, or as soon as the check fails or its
+ * script can't load, and the claim goes on without a pass.
+ */
 function useTurnstile(siteKey: string | undefined) {
   const ref = useRef<HTMLDivElement>(null);
   const widget = useRef<string | null>(null);
-  const [token, setToken] = useState<string>();
+  const pass = useRef<string | undefined>(undefined);
+  const failed = useRef(false);
   useEffect(() => {
     const el = ref.current;
     if (!siteKey || !el) return;
@@ -995,9 +998,12 @@ function useTurnstile(siteKey: string | undefined) {
       widget.current = ts.render(el, {
         sitekey: siteKey,
         appearance: "interaction-only",
-        callback: setToken,
-        "expired-callback": () => setToken(undefined),
-        "error-callback": () => setToken(undefined),
+        callback: (t: string) => (pass.current = t),
+        "expired-callback": () => (pass.current = undefined),
+        "error-callback": () => {
+          pass.current = undefined;
+          failed.current = true;
+        },
       });
     };
     if ((window as unknown as { turnstile?: TurnstileApi }).turnstile) mount();
@@ -1011,22 +1017,30 @@ function useTurnstile(siteKey: string | undefined) {
         document.head.appendChild(script);
       }
       script.addEventListener("load", mount);
+      script.addEventListener("error", () => (failed.current = true));
     }
     return () => {
       cancelled = true;
       const ts = (window as unknown as { turnstile?: TurnstileApi }).turnstile;
       if (ts && widget.current) ts.remove(widget.current);
       widget.current = null;
-      setToken(undefined);
+      pass.current = undefined;
+      failed.current = false;
     };
   }, [siteKey]);
   return {
     ref,
-    token,
+    /** The pass, as soon as there is one; undefined after `ms`, or sooner if the check failed. */
+    waitForPass: async (ms: number): Promise<string | undefined> => {
+      const until = Date.now() + ms;
+      while (!pass.current && !failed.current && Date.now() < until) await new Promise((r) => setTimeout(r, 150));
+      return pass.current;
+    },
     reset: () => {
       const ts = (window as unknown as { turnstile?: TurnstileApi }).turnstile;
       if (ts && widget.current) ts.reset(widget.current);
-      setToken(undefined);
+      pass.current = undefined;
+      failed.current = false;
     },
   };
 }

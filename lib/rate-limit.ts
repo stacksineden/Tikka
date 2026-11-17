@@ -19,6 +19,9 @@ export const LIMITS = {
   // because Nigerian mobile networks put many unrelated people behind one address (CGNAT).
   claim_page: [{ max: 3, seconds: 3600 }, { max: 40, seconds: 3600 }],
   claim_page_day: [{ max: 6, seconds: 86_400 }, { max: 300, seconds: 86_400 }],
+  // On top of those: page claims whose robot check didn't pass (it failed, or couldn't run in an
+  // in-app browser or an older phone). They still go through, just fewer per person and connection.
+  claim_page_unchecked: [{ max: 2, seconds: 3600 }, { max: 30, seconds: 3600 }],
   notify: [{ max: 10, seconds: 3600 }, { max: 150, seconds: 3600 }],
   report: [{ max: 5, seconds: 86_400 }, { max: 60, seconds: 86_400 }],
   events: [{ max: 300, seconds: 600 }, { max: 5000, seconds: 600 }],
