@@ -107,6 +107,8 @@ How to read the results:
 
 ## 3. NOW: build in this order (items 1–7)
 
+**Progress (17 Nov 2026):** items 1–7 are built and on `main`. Their four migrations (`20261117120000` to `20261117180000`) must be live in Supabase before the code is deployed. Next: section 4 (owner tasks) and section 5 (payments).
+
 General rules for every item:
 - One commit per item, on the working branch.
 - **Migration and database test before the UI** (`supabase/tests/`, `pnpm test:db`).

@@ -4,15 +4,15 @@
   "section": "money",
   "order": 1,
   "minutes": 2,
-  "summary": "Your first drop is free. After that, each drop is ₦10,000, whatever its size, or buy a season pack.",
+  "summary": "Free to start. Pay for each drop: ₦10,000, whatever its size, or buy a season pack.",
   "app": {
     "href": "/app/settings/payments",
     "label": "Open Payments"
   },
   "steps": [
     {
-      "title": "Your first drop is free",
-      "body": "Your first drop is free, up to 1,000 Tikkas. Your business page is always free."
+      "title": "Free to start",
+      "body": "Your business page, bookings on WhatsApp, your QR poster, your list of everyone who claims, reviews, the counter screen and staff logins are free, always. So is your first drop."
     },
     {
       "title": "After that, one price per drop",
@@ -29,7 +29,8 @@
   ],
   "tips": [
     "Every payment you've made is listed in Payments.",
-    "If a paid drop brings fewer than 10 customers, your next drop is free (once)."
+    "If a paid drop brings fewer than 10 customers, your next drop is free (once).",
+    "Coming soon: take deposits when customers book, so no-shows don't cost you. You'll pay a small fee only when customers pay you."
   ],
   "published": true
 }

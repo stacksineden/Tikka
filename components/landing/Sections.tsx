@@ -20,7 +20,7 @@ import { RarityBadge } from "@/components/tikka/RarityBadge";
 import { SoloCard } from "@/components/tikka/SoloCard";
 import type { CardFace } from "@/components/tikka/TikkaCard";
 import { count, nairaShort } from "@/lib/format";
-import { overMaxLine, paidTier, priceLabel, type DropPack, type DropTier } from "@/lib/pricing";
+import { paidTier, priceLabel, type DropPack, type DropTier } from "@/lib/pricing";
 import { DropTile } from "@/components/market/DropTile";
 import type { MarketDrop } from "@/lib/types";
 import { ExampleTag } from "./ExampleTag";
@@ -428,22 +428,24 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
       <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div className="max-w-2xl">
           <Eyebrow>Pricing</Eyebrow>
-          <h2 className="mt-3 text-heading sm:text-display-lg">Start free. Pay per drop after that.</h2>
+          <h2 className="mt-3 text-heading sm:text-display-lg">Free to start. Pay for each drop.</h2>
+          <p className="text-body-lg mt-3 text-ink-muted">Deposits coming soon: a small fee only when customers pay you.</p>
         </div>
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
           <div className="flex flex-col rounded-card border border-line bg-surface-raised p-6 sm:p-8">
             <h3 className="text-title">Start free</h3>
             <p className="mt-2 text-display-lg">₦0</p>
-            <p className="text-body mt-1 text-ink-muted">Your business page and your first drop.</p>
+            <p className="text-body mt-1 text-ink-muted">Everything you need to look professional and take bookings. Free, always.</p>
             <ul className="text-body mt-6 grid gap-3">
               {[
-                `Free business page for your Instagram and WhatsApp bio, with ${PORTFOLIO_FREE.items} photos of your work`,
-                "Your first drop free",
-                "Ready-made offers for your business",
-                "Redeem codes at the counter, with staff logins",
-                "Live link activity",
-                "Listed on the Tikka marketplace",
+                `Your business page for your Instagram and WhatsApp bio, with ${PORTFOLIO_FREE.items} photos of your work`,
+                "Bookings on WhatsApp: customers pick a service, day and time",
+                "Your first drop, from a ready-made offer for your business",
+                "Your QR poster for the counter",
                 "Every person who claims is yours to follow up",
+                "Reviews from people who came in",
+                "The counter screen, with staff logins",
+                "Listed on the Tikka marketplace",
               ].map((t) => (
                 <li key={t} className="flex gap-2.5">
                   <Tick className="mt-0.5 size-5 shrink-0 text-success" />
@@ -462,7 +464,12 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
               For each drop after your first, big or small. Pay by card or transfer when you publish. No subscription.
             </p>
             <ul className="text-body mt-6 grid gap-3">
-              {["The drop, as many Tikkas as you need", "Your results: what the drop brought in, in naira", "Our promise: a free drop if it doesn't bring customers"].map(
+              {[
+                "The drop, as many Tikkas as you need",
+                "Your results: what the drop brought in, in naira",
+                "Our promise: a free drop if it doesn't bring customers",
+                `Your full portfolio while it runs: ${PORTFOLIO_OPEN.items} photos and videos in up to ${PORTFOLIO_OPEN.collections} collections`,
+              ].map(
                 (t) => (
                   <li key={t} className="flex gap-2.5">
                     <Tick className="mt-0.5 size-5 shrink-0 text-success" />
@@ -471,12 +478,8 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
                 ),
               )}
             </ul>
-            <p className="text-body mt-4">
-              <span className="font-semibold">Your full portfolio:</span> every paid drop opens {PORTFOLIO_OPEN.items} photos and videos on your page,
-              sorted into up to {PORTFOLIO_OPEN.collections} collections like Bridal or Gele. Each one gets its own link to share.
-            </p>
             {pack && (
-              <p className="text-body mt-3">
+              <p className="text-body mt-4">
                 <span className="font-semibold">Season pack:</span> {count(pack.drops)} drops for {priceLabel(pack.priceKobo)}. Use them for Black
                 Friday, December and Valentine&apos;s.
               </p>
@@ -485,7 +488,6 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
               If a paid drop brings fewer than {count(drop?.guaranteeMinRedemptions ?? 10)} customers, your next one is free.{" "}
               <FaqLink id="faq-guarantee">How it works</FaqLink>
             </p>
-            <p className="text-caption mt-4 text-ink-muted">{overMaxLine(tiers)}</p>
             <p className="text-caption mt-auto pt-6 text-ink-muted">During the pilot, Tikka pays for every WhatsApp message.</p>
           </div>
         </div>
@@ -525,7 +527,7 @@ function faqs(tiers: DropTier[], packs: DropPack[]): { id?: string; q: string; a
     },
     {
       q: "What does a thank-you Tikka give people?",
-      a: "Something small but real that you choose, like 10% off, a free add-on or priority booking. A thank-you Tikka is never empty.",
+      a: "Something small but real that you choose, like a free hair wash or a free drink with any service. It's a reason to come in, and a thank-you Tikka is never empty.",
     },
     {
       q: "How long do Tikkas last?",
@@ -549,7 +551,7 @@ function faqs(tiers: DropTier[], packs: DropPack[]): { id?: string; q: string; a
     },
     {
       q: "What's the business page?",
-      a: `Every business gets a free page at usetikka.com/yourname: your services, prices, photos, reviews, hours and location, plus your live drop. Put it in your Instagram and WhatsApp bio. It's free, always, with up to ${PORTFOLIO_FREE.items} photos and videos of your work. A paid drop opens ${PORTFOLIO_OPEN.items}, sorted into up to ${PORTFOLIO_OPEN.collections} collections like Bridal or Gele, each with its own link. They stay open until ${OPEN_DAYS_AFTER} days after the drop ends (all season with a season pack), and nothing is hidden when they close.`,
+      a: `Every business gets a free page at usetikka.com/yourname: your services, prices, photos, reviews, hours and location, plus your live drop. Put it in your Instagram and WhatsApp bio. Customers can pick a service, day and time and send you the booking on WhatsApp. It's free, always, with up to ${PORTFOLIO_FREE.items} photos and videos of your work. While a paid drop runs (and ${OPEN_DAYS_AFTER} days after), your page shows up to ${PORTFOLIO_OPEN.items}, sorted into collections like Bridal or Gele. Nothing is hidden when it closes.`,
     },
     {
       q: "What's the QR poster?",
@@ -557,7 +559,7 @@ function faqs(tiers: DropTier[], packs: DropPack[]): { id?: string; q: string; a
     },
     {
       q: "What does it cost?",
-      a: `Your business page and your first drop are free. After that, each drop is ${drop ? priceLabel(drop.priceKobo) : ""}, whatever its size.${pack ? ` Or buy a season pack of ${count(pack.drops)} drops for ${priceLabel(pack.priceKobo)}.` : ""} Pay by card or transfer. No subscription.`,
+      a: `Free to start: your business page, bookings on WhatsApp, your QR poster, your list of everyone who claims, reviews, the counter screen and your first drop cost nothing. After that, each drop is ${drop ? priceLabel(drop.priceKobo) : ""}, whatever its size.${pack ? ` Or buy a season pack of ${count(pack.drops)} drops for ${priceLabel(pack.priceKobo)}.` : ""} Pay by card or transfer. No subscription. Coming soon: take deposits when customers book, for a small fee only when customers pay you.`,
     },
     {
       q: "Does Tikka use AI?",
