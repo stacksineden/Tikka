@@ -2,7 +2,7 @@
 // Pure, so the builder shows them live and publish_drop records the ones left (ignored_warnings,
 // which the guarantee reads).
 
-import { applyMix, AUDIENCE, DEFAULT_BOUNCE_BACK, needsPurchase, setTierCount, tierCount, withThankYouFilled, type DropDraft } from "./drop";
+import { applyMix, AUDIENCE, DEFAULT_BOUNCE_BACK, needsPurchase, setTierCount, suggestDropSize, tierCount, withThankYouFilled, type DropDraft } from "./drop";
 import { count } from "./format";
 
 export type WarningId = "no_purchase" | "long_validity" | "empty_thank_you" | "too_big" | "no_bounce_back" | "big_legendary";
@@ -17,9 +17,9 @@ export interface DropWarning {
 export const FIX_RARE_TERMS = "With any paid service";
 export const SUGGESTED_THANK_YOU = "10% off any service";
 
-/** The size the audience answer suggests (about 1 Tikka per 3 viewers), or null if not answered. */
-export function suggestedSize(d: Pick<DropDraft, "audienceBand">): number | null {
-  return AUDIENCE.find((a) => a.id === d.audienceBand)?.suggest ?? null;
+/** The size the audience answer suggests (half the people who see the posts), or null if not answered. */
+export function suggestedSize(d: Pick<DropDraft, "audienceBand" | "audienceViews">): number | null {
+  return suggestDropSize(d.audienceViews) ?? AUDIENCE.find((a) => a.id === d.audienceBand)?.suggest ?? null;
 }
 
 export function dropCheck(d: DropDraft): DropWarning[] {

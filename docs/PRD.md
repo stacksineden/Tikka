@@ -294,7 +294,7 @@ Each drop: status (Draft, Scheduled, Live, Sold out, Ended), goal, dates, cards 
 - **Ask them to do something first** (collapsed, Legendary and Rare): makes it an action card; staff tick it before confirming.
 
 **"How many, and when?"**
-- "About how many people see what you post, on WhatsApp, Instagram or anywhere else?" Under 300 · 300–1,000 · 1,000–5,000 · More than 5,000 → a suggested size (about 1 Tikka per 3 viewers, rounded to a tier). After a past drop, suggest from its real numbers.
+- "About how many people see your posts or status?" A number box (blank is fine). Tikka suggests half of it, rounded to the nearest 10, at least 20 and at most 1,000: "We suggest 40 Tikkas. A drop that runs out gets people moving." with "Use 40", and the size marked "suggested" in the quick picks. Over 1,000: "For more than 1,000 Tikkas in one drop, talk to us." After a past drop, suggest from its real numbers. (`suggestDropSize()` in `lib/drop.ts`, docs/REVENUE_PLAN.md item 3; the number is kept in the draft and filed into `drops.audience_band`.)
 - **How many Tikkas:** quick picks 50 · 100 · 200 · 500 · 1,000 (the suggested size marked "suggested") and "Another number". Under them one price line, never with a number of Tikkas: "Free (your first drop) · Any size up to 1,000", "Drop · ₦10,000 · The same price for any size", or "Covered by your season pack". A first drop starts at 200. Over 1,000: "For more than 1,000 Tikkas in one drop, talk to us" (only shown when they type more).
 - **When does it start?** "As soon as I publish" or "On a date" (then the date and time).
 - **Open for** 3, 5, 7, 14 or 30 days (default 14), with the closing date.

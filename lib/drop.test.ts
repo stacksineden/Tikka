@@ -20,7 +20,11 @@ import {
   watToIso,
   withThankYouFilled,
   type DropDraft,
+  audienceOverMax,
+  bandFor,
+  suggestDropSize,
 } from "./drop";
+import { suggestedSize } from "./dropcheck";
 
 const NOW = new Date("2026-10-20T10:00:00+01:00");
 
@@ -157,5 +161,41 @@ describe("one live drop, one scheduled next", () => {
 
   it("ignores the drop being republished", () => {
     expect(publishWindowProblem([next], { id: "b", startsAt: next.startsAt }, now)).toBeNull();
+  });
+});
+
+describe("the size suggestion from the audience", () => {
+  it("suggests half, rounded to the nearest 10, at least 20 and at most 1,000", () => {
+    expect(suggestDropSize(80)).toBe(40);
+    expect(suggestDropSize(65)).toBe(30);
+    expect(suggestDropSize(500)).toBe(250);
+    expect(suggestDropSize(30)).toBe(20);
+    expect(suggestDropSize(5000)).toBe(1000);
+  });
+
+  it("suggests nothing when the box is blank", () => {
+    expect(suggestDropSize(null)).toBeNull();
+    expect(suggestDropSize(undefined)).toBeNull();
+    expect(suggestDropSize(0)).toBeNull();
+  });
+
+  it("says when half the audience is more than one drop can take", () => {
+    expect(audienceOverMax(2000)).toBe(false);
+    expect(audienceOverMax(2001)).toBe(true);
+    expect(audienceOverMax(null)).toBe(false);
+  });
+
+  it("files the number into the old audience band for the database", () => {
+    expect(bandFor(80)).toBe("under_300");
+    expect(bandFor(300)).toBe("300_1000");
+    expect(bandFor(4000)).toBe("1000_5000");
+    expect(bandFor(9000)).toBe("over_5000");
+    expect(bandFor(null)).toBeNull();
+  });
+
+  it("drives the drop check's suggested size, and the old chips still work", () => {
+    expect(suggestedSize({ audienceBand: null, audienceViews: 80 })).toBe(40);
+    expect(suggestedSize({ audienceBand: "under_300", audienceViews: null })).toBe(100);
+    expect(suggestedSize({ audienceBand: null, audienceViews: null })).toBeNull();
   });
 });

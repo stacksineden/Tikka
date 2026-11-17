@@ -9,7 +9,7 @@ import { ClaimPreview, type PreviewBusiness, type PreviewDrop } from "@/componen
 import { TextInput } from "@/components/setup/Fields";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
 import {
-  AUDIENCE,
+  audienceOverMax,
   bounceBackLabel,
   DAY_CHOICES,
   draftFromTemplate,
@@ -25,6 +25,7 @@ import {
   RUN_CHOICES,
   setTotal,
   splitCondition,
+  suggestDropSize,
   summary,
   tierCount,
   TIERS,
@@ -43,7 +44,7 @@ import {
 } from "@/lib/drop";
 import { applyFix, dropCheck, suggestedSize } from "@/lib/dropcheck";
 import { clockTime, count, shortDate } from "@/lib/format";
-import { coveredBy, guaranteeLine, maxSelfServe, priceLabel, publishLabel, quoteDrop, quoteLine, type DropTier } from "@/lib/pricing";
+import { coveredBy, guaranteeLine, maxSelfServe, overMaxLine, priceLabel, publishLabel, quoteDrop, quoteLine, type DropTier } from "@/lib/pricing";
 import { daysLabel, GOALS, type DropTemplate, type Goal } from "@/lib/templates";
 import type { Business, Tier } from "@/lib/types";
 import type { Voucher } from "@/lib/vouchers";
@@ -663,6 +664,7 @@ function StepWhen({
   pageClaims: boolean;
 }) {
   const now = new Date(openedAt);
+  const viewsSuggest = suggestDropSize(draft.audienceViews);
   const suggest = suggestedSize(draft) ?? pastSuggest?.suggest ?? null;
   // Flat pricing: any size is one price, so these are just quick picks, never price levels.
   const picks = [...new Set([...SIZE_PICKS, ...(suggest && suggest <= maxSelfServe(tiers) ? [suggest] : [])])].sort((a, b) => a - b);
@@ -675,17 +677,42 @@ function StepWhen({
   return (
     <>
       <section className="grid gap-2" aria-labelledby="aud-h">
-        <h2 id="aud-h" className="text-title text-[17px]">
-          About how many people see what you post, on WhatsApp, Instagram or anywhere else?
-        </h2>
-        <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="aud-h">
-          {AUDIENCE.map((a) => (
-            <Chip key={a.id} on={draft.audienceBand === a.id} onClick={() => patch({ audienceBand: a.id })}>
-              {a.label}
-            </Chip>
-          ))}
+        <label htmlFor="aud-views" id="aud-h" className="text-title text-[17px]">
+          About how many people see your posts or status?
+        </label>
+        <div className="flex items-center gap-2">
+          <input
+            id="aud-views"
+            className="input w-36 text-center text-[18px] font-semibold tabular-nums"
+            inputMode="numeric"
+            placeholder="e.g. 80"
+            value={draft.audienceViews ? String(draft.audienceViews) : ""}
+            onChange={(e) => patch({ audienceViews: Number(e.target.value.replace(/\D/g, "").slice(0, 6)) || null })}
+          />
+          <span className="text-body text-ink-muted">people</span>
         </div>
-        {pastSuggest && !draft.audienceBand && <p className="text-caption text-ink-muted">{pastSuggest.text}</p>}
+        {viewsSuggest ? (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-card border border-line bg-surface-raised p-3">
+            <p className="text-body min-w-0 flex-1">
+              <span className="font-semibold">We suggest {count(viewsSuggest)} Tikkas.</span> A drop that runs out gets people moving.
+            </p>
+            {draft.total !== viewsSuggest && (
+              <button
+                type="button"
+                className="btn btn-secondary min-h-11 shrink-0 px-4 text-label"
+                onClick={() => {
+                  setShowExact(false);
+                  setSize(viewsSuggest);
+                }}
+              >
+                Use {count(viewsSuggest)}
+              </button>
+            )}
+            {audienceOverMax(draft.audienceViews) && <p className="text-caption w-full text-ink-muted">{overMaxLine(tiers)}</p>}
+          </div>
+        ) : (
+          <p className="text-caption text-ink-muted">{pastSuggest?.text ?? "Skip it if you're not sure. You can pick a size below."}</p>
+        )}
       </section>
 
       <section className="grid gap-2" aria-labelledby="size-h">

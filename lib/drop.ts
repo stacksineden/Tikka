@@ -59,7 +59,10 @@ export function runDaysFor(days: number): RunDays {
 }
 
 export type AudienceBand = "under_300" | "300_1000" | "1000_5000" | "over_5000";
-/** "About how many people see what you post, on WhatsApp, Instagram or anywhere else?" → about 1 Tikka per 3 viewers. */
+/**
+ * The old audience answer (chips), kept for drafts saved before the number box and for the
+ * `drops.audience_band` column (bandFor() files a number into one).
+ */
 export const AUDIENCE: { id: AudienceBand; label: string; suggest: number }[] = [
   { id: "under_300", label: "Under 300", suggest: 100 },
   { id: "300_1000", label: "300–1,000", suggest: 300 },
@@ -100,6 +103,8 @@ export interface DropDraft {
   /** "Check WhatsApp at the counter" (page-claim mode): on unless the owner turns it off. */
   counterCheck?: boolean;
   audienceBand: AudienceBand | null;
+  /** "About how many people see your posts or status?" (the number box; saved in the draft). */
+  audienceViews?: number | null;
   /** Drop-check warnings still showing at publish (set by the server). */
   ignoredWarnings: string[];
   copiedFrom?: string;
@@ -317,6 +322,27 @@ export function blankDraft(now: Date): DropDraft {
     ignoredWarnings: [],
   };
   return applyMix(base, "balanced");
+}
+
+/**
+ * The size the builder suggests from how many people see the owner's posts: half of them,
+ * rounded to the nearest 10, at least 20 and at most 1,000 (docs/REVENUE_PLAN.md item 3). A drop
+ * that runs low ("12 of 40 left") gets people moving; "194 of 200 left" looks dead.
+ */
+export function suggestDropSize(views: number | null | undefined): number | null {
+  if (!views || !Number.isFinite(views) || views <= 0) return null;
+  return Math.min(LIMITS.maxTotal, Math.max(20, Math.round(views / 2 / 10) * 10));
+}
+
+/** Half the audience is more than one drop can take without talking to Tikka. */
+export function audienceOverMax(views: number | null | undefined): boolean {
+  return !!views && views / 2 > LIMITS.maxTotal;
+}
+
+/** Files the number into the old audience band, for the drops.audience_band column. */
+export function bandFor(views: number | null | undefined): AudienceBand | null {
+  if (!views || views <= 0) return null;
+  return views < 300 ? "under_300" : views <= 1000 ? "300_1000" : views <= 5000 ? "1000_5000" : "over_5000";
 }
 
 /** Who can claim follows the goal: new customers only for "Get new customers". */

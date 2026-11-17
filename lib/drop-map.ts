@@ -3,7 +3,7 @@
 // own copy rides along in drops.builder so a draft reopens exactly as it was left. Pure, so the
 // mapping is pinned by tests.
 
-import { bounceBackLabel, LIMITS, rewardLabel, watToIso, type DraftReward, type DropDraft } from "./drop";
+import { bandFor, bounceBackLabel, LIMITS, rewardLabel, watToIso, type DraftReward, type DropDraft } from "./drop";
 import type { Drop, DropStatus, RewardType, Tier } from "./types";
 
 type DbTier = "legendary" | "rare" | "common";
@@ -119,7 +119,7 @@ export function draftTo(d: DropDraft, now: Date, slug: string) {
           validity_days: d.bounceBack.validityDays,
         }
       : null,
-    audience_band: d.audienceBand,
+    audience_band: bandFor(d.audienceViews) ?? d.audienceBand,
     counter_check: d.counterCheck !== false,
     ignored_warnings: d.ignoredWarnings,
     copied_from: d.copiedFrom && UUID.test(d.copiedFrom) ? d.copiedFrom : null,
