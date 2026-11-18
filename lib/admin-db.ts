@@ -245,6 +245,8 @@ export interface PersonRecord {
   notify: { businessName: string; dropTitle?: string; status: string }[];
   optedOut: boolean;
   messages: number;
+  bookings: { businessName: string; service: string; startsAt: string; status: string; depositPaidKobo?: number; email: boolean }[];
+  payments: { businessName: string; note: string; amountKobo: number; status: string; email: boolean }[];
 }
 
 /** Privacy requests: what Tikka holds for a number (the lookup is logged, with the number masked). */
@@ -263,6 +265,21 @@ export async function dbAdminPersonLookup(phone: string): Promise<PersonRecord> 
     })),
     businessesWithLead: (j.businesses_with_lead as string[]) ?? [],
     notify: ((j.notify as Record<string, unknown>[]) ?? []).map((n) => ({ businessName: String(n.business_name), dropTitle: n.drop_title ? String(n.drop_title) : undefined, status: String(n.status) })),
+    bookings: ((j.bookings as Record<string, unknown>[]) ?? []).map((b) => ({
+      businessName: String(b.business_name),
+      service: String(b.service),
+      startsAt: String(b.starts_at),
+      status: String(b.status),
+      depositPaidKobo: b.deposit_paid_kobo == null ? undefined : Number(b.deposit_paid_kobo),
+      email: b.email === true,
+    })),
+    payments: ((j.payments as Record<string, unknown>[]) ?? []).map((p) => ({
+      businessName: String(p.business_name),
+      note: String(p.note),
+      amountKobo: Number(p.amount_kobo),
+      status: String(p.status),
+      email: p.email === true,
+    })),
     optedOut: !!j.opted_out,
     messages: Number(j.messages),
   };

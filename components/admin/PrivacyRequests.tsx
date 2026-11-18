@@ -3,7 +3,7 @@
 import { Check, Loader2, Search, Trash2 } from "lucide-react";
 import { useActionState, useState } from "react";
 import { adminForgetPersonAction, adminLookupPersonAction, type PersonLookupState } from "@/app/app/actions";
-import { shortDate } from "@/lib/format";
+import { naira, shortDate } from "@/lib/format";
 
 /** What was removed, in this order: [one, many]. */
 const LABEL: [string, string, string][] = [
@@ -71,7 +71,7 @@ export function PrivacyRequests() {
         </div>
       ) : found.step === "found" ? (
         <div className="grid gap-3 rounded-card border border-line bg-surface-raised p-4">
-          {found.record.claims.length === 0 && found.record.notify.length === 0 && found.record.messages === 0 && !found.record.optedOut ? (
+          {found.record.claims.length === 0 && found.record.notify.length === 0 && found.record.messages === 0 && !found.record.optedOut && !found.record.bookings?.length && !found.record.payments?.length ? (
             <p className="text-body">Tikka holds nothing for this number.</p>
           ) : (
             <>
@@ -91,6 +91,26 @@ export function PrivacyRequests() {
                   </ul>
                 )}
               </div>
+              {(found.record.bookings?.length ?? 0) + (found.record.payments?.length ?? 0) > 0 && (
+                <div className="grid gap-1">
+                  <h3 className="text-label">Bookings and payments</h3>
+                  <ul className="text-caption grid gap-1">
+                    {found.record.bookings?.map((b, i) => (
+                      <li key={`b${i}`}>
+                        Booking · {b.businessName} · {b.service} · {shortDate(b.startsAt)} · {b.status}
+                        {b.depositPaidKobo ? ` · deposit ${naira(b.depositPaidKobo / 100)}` : ""}
+                        {b.email ? " · email held" : ""}
+                      </li>
+                    ))}
+                    {found.record.payments?.map((p, i) => (
+                      <li key={`p${i}`}>
+                        Pay link · {p.businessName} · {p.note} · {naira(p.amountKobo / 100)} · {p.status}
+                        {p.email ? " · email held" : ""}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <p className="text-caption text-ink-muted">
                 On the customer list of: {found.record.businessesWithLead.join(", ") || "none"}. Notify me:{" "}
                 {found.record.notify.map((n) => n.businessName).join(", ") || "none"}. {found.record.optedOut ? "Has replied STOP. " : ""}

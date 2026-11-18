@@ -262,3 +262,11 @@ export function leftToPay(b: { priceKobo?: number | null; priceKind?: string | n
   if (b.priceKind !== "fixed" || b.priceKobo == null) return null;
   return b.depositCounts === false ? b.priceKobo : Math.max(0, b.priceKobo - depositKobo);
 }
+
+const LONG_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** The pass's date block, in WAT: "Friday", 20, "Nov", "2:30pm". */
+export function dateBlock(iso: string | Date): { weekday: string; day: number; month: string; time: string } {
+  const w = new Date(new Date(iso).getTime() + WAT_OFFSET_MS);
+  return { weekday: LONG_DAYS[w.getUTCDay()], day: w.getUTCDate(), month: MONTHS[w.getUTCMonth()], time: timeLabel(iso) };
+}

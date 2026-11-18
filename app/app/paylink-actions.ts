@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getBusiness, isDbId, memberBusinessId } from "@/lib/data";
-import { dbCancelPayLink, dbCreatePayLink, dbPaidForCode } from "@/lib/paylinks-db";
+import { dbCancelPayLink, dbCounterExtras, dbCreatePayLink } from "@/lib/paylinks-db";
 import { paystackMode } from "@/lib/paystack";
 import { getOwnerUser, getSessionUser } from "@/lib/session";
 import { siteUrl } from "@/lib/supabase/env";
@@ -34,10 +34,10 @@ export async function cancelPayLinkAction(id: string): Promise<{ kind: string }>
   return { kind };
 }
 
-/** At the counter: what was paid online for this Tikka code (owners and staff; amounts only). */
-export async function paidForCodeAction(code: string): Promise<number> {
+/** At the counter, beside a Tikka's code: paid online for it and its booking (owners and staff; never the number). */
+export async function counterExtrasAction(code: string): Promise<{ paidKobo: number; booking: { startsAt: string; service: string; code: string } | null }> {
   const user = await getSessionUser();
   const biz = user ? await memberBusinessId(user) : null;
-  if (!biz || !isDbId(biz)) return 0;
-  return dbPaidForCode(biz, String(code ?? "").slice(0, 20));
+  if (!biz || !isDbId(biz)) return { paidKobo: 0, booking: null };
+  return dbCounterExtras(biz, String(code ?? "").slice(0, 20));
 }

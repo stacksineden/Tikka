@@ -4,7 +4,8 @@ import { Camera, CheckCircle2, Loader2, ScanLine, Smartphone, XCircle } from "lu
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { checkCodeAction, checkDigitsAction, confirmRedemptionAction, giveMoreTimeAction } from "@/app/app/actions";
 import { BookingAtCounter } from "@/components/bookings/BookingAtCounter";
-import { paidForCodeAction } from "@/app/app/paylink-actions";
+import { counterExtrasAction } from "@/app/app/paylink-actions";
+import { whenLabel } from "@/lib/bookings";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
 import { visitWhen } from "@/lib/followups";
 import { clockTime, naira, shortDate } from "@/lib/format";
@@ -91,6 +92,8 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
   const [bookingCode, setBookingCode] = useState<string | null>(null);
   // What was paid online for this Tikka (a pay link sent from Leads), so nobody charges twice.
   const [paidOnline, setPaidOnline] = useState(0);
+  // The booking made with this Tikka, if any (so staff know they were expected).
+  const [tikkaBooking, setTikkaBooking] = useState<{ startsAt: string; service: string } | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<Scanner | null>(null);
@@ -133,7 +136,10 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
           );
           setView({ kind: "valid", result: r });
           setPaidOnline(0);
-          paidForCodeAction(offline.code).then(setPaidOnline).catch(() => undefined);
+          setTikkaBooking(null);
+          counterExtrasAction(offline.code)
+            .then((x) => (setPaidOnline(x.paidKobo), setTikkaBooking(x.booking)))
+            .catch(() => undefined);
           buzz(20);
         } else {
           setMoreTime({ saving: false });
@@ -404,6 +410,14 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
               <>
                 <dt className="text-label text-ink-muted">Only if</dt>
                 <dd className="text-body font-semibold">{view.result.terms}</dd>
+              </>
+            )}
+            {tikkaBooking && (
+              <>
+                <dt className="text-label text-ink-muted">Booked</dt>
+                <dd className="text-body font-semibold">
+                  {whenLabel(tikkaBooking.startsAt)} · {tikkaBooking.service}
+                </dd>
               </>
             )}
             {paidOnline > 0 && (

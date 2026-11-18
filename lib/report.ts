@@ -26,6 +26,8 @@ export interface DropReport {
   newCustomers: number;
   returningCustomers: number;
   recordedSalesKobo: number;
+  /** Paid online for the drop's Tikkas (pay links from Leads), live only. */
+  paidOnlineKobo?: number;
   estimatedRewardCostKobo: number;
   /** Free items with no cost entered, left out of the estimate. */
   freeItemsWithoutCost: number;
@@ -61,7 +63,7 @@ const FEE_LABEL: Record<Exclude<DropFee["kind"], "paid">, string> = {
   gift: "Free (a drop from Tikka)",
 };
 
-export function dropReport(drop: { goal?: Goal; validWeekdays?: number[] | null }, claims: ReportClaim[], fee: DropFee): DropReport {
+export function dropReport(drop: { goal?: Goal; validWeekdays?: number[] | null }, claims: ReportClaim[], fee: DropFee, paidOnlineKobo = 0): DropReport {
   const used = claims.filter((c) => c.kind === "drop" && c.redeemed);
   const customers = used.length;
   const newCustomers = used.filter((c) => c.customerStatus !== "returning").length;
@@ -76,7 +78,8 @@ export function dropReport(drop: { goal?: Goal; validWeekdays?: number[] | null 
   const feeKobo = fee.kind === "paid" ? fee.amountKobo : 0;
   const perNew = drop.goal === "new_customers";
   const base = perNew ? newCustomers : customers;
-  const recorded = `${naira(sales / 100)} recorded`;
+  // What it brought in: what staff typed at the counter, plus what was paid online for its Tikkas.
+  const recorded = `${naira((sales + paidOnlineKobo) / 100)} recorded`;
   const headline =
     drop.goal === "bring_back"
       ? `${count(customers)} customer${customers === 1 ? "" : "s"} came back · ${recorded}`
@@ -89,6 +92,7 @@ export function dropReport(drop: { goal?: Goal; validWeekdays?: number[] | null 
     newCustomers,
     returningCustomers: customers - newCustomers,
     recordedSalesKobo: sales,
+    paidOnlineKobo,
     estimatedRewardCostKobo: cost,
     freeItemsWithoutCost: unknown,
     feeKobo,
