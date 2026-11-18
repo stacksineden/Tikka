@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { getBusiness, isDbId } from "@/lib/data";
-import { createSubaccount, deactivateSubaccount, listBanks, paystackConfigured, resolveAccount, type Bank } from "@/lib/paystack";
+import { createSubaccount, deactivateSubaccount, listBanks, paystackConfigured, paystackMode, resolveAccount, type Bank } from "@/lib/paystack";
 import { dbPayoutState, dbRemovePayout, dbSavePayout } from "@/lib/payouts-db";
 import { tooMany } from "@/lib/rate-limit";
 import { getOwnerUser } from "@/lib/session";
@@ -85,6 +85,8 @@ export async function savePayoutAction(bankCode: string, accountNumber: string):
     last4: number.slice(-4),
     accountName: name || "Name not shown by the bank",
     subaccount: sub.code,
+    // Test and live subaccounts live in separate worlds at Paystack: remember which this is.
+    mode: paystackMode() ?? "test",
   });
   if (saved.kind !== "saved") {
     await deactivateSubaccount(sub.code);

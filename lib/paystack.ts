@@ -11,6 +11,12 @@ function secret(): string | undefined {
   return process.env.PAYSTACK_SECRET_KEY || undefined;
 }
 
+/** Which Paystack world the key belongs to: test and live subaccounts don't see each other. */
+export function paystackMode(): "test" | "live" | null {
+  const k = secret();
+  return !k ? null : k.startsWith("sk_live_") ? "live" : "test";
+}
+
 /** Until the keys are added, the pay page shows the demo checkout instead. */
 export function paystackConfigured(): boolean {
   return Boolean(secret());

@@ -11,7 +11,7 @@ export type PayoutProblem = "not_found" | "demo" | "suspended" | "not_enabled" |
 export interface PayoutState {
   problem: PayoutProblem | null;
   maxKobo: number;
-  payout: { bankName: string; last4: string; accountName: string; confirmedAt: string } | null;
+  payout: { bankName: string; last4: string; accountName: string; confirmedAt: string; mode: "test" | "live" } | null;
 }
 
 /** The owner's Get paid screen (owner only, in SQL). */
@@ -19,11 +19,17 @@ export async function dbPayoutState(businessId: string): Promise<PayoutState | n
   const sb = await createClient();
   const { data, error } = await sb.rpc("payout_state", { p_business: businessId });
   if (error || !data) return null;
-  const r = data as { problem: PayoutProblem | null; max_kobo: number; payout: { bank_name: string; last4: string; account_name: string; confirmed_at: string } | null };
+  const r = data as {
+    problem: PayoutProblem | null;
+    max_kobo: number;
+    payout: { bank_name: string; last4: string; account_name: string; confirmed_at: string; mode?: "test" | "live" } | null;
+  };
   return {
     problem: r.problem,
     maxKobo: Number(r.max_kobo),
-    payout: r.payout ? { bankName: r.payout.bank_name, last4: r.payout.last4, accountName: r.payout.account_name, confirmedAt: r.payout.confirmed_at } : null,
+    payout: r.payout
+      ? { bankName: r.payout.bank_name, last4: r.payout.last4, accountName: r.payout.account_name, confirmedAt: r.payout.confirmed_at, mode: r.payout.mode ?? "live" }
+      : null,
   };
 }
 
@@ -36,6 +42,7 @@ export async function dbSavePayout(input: {
   last4: string;
   accountName: string;
   subaccount: string;
+  mode: "test" | "live";
 }): Promise<{ kind: string; replaced?: string | null }> {
   const { data, error } = await adminClient().rpc("save_payout", {
     p_business: input.businessId,
@@ -45,6 +52,7 @@ export async function dbSavePayout(input: {
     p_last4: input.last4,
     p_account_name: input.accountName,
     p_subaccount: input.subaccount,
+    p_mode: input.mode,
   });
   if (error) return { kind: error.code === "42501" ? "no_access" : "error" };
   return data as { kind: string; replaced?: string | null };
@@ -64,6 +72,7 @@ export interface AdminPaymentSetting {
   bankName?: string;
   last4?: string;
   accountName?: string;
+  mode?: "test" | "live";
 }
 
 /** Admin: payments settings and accounts by business id. */
@@ -71,11 +80,11 @@ export async function dbAdminPaymentSettings(): Promise<Record<string, AdminPaym
   const sb = await createClient();
   const { data, error } = await sb.rpc("admin_payment_settings");
   if (error || !data) return {};
-  const rows = data as Record<string, { enabled: boolean; max_kobo: number; bank_name: string | null; last4: string | null; account_name: string | null }>;
+  const rows = data as Record<string, { enabled: boolean; max_kobo: number; bank_name: string | null; last4: string | null; account_name: string | null; mode?: "test" | "live" | null }>;
   return Object.fromEntries(
     Object.entries(rows).map(([id, r]) => [
       id,
-      { enabled: r.enabled, maxKobo: Number(r.max_kobo), bankName: r.bank_name ?? undefined, last4: r.last4 ?? undefined, accountName: r.account_name ?? undefined },
+      { enabled: r.enabled, maxKobo: Number(r.max_kobo), bankName: r.bank_name ?? undefined, last4: r.last4 ?? undefined, accountName: r.account_name ?? undefined, mode: r.mode ?? undefined },
     ]),
   );
 }

@@ -392,7 +392,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                   </button>
                   <p className="text-caption text-ink-muted sm:col-span-3">
                     {paySettings[b.id]?.last4
-                      ? `Paid to ${paySettings[b.id]!.accountName} · ${paySettings[b.id]!.bankName} ••••${paySettings[b.id]!.last4}`
+                      ? `Paid to ${paySettings[b.id]!.accountName} · ${paySettings[b.id]!.bankName} ••••${paySettings[b.id]!.last4}${paySettings[b.id]!.mode === "test" ? " (added in test mode)" : ""}`
                       : "No bank account added yet."}
                     {!b.verified ? " Needs the Verified badge first." : ""}
                   </p>

@@ -6,7 +6,7 @@ import { GetPaidForm } from "@/components/payments/GetPaidForm";
 import { SettingsPage } from "@/components/settings/SettingsPage";
 import { getBusiness, isDbId } from "@/lib/data";
 import { naira } from "@/lib/format";
-import { paystackConfigured } from "@/lib/paystack";
+import { paystackConfigured, paystackMode } from "@/lib/paystack";
 import { dbPayoutState } from "@/lib/payouts-db";
 import { getOwnerUser } from "@/lib/session";
 
@@ -30,6 +30,10 @@ async function GetPaid() {
   if (!b) redirect("/app/setup");
   const state = isDbId(b.id) ? await dbPayoutState(b.id) : null;
   const problem = !state ? "demo" : !paystackConfigured() ? "not_enabled" : state.problem;
+  // An account added with the other kind of Paystack key (test while trying it out, or live) can't
+  // take payments here: ask for it again rather than show it as working.
+  const payout = state?.payout && state.payout.mode === paystackMode() ? state.payout : null;
+  const otherMode = !!state?.payout && !payout;
 
   return (
     <div className="grid gap-4">
@@ -42,7 +46,12 @@ async function GetPaid() {
         </section>
       ) : (
         <>
-          <GetPaidForm current={state!.payout} />
+          {otherMode && (
+            <p className="text-body rounded-md bg-gold-soft px-4 py-3">
+              Your bank account was added while Tikka was being tested, so it can&apos;t take real payments. Add it again below: it only takes a minute.
+            </p>
+          )}
+          <GetPaidForm current={payout} />
           <section className="rounded-card border border-line bg-surface-raised p-4 sm:p-5">
             <h2 className="text-title text-[17px] leading-6">What it costs</h2>
             <ul className="text-body mt-2 grid gap-1.5">

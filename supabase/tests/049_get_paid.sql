@@ -20,7 +20,7 @@ insert into public.business_members (business_id, user_id, role)
 values ((select v from t where k = 'biz'), '00000000-0000-4000-c049-000000000002', 'staff');
 
 create function pg_temp.save(p_sub text) returns text language sql as $$
-  select public.save_payout((select v from t where k = 'biz'), '00000000-0000-4000-c049-000000000001', '058', 'GTBank', '6047', 'ADA OBI', p_sub) ->> 'kind';
+  select public.save_payout((select v from t where k = 'biz'), '00000000-0000-4000-c049-000000000001', '058', 'GTBank', '6047', 'ADA OBI', p_sub, 'test') ->> 'kind';
 $$;
 
 -- Not switched on yet, then not Verified: nothing saves.
@@ -55,15 +55,15 @@ declare
 begin
   -- Staff can't save through the server either.
   begin
-    perform public.save_payout((select v from t where k = 'biz'), '00000000-0000-4000-c049-000000000002', '058', 'GTBank', '6047', 'ADA OBI', 'ACCT_x');
+    perform public.save_payout((select v from t where k = 'biz'), '00000000-0000-4000-c049-000000000002', '058', 'GTBank', '6047', 'ADA OBI', 'ACCT_x', 'test');
     assert false, 'staff must not save an account';
   exception when insufficient_privilege then null;
   end;
   assert pg_temp.save('ACCT_one') = 'saved', 'saved';
-  r := public.save_payout((select v from t where k = 'biz'), '00000000-0000-4000-c049-000000000001', '044', 'Access Bank', '1234', 'ADA OBI', 'ACCT_two');
+  r := public.save_payout((select v from t where k = 'biz'), '00000000-0000-4000-c049-000000000001', '044', 'Access Bank', '1234', 'ADA OBI', 'ACCT_two', 'live');
   assert r ->> 'kind' = 'saved' and r ->> 'replaced' = 'ACCT_one', 'changing returns the old subaccount: ' || r::text;
   begin
-    perform public.save_payout((select v from t where k = 'biz'), '00000000-0000-4000-c049-000000000001', '044', 'Access Bank', '123456', 'ADA OBI', 'ACCT_three');
+    perform public.save_payout((select v from t where k = 'biz'), '00000000-0000-4000-c049-000000000001', '044', 'Access Bank', '123456', 'ADA OBI', 'ACCT_three', 'live');
     assert false, 'only the last 4 digits are kept';
   exception when check_violation then null;
   end;
@@ -78,6 +78,7 @@ declare
 begin
   assert s -> 'problem' = 'null'::jsonb and (s ->> 'max_kobo')::int = 5000000, 'open, ₦50,000 max: ' || s::text;
   assert s -> 'payout' ->> 'bank_name' = 'Access Bank' and s -> 'payout' ->> 'last4' = '1234', 'the account';
+  assert s -> 'payout' ->> 'mode' = 'live', 'made with a live key';
   assert s::text !~ 'ACCT_', 'the subaccount code stays on the server';
 end $$;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-c049-000000000002","role":"authenticated"}', true);
@@ -106,7 +107,7 @@ do $$
 declare
   a jsonb := public.admin_payment_settings() -> ((select v from t where k = 'biz')::text);
 begin
-  assert (a ->> 'enabled')::boolean and a ->> 'last4' = '1234', 'admin sees it: ' || coalesce(a::text, 'null');
+  assert (a ->> 'enabled')::boolean and a ->> 'last4' = '1234' and a ->> 'mode' = 'live', 'admin sees it: ' || coalesce(a::text, 'null');
 end $$;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-c049-000000000001","role":"authenticated"}', true);
 do $$
