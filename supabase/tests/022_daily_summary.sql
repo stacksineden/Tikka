@@ -68,7 +68,7 @@ begin
   assert found, 'A gets a summary';
   assert a.phone = '+2348229999999', 'to the alert number, not the button: ' || a.phone;
   assert a.new_claims = 1 and a.planning_tomorrow = 1 and a.expiring_soon = 1, format('counts %s %s %s', a.new_claims, a.planning_tomorrow, a.expiring_soon);
-  -- "Run it again" waits while a drop is running (20261118160000_summary_nudge_when_idle.sql).
+  -- "Run it again" waits while a drop is running (20261119100000_summary_nudge_when_idle.sql).
   assert a.last_drop_id is null, 'no last drop while one is running: ' || coalesce(a.last_drop_title, 'none');
   assert not exists (select 1 from public.daily_summary_rows() where business_name in ('Summary B', 'Summary C')), 'nobody with it off or without a number';
 end $$;
