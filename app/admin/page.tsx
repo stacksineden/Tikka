@@ -23,7 +23,7 @@ import { getSessionUser } from "@/lib/session";
 import { isDbId } from "@/lib/business-db";
 import { dbAdminEarlyAccess, dbAdminEnquiries } from "@/lib/studio-db";
 import { dbAdminCounterChecks } from "@/lib/admin-db";
-import { dbAdminPaymentSettings } from "@/lib/payouts-db";
+import { collectionLimitKobo, dbAdminMoney, dbAdminPaymentSettings } from "@/lib/payouts-db";
 import { counterCheckTotals } from "@/lib/counter-checks";
 import { STUDIO_CATEGORIES } from "@/lib/studio-shared";
 
@@ -53,7 +53,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const real = isDbId(user.id);
-  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog, enquiries, early, checks, earlyPay, paySettings] = await Promise.all([
+  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog, enquiries, early, checks, earlyPay, paySettings, cash] = await Promise.all([
     adminView(user, q),
     getDropTiers(),
     getAllDropPacks(),
@@ -63,7 +63,12 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
     real ? dbAdminCounterChecks().catch(() => []) : Promise.resolve([]),
     real ? dbAdminEarlyAccess("payments") : Promise.resolve({ count: 0, list: [] }),
     real ? dbAdminPaymentSettings() : Promise.resolve({} as Awaited<ReturnType<typeof dbAdminPaymentSettings>>),
+    real ? dbAdminMoney() : Promise.resolve(null),
   ]);
+  // The Paystack Starter limit (REVENUE_PLAN 5.6): everything collected, live, counts.
+  const limit = collectionLimitKobo();
+  const collected = cash ? cash.dropPaymentsKobo + cash.payLinksKobo + cash.depositsKobo : 0;
+  const share = limit ? collected / limit : 0;
   const ct = counterCheckTotals(checks);
   const newEnquiries = enquiries.filter((e) => e.status === "new").length;
   // Flat pricing: one paid level on sale ("Drop"), and the packs that are on sale.
@@ -132,6 +137,73 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
               </li>
             ))}
           </ul>
+        </Section>
+      )}
+
+      {cash && (
+        <Section
+          id="money-h"
+          title="Customer payments (pilot)"
+          note="Everything Tikka's Paystack account has collected in live mode: owners' drop payments, pay links and booking deposits. Paystack pays businesses directly; Tikka keeps 1%."
+        >
+          {limit > 0 && (
+            <div className={`${card} grid gap-2`}>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="text-body font-semibold">
+                  {cash ? `${naira(collected / 100)} of ${naira(limit / 100)}` : ""} · Paystack Starter limit
+                </p>
+                <p className="font-mono text-[15px] tabular-nums">{Math.floor(share * 100)}%</p>
+              </div>
+              <div className="h-3 overflow-hidden rounded-pill bg-surface-sunken" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, Math.floor(share * 100))} aria-label="Of the Starter limit">
+                <div className={`h-full rounded-pill ${share >= 0.9 ? "bg-danger" : share >= 0.75 ? "bg-gold" : "bg-brand"}`} style={{ width: `${Math.min(100, Math.max(1, share * 100))}%` }} />
+              </div>
+              {share >= 0.75 && (
+                <p className={`text-body rounded-md px-3 py-2 ${share >= 0.9 ? "bg-danger-soft text-danger" : "bg-gold-soft"}`}>
+                  {share >= 0.9
+                    ? "Almost at the limit: Paystack will switch payments off when it's reached. Upgrade to a Registered Business now (Compliance → Profile → Business type)."
+                    : "Three quarters of the Starter limit is used. Start the upgrade to a Registered Business (it needs the CAC documents)."}
+                </p>
+              )}
+              <p className="text-caption text-ink-muted">After upgrading, set PAYSTACK_COLLECTION_LIMIT_NAIRA=0 in Vercel and this bar goes away.</p>
+            </div>
+          )}
+          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              ["Drop payments", naira(cash.dropPaymentsKobo / 100)],
+              ["Pay links", naira(cash.payLinksKobo / 100)],
+              ["Deposits", naira(cash.depositsKobo / 100)],
+              ["Tikka's 1%", naira(cash.tikkaKobo / 100)],
+            ].map(([label, value]) => (
+              <div key={label} className={card}>
+                <dt className="text-caption text-ink-muted">{label}</dt>
+                <dd className="mt-1 font-mono text-[18px] font-semibold tabular-nums">{value}</dd>
+              </div>
+            ))}
+          </dl>
+          {cash.testKobo > 0 && <p className="text-caption text-ink-muted">Test-mode payments (not counted): {naira(cash.testKobo / 100)}</p>}
+          {cash.businesses.length === 0 ? (
+            <p className="text-body text-ink-muted">No business has payments on yet. Switch them on below, under Businesses.</p>
+          ) : (
+            <ul className="grid gap-2">
+              {cash.businesses.map((b) => (
+                <li key={b.id} className={`${card} grid gap-1`}>
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <p className="text-body font-semibold">
+                      {b.name}
+                      {!b.enabled && <span className="tag ml-2 bg-surface-sunken text-ink-muted">Payments off</span>}
+                      {!b.verified && <span className="tag ml-2 bg-gold-soft">Not verified</span>}
+                    </p>
+                    <p className="font-mono text-[16px] font-semibold tabular-nums">{naira(b.liveKobo / 100)}</p>
+                  </div>
+                  <p className="text-caption text-ink-muted">
+                    {b.last4 ? `${b.bank} ••••${b.last4}${b.mode === "test" ? " (test mode: ask them to add it again)" : ""}` : "No bank account yet"} · up to {naira(b.maxKobo / 100)} a payment ·{" "}
+                    {b.depositsOn ? "deposits on" : "deposits off"} · {count(b.linksPaid)} pay link{b.linksPaid === 1 ? "" : "s"} and {count(b.depositsPaid)} deposit
+                    {b.depositsPaid === 1 ? "" : "s"} paid{b.lastPaidAt ? ` · last ${shortDate(b.lastPaidAt)}` : ""}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
         </Section>
       )}
 

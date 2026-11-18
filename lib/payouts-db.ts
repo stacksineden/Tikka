@@ -103,3 +103,65 @@ export function payReady(state: PayoutState | null, mode: "test" | "live" | null
   if (state.payout.mode !== mode) return { ready: false, maxKobo: state.maxKobo, why: "account_again" };
   return { ready: true, maxKobo: state.maxKobo };
 }
+
+/** Paystack Starter Business: ₦8,000,000 in total, ever. Set PAYSTACK_COLLECTION_LIMIT_NAIRA=0 after upgrading to Registered. */
+export function collectionLimitKobo(): number {
+  const raw = process.env.PAYSTACK_COLLECTION_LIMIT_NAIRA;
+  const n = raw === undefined || raw === "" ? 8_000_000 : Number(raw);
+  return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0;
+}
+
+export interface AdminMoney {
+  dropPaymentsKobo: number;
+  payLinksKobo: number;
+  depositsKobo: number;
+  tikkaKobo: number;
+  testKobo: number;
+  businesses: {
+    id: string;
+    name: string;
+    slug: string;
+    verified: boolean;
+    enabled: boolean;
+    maxKobo: number;
+    bank?: string;
+    last4?: string;
+    mode?: "test" | "live";
+    depositsOn: boolean;
+    liveKobo: number;
+    linksPaid: number;
+    depositsPaid: number;
+    lastPaidAt?: string;
+  }[];
+}
+
+/** Admin: what Tikka's Paystack account has collected, and each business's customer payments. */
+export async function dbAdminMoney(): Promise<AdminMoney | null> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("admin_money");
+  if (error || !data) return null;
+  const r = data as Record<string, unknown>;
+  return {
+    dropPaymentsKobo: Number(r.drop_payments_kobo ?? 0),
+    payLinksKobo: Number(r.pay_links_kobo ?? 0),
+    depositsKobo: Number(r.deposits_kobo ?? 0),
+    tikkaKobo: Number(r.tikka_kobo ?? 0),
+    testKobo: Number(r.test_kobo ?? 0),
+    businesses: ((r.businesses as Record<string, unknown>[]) ?? []).map((b) => ({
+      id: String(b.id),
+      name: String(b.name),
+      slug: String(b.slug),
+      verified: b.verified === true,
+      enabled: b.enabled === true,
+      maxKobo: Number(b.max_kobo ?? 0),
+      bank: (b.bank as string | null) ?? undefined,
+      last4: (b.last4 as string | null) ?? undefined,
+      mode: (b.mode as "test" | "live" | null) ?? undefined,
+      depositsOn: b.deposits_on === true,
+      liveKobo: Number(b.live_kobo ?? 0),
+      linksPaid: Number(b.links_paid ?? 0),
+      depositsPaid: Number(b.deposits_paid ?? 0),
+      lastPaidAt: (b.last_paid_at as string | null) ?? undefined,
+    })),
+  };
+}
