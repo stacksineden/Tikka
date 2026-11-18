@@ -151,6 +151,9 @@ export function CalendarSheet({
       });
       const data = (await res.json()) as { ok: boolean; token?: string; reason?: string };
       if (data.ok && data.token) {
+        // Close the sheet first: Next keeps the page it leaves mounted (hidden) for going back, and an
+        // open modal dialog there would leave the booking page unclickable until a reload.
+        close();
         router.push(`/bk/${data.token}`);
         return;
       }
