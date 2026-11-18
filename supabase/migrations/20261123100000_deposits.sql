@@ -453,3 +453,14 @@ grant execute on function public.booking_deposits(uuid, text) to anon, authentic
 grant execute on function public.save_deposit_settings(uuid, text, int, int, boolean, jsonb), public.get_deposits(uuid, int) to authenticated;
 grant execute on function public.book_time(uuid, uuid, timestamptz, text, text, boolean, text, text, text), public.booking_checkout(text),
   public.rehold_booking(text), public.complete_booking_deposit(text, int, int, text) to service_role;
+
+-- The code deployed before deposits calls book_time with 7 arguments: keep that working (no
+-- deposit) so the database and the code can go live in either order.
+create function public.book_time(
+  p_business uuid, p_service uuid, p_start timestamptz, p_first_name text, p_phone text, p_future boolean, p_visitor text
+) returns jsonb
+language sql security definer set search_path = '' as $$
+  select public.book_time(p_business, p_service, p_start, p_first_name, p_phone, p_future, p_visitor, null, null);
+$$;
+revoke all on function public.book_time(uuid, uuid, timestamptz, text, text, boolean, text) from public, anon, authenticated;
+grant execute on function public.book_time(uuid, uuid, timestamptz, text, text, boolean, text) to service_role;
