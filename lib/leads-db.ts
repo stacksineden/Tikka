@@ -34,6 +34,19 @@ export async function dbGiveMoreTime(businessId: string, target: { claimId: stri
   return (data ?? { kind: "unknown" }) as Record<string, unknown>;
 }
 
+/** set_redemption_amount(): what a used Tikka's customer spent (owner only, checked in SQL). By claim (Leads) or code (counter). */
+export async function dbSetSpent(businessId: string, target: { claimId: string } | { code: string }, kobo: number): Promise<Record<string, unknown>> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("set_redemption_amount", {
+    p_business: businessId,
+    p_amount_kobo: kobo,
+    p_claim: "claimId" in target ? target.claimId : null,
+    p_code: "code" in target ? target.code : null,
+  });
+  if (error) throw new Error("Only the owner can change what a customer spent.");
+  return (data ?? { kind: "unknown" }) as Record<string, unknown>;
+}
+
 /** "Message on WhatsApp" was tapped. */
 export async function dbLogFollowup(claimId: string): Promise<boolean> {
   const sb = await createClient();

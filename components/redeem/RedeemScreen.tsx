@@ -5,8 +5,10 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { checkCodeAction, checkDigitsAction, confirmRedemptionAction, giveMoreTimeAction } from "@/app/app/actions";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
 import { visitWhen } from "@/lib/followups";
-import { clockTime, shortDate } from "@/lib/format";
+import { clockTime, naira, shortDate } from "@/lib/format";
 import { MORE_TIME_DAYS, noMoreTimeReason } from "@/lib/more-time";
+import { formatNairaInput, parseNaira } from "@/lib/spent";
+import { SpentEdit } from "@/components/leads/SpentEdit";
 import { offlineCheck, type CheckResult } from "@/lib/redeem";
 
 // The counter screen (PRD B7): scan or type → check (never uses the code) → confirm.
@@ -30,7 +32,8 @@ type View =
   | { kind: "checking"; code: string }
   | { kind: "valid"; result: Extract<CheckResult, { kind: "valid" }> }
   | { kind: "invalid"; problem: Problem }
-  | { kind: "done"; name: string; askReview?: boolean };
+  /** `code` and `skipped`: the owner can add what they spent right away if nobody typed it. */
+  | { kind: "done"; name: string; askReview?: boolean; code: string; skipped: boolean };
 
 type Scanner = { start(): Promise<void>; stop(): void; destroy(): void };
 
@@ -257,13 +260,14 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
     setConfirming(true);
     setConfirmError(undefined);
     try {
-      const naira = Number(bill.replace(/[^\d]/g, "")) || null;
-      const res = await confirmRedemptionAction(r.code, naira, ticked, customer);
+      const spent = parseNaira(bill) || null;
+      const res = await confirmRedemptionAction(r.code, spent, ticked, customer);
       if (res.ok) {
         buzz(30);
-        setView({ kind: "done", name: res.name, askReview: res.askReview });
+        setView({ kind: "done", name: res.name, askReview: res.askReview, code: r.code, skipped: !spent });
         // A page claim: give staff time to ask for the review before the screen moves on.
-        backTimer.current = setTimeout(scanAgain, res.askReview ? 8000 : 3500);
+        // The owner who skipped the amount gets a moment to add it.
+        backTimer.current = setTimeout(scanAgain, res.askReview || (isOwner && !spent) ? 8000 : 3500);
       } else if (res.result.kind === "needs_action") {
         setConfirmError("Tick the box once they've done it.");
       } else if (res.result.kind === "needs_whatsapp_check") {
@@ -519,8 +523,7 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
                   autoComplete="off"
                   value={bill}
                   onChange={(e) => {
-                    const d = e.target.value.replace(/[^\d]/g, "").slice(0, 9);
-                    setBill(d ? Number(d).toLocaleString("en-NG") : "");
+                    setBill(formatNairaInput(e.target.value));
                   }}
                   placeholder="25,000"
                   aria-describedby="redeem-bill-help"
@@ -558,6 +561,21 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
             Not valid
           </h2>
           <p className="text-body-lg mt-3">{reason(view.problem, businessName)}</p>
+          {view.problem.kind === "already_used" && view.problem.name && (
+            <p className="text-body mt-1 opacity-90">
+              {view.problem.name}
+              {view.problem.spentKobo ? ` · spent ${naira(view.problem.spentKobo / 100)}` : ""}
+            </p>
+          )}
+          {view.problem.kind === "already_used" && view.problem.canSetSpent && view.problem.code && isOwner && (
+            <SpentEdit
+              key={`spent-${view.problem.code}`}
+              variant="panel"
+              target={{ code: view.problem.code }}
+              name={view.problem.name ?? ""}
+              spent={view.problem.spentKobo ? view.problem.spentKobo / 100 : undefined}
+            />
+          )}
           {view.problem.kind === "expired" && view.problem.name && (
             <p className="text-body mt-1 opacity-90">
               {view.problem.name}
@@ -625,6 +643,9 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
               ? "Ask them to rate you before they go. The stars are on their phone now."
               : "Tikka will thank them on WhatsApp and ask how it went."}
           </p>
+          {isOwner && view.skipped && (
+            <SpentEdit key={`spent-${view.code}`} variant="panel" target={{ code: view.code }} name={view.name} onOpen={() => clearTimeout(backTimer.current)} />
+          )}
           <button type="button" className="btn btn-secondary btn-lg mt-5 w-full" onClick={scanAgain}>
             <ScanLine />
             Scan the next code

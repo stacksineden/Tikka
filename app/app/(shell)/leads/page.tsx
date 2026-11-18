@@ -8,11 +8,13 @@ import { RarityBadge } from "@/components/tikka/RarityBadge";
 import { ComingIn } from "@/components/leads/ComingIn";
 import { MessageToday } from "@/components/leads/MessageToday";
 import { MoreTime } from "@/components/leads/MoreTime";
+import { SpentEdit } from "@/components/leads/SpentEdit";
 import { getBusiness, getDrops, getFollowups, getLeads, getReviewAsks, leadsNow } from "@/lib/data";
 import { comingIn, visitPlanLabel } from "@/lib/followups";
 import { naira, shortDate, timeAgo } from "@/lib/format";
 import { filterLeads, followUpLink, reviewAskLink, LEAD_TABS, parseLeadFilters, SOURCE_LABEL, tabCounts, waLink, type LeadFilters } from "@/lib/leads";
 import { moreTimeUntil } from "@/lib/more-time";
+import { canSetSpent } from "@/lib/spent";
 import { getOwnerUser } from "@/lib/session";
 import { siteUrl } from "@/lib/supabase/env";
 import type { Source, Tier } from "@/lib/types";
@@ -210,6 +212,10 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
                   {wa && <FollowUpButton href={wa} leadId={l.id} name={l.name} review={!!ask} />}
                   {l.status === "claimed" && (moreUntil || l.extendedAt) && (
                     <MoreTime key={`more-${l.id}`} claimId={l.id} name={l.name} businessName={b.name} until={moreUntil} waTo={waTo} />
+                  )}
+                  {/* Skipped "What did they spend?" at the counter, or typed it wrong: owner only (this page), 30 days. */}
+                  {l.status === "redeemed" && canSetSpent(l.redeemedAt ?? l.claimedAt, planNow) && (
+                    <SpentEdit key={`spent-${l.id}`} target={{ claimId: l.id }} name={l.name} spent={l.spent} />
                   )}
                 </li>
               );

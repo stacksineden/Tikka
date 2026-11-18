@@ -70,7 +70,20 @@ describe("the counter's check", () => {
   });
 
   it("says why a code can't be used", () => {
-    expect(checkFrom({ kind: "already_used", code: "X", at: "2026-10-20T12:00:00Z" })).toEqual({ kind: "already_used", code: "X", at: "2026-10-20T12:00:00.000Z" });
+    expect(checkFrom({ kind: "already_used", code: "X", at: "2026-10-20T12:00:00Z" })).toEqual({
+      kind: "already_used",
+      code: "X",
+      at: "2026-10-20T12:00:00.000Z",
+      name: undefined,
+      spentKobo: undefined,
+      canSetSpent: false,
+    });
+    // Whose it was and what they spent, so the owner can add or fix it.
+    expect(checkFrom({ kind: "already_used", code: "X", at: "2026-10-20T12:00:00Z", name: "Tolu", spent_kobo: 1500000, can_set_spent: true })).toMatchObject({
+      name: "Tolu",
+      spentKobo: 1500000,
+      canSetSpent: true,
+    });
     expect(checkFrom({ kind: "wrong_day", code: "X", days: [1, 2, 3, 4] })).toEqual({ kind: "wrong_day", code: "X", days: "Valid Mon–Thu only" });
     expect(checkFrom({ kind: "wrong_business", code: "X" }).kind).toBe("wrong_business");
     expect(checkFrom({ kind: "something else", code: "X" }).kind).toBe("unknown");

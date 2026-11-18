@@ -43,6 +43,9 @@ describe("check_code", () => {
       kind: "already_used",
       code: "GS-7X4QX",
       at: "2026-10-20T14:14:00+01:00",
+      name: "Adaeze O.",
+      spentKobo: undefined,
+      canSetSpent: true,
     });
     expect(checkClaim({ ...claim, card: { ...claim.card, expiresAt: "2026-10-01T21:00:00+01:00" } }, "owner_a", "GS-7X4QX", now).kind).toBe("expired");
   });

@@ -95,7 +95,14 @@ export function checkFrom(j: Record<string, unknown>): CheckResult {
         plannedVisitPart: VISIT_PARTS.some((p) => p.id === j.planned_visit_part) ? (j.planned_visit_part as VisitPart) : undefined,
       };
     case "already_used":
-      return { kind: "already_used", code, at: new Date(String(j.at)).toISOString() };
+      return {
+        kind: "already_used",
+        code,
+        at: new Date(String(j.at)).toISOString(),
+        name: typeof j.name === "string" ? j.name : undefined,
+        spentKobo: typeof j.spent_kobo === "number" ? j.spent_kobo : undefined,
+        canSetSpent: j.can_set_spent === true,
+      };
     case "expired":
       return {
         kind: "expired",
@@ -156,6 +163,7 @@ export function leadFrom(r: LeadRow): Lead {
     reward: r.reward,
     dropId: r.drop_id,
     claimedAt: new Date(r.claimed_at).toISOString(),
+    redeemedAt: iso(r.redeemed_at),
     spent: r.bill_amount_kobo ? r.bill_amount_kobo / 100 : undefined,
     lastFollowupAt: iso(r.last_followup_at),
     marketingOptIn: r.marketing_opt_in,

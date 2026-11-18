@@ -4,6 +4,7 @@
 import { isWellFormed, normalize } from "./codes";
 import type { ClaimedCard, Tier } from "./types";
 import { moreTimeUntil } from "./more-time";
+import { canSetSpent } from "./spent";
 import { claimExpiry, validDaysLabel, validOn, watDate, type VisitPart } from "./visit";
 
 export const REVIEW_WINDOW_DAYS = 30;
@@ -93,7 +94,8 @@ export type CheckResult =
       plannedVisitDate?: string;
       plannedVisitPart?: VisitPart;
     }
-  | { kind: "already_used"; code: string; at: string }
+  /** `spentKobo`: what they spent (none when nobody typed it); `canSetSpent`: the owner can still add or change it. */
+  | { kind: "already_used"; code: string; at: string; name?: string; spentKobo?: number; canSetSpent?: boolean }
   /** `moreTime`: the date "Give more time" would move it to (owners only), when it can have more time. */
   | { kind: "expired"; code: string; at: string; name?: string; reward?: string; moreTime?: string }
   | { kind: "wrong_day"; code: string; days: string }
@@ -189,7 +191,8 @@ export function offlineCheck(input: string): { ok: true; code: string } | { ok: 
 export function checkClaim(claim: ClaimRecord | undefined, ownerId: string, code: string, now: Date, returning = false): CheckResult {
   if (!claim) return { kind: "unknown", code };
   if (claim.ownerId !== ownerId) return { kind: "wrong_business", code };
-  if (claim.redeemedAt) return { kind: "already_used", code, at: claim.redeemedAt };
+  if (claim.redeemedAt)
+    return { kind: "already_used", code, at: claim.redeemedAt, name: displayName(claim.card.claimer, claim.lastInitial), spentKobo: claim.billKobo, canSetSpent: canSetSpent(claim.redeemedAt, now) };
   if (new Date(claim.card.expiresAt) <= now) {
     const moreTime = moreTimeUntil({ claimedAt: claim.claimedAt, expiresAt: claim.card.expiresAt, extendedAt: claim.extendedAt }, now);
     return { kind: "expired", code, at: claim.card.expiresAt, name: displayName(claim.card.claimer, claim.lastInitial), reward: claim.card.reward, moreTime: moreTime ?? undefined };

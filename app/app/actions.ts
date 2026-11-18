@@ -47,6 +47,7 @@ import {
   getDropTemplates,
   getPayment,
   giveMoreTime,
+  setSpent,
   inviteStaff,
   publishProblem,
   publishWithVoucher,
@@ -76,6 +77,7 @@ import { getOwnerUser, getSessionUser } from "@/lib/session";
 import { processQueue } from "@/lib/whatsapp/send";
 import { LIMITS, normalizeNgPhone, prefixAlternatives, validateCard, type CardDraft, type Errors } from "@/lib/setup";
 import type { CheckResult, DigitsResult } from "@/lib/redeem";
+import { parseNaira, type SpentResult } from "@/lib/spent";
 import type { BusinessPageInput } from "@/lib/page";
 import type { Business, OpeningHours, PortfolioCollection, PortfolioPhoto, ServeMode, ServiceItem } from "@/lib/types";
 import { requestPhone } from "@/lib/privacy";
@@ -681,6 +683,22 @@ export async function giveMoreTimeAction(target: { claimId: string } | { code: s
   if (!user) return { kind: "unknown" };
   const r = await giveMoreTime(user, target).catch((): MoreTimeResult => ({ kind: "unknown" }));
   if (r.kind === "extended") revalidatePath("/app/leads");
+  return r;
+}
+
+/**
+ * "What did they spend?" after redeeming: add or fix the amount on a used Tikka, so the drop's
+ * results count it. Owners only (the database checks again), within 30 days of the visit. From
+ * Leads by the claim, or at the counter by the code. The browser sends naira; the server checks it.
+ */
+export async function setSpentAction(target: { claimId: string } | { code: string }, input: string): Promise<SpentResult> {
+  const user = await getOwnerUser();
+  if (!user) return { kind: "unknown" };
+  const naira = parseNaira(input);
+  if (naira === null) return { kind: "bad_amount" };
+  const r = await setSpent(user, target, naira).catch((): SpentResult => ({ kind: "unknown" }));
+  // Leads, Home and every drop's results add it up.
+  if (r.kind === "saved") revalidatePath("/app", "layout");
   return r;
 }
 

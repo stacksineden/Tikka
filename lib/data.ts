@@ -4,8 +4,9 @@ import { createHash, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { connection } from "next/server";
-import { dbGiveMoreTime, dbLeads, dbReviewAsks, dbLogFollowup, dbNewClaims } from "./leads-db";
+import { dbGiveMoreTime, dbLeads, dbReviewAsks, dbLogFollowup, dbNewClaims, dbSetSpent } from "./leads-db";
 import { moreTimeUntil } from "./more-time";
+import { canSetSpent, MAX_SPENT_NAIRA, type SpentResult } from "./spent";
 import { dbAdminBusinesses, dbAdminDecide, dbAdminForgetPerson, dbAdminPersonLookup, dbAdminPrivacyLog, type PersonRecord, type PrivacyLogEntry, dbAdminDrops, dbAdminGrantDrop, dbAdminOverview, dbAdminPayments, dbAdminPinDrop, dbAdminReports, dbAdminSaveTier, dbAdminSavePack, dbAdminSetBusiness, dbAdminSetDropShown, dbPacks, dbPins, dbTiers, type AdminBusiness, type AdminDrop, type AdminOverview, type AdminPayment, type AdminReport } from "./admin-db";
 import { dbMarketplaceDrops, dbNotifyIntent, dbReportDrop } from "./market-db";
 import { dbOwnerReviews, dbPublicReviews, dbReportReview, dbReviewPage, dbSubmitReview } from "./reviews-db";
@@ -1314,7 +1315,8 @@ export async function getLeads(user: Pick<SessionUser, "id" | "role">): Promise<
       const tapped = followups.get(l.id);
       const more = moreTimeDemo.get(l.id);
       const withMore = more ? { ...lead, expiresAt: more.expiresAt, extendedAt: more.extendedAt } : lead;
-      return tapped ? { ...withMore, lastFollowupAt: tapped } : withMore;
+      const withSpent = spentDemo.has(l.id) ? { ...withMore, spent: spentDemo.get(l.id) || undefined } : withMore;
+      return tapped ? { ...withSpent, lastFollowupAt: tapped } : withSpent;
     })
     .sort((a, b) => b.claimedAt.localeCompare(a.claimedAt));
 }
@@ -1405,6 +1407,42 @@ export async function giveMoreTime(user: Pick<SessionUser, "id" | "role">, targe
   if (!until) return { kind: "no_more_time" };
   moreTimeDemo.set(lead.id, { expiresAt: until, extendedAt: now.toISOString() });
   return { kind: "extended", expiresAt: until, name: lead.name.split(" ")[0] };
+}
+
+// DEMO: amounts the owner added or changed on demo leads after redeeming (naira; 0 clears it).
+const spentDemo: Map<string, number> = ((globalThis as { __tikkaSpent?: Map<string, number> }).__tikkaSpent ??= new Map());
+
+/**
+ * set_redemption_amount: add or change what a used Tikka's customer spent, so the drop's results
+ * count it. Owners only, within 30 days of the visit (lib/spent.ts). By claim (Leads) or code (counter).
+ */
+export async function setSpent(user: Pick<SessionUser, "id" | "role">, target: { claimId: string } | { code: string }, naira: number): Promise<SpentResult> {
+  if (user.role !== "owner") return { kind: "unknown" };
+  if (!Number.isSafeInteger(naira) || naira < 0 || naira > MAX_SPENT_NAIRA) return { kind: "bad_amount" };
+  if (isDbId(user.id)) {
+    const b = await getBusiness(user);
+    if (!b) return { kind: "unknown" };
+    const r = await dbSetSpent(b.id, target, naira * 100);
+    if (r.kind === "saved") return { kind: "saved", naira: Number(r.amount_kobo ?? 0) / 100, name: String(r.name ?? "") };
+    return { kind: r.kind === "not_used" || r.kind === "too_late" || r.kind === "bad_amount" ? r.kind : "unknown" };
+  }
+  if (user.id !== DEMO_USER) return { kind: "unknown" };
+  if ("code" in target) {
+    // The demo counter runs on the real clock (checkCode), so this does too.
+    const c = findByCode(target.code.trim().toUpperCase());
+    if (!c || c.ownerId !== user.id) return { kind: "unknown" };
+    if (!c.redeemedAt) return { kind: "not_used" };
+    if (!canSetSpent(c.redeemedAt, new Date())) return { kind: "too_late" };
+    c.billKobo = naira ? naira * 100 : undefined;
+    return { kind: "saved", naira, name: c.card.claimer };
+  }
+  // Demo leads live at DEMO_NOW, like the Leads page.
+  const lead = (await getLeads(user)).find((l) => l.id === target.claimId);
+  if (!lead) return { kind: "unknown" };
+  if (lead.status !== "redeemed") return { kind: "not_used" };
+  if (!canSetSpent(lead.redeemedAt ?? lead.claimedAt, DEMO_NOW)) return { kind: "too_late" };
+  spentDemo.set(lead.id, naira);
+  return { kind: "saved", naira, name: lead.name.split(" ")[0] };
 }
 
 /** "Message on WhatsApp" was tapped: a followup_tap for the funnel and leads.last_followup_at. */

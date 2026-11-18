@@ -287,6 +287,8 @@ export interface Lead {
   reward: string;
   dropId: string;
   claimedAt: string;
+  /** When their Tikka was used at the counter. */
+  redeemedAt?: string;
   spent?: number;
   /** The owner's last "Message on WhatsApp" tap. */
   lastFollowupAt?: string;
