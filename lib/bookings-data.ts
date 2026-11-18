@@ -232,7 +232,9 @@ export async function getBookingSetup(user: Pick<SessionUser, "id" | "role" | "b
   const w = await who(user);
   if (!w) return null;
   if (isDbId(w.key)) {
-    const s = await dbBookingSetup(w.key);
+    // Before the bookings migration is live, Home and Redeem simply show no bookings.
+    const s = await dbBookingSetup(w.key).catch(() => null);
+    if (!s) return null;
     return { ...s, minutes: Object.fromEntries(w.business.services.filter((x) => x.id).map((x) => [x.id!, x.minutes ?? null])) };
   }
   const d = demoBook(w.key, w.business);
