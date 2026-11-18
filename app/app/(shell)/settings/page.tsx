@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { ChevronRight, Clock, Film, Globe, Images, Wallet, ListChecks, Palette, Phone, Sparkles, Store, UserRound, UsersRound, type LucideIcon } from "lucide-react";
+import {
+  Landmark, ChevronRight, Clock, Film, Globe, Images, Wallet, ListChecks, Palette, Phone, Sparkles, Store, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -33,6 +34,7 @@ async function Hub() {
   ];
   const account: Row[] = [
     { href: "/app/settings/team", label: "Team", meta: "Staff who redeem codes at the counter", Icon: UsersRound },
+    { href: "/app/settings/get-paid", label: "Get paid", meta: "The bank account customers' payments go to", Icon: Landmark },
     { href: "/app/settings/payments", label: "Payments", meta: ((n) => (n ? `${n} drop${n === 1 ? "" : "s"} ready to publish · season packs` : "Season packs and drop payments"))(dropsReady(vouchers, new Date())), Icon: Wallet },
     { href: "/app/settings/account", label: "Account", meta: "WhatsApp alerts, daily summary, sign-in", Icon: UserRound },
   ];
