@@ -15,6 +15,7 @@ import {
   adminEnquiryStatusAction,
 } from "@/app/app/actions";
 import { PrivacyRequests } from "@/components/admin/PrivacyRequests";
+import { SaveButton } from "@/components/admin/SaveButton";
 import { Logo } from "@/components/site/Logo";
 import { adminPrivacyLog, adminView, getAllDropPacks, getDropTiers } from "@/lib/data";
 import { count, naira, place, shortDate } from "@/lib/format";
@@ -431,20 +432,20 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
               </div>
               <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
                 <form action={adminSetBusinessAction.bind(null, b.id, { verified: !b.verified })}>
-                  <button type="submit" aria-pressed={b.verified} className={`btn min-h-11 w-full px-3 text-label ${b.verified ? "" : "btn-secondary"}`}>
+                  <SaveButton className={`btn min-h-11 w-full px-3 text-label ${b.verified ? "" : "btn-secondary"}`} pressed={b.verified}>
                     {b.verified ? "Verified" : "Give Verified badge"}
-                  </button>
+                  </SaveButton>
                 </form>
                 <form action={adminSetBusinessAction.bind(null, b.id, { foundingMember: !b.foundingMember })}>
-                  <button type="submit" aria-pressed={b.foundingMember} className={`btn min-h-11 w-full px-3 text-label ${b.foundingMember ? "" : "btn-secondary"}`}>
+                  <SaveButton className={`btn min-h-11 w-full px-3 text-label ${b.foundingMember ? "" : "btn-secondary"}`} pressed={b.foundingMember}>
                     {b.foundingMember ? "Founding member" : "Make founding member"}
-                  </button>
+                  </SaveButton>
                 </form>
                 {!b.isDemo && (
                   <form action={adminSetBusinessAction.bind(null, b.id, { suspended: !b.suspended })}>
-                    <button type="submit" aria-pressed={b.suspended} className="btn btn-secondary min-h-11 w-full px-3 text-label text-danger">
+                    <SaveButton className="btn btn-secondary min-h-11 w-full px-3 text-label text-danger" pressed={b.suspended}>
                       {b.suspended ? "Lift suspension" : "Suspend"}
-                    </button>
+                    </SaveButton>
                   </form>
                 )}
               </div>
@@ -459,9 +460,9 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                     <span className="text-caption text-ink-muted">Most per payment (₦)</span>
                     <input name="max" inputMode="numeric" defaultValue={String((paySettings[b.id]?.maxKobo ?? 2_000_000) / 100)} className={field} />
                   </label>
-                  <button type="submit" className="btn btn-secondary min-h-11 px-4 text-label">
+                  <SaveButton className="btn btn-secondary min-h-11 px-4 text-label">
                     Save
-                  </button>
+                  </SaveButton>
                   <p className="text-caption text-ink-muted sm:col-span-3">
                     {paySettings[b.id]?.last4
                       ? `Paid to ${paySettings[b.id]!.accountName} · ${paySettings[b.id]!.bankName} ••••${paySettings[b.id]!.last4}${paySettings[b.id]!.mode === "test" ? " (added in test mode)" : ""}`
@@ -485,9 +486,9 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                   <span className="text-caption text-ink-muted">Use by (optional)</span>
                   <input type="date" name="expiresOn" className={field} />
                 </label>
-                <button type="submit" className="btn btn-secondary min-h-11 px-4 text-label">
+                <SaveButton className="btn btn-secondary min-h-11 px-4 text-label">
                   Give drop
-                </button>
+                </SaveButton>
               </form>
             </li>
           ))}
