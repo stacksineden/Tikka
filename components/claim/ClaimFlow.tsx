@@ -290,13 +290,11 @@ export function ClaimFlow({
         return go("closed");
       }
       if (r.reason === "scheduled") setStatus("scheduled");
-      if (r.reason === "phone" || r.reason === "invalid_phone" || r.reason === "number_taken") {
+      // Refusals about the number stay on the sheet, under the number, so it's clear what happened.
+      const numberNote = PAGE_NUMBER_NOTES[r.reason];
+      if (numberNote) {
         go("claim");
-        return setPhoneError(
-          r.reason === "number_taken"
-            ? "That number already has a Tikka from this drop. Check the number, or use your own."
-            : "That doesn't look like a Nigerian mobile number. Check it and try again.",
-        );
+        return setPhoneError(numberNote(face.name));
       }
       go("front");
       return setNote(PAGE_CLAIM_NOTES[r.reason] ?? "That didn't go through. Tap Claim again.");
@@ -962,13 +960,20 @@ function ShareIcon() {
   );
 }
 
+/** Why a page claim's number was refused, shown under the number on the claim sheet. */
+const PAGE_NUMBER_NOTES: Record<string, (business: string) => string> = {
+  phone: () => "That doesn't look like a Nigerian mobile number. Check it and try again.",
+  invalid_phone: () => "That doesn't look like a Nigerian mobile number. Check it and try again.",
+  number_taken: () => "That number already has a Tikka from this drop. Check the number, or use your own.",
+  blocked_new_only: (b) => `This drop is for new customers, and that number already got a Tikka from ${b}. Watch out for their next one.`,
+  blocked_period: (b) => `That number had a Tikka from ${b} recently. Catch their next drop.`,
+};
+
 /** Why a page claim didn't go through, in the claimer's words (lib/claim-mode.ts). */
 const PAGE_CLAIM_NOTES: Record<string, string> = {
   network: "No connection. Check your data and tap Claim again.",
   slow_down: "Too many tries from this phone. Try again later.",
   prelaunch: "Tikkas open to claim very soon. Check back in a few days.",
-  blocked_new_only: "This drop is for new customers. Watch out for their next one.",
-  blocked_period: "You had a Tikka from here recently. Catch their next drop.",
   market_sold_out: "The marketplace Tikkas for this drop are gone. Follow them for the next one.",
 };
 

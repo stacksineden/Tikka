@@ -68,8 +68,24 @@ begin
   assert found, 'A gets a summary';
   assert a.phone = '+2348229999999', 'to the alert number, not the button: ' || a.phone;
   assert a.new_claims = 1 and a.planning_tomorrow = 1 and a.expiring_soon = 1, format('counts %s %s %s', a.new_claims, a.planning_tomorrow, a.expiring_soon);
-  assert a.last_drop_title = 'Old week' and a.last_drop_customers = 1, 'the last finished drop: ' || coalesce(a.last_drop_title, 'none');
+  -- "Run it again" waits while a drop is running (20261119100000_summary_nudge_when_idle.sql).
+  assert a.last_drop_id is null, 'no last drop while one is running: ' || coalesce(a.last_drop_title, 'none');
   assert not exists (select 1 from public.daily_summary_rows() where business_name in ('Summary B', 'Summary C')), 'nobody with it off or without a number';
+end $$;
+
+-- Once nothing is running, the last finished drop comes back (This week, ended early: one came in).
+update public.drops set status = 'ended_early' where id = '00000000-0000-4000-b800-0000000000d2';
+do $$
+declare
+  a record;
+begin
+  select * into a from public.daily_summary_rows() where business_name = 'Summary A';
+  assert a.last_drop_title = 'This week' and a.last_drop_customers = 1, 'the last finished drop: ' || coalesce(a.last_drop_title, 'none');
+  -- A scheduled next drop counts as running.
+  update public.drops set status = 'published', starts_at = now() + interval '2 days', ends_at = now() + interval '9 days'
+    where id = '00000000-0000-4000-b800-0000000000d1';
+  select * into a from public.daily_summary_rows() where business_name = 'Summary A';
+  assert a.last_drop_id is null, 'no last drop while the next is scheduled: ' || coalesce(a.last_drop_title, 'none');
 end $$;
 
 set local role anon;
