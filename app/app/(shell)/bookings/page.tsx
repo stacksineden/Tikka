@@ -14,6 +14,7 @@ import { getOwnerUser } from "@/lib/session";
 import { DepositSettings } from "@/components/bookings/DepositSettings";
 import { paystackMode } from "@/lib/paystack";
 import { dbPayoutState, payReady } from "@/lib/payouts-db";
+import { dbBookingSetup } from "@/lib/bookings-db";
 
 export const metadata: Metadata = { title: "Bookings" };
 
@@ -90,7 +91,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
 }
 
 async function depositsCard(b: NonNullable<Awaited<ReturnType<typeof getBusiness>>>) {
-  const [state, setup] = await Promise.all([dbPayoutState(b.id), import("@/lib/bookings-db").then((m) => m.dbBookingSetup(b.id))]);
+  const [state, setup] = await Promise.all([dbPayoutState(b.id), dbBookingSetup(b.id)]);
   const pay = payReady(state, paystackMode());
   if (!pay.ready) {
     return (

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { LENGTHS } from "@/lib/bookings";
 import { addBooking, blockTime, cancelBooking, checkBookingCode, markBooking, moveBooking, removeBlock, saveBookingSettings, type Act, type BookingCheck } from "@/lib/bookings-data";
 import { getSessionUser } from "@/lib/session";
+import { dbSaveDepositSettings } from "@/lib/bookings-db";
+import { getBusiness, isDbId } from "@/lib/data";
 import { normalizeNgPhone } from "@/lib/setup";
 import { firstName } from "@/lib/claim";
 
@@ -116,8 +118,6 @@ export async function saveDepositSettingsAction(input: {
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const u = await user();
   if (u.role !== "owner") return { ok: false, error: "Only the owner sets deposits." };
-  const { getBusiness, isDbId } = await import("@/lib/data");
-  const { dbSaveDepositSettings } = await import("@/lib/bookings-db");
   const b = await getBusiness(u);
   if (!b || !isDbId(b.id)) return { ok: false, error: "The demo business can't take deposits." };
   const kobo = (n: number | null | undefined) => (n == null || !Number.isFinite(Number(n)) ? null : Math.round(Number(n) * 100));

@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getBusiness, isDbId } from "@/lib/data";
-import { dbCancelPayLink, dbCreatePayLink } from "@/lib/paylinks-db";
+import { getBusiness, isDbId, memberBusinessId } from "@/lib/data";
+import { dbCancelPayLink, dbCreatePayLink, dbPaidForCode } from "@/lib/paylinks-db";
 import { paystackMode } from "@/lib/paystack";
-import { getOwnerUser } from "@/lib/session";
+import { getOwnerUser, getSessionUser } from "@/lib/session";
 import { siteUrl } from "@/lib/supabase/env";
 
 // Pay links from the dashboard (REVENUE_PLAN 5.3). Owners only; the database checks again that
@@ -36,9 +36,6 @@ export async function cancelPayLinkAction(id: string): Promise<{ kind: string }>
 
 /** At the counter: what was paid online for this Tikka code (owners and staff; amounts only). */
 export async function paidForCodeAction(code: string): Promise<number> {
-  const { getSessionUser } = await import("@/lib/session");
-  const { memberBusinessId } = await import("@/lib/data");
-  const { dbPaidForCode } = await import("@/lib/paylinks-db");
   const user = await getSessionUser();
   const biz = user ? await memberBusinessId(user) : null;
   if (!biz || !isDbId(biz)) return 0;
