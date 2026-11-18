@@ -13,12 +13,28 @@ import { naira, shortDate } from "@/lib/format";
 import { bookingNumber } from "@/lib/page";
 import { dbCompletePayLink, dbPayPage } from "@/lib/paylinks-db";
 import { verifyPayment } from "@/lib/paystack";
+import { siteUrl } from "@/lib/supabase/env";
 
 // A pay link (REVENUE_PLAN 5.3): the business, what it's for and how much, then Paystack. Back from
 // Paystack (?reference=), the payment is checked with Paystack and recorded before the receipt shows;
 // the webhook records it too, whichever comes first. Never the business's account details.
 
-export const metadata: Metadata = { title: "Pay", robots: { index: false, follow: false } };
+// The link preview in WhatsApp says what it is: "Pay ₦200 to Stacks Glow · Conrrows".
+export async function generateMetadata({ params }: PageProps<"/pay/[token]">): Promise<Metadata> {
+  const { token } = await params;
+  const link = await dbPayPage(token);
+  const found = link ? await getBusinessBySlug(link.businessSlug) : null;
+  if (!link || !found) return { title: "Pay", robots: { index: false, follow: false } };
+  const amount = naira(link.amountKobo / 100);
+  const title = link.status === "paid" ? `Paid ${amount} to ${found.business.name}` : `Pay ${amount} to ${found.business.name}`;
+  const description = `${link.note}. Pay securely by card, bank transfer or USSD.`;
+  return {
+    title: { absolute: `${title} · ${link.note}` },
+    description,
+    openGraph: { title: `${title} · ${link.note}`, description, type: "website" },
+    robots: { index: false, follow: false },
+  };
+}
 
 async function Pay({ params, searchParams }: { params: PageProps<"/pay/[token]">["params"]; searchParams: PageProps<"/pay/[token]">["searchParams"] }) {
   const [{ token }, sp] = await Promise.all([params, searchParams]);
@@ -72,7 +88,13 @@ async function Pay({ params, searchParams }: { params: PageProps<"/pay/[token]">
         </div>
       </section>
       {number && (
-        <a href={whatsappLink(number, `Hi ${b.name}, about the ${amount} payment for ${link.note}.`)} target="_blank" rel="noopener noreferrer" className="biz-btn min-h-12 w-full border border-line-strong">
+        <a
+          href={whatsappLink(
+            number,
+            link.status === "paid"
+              ? `Hi ${b.name}, I've paid ${amount} for ${link.note} through Tikka${link.paidAt ? ` (${shortDate(link.paidAt)})` : ""}. Here's my receipt: ${siteUrl()}/pay/${token}`
+              : `Hi ${b.name}, I have a question about the ${amount} pay link for ${link.note}.`,
+          )} target="_blank" rel="noopener noreferrer" className="biz-btn min-h-12 w-full border border-line-strong">
           <ActionIcon kind="whatsapp" />
           Message {b.name}
         </a>
