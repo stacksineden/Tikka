@@ -1,6 +1,6 @@
 # Bookings with free times
 
-Agreed with the owner on 18 Nov 2026. Step 1 of the payments build (docs/REVENUE_PLAN.md 5.5, 5.9). This file is the requirement; deposits (marked 💳) come in step 4 and are written here so the calendar is built to take them.
+Agreed with the owner on 18 Nov 2026. Built 18 Nov 2026 (migrations `20261120100000_bookings.sql` and `20261120110000_bookings_part2.sql`, database tests 046 and 047); deposits are not built yet. Step 1 of the payments build (docs/REVENUE_PLAN.md 5.5, 5.9). This file is the requirement; deposits (marked 💳) come in step 4 and are written here so the calendar is built to take them.
 
 ## Decisions
 - **Picking a free time = booked.** No request, no accept step. The owner moves or cancels if needed.

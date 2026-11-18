@@ -46,7 +46,7 @@ export async function dbBookingRules(businessId: string, from: Date, days: numbe
   };
 }
 
-export type BookResult = { kind: "booked"; token: string; code: string; id: string } | { kind: string };
+export type BookResult = { kind: "booked" | "already"; token: string; code?: string; id?: string } | { kind: string };
 
 /** book_time(): server only, after the route's rate limits. */
 export async function dbBookTime(input: {
@@ -175,3 +175,67 @@ export const dbBlockTime = (businessId: string, startsAt: string, endsAt: string
   call("block_time", { p_business: businessId, p_start: startsAt, p_end: endsAt, p_note: note });
 
 export const dbRemoveBlock = (businessId: string, id: string) => call("remove_block", { p_business: businessId, p_block: id });
+
+export interface BookingLeadRow {
+  lead_id: string;
+  first_name: string;
+  phone: string;
+  phone_confirmed: boolean;
+  marketing_opt_in: boolean;
+  first_seen_at: string;
+  claims_count: number;
+  sources: string[] | null;
+  bookings: number;
+  came: number;
+  last_at: string;
+  next: { starts_at: string; service: string; code: string; claim_id: string | null } | null;
+}
+
+/** Everyone who booked, one per person (owner only, in SQL). */
+export async function dbBookingLeads(businessId: string): Promise<BookingLeadRow[]> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("get_booking_leads", { p_business: businessId });
+  if (error) return [];
+  return (data ?? []) as BookingLeadRow[];
+}
+
+export interface TikkaInfo {
+  businessId: string;
+  firstName: string;
+  expiresAt: string;
+  redeemed: boolean;
+  reward: string;
+  booking: { viewToken: string; startsAt: string; service: string } | null;
+}
+
+/** A Tikka and its booking, by the card's link (server only). */
+export async function dbTikkaInfo(token: string): Promise<TikkaInfo | null> {
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return null;
+  const { data, error } = await adminClient().rpc("tikka_booking_info", { p_view_token: token });
+  if (error || !data) return null;
+  const r = data as Row;
+  const b = r.booking as Row | null;
+  return {
+    businessId: String(r.business_id),
+    firstName: String(r.first_name),
+    expiresAt: String(r.expires_at),
+    redeemed: r.redeemed === true,
+    reward: String(r.reward ?? ""),
+    booking: b ? { viewToken: String(b.view_token), startsAt: String(b.starts_at), service: String(b.service) } : null,
+  };
+}
+
+/** book_for_claim(): the claimer books a time to use their Tikka (server only). */
+export async function dbBookForClaim(token: string, serviceId: string, startsAt: string): Promise<BookResult> {
+  const { data, error } = await adminClient().rpc("book_for_claim", { p_view_token: token, p_service: serviceId, p_start: startsAt });
+  if (error) return { kind: error.code === "P0002" ? "not_found" : "error" };
+  return data as BookResult;
+}
+
+/** A BK- code at the counter (team only, never the number). */
+export async function dbCheckBookingCode(businessId: string, code: string): Promise<Row> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("check_booking_code", { p_business: businessId, p_code: code });
+  if (error) return { kind: "no_access" };
+  return (data ?? { kind: "unknown" }) as Row;
+}

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { LENGTHS } from "@/lib/bookings";
-import { addBooking, blockTime, cancelBooking, markBooking, moveBooking, removeBlock, saveBookingSettings, type Act } from "@/lib/bookings-data";
+import { addBooking, blockTime, cancelBooking, checkBookingCode, markBooking, moveBooking, removeBlock, saveBookingSettings, type Act, type BookingCheck } from "@/lib/bookings-data";
 import { getSessionUser } from "@/lib/session";
 import { normalizeNgPhone } from "@/lib/setup";
 import { firstName } from "@/lib/claim";
@@ -96,4 +96,9 @@ export async function removeBlockAction(id: string): Promise<Act> {
   const r = await removeBlock(await user(), id);
   refresh();
   return r;
+}
+
+/** A BK- code typed on Redeem: the booking, never the number. Read-only (owners and staff). */
+export async function checkBookingCodeAction(code: string): Promise<BookingCheck> {
+  return checkBookingCode(await user(), String(code ?? "").slice(0, 20));
 }

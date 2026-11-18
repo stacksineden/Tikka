@@ -28,10 +28,14 @@ import {
   dbMoveBooking,
   dbRemoveBlock,
   dbSaveBookingSettings,
+  dbBookingLeads,
+  dbTikkaInfo,
+  dbBookForClaim,
+  dbCheckBookingCode,
   type BookingPass,
   type BookResult,
 } from "./bookings-db";
-import { getBusiness, getBusinessBySlug, isDbId, memberBusinessId } from "./data";
+import { demoTikkaForBooking, getBusiness, getBusinessBySlug, isDbId, memberBusinessId } from "./data";
 import type { SessionUser } from "./types";
 import type { Business, ServiceItem } from "./types";
 
@@ -356,3 +360,154 @@ export async function removeBlock(user: Pick<SessionUser, "id" | "role" | "busin
 }
 
 export { DEFAULT_RULES };
+
+/* ------------------------------------------------------------ part 2 */
+
+export interface BookingLead {
+  leadId: string;
+  name: string;
+  phone: string;
+  phoneConfirmed: boolean;
+  optIn: boolean;
+  claims: number;
+  sources: Booking["source"][];
+  bookings: number;
+  came: number;
+  lastAt: string;
+  next?: { startsAt: string; service: string; code: string; claimId?: string };
+}
+
+/** Everyone who booked, one per person, for the Leads page. Owners only (rule 4). */
+export async function getBookingLeads(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">): Promise<BookingLead[]> {
+  if (user.role !== "owner") return [];
+  const w = await who(user);
+  if (!w) return [];
+  if (isDbId(w.key)) {
+    return (await dbBookingLeads(w.key)).map((r) => ({
+      leadId: r.lead_id,
+      name: r.first_name,
+      phone: r.phone,
+      phoneConfirmed: r.phone_confirmed,
+      optIn: r.marketing_opt_in,
+      claims: Number(r.claims_count),
+      sources: (r.sources ?? []) as Booking["source"][],
+      bookings: Number(r.bookings),
+      came: Number(r.came),
+      lastAt: r.last_at,
+      next: r.next ? { startsAt: r.next.starts_at, service: r.next.service, code: r.next.code, claimId: r.next.claim_id ?? undefined } : undefined,
+    }));
+  }
+  const d = demoBook(w.key, w.business);
+  if (!d) return [];
+  const byPhone = new Map<string, DemoBooking[]>();
+  for (const b of d.bookings) if (b.phone) byPhone.set(b.phone, [...(byPhone.get(b.phone) ?? []), b]);
+  const now = Date.now();
+  return [...byPhone.entries()]
+    .map(([phone, list]) => {
+      const next = list.filter((b) => b.status === "booked" && new Date(b.endsAt).getTime() > now).sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0];
+      return {
+        leadId: `demo_${phone}`,
+        name: list[0].firstName,
+        phone,
+        phoneConfirmed: false,
+        optIn: list.some((b) => b.futureOffers && b.status === "arrived"),
+        claims: list.some((b) => b.claimId) ? 1 : 0,
+        sources: [...new Set(list.map((b) => b.source))],
+        bookings: list.filter((b) => b.status !== "cancelled").length,
+        came: list.filter((b) => b.status === "arrived").length,
+        lastAt: list.map((b) => b.createdAt).sort().at(-1)!,
+        next: next ? { startsAt: next.startsAt, service: next.service, code: next.code, claimId: next.claimId } : undefined,
+      };
+    })
+    .sort((a, b) => b.lastAt.localeCompare(a.lastAt));
+}
+
+export interface TikkaForBooking {
+  token: string;
+  name: string;
+  /** The last WAT day it can be booked on (the use-by). */
+  until: string;
+  untilAt: string;
+  reward: string;
+  booking?: { token: string; startsAt: string; service: string };
+}
+
+/** "Book a time to use it": the Tikka, if it's this business's, unused and still good. */
+export async function getTikkaForBooking(token: string, ownerKey: string, business: Business): Promise<TikkaForBooking | null> {
+  await connection();
+  const now = Date.now();
+  const shape = (t: { firstName: string; expiresAt: string; reward: string }, booking?: TikkaForBooking["booking"]): TikkaForBooking => ({
+    token,
+    name: t.firstName,
+    until: watParts(new Date(new Date(t.expiresAt).getTime() - 60_000)).day,
+    untilAt: t.expiresAt,
+    reward: t.reward,
+    booking,
+  });
+  if (isDbId(ownerKey)) {
+    const t = await dbTikkaInfo(token);
+    if (!t || t.businessId !== business.id || t.redeemed || new Date(t.expiresAt).getTime() <= now) return null;
+    return shape(t, t.booking ? { token: t.booking.viewToken, startsAt: t.booking.startsAt, service: t.booking.service } : undefined);
+  }
+  const t = demoTikkaForBooking(token);
+  if (!t || t.ownerId !== ownerKey || t.redeemed || new Date(t.expiresAt).getTime() <= now) return null;
+  const d = demoBook(ownerKey, business);
+  const b = d?.bookings.find((x) => x.claimId === token && (x.status === "booked" || x.status === "arrived"));
+  return shape(t, b ? { token: b.viewToken!, startsAt: b.startsAt, service: b.service } : undefined);
+}
+
+/** The claimer books a time to use their Tikka. Name and number come from the claim, never the browser. */
+export async function bookForTikka(slug: string, token: string, serviceId: string, startsAt: string): Promise<BookResult> {
+  const found = await getBusinessBySlug(slug);
+  if (!found) return { kind: "not_found" };
+  const { business, ownerId } = found;
+  if (isDbId(ownerId)) return dbBookForClaim(token, serviceId, startsAt);
+  const t = demoTikkaForBooking(token);
+  const d = demoBook(ownerId, business);
+  const svc = business.services.find((s) => s.id === serviceId);
+  if (!t || !d || !svc || t.ownerId !== ownerId) return { kind: "not_found" };
+  if (t.redeemed) return { kind: "used" };
+  const have = d.bookings.find((x) => x.claimId === token && x.status === "booked" && new Date(x.endsAt).getTime() > Date.now());
+  if (have) return { kind: "already", token: have.viewToken!, code: have.code, id: have.id };
+  const start = new Date(startsAt);
+  if (start.getTime() >= new Date(t.expiresAt).getTime()) return { kind: "after_use_by" };
+  const minutes = d.minutes[svc.id!] ?? DEFAULT_MINUTES;
+  const problem = demoProblem(d, business.hours, start, minutes, null, false);
+  if (problem) return { kind: problem };
+  const b: DemoBooking = {
+    id: `bk_${randomBytes(6).toString("hex")}`, service: svc.name, serviceId: svc.id, minutes, startsAt: start.toISOString(),
+    endsAt: new Date(start.getTime() + minutes * 60_000).toISOString(), firstName: t.firstName, phone: t.phone, source: "tikka",
+    status: "booked", code: demoCode(), viewToken: randomBytes(12).toString("hex"), moved: false, createdAt: new Date().toISOString(),
+    futureOffers: false, claimId: token,
+  };
+  d.bookings.push(b);
+  return { kind: "booked", token: b.viewToken!, code: b.code, id: b.id };
+}
+
+export type BookingCheck =
+  | { kind: "booking"; id: string; code: string; firstName: string; service: string; minutes: number; startsAt: string; status: Booking["status"]; source: Booking["source"] }
+  | { kind: "unknown" | "wrong_business" | "no_access" };
+
+/** A BK- code at the counter. Owners and staff; never the number. Read-only. */
+export async function checkBookingCode(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, code: string): Promise<BookingCheck> {
+  const w = await who(user);
+  if (!w) return { kind: "no_access" };
+  const clean = code.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (!/^BK[A-Z0-9]{6}$/.test(clean)) return { kind: "unknown" };
+  if (isDbId(w.key)) {
+    const r = await dbCheckBookingCode(w.key, clean);
+    if (r.kind !== "booking") return { kind: r.kind as "unknown" };
+    return {
+      kind: "booking", id: String(r.id), code: String(r.code), firstName: String(r.first_name), service: String(r.service),
+      minutes: Number(r.minutes), startsAt: String(r.starts_at), status: r.status as Booking["status"], source: r.source as Booking["source"],
+    };
+  }
+  const full = `BK-${clean.slice(2)}`;
+  for (const [key, d] of demo) {
+    const b = d.bookings.find((x) => x.code === full);
+    if (!b) continue;
+    if (key !== w.key) return { kind: "wrong_business" };
+    return { kind: "booking", id: b.id, code: b.code, firstName: b.firstName, service: b.service, minutes: b.minutes, startsAt: b.startsAt, status: b.status, source: b.source };
+  }
+  return { kind: "unknown" };
+}

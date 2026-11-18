@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ActionIcon } from "@/components/tikka/ActionIcon";
 import { bookingMonths, slotLabel, whatsappLink, type BookingDay } from "@/lib/booking";
-import { freeDays, lengthLabel, PROBLEM_TEXT, watInstant, type BookingRules } from "@/lib/bookings";
+import { freeDays, lengthLabel, PROBLEM_TEXT, watInstant, whenLabel, type BookingRules } from "@/lib/bookings";
 
 export interface SheetService {
   id: string;
@@ -14,7 +14,17 @@ export interface SheetService {
   price: string;
 }
 
-type Step = "service" | "time" | "details";
+type Step = "service" | "time" | "details" | "booked";
+
+/** "Book a time to use it" (journey 11b): the Tikka from the card link; its name and number stay on the server. */
+export interface SheetTikka {
+  token: string;
+  name: string;
+  /** The last WAT day it can be booked on. */
+  until: string;
+  reward: string;
+  booking?: { token: string; startsAt: string; service: string };
+}
 
 /**
  * The booking calendar (docs/BOOKINGS.md journey 1). Every Book link on the business page carries
@@ -22,10 +32,22 @@ type Step = "service" | "time" | "details";
  * Pick a service, a free time (only free times show), then first name and WhatsApp number: Book
  * stores the booking and opens the customer's pass. Free times are fetched fresh on every open.
  */
-export function CalendarSheet({ slug, business, number, services }: { slug: string; business: string; number: string | null; services: SheetService[] }) {
+export function CalendarSheet({
+  slug,
+  business,
+  number,
+  services,
+  tikka,
+}: {
+  slug: string;
+  business: string;
+  number: string | null;
+  services: SheetService[];
+  tikka?: SheetTikka;
+}) {
   const ref = useRef<HTMLDialogElement>(null);
   const router = useRouter();
-  const [step, setStep] = useState<Step>("service");
+  const [step, setStep] = useState<Step>(tikka?.booking ? "booked" : "service");
   const [service, setService] = useState<SheetService | null>(null);
   const [rules, setRules] = useState<BookingRules | null>(null);
   const [loading, setLoading] = useState(false);
@@ -55,7 +77,7 @@ export function CalendarSheet({ slug, business, number, services }: { slug: stri
   }
 
   function showTimes(r: BookingRules | null, s: SheetService, keepDay?: string | null) {
-    const next = r ? freeDays(r, s.minutes, new Date()) : [];
+    const next = r ? freeDays(r, s.minutes, new Date(), tikka?.until) : [];
     const first = next.find((d) => d.key === keepDay && d.slots.length) ?? next.find((d) => d.slots.length);
     setDays(next);
     setDayKey(first?.key ?? null);
@@ -69,6 +91,16 @@ export function CalendarSheet({ slug, business, number, services }: { slug: stri
     showTimes(r, s);
     setStep("time");
   }
+
+  // From a Tikka's card: open straight away (or show the booking it already has).
+  useEffect(() => {
+    if (!tikka) return;
+    ref.current?.showModal();
+    if (tikka.booking) return;
+    const t = setTimeout(() => void loadRules().then((r) => services.length === 1 && pickService(services[0], r)), 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tikka?.token]);
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -103,14 +135,19 @@ export function CalendarSheet({ slug, business, number, services }: { slug: stri
   async function book() {
     if (!service || !day || time === null) return;
     setError("");
-    if (!name.trim()) return setError(PROBLEM_TEXT.bad_name);
-    if (phone.replace(/\D/g, "").length < 10) return setError(PROBLEM_TEXT.bad_phone);
+    if (!tikka && !name.trim()) return setError(PROBLEM_TEXT.bad_name);
+    if (!tikka && phone.replace(/\D/g, "").length < 10) return setError(PROBLEM_TEXT.bad_phone);
     setBusy(true);
     try {
       const res = await fetch("/api/book", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ slug, serviceId: service.id, startsAt: new Date(watInstant(day.key, time)).toISOString(), name, phone, futureOffers: offers }),
+        body: JSON.stringify({
+          slug,
+          serviceId: service.id,
+          startsAt: new Date(watInstant(day.key, time)).toISOString(),
+          ...(tikka ? { tikka: tikka.token } : { name, phone, futureOffers: offers }),
+        }),
       });
       const data = (await res.json()) as { ok: boolean; token?: string; reason?: string };
       if (data.ok && data.token) {
@@ -124,7 +161,15 @@ export function CalendarSheet({ slug, business, number, services }: { slug: stri
         showTimes(r, service, day.key);
         setStep("time");
       }
-      setError(reason === "slow_down" ? "Too many tries. Wait a little and try again." : (PROBLEM_TEXT[reason] ?? "Something went wrong. Try again."));
+      setError(
+        reason === "slow_down"
+          ? "Too many tries. Wait a little and try again."
+          : reason === "after_use_by"
+            ? "Pick a time before your Tikka runs out."
+            : reason === "used" || reason === "expired"
+              ? "This Tikka can't be booked any more."
+              : (PROBLEM_TEXT[reason] ?? "Something went wrong. Try again."),
+      );
     } catch {
       setError("Couldn't book. Check your connection and try again.");
     } finally {
@@ -144,7 +189,7 @@ export function CalendarSheet({ slug, business, number, services }: { slug: stri
       <div className="biz-sheet-panel">
         <div className="flex items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-2">
-            {step !== "service" && (
+            {step !== "service" && step !== "booked" && (
               <button
                 type="button"
                 className="biz-sheet-x !m-0 -ml-2 shrink-0"
@@ -156,11 +201,12 @@ export function CalendarSheet({ slug, business, number, services }: { slug: stri
             )}
             <div className="min-w-0">
               <h2 id="book-title" className="biz-serif text-[26px] leading-tight tracking-[-0.01em]">
-                {step === "service" || !service ? "Book a time" : step === "details" ? "Your details" : `Book ${service.name}`}
+                {step === "booked" ? "You're booked" : step === "service" || !service ? "Book a time" : step === "details" ? "Your details" : `Book ${service.name}`}
               </h2>
               <p className="text-body mt-0.5 text-ink-muted">
-                {service && step !== "service" ? `${business} · ${lengthLabel(service.minutes)}${service.price ? ` · ${service.price}` : ""}` : business}
+                {service && step !== "service" && step !== "booked" ? `${business} · ${lengthLabel(service.minutes)}${service.price ? ` · ${service.price}` : ""}` : business}
               </p>
+              {tikka && step !== "booked" && <p className="text-label mt-2">For your Tikka: {tikka.reward}</p>}
             </div>
           </div>
           <button type="button" onClick={close} className="biz-sheet-x" aria-label="Close">
@@ -188,6 +234,18 @@ export function CalendarSheet({ slug, business, number, services }: { slug: stri
               ))}
             </ul>
           </>
+        )}
+
+        {step === "booked" && tikka?.booking && (
+          <div className="mt-5 grid gap-3">
+            <p className="rounded-md bg-surface-sunken px-4 py-3 text-[15px] font-semibold">
+              {tikka.booking.service} · {whenLabel(tikka.booking.startsAt)}
+            </p>
+            <a href={`/bk/${tikka.booking.token}`} className="biz-btn min-h-[52px] w-full bg-ink text-surface-raised">
+              See your booking
+            </a>
+            <p className="text-caption text-ink-muted">To change it, message {business} from your booking.</p>
+          </div>
         )}
 
         {step === "time" && service && (
@@ -257,9 +315,10 @@ export function CalendarSheet({ slug, business, number, services }: { slug: stri
                 <button
                   type="button"
                   className="biz-btn mt-6 min-h-[52px] w-full bg-ink text-surface-raised"
-                  onClick={() => (time === null ? setError("Pick a time first.") : (setError(""), setStep("details")))}
+                  disabled={busy}
+                  onClick={() => (time === null ? setError("Pick a time first.") : tikka ? void book() : (setError(""), setStep("details")))}
                 >
-                  Next
+                  {tikka ? (busy ? "Booking…" : "Book") : "Next"}
                 </button>
               </>
             ) : (

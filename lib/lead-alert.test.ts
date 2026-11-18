@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { leadAlertText, testAlertText } from "./lead-alert";
+import { bookingAlertText, leadAlertText, testAlertText } from "./lead-alert";
 
 const GAMBLING = /\b(win|winner|luck|lucky|jackpot|odds|bet|stake|lottery|raffle)\b/i;
 
@@ -28,5 +28,14 @@ describe("leadAlertText", () => {
       expect(`${t.title} ${t.body}`).not.toMatch(GAMBLING);
     }
     expect(`${testAlertText("Glow Studio").title} ${testAlertText("Glow Studio").body}`).not.toMatch(GAMBLING);
+  });
+});
+
+describe("bookingAlertText", () => {
+  it("says who booked what and when, never a number", () => {
+    const t = bookingAlertText({ businessName: "Glow Studio", firstName: "Adaeze", service: "Braids", when: "Sat 15 Nov, 2:00pm" });
+    expect(t.title).toBe("New booking · Glow Studio");
+    expect(t.body).toBe("Adaeze booked Braids for Sat 15 Nov, 2:00pm. Tap to see your bookings.");
+    expect(t.body).not.toMatch(/\d{6,}/);
   });
 });

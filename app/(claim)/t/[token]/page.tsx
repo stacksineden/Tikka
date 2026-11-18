@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import { ClaimFlow } from "@/components/claim/ClaimFlow";
 import { faceFromBusiness } from "@/components/tikka/TikkaCard";
 import { claimProfile } from "@/lib/claim";
+import { getBookingRules, getTikkaForBooking } from "@/lib/bookings-data";
+import { whenLabel } from "@/lib/bookings";
 import { getBusinessReviews, getCardPage } from "@/lib/data";
 import { qrSvg } from "@/lib/qr";
 
@@ -16,7 +18,9 @@ async function Card({ params }: PageProps<"/t/[token]">) {
   const { token } = await params;
   const page = await getCardPage(token);
   if (!page) notFound();
-  const reviews = await getBusinessReviews(page.ownerId);
+  const [reviews, rules] = await Promise.all([getBusinessReviews(page.ownerId), getBookingRules(page.ownerId, page.business)]);
+  // Bookings on: "Book a time to use it" (or the booking it already has). Unused, unexpired Tikkas only.
+  const tikka = rules ? await getTikkaForBooking(token, page.ownerId, page.business) : null;
   return (
     <ClaimFlow
       view="card"
@@ -28,6 +32,7 @@ async function Card({ params }: PageProps<"/t/[token]">) {
       drop={page.drop}
       source="wa"
       claimed={{ card: page.card, status: page.status, qr: await qrSvg(page.card.code) }}
+      booking={tikka ? { booked: tikka.booking ? { when: whenLabel(tikka.booking.startsAt), token: tikka.booking.token } : undefined } : undefined}
     />
   );
 }

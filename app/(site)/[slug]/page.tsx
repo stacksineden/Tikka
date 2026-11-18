@@ -15,7 +15,7 @@ import { NotifyMe } from "@/components/market/NotifyMe";
 import { Logo } from "@/components/site/Logo";
 import { ACTION_LABEL, ActionIcon, actionHref } from "@/components/tikka/ActionIcon";
 import { isSocial } from "@/lib/social";
-import { getBookingRules, serviceLengths } from "@/lib/bookings-data";
+import { getBookingRules, getTikkaForBooking, serviceLengths } from "@/lib/bookings-data";
 import { getBusinessBySlug, getBusinessReviews, getPageDrops } from "@/lib/data";
 import { clockTime, count, place, shortDate } from "@/lib/format";
 import { bookingLink, bookingNumber, focalPosition, priceText, heroHeadline, serviceGroups, showsLocation, visibleSections, whereLine, type PageDrop } from "@/lib/page";
@@ -182,8 +182,9 @@ function DropBand({ b, live, next }: { b: Business; live?: PageDrop; next?: Page
   );
 }
 
-async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"] }) {
+async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slug]">["params"]; searchParams: PageProps<"/[slug]">["searchParams"] }) {
   const { slug } = await params;
+  const sp = await searchParams;
   const found = await getBusinessBySlug(slug);
   if (!found) notFound();
   const b = found.business;
@@ -205,6 +206,9 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
   const calendar = !external && !!rules && bookable.length > 0;
   const sheet = calendar || (!external && !!number);
   const book = external ?? bookingLink(b) ?? (calendar ? "#book" : null);
+  // "Book a time to use it" from a Tikka's card: ?tikka=<card link>. Only this business's, unused Tikkas.
+  const tikkaToken = typeof sp.tikka === "string" ? sp.tikka : null;
+  const tikka = calendar && tikkaToken ? await getTikkaForBooking(tikkaToken, found.ownerId, b) : null;
   const bookProps = { href: book ?? undefined, target: "_blank", rel: "noopener noreferrer", ...(sheet ? { "data-book": "" } : {}) };
   const call = b.actions.find((a) => a.kind === "call");
   const socials = b.actions.filter((a) => isSocial(a.kind));
@@ -594,6 +598,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
           business={b.name}
           number={number}
           services={bookable.map((s) => ({ id: s.id!, name: s.name, minutes: serviceLengths(found.ownerId, b)[s.id!], price: s.priceKind === "ask" || s.price === null ? "" : priceText(s) }))}
+          tikka={tikka ? { token: tikka.token, name: tikka.name, until: tikka.until, reward: tikka.reward, booking: tikka.booking } : undefined}
         />
       ) : (
         sheet && <BookingSheet business={b.name} number={number!} hours={b.hours} />
@@ -606,7 +611,7 @@ export default function Page(props: PageProps<"/[slug]">) {
   return (
     <main className="min-h-dvh bg-surface-raised">
       <Suspense fallback={<div className="h-dvh bg-surface-raised" />}>
-        <BusinessPage params={props.params} />
+        <BusinessPage params={props.params} searchParams={props.searchParams} />
       </Suspense>
     </main>
   );
