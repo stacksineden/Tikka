@@ -86,7 +86,7 @@ How to read the results:
 - **Guarantee:** a paid drop that brings **fewer than 10** confirmed redemptions earns a free drop, once per business (all other B5 guarantee conditions unchanged).
 - **The two pilot businesses get the founding flag** (admin, `/admin` → Businesses). They never see a price rise.
 - **Why ₦10,000:** less than one customer's bill at most service businesses; about what owners spend boosting an Instagram post for a few days, with no proof it worked; at the bottom of Bumpa's ₦5k–25k a month, but only paid when they run a drop.
-- **Why Paystack + 1% and not an all-in %:** Paystack's fixed ₦100 makes small payments expensive, so a flat all-in "3%" loses Tikka money on small deposits. On a ₦5,000 deposit: Paystack ≈ ₦175, Tikka ₦50, business ≈ ₦4,775. **Check Paystack's current fee schedule before publishing.**
+- **Why Paystack + 1% and not an all-in %:** Paystack's fixed ₦100 makes small payments expensive, so a flat all-in "3%" loses Tikka money on small deposits. On a ₦5,000 deposit: Paystack ≈ ₦175, Tikka ₦50, business ≈ ₦4,775. Paystack's fees checked on 18 Nov 2026 (section 5.1).
 
 ---
 
@@ -285,8 +285,8 @@ Businesses asked to be told when they get a new lead instead of checking the das
 | End-of-drop sit-down | When a drop ends, show the owner "This drop brought in ₦X" and offer the next drop or the season pack right then |
 | Studio setup package | Sell "We set up your page and run your first two drops", one-off, about ₦50,000–150,000 |
 | Studio monthly retainer | Sell "We plan and run a drop for you every month and send you the results", a monthly fee: recurring income before Plus |
-| Lawyer | Send the payment questions (section 5.5) now, so answers are ready when payments are built |
-| Paystack | Finish KYC (roadmap 0.2); ask how **refunds work on split payments** (is the business's share taken back from its next payout?) and confirm current fees |
+| Lawyer | Cleared payments to be built (18 Nov 2026). Show him the finished flow before customers use it (section 5.10) |
+| Paystack | Answered from Paystack's docs on 18 Nov 2026 (section 5.6): refunds come from Tikka, so Tikka doesn't refund deposits; live subaccounts work on the Starter account. Turn on 2FA; upgrade to Registered once the CAC arrives |
 | Focus | No new features on the marketplace, Spark or collections until the kill test is answered |
 | What to tell businesses asking for payments | "Yes, we're adding it. Soon you'll be able to take deposits when customers book on your Tikka page, so no-shows don't cost you. The money goes straight to your bank account. We'd like you to be one of the first. Which services would you want a deposit on, and how much?" Give no date until the lawyer and Paystack have answered |
 
@@ -294,78 +294,97 @@ Businesses asked to be told when they get a new lead instead of checking the das
 
 ## 5. NEXT: Payments (bookings with deposits, pay links)
 
-**Why:** businesses are asking for it unprompted. It solves **no-shows** (someone who has paid a deposit turns up, or cancels in time), makes the free page a working storefront ("Bumpa for service businesses"), earns Tikka a cut of every payment, and is the base for gifts, paid Tikkas and Tikka Plus. **It's possible with what Tikka already has:** Paystack is integrated, the booking sheet exists, the counter screen checks codes, and the live dashboard feed exists. **It needs no Meta verification:** the customer messages the owner from their own WhatsApp, as booking works today.
+**Why:** businesses are asking for it unprompted. A deposit **locks in the time** and stops **no-shows**: someone who has paid turns up, or loses the deposit. It also makes the free page a working storefront ("Bumpa for service businesses"), earns Tikka 1% of every payment, and is the base for gifts, paid Tikkas and Tikka Plus. **It needs no Meta verification:** the customer messages the owner from their own WhatsApp, as booking works today.
 
-**Not before:** the lawyer's answers (5.5) and Paystack's answer on refunds for split payments.
+**Go-ahead (18 Nov 2026):** the lawyer has cleared building payments and deposits; he'll say if anything is needed before customers use it. Paystack's own docs answered the rest (5.6), and a live subaccount was created on Tikka's account on 18 Nov, so **the pilot can run before the CAC arrives**.
 
 ### 5.1 How the money moves (Tikka never holds it)
-- **Paystack split payments with subaccounts.** When an owner adds their bank account, Paystack resolves the account name. Tikka checks it against the business and creates a Paystack **subaccount** for the business, saving its code.
-- Each customer payment is split by Paystack: **the business's share goes to the business's bank** (usually the next working day), **Tikka's 1% goes to Tikka.** Decide who bears Paystack's fee (Paystack lets you choose); default to the business, with fees shown clearly.
+- **Paystack split payments with subaccounts.** When an owner adds their bank account, Tikka creates a Paystack **subaccount** for the business; Paystack returns the account name from the bank, the owner confirms it's theirs, and Tikka saves the subaccount code. (Paystack isn't liable for payouts to a wrong account, so the owner must confirm the name.)
+- Each customer payment is split by Paystack: Tikka's share is set per payment (`transaction_charge`, 1%), the rest goes to the business, and **the business pays Paystack's fee** (`bearer: "subaccount"`). Paystack pays the business **automatically the next working day**; Tikka can't hold or delay it.
+- **Example, a ₦5,000 deposit:** Paystack's fee ₦175 (1.5% + ₦100), Tikka ₦50, the business **₦4,775**. Fees (Paystack Nigeria, checked 18 Nov 2026): 1.5% + ₦100, the ₦100 waived under ₦2,500, never more than ₦2,000 per payment.
 - **The server works out every amount** from the service's deposit or the pay link (as rule 11 does for drops). The browser never sends an amount.
 - **The existing Paystack webhook** (`app/api/paystack/webhook`) is extended to confirm booking and pay-link payments (signature checked, idempotent).
-- **Only Verified businesses can take payments**, with a cap on deposit size at first. This stops a fake business collecting deposits and disappearing.
 
-### 5.2 Phase 1: bank account and pay links
+### 5.2 No refunds through Tikka (decided 18 Nov 2026)
+This is how the businesses already work: once you've booked and locked in the time, you come, or you lose the deposit.
+- **Tikka never refunds a deposit.** No refund button, no cancellation rules, no automatic refunds.
+- **After paying, the business and customer sort everything out on WhatsApp:** fixing the exact time, moving it, waiving or giving back the deposit. That's between them; the business can refund the customer itself if it wants to.
+- **Why:** Paystack takes refunds from **Tikka's** money (Tikka's next payout or balance), not the business's, because the business has already been paid. Paystack also keeps its fee on a refund. Every refund through Tikka would cost Tikka the whole deposit.
+- **The customer is told before paying**, right above the Pay button: "This deposit holds your time. It isn't refundable through Tikka. To move or cancel, message {business}." Tikka keeps a record that this was shown with each payment (for card disputes and the terms).
+- **After paying:** the booking pass has a **"Message {business}"** button that opens WhatsApp to the business.
+- **Card disputes (chargebacks)** can still happen: a customer can ask their bank to reverse a card payment, and Paystack may take it from Tikka's side. Kept rare and small by: Verified businesses only, a maximum deposit, the line above, and admin pausing a business that gets complaints.
+
+### 5.3 Phase 1: bank account and pay links
 - **Owner:**
-  - Settings → "Get paid": add a bank account, see the name check, done.
+  - Settings → "Get paid": pick the bank, type the account number, see the account name, confirm. Done.
   - **"Send a pay link"** for any amount with a note (a balance, a custom job). Tikka makes a link the owner pastes into their own WhatsApp chat.
-  - A **Money** screen: money in, fees, what's on its way to the bank, refunds.
+  - A **Money** screen: money in, Tikka's and Paystack's fees, what's on its way to the bank.
 - **Customer:** opens the link, pays by card, transfer or USSD (Paystack asks for an email, which also gets them a receipt), and sees a Tikka-style receipt.
-- **Acceptance:** a ₦5,000 pay link pays out about ₦4,775 to the business's bank and ₦50 to Tikka (at the fees confirmed with Paystack). Nothing is ever held by Tikka.
+- **Only Verified businesses** can switch on "Get paid", with a maximum per payment at first.
+- **Acceptance:** a ₦5,000 pay link pays out ₦4,775 to the business's bank and ₦50 to Tikka. Nothing is held by Tikka.
 
-### 5.3 Phase 2: deposits on bookings
-- **Owner:**
-  - Per service: a deposit as a fixed ₦ or a %, or off. Optional "pay in full" for services the owner wants paid ahead (e.g. bridal).
-  - A cancellation rule chosen from presets, never written by the owner. Default: "Free cancellation up to 24 hours before; after that the deposit is kept."
+### 5.4 Phase 2: deposits on bookings
+- **Owner:** per service, "Book and pay" with a deposit (fixed ₦ or a %), or "pay in full" for services the owner wants paid ahead (e.g. bridal), or "Ask first" (no payment). Guidance: keep deposits modest (about 10–30% of the service).
 - **Customer flow:**
-  1. Picks a service, day and time on the booking sheet (as today).
-  2. Sees: "Hold your slot with ₦5,000. Pay the rest (₦20,000) at the shop." and the cancellation rule **before** paying.
-  3. Pays through Paystack.
+  1. Picks a service and a **free** time (5.5), gives first name and WhatsApp number.
+  2. Sees: "Hold your time with ₦5,000. Pay the rest (₦20,000) at the shop." and the not-refundable line **before** paying. The time is held while they pay.
+  3. Pays through Paystack. **Paid means booked**: no waiting for the owner to confirm.
   4. Gets a **booking pass**, ticket-shaped like a Tikka: "Booked · Sat 15 Nov, 2:00pm · ₦5,000 paid · ₦20,000 to pay at Glow Studio · BK-7X4QP" ("Paid securely through Tikka").
-  5. Taps **"Tell Glow Studio"**: WhatsApp opens to the owner with "Hi, I've booked Signature facial for Sat 15 Nov, 2pm and paid the ₦5,000 deposit. Ref BK-7X4QP."
-- **Bookings become stored records.** Today the booking sheet stores nothing. Statuses: waiting for payment → paid → confirmed → arrived / no-show / cancelled / refunded.
-- **Owner's bookings list:** Confirm / Move / Cancel. After the time: Arrived or No-show. A new paid booking shows in the live feed (the existing Realtime broadcast) and by email.
+  5. Taps **"Message Glow Studio"**: WhatsApp opens to the owner with "Hi, I've booked Signature facial for Sat 15 Nov, 2pm and paid the ₦5,000 deposit. Ref BK-7X4QP."
+- **Statuses:** waiting for payment → booked → arrived / no-show / cancelled. (A time held for an unfinished payment is released after a few minutes.)
+- **Owner's bookings list:** Move / Cancel (cancelling only frees the time; any money is settled on WhatsApp). After the time: Arrived or No-show. A new paid booking shows in the live feed and as a lead alert.
 - **Counter screen:** staff enter BK- codes on the same redeem screen as Tikka codes: "Deposit paid ₦5,000 · collect ₦20,000" → Arrived.
-- **Protection rules:**
-  - Business cancels → full refund, always.
-  - Customer cancels in time → full refund.
-  - Customer cancels late or doesn't come → the business keeps the deposit.
-  - **The owner doesn't confirm within 24 hours → automatic refund.**
-- **Known limit:** there's no full calendar yet, so two people could pay for the same slot. That's why the owner confirms each booking and the 24-hour auto-refund exists. Held slots come with Tikka Plus.
-- **Deposit size guidance:** modest (about 10–30% of the service); too high and people won't book. Trust comes from the Verified mark, reviews from people who came in, and "Paid securely through Tikka".
 - **Phone numbers:** the same privacy rules as leads (rule 4). Staff see the booking, the code and the amounts, never the phone number.
 
-### 5.3a Bookings with free times (comes with deposits)
-Decided on 17 Nov 2026: deposits and a proper booking calendar ship together, so nobody pays for a slot that's already taken.
+### 5.5 Bookings with free times (build first)
+Decided on 17 Nov 2026: deposits and a proper booking calendar ship together, so nobody pays for a time that's already taken. The calendar needs no money, so it's built first and is useful on its own.
 - The owner sets opening hours and how many customers they can serve at once; each service's "How long" sets its length. Customers see only free times; a full day says so and offers the next free one.
 - The customer gives their first name and WhatsApp number first. The booking is stored, the owner sees it live (with the number, owners only, rule 4) and can message them straight away.
-- Per service, the owner picks "Book and pay" (deposit now) or "Ask first" (a request with no payment; the owner messages, then sends a pay link).
+- Until deposits are switched on, every service is "Ask first" (a request with no payment; the owner messages, and can send a pay link once 5.3 exists).
 - "Block a time" lets the owner keep the calendar true for walk-ins and DM bookings.
 - Booking stays free; Tikka earns from the 1% on deposits. A per-staff calendar, reminders and win-back stay in Tikka Plus.
-- The calendar without money needs neither the lawyer nor Paystack, so it can be built first.
 
-### 5.4 Data and code to add (outline)
-- A business payout record (bank, resolved name, Paystack subaccount code, verified).
-- Deposit settings on services.
-- A `bookings` table (business, service, time, customer first name and phone, email, amounts, status, code, Paystack reference).
-- `pay_links` (amount, note, status, reference).
+### 5.6 What Paystack's docs say (checked 18 Nov 2026)
+- **Refunds** are taken from the main account (Tikka's) next payout first, then its Paystack balance (Registered Businesses only); Paystack's fee is never returned; customers get the money 3–10 working days later. → Hence no refunds through Tikka (5.2).
+- **Subaccounts** are paid automatically the next working day; there's no setting to hold the money.
+- **Tikka's account is a Starter Business** (no CAC yet). Starter accounts can't use Transfers, POS terminals or identity checks, and can collect **₦8,000,000 in total, ever**, counting the **full** amount of every payment (deposits, pay links and drop payments). Subaccounts and splits **do** work on it: a live subaccount was created on 18 Nov 2026.
+- **After the CAC:** upgrade in Paystack (Compliance → Profile → Business type). The limit goes and existing subaccounts keep working; nothing in the code changes.
+- Not confirmed: whether a lost chargeback is taken from Tikka or from the subaccount. Plan as if from Tikka.
+
+### 5.7 The pilot (before the CAC)
+- Deposits and pay links are switched on **per business by Tikka admin**, for the pilot businesses only, and only if Verified.
+- A low maximum deposit to start.
+- /admin shows the running total collected against the ₦8,000,000 Starter limit, with a warning well before it.
+- **Before the public launch:** CAC done and the Paystack account upgraded; the lawyer has seen the final flow (deposits not refundable through Tikka, the business responsible for the service) and the terms are updated; then deposits open to all Verified businesses and the "Coming soon" teaser is replaced.
+- Tikka's Paystack account has 2FA on.
+
+### 5.8 Data and code to add (outline)
+- Opening hours, capacity and blocked times per business; bookings (business, service, time, customer first name and phone, email, amounts, status, BK code, Paystack reference, when the not-refundable line was shown).
+- A business payout record (bank, account name, Paystack subaccount code, confirmed by the owner) and a per-business "payments on" switch and maximum, set by admin.
+- Deposit settings on services; `pay_links` (amount, note, status, reference).
 - RPCs with owner/staff checks in SQL (not React).
-- Webhook handling, refunds through Paystack's refund API, receipts and booking-pass pages, a Money screen, a bookings list (phone first, added to `components/dashboard/Nav.tsx` for both phone and desktop), and BK codes on the counter screen.
-- Rate limits on the public payment endpoints.
+- Webhook handling, receipts and booking-pass pages, a Money screen, a bookings list (phone first, added to `components/dashboard/Nav.tsx` for both phone and desktop), and BK codes on the counter screen.
+- Rate limits on the public booking and payment endpoints.
 - Database tests for every RPC.
 
-### 5.5 Questions for the lawyer (send now)
-The current terms (cleared 10 Nov 2026) cover businesses paying Tikka and customers getting free Tikkas. Taking money from the public for services someone else delivers needs:
-1. **Refunds:** who refunds when the business closes or cancels, Tikka or the business? What the terms must say.
-2. **Deposits kept on no-shows or late cancellation:** allowed under consumer protection law (FCCPC Act)? How clearly must the customer agree before paying?
-3. **Gift expiry:** can a paid gift or paid Tikka expire, and does the buyer lose the money?
-4. **Not holding money:** confirm that with Paystack split payments (money settled directly to the business) Tikka isn't treated as holding customers' funds, which could need a licence.
-5. **Responsibility for the service:** the business, not Tikka. Wording for the customer and business terms.
-6. **Business terms:** businesses that take payments accept the refund and cancellation rules.
-7. **"Bring 3 friends" (section 6.3):** does "do something to get a better reward" count as a promotion needing approval? This is the same as the open roadmap question 0.3 about rewards that differ from card to card.
-8. **Brand-funded drops (section 7):** a simple contract template for brands.
+### 5.9 Build order
+1. The calendar and stored bookings, "Ask first" only (5.5).
+2. "Get paid": bank account and subaccount (5.3).
+3. Pay links, the receipt and the Money screen (5.3).
+4. Deposits on bookings, the booking pass and BK codes at the counter (5.4).
+5. The pilot switches and the ₦8m total in /admin (5.7).
+
+### 5.10 Questions for the lawyer
+Cleared to build on 18 Nov 2026. Show him the finished flow before customers use it, especially:
+1. **Deposits aren't refundable through Tikka;** customer and business settle changes on WhatsApp. Is the line shown before paying enough (FCCPC Act)?
+2. **Not holding money:** Paystack pays the business directly; Tikka only takes 1%.
+3. **Responsibility for the service** is the business's, not Tikka's. Wording for the customer and business terms.
+4. **Gift expiry** (section 6): can a paid gift or paid Tikka expire, and does the buyer lose the money?
+5. **"Bring 3 friends" (section 6.3):** does "do something to get a better reward" count as a promotion needing approval? (Same as the open roadmap question 0.3.)
+6. **Brand-funded drops (section 7):** a simple contract template for brands.
 
 ---
+
 
 ## 6. NEXT: gifts, friends, paid Tikkas
 
@@ -391,7 +410,7 @@ December 2026 is too close to build full gifting after payments and the lawyer. 
   - Full payment up front.
   - Almost no Nigerian salon or spa sells gift cards online.
   - The recipient is a new customer for the business.
-- **Lawyer:** gift expiry and refunds (5.5).
+- **Lawyer:** gift expiry and refunds (5.10).
 
 ### 6.3 Bring 3 friends, get a new Rare Tikka
 **Why:** it breaks the "only as big as the owner's audience" limit, which is the weakest goal (new customers).
@@ -416,7 +435,7 @@ December 2026 is too close to build full gifting after payments and the lawyer. 
 ### 6.4 Paid Tikkas inside drops
 - A Legendary or Rare that locks with a small payment: "Pay ₦3,000 now, get 40% off your braids in December."
 - Same payment system. Cash up front for the business, fewer no-shows, Tikka's 1%.
-- Lawyer questions as 5.5.
+- Lawyer questions as 5.10.
 
 ### 6.5 Message costs before WhatsApp claiming goes live
 - Once Meta is verified, each claim costs Tikka about ₦15–40 (utility templates around ₦14 each: the expiry reminder, the thank-you outside the 24-hour window, visit reminders; the card itself is free inside the 24-hour window).
@@ -450,7 +469,7 @@ Drops happen a few times a year; no-shows, booking chaos in DMs and regulars dri
 ### Brand-funded drops
 - A hair-care or skincare brand pays for Legendary rewards across many salons ("Free treatment with Brand X products").
 - Brands pay Tikka; salons get free drops.
-- Needs 50+ businesses and a brand contract (5.5).
+- Needs 50+ businesses and a brand contract (5.10).
 
 ---
 
