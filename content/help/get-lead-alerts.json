@@ -1,0 +1,36 @@
+{
+  "slug": "get-lead-alerts",
+  "title": "Get a notification for every new lead",
+  "section": "followup",
+  "order": 3,
+  "minutes": 1,
+  "summary": "Your phone tells you the moment someone claims your Tikka, even when Tikka is closed.",
+  "app": {
+    "href": "/app",
+    "label": "Open Home"
+  },
+  "steps": [
+    {
+      "title": "On Android: tap Turn on alerts",
+      "body": "Open your Tikka dashboard in Chrome. On Home, tap \"Turn on alerts\", then tap Allow when your phone asks. That's it."
+    },
+    {
+      "title": "On an iPhone: add Tikka to your home screen first",
+      "body": "Apple only allows notifications from apps on the home screen (iOS 16.4 or newer). In Chrome or Safari, tap the Share button, then \"Add to Home Screen\", then Add. Open Tikka from the new icon, sign in, and tap \"Turn on alerts\".\n\nNo \"Add to Home Screen\" in Chrome? Do it once in Safari."
+    },
+    {
+      "title": "When someone claims",
+      "body": "You get a notification like \"New lead · Glow Studio: Adaeze just claimed a Rare Tikka\". Tap it and Leads opens with them at the top, ready to message. If several people claim at once, you get one notification that says how many."
+    },
+    {
+      "title": "Turn it off or test it",
+      "body": "Settings, then Account: switch \"New lead notifications on this phone\" off or on, or tap \"Send a test notification\". Each phone you use is switched on separately."
+    }
+  ],
+  "tips": [
+    "The notification never shows the customer's phone number, so it's safe on your lock screen. Open Leads to see it.",
+    "Only owners get lead alerts. Staff accounts never do.",
+    "Blocked by mistake? Allow notifications for the site in your browser's settings, then turn alerts on again."
+  ],
+  "published": true
+}

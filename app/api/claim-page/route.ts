@@ -1,10 +1,11 @@
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { claimCookie, firstName, parseSource, VISITOR_COOKIE } from "@/lib/claim";
 import { dbCardByViewToken, dbClaimOnPage, dbClaimResult, dbCreateIntent, dbRevealCard } from "@/lib/claim-db";
 import { claimMode } from "@/lib/claim-mode";
 import { getPublicDrop, isDbId, posterOf } from "@/lib/data";
 import { openForThisVisitor } from "@/lib/launch";
+import { sendLeadAlert } from "@/lib/push";
 import { qrSvg } from "@/lib/qr";
 import { clientIp, tooMany } from "@/lib/rate-limit";
 import { normalizeNgPhone } from "@/lib/setup";
@@ -61,7 +62,12 @@ export async function POST(request: Request) {
   let viewToken: string | null = null;
   if (r.kind === "claimed") {
     const res = await dbClaimResult(intent.token, visitorId);
-    if (res.kind === "ready") viewToken = res.card.token;
+    if (res.kind === "ready") {
+      viewToken = res.card.token;
+      // New lead alert to the owner's phone, after the response: it never slows or blocks the claim.
+      const token = viewToken;
+      after(() => sendLeadAlert(token));
+    }
   } else if (r.kind === "already_this_browser") {
     viewToken = r.viewToken;
   } else {

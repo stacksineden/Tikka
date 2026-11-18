@@ -5,7 +5,9 @@ import { Suspense } from "react";
 import { signOut } from "@/app/(auth)/actions";
 import { SettingsPage } from "@/components/settings/SettingsPage";
 import { OwnerAlerts } from "@/components/settings/OwnerAlerts";
-import { getBusiness, ownerNumber } from "@/lib/data";
+import { LeadAlertsSetting } from "@/components/alerts/LeadAlerts";
+import { pushConfigured } from "@/lib/push";
+import { getBusiness, isDbId, ownerNumber } from "@/lib/data";
 import { getSessionUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Account" };
@@ -16,6 +18,7 @@ async function Account() {
   const b = user.role === "owner" ? await getBusiness(user) : null;
   return (
     <div className="grid gap-4">
+      {b && isDbId(b.id) && pushConfigured() && <LeadAlertsSetting vapidKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!} />}
       {b && <OwnerAlerts number={ownerNumber(b) ?? ""} dailySummary={b.dailySummary !== false} />}
       <section className="rounded-card border border-line bg-surface-raised p-4 sm:p-6">
         <h2 className="text-title text-[17px] leading-6">Signed in as</h2>

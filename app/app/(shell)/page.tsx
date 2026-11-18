@@ -16,6 +16,8 @@ import {
 } from "@/components/dashboard/Home";
 import { BioCard } from "@/components/business/BioCard";
 import { PaymentsCard } from "@/components/payments/PaymentsTeaser";
+import { LeadAlertsCard } from "@/components/alerts/LeadAlerts";
+import { pushConfigured } from "@/lib/push";
 import { earlyAccessState } from "@/lib/studio-db";
 import { SoloCard } from "@/components/tikka/SoloCard";
 import { faceFromBusiness } from "@/components/tikka/TikkaCard";
@@ -27,6 +29,7 @@ import {
   getGuaranteeNotice,
   getLeads,
   leadsNow,
+  isDbId,
 } from "@/lib/data";
 import { ClaimPrompt } from "@/components/dashboard/ClaimPrompt";
 import { GuaranteeNotice } from "@/components/dashboard/GuaranteeNotice";
@@ -75,6 +78,8 @@ async function Home() {
     <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <HomeHeader name={user.name} now={now} />
       {owner && <ClaimPrompt since={renderedAt} />}
+      {/* New lead alerts on this phone: real owners only, once the keys are set (lib/push.ts). */}
+      {owner && isDbId(business.id) && pushConfigured() && <LeadAlertsCard vapidKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!} />}
       {guarantee && <GuaranteeNotice message={guarantee} />}
       {nudge && <SeasonalNudge text={nudge.text} fromId={nudge.fromId} />}
       {recentEnd && ended && <LastDropResults id={ended.id} name={ended.name} headline={recentEnd.headline} />}

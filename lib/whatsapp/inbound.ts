@@ -1,6 +1,7 @@
 import "server-only";
 
 import { routeInbound } from "../notify";
+import { sendLeadAlert } from "../push";
 import { adminClient } from "../supabase/admin";
 import type { Reply } from "../wa-text";
 
@@ -48,6 +49,8 @@ export async function handleInbound(msg: InboundMessage): Promise<boolean> {
       // The card once per claim; a repeat (a new code, or the same message sent again) resends it (rule 3).
       const first = r.result === "claimed" ? (await enqueue("card", payload, `card:${r.claim_id}`)).data : null;
       if (!first) await enqueue("resend", payload, `resend:${msg.id}`);
+      // A new claim (not a repeat): the owner's lead alert. Never throws.
+      if (r.result === "claimed") await sendLeadAlert(r.view_token);
       return true;
     }
     const { data: ctx } = await admin.rpc("intent_context", { p_token: route.code });

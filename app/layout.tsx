@@ -26,6 +26,8 @@ export const metadata: Metadata = {
   },
   description:
     "Share a Tikka drop behind one link. People claim on WhatsApp, come in to use it, and you see every name, number and naira it brought in.",
+  // Added to an iPhone's home screen, the dashboard opens full screen as "Tikka" (needed for lead alerts there).
+  appleWebApp: { capable: true, title: "Tikka", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

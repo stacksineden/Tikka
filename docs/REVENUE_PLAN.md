@@ -271,6 +271,9 @@ General rules for every item:
 ### Item 8. Give more time (built 18 Nov 2026)
 From the pilot: customers who can't come before a 7-day Tikka runs out (their hair isn't ready). The owner can give one Tikka one extra week, once, never past 30 days from the claim, from Leads or at the counter; customers are never told it exists, so the deadline still works. Migration `20261118120000_more_time.sql`, database test 043, `lib/more-time.ts`. The builder nudges 7 days towards 14 where people book ahead.
 
+### Item 9. New lead alerts (built 18 Nov 2026)
+Businesses asked to be told when they get a new lead instead of checking the dashboard. Web push: free, instant, no Meta needed. Owners turn it on per phone (Home card or Settings → Account); iPhones need Tikka added to the home screen first. Migration `20261118140000_lead_alerts.sql`, database test 044, `lib/push.ts`, `lib/lead-alert.ts`, `public/sw.js`, `app/manifest.ts`. Needs the three VAPID keys in Vercel (`docs/LAUNCH.md`). Later: email alerts for owners who won't turn on notifications, and WhatsApp alerts once Meta approves.
+
 ## 4. NOW: things the owner does (no code)
 
 | What | Details |
