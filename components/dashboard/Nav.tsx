@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Banknote,
   CalendarDays,
   CircleHelp,
   Globe,
@@ -32,6 +33,7 @@ export const NAV: Item[] = [
   { href: "/app/drops", label: "Drops", Icon: Layers },
   { href: "/app/bookings", label: "Bookings", Icon: CalendarDays },
   { href: "/app/leads", label: "Leads", Icon: Users },
+  { href: "/app/money", label: "Money", Icon: Banknote },
   { href: "/app/reviews", label: "Reviews", Icon: MessageSquareText },
   { href: "/app/page", label: "Your page", Icon: Globe },
   { href: "/app/posters", label: "Posters", Icon: QrCode },
@@ -140,7 +142,7 @@ export function MobileHeader({ account, staff = false }: { account: AccountSumma
   );
 }
 
-const MORE_PATHS = ["/app/drops", "/app/reviews", "/app/page", "/app/posters", "/app/settings"];
+const MORE_PATHS = ["/app/drops", "/app/money", "/app/reviews", "/app/page", "/app/posters", "/app/settings"];
 
 /** Bottom tab bar on phones. Redeem sits in the middle: it's what gets used at the counter. */
 export function BottomNav({ account }: { account: AccountSummary | null }) {
@@ -229,6 +231,7 @@ function MoreSheet({ open, onClose, account, path }: { open: boolean; onClose: (
 
   const rows: { href: string; label: string; Icon: LucideIcon; meta?: string }[] = [
     { href: "/app/drops", label: "Drops", Icon: Layers, meta: "Your drops and their results" },
+    { href: "/app/money", label: "Money", Icon: Banknote, meta: "Pay links and what came in" },
     {
       href: "/app/reviews",
       label: "Reviews",

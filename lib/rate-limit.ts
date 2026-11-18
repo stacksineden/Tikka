@@ -34,6 +34,8 @@ export const LIMITS = {
   book_day: [{ max: 12, seconds: 86_400 }, { max: 400, seconds: 86_400 }],
   // Get paid: checking an account name at Paystack (per owner, per connection).
   resolve_account: [{ max: 15, seconds: 3600 }, { max: 60, seconds: 3600 }],
+  // Starting a checkout on a pay link.
+  pay: [{ max: 10, seconds: 3600 }, { max: 120, seconds: 3600 }],
   enquiry: [{ max: 5, seconds: 3600 }, { max: 40, seconds: 3600 }],
   early_access: [{ max: 10, seconds: 3600 }, { max: 100, seconds: 3600 }],
 } satisfies Record<string, [Rule, Rule]>;

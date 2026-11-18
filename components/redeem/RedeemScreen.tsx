@@ -4,6 +4,7 @@ import { Camera, CheckCircle2, Loader2, ScanLine, Smartphone, XCircle } from "lu
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { checkCodeAction, checkDigitsAction, confirmRedemptionAction, giveMoreTimeAction } from "@/app/app/actions";
 import { BookingAtCounter } from "@/components/bookings/BookingAtCounter";
+import { paidForCodeAction } from "@/app/app/paylink-actions";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
 import { visitWhen } from "@/lib/followups";
 import { clockTime, naira, shortDate } from "@/lib/format";
@@ -88,6 +89,8 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
   const [checkingDigits, setCheckingDigits] = useState(false);
   const [moreTime, setMoreTime] = useState<{ saving: boolean; error?: string }>({ saving: false });
   const [bookingCode, setBookingCode] = useState<string | null>(null);
+  // What was paid online for this Tikka (a pay link sent from Leads), so nobody charges twice.
+  const [paidOnline, setPaidOnline] = useState(0);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<Scanner | null>(null);
@@ -129,6 +132,8 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
                 : { kind: "closed" },
           );
           setView({ kind: "valid", result: r });
+          setPaidOnline(0);
+          paidForCodeAction(offline.code).then(setPaidOnline).catch(() => undefined);
           buzz(20);
         } else {
           setMoreTime({ saving: false });
@@ -399,6 +404,12 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
               <>
                 <dt className="text-label text-ink-muted">Only if</dt>
                 <dd className="text-body font-semibold">{view.result.terms}</dd>
+              </>
+            )}
+            {paidOnline > 0 && (
+              <>
+                <dt className="text-label text-ink-muted">Paid online</dt>
+                <dd className="text-body-lg font-semibold text-success">{naira(paidOnline / 100)}</dd>
               </>
             )}
             <dt className="text-label text-ink-muted">Tier</dt>
