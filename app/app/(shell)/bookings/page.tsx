@@ -6,6 +6,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { BookingSetup } from "@/components/bookings/BookingSetup";
 import { BookingsBoard } from "@/components/bookings/BookingsBoard";
+import { StayFresh } from "@/components/payments/StayFresh";
 import { CopyLink } from "@/components/dashboard/CopyLink";
 import { getBookings, getBookingSetup, serviceLengths } from "@/lib/bookings-data";
 import { getBusiness, isDbId } from "@/lib/data";
@@ -61,6 +62,8 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
 
   return (
     <>
+      {/* New bookings and paid deposits show without a reload. */}
+      <StayFresh waiting={false} slow={20_000} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-heading">Bookings</h1>
