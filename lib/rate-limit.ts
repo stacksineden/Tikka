@@ -28,6 +28,10 @@ export const LIMITS = {
   visit: [{ max: 30, seconds: 600 }, { max: 300, seconds: 600 }],
   // The card page checking for "used" at the counter (page-claim mode): every few seconds, per card.
   card_status: [{ max: 150, seconds: 600 }, { max: 3000, seconds: 600 }],
+  // Booking a time on a business page (docs/BOOKINGS.md): typed numbers, like page claims. The
+  // database also caps 3 upcoming bookings per number per business.
+  book: [{ max: 6, seconds: 3600 }, { max: 60, seconds: 3600 }],
+  book_day: [{ max: 12, seconds: 86_400 }, { max: 400, seconds: 86_400 }],
   enquiry: [{ max: 5, seconds: 3600 }, { max: 40, seconds: 3600 }],
   early_access: [{ max: 10, seconds: 3600 }, { max: 100, seconds: 3600 }],
 } satisfies Record<string, [Rule, Rule]>;

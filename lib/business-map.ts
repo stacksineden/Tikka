@@ -69,6 +69,8 @@ export interface ServiceRow {
   /** Added by the service_focal migration; absent on rows read before it. */
   focal_x?: number | string | null;
   focal_y?: number | string | null;
+  /** Added by the bookings migration. */
+  minutes?: number | null;
 }
 
 export interface PortfolioRow {
@@ -135,6 +137,7 @@ export function serviceFrom(r: ServiceRow): ServiceItem {
     price: r.price_kobo === null ? null : r.price_kobo / 100,
     priceKind: r.price_kind,
     duration: opt(r.duration),
+    minutes: r.minutes ?? undefined,
     imageUrl: fromStored(r.image_path),
     focal: r.focal_x == null || r.focal_y == null ? undefined : { x: Number(r.focal_x), y: Number(r.focal_y) },
   };
@@ -151,6 +154,7 @@ export function serviceTo(s: ServiceItem) {
     price_kobo: priced ? Math.round(s.price! * 100) : null,
     price_kind: priced ? (s.priceKind ?? "fixed") : "ask",
     duration: s.duration?.trim() || null,
+    minutes: s.minutes ?? null,
     image_path: toStored(s.imageUrl),
     focal_x: s.focal?.x ?? 0.5,
     focal_y: s.focal?.y ?? 0.3,
