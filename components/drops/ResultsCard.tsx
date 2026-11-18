@@ -8,6 +8,7 @@ export function ResultsCard({ report: r }: { report: DropReport }) {
   const rows: [string, string, string?][] = [
     ["Customers who came in", count(r.customers), r.customers ? `${count(r.newCustomers)} new · ${count(r.returningCustomers)} been before` : undefined],
     ["Recorded sales", money(r.recordedSalesKobo), "What staff typed at the counter"],
+    ...(r.paidOnlineKobo ? ([["Paid online", money(r.paidOnlineKobo), "Pay links sent for this drop's Tikkas"]] as [string, string, string][]) : []),
     [
       "Estimated reward cost",
       money(r.estimatedRewardCostKobo),

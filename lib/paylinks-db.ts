@@ -135,3 +135,12 @@ export async function dbPaidForCode(businessId: string, code: string): Promise<n
   if (error) return 0;
   return Number((data as Row)?.paid_kobo ?? 0);
 }
+
+/** At the counter, beside a Tikka's code: paid online for it, and the booking made with it (team only). */
+export async function dbCounterExtras(businessId: string, code: string): Promise<{ paidKobo: number; booking: { startsAt: string; service: string; code: string } | null }> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("counter_extras", { p_business: businessId, p_code: code });
+  if (error || !data) return { paidKobo: await dbPaidForCode(businessId, code), booking: null };
+  const r = data as { paid_kobo: number; booking: { starts_at: string; service: string; code: string } | null };
+  return { paidKobo: Number(r.paid_kobo ?? 0), booking: r.booking ? { startsAt: r.booking.starts_at, service: r.booking.service, code: r.booking.code } : null };
+}

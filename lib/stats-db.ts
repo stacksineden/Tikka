@@ -92,5 +92,7 @@ export async function dbDropReport(drop: Drop): Promise<DropReport | null> {
     };
   });
   const fee: DropFee = r.fee.kind === "paid" ? { kind: "paid", amountKobo: r.fee.amount_kobo } : { kind: r.fee.kind };
-  return dropReport({ goal: drop.goal, validWeekdays: drop.validWeekdays }, claims, fee);
+  // Paid online for this drop's Tikkas (pay links from Leads); nothing before that migration is live.
+  const online = await sb.rpc("drop_paid_online", { p_drop: drop.id });
+  return dropReport({ goal: drop.goal, validWeekdays: drop.validWeekdays }, claims, fee, online.error ? 0 : Number(online.data ?? 0));
 }
