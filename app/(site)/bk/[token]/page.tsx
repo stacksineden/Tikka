@@ -1,6 +1,7 @@
 import "@/components/business/site.css";
+import "@/components/bookings/pass.css";
 import type { Metadata } from "next";
-import { CalendarCheck, Clock, MapPin, Ticket } from "lucide-react";
+import { Check, Clock, MapPin, Ticket, Wallet } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -9,7 +10,7 @@ import { ActionIcon } from "@/components/tikka/ActionIcon";
 import { whatsappLink } from "@/lib/booking";
 import { after } from "next/server";
 import { FinishPaying } from "@/components/payments/FinishPaying";
-import { bookedMessage, leftToPay, lengthLabel, whenLabel } from "@/lib/bookings";
+import { bookedMessage, dateBlock, leftToPay, lengthLabel } from "@/lib/bookings";
 import { dbCompleteDeposit } from "@/lib/bookings-db";
 import { naira } from "@/lib/format";
 import { verifyPayment } from "@/lib/paystack";
@@ -25,7 +26,7 @@ import { bookingNumber } from "@/lib/page";
 export const metadata: Metadata = { title: "Your booking", robots: { index: false, follow: false } };
 
 const STATUS: Record<string, string> = {
-  held: "Waiting for your deposit",
+  held: "Not booked yet",
   booked: "Booked",
   arrived: "You came in",
   no_show: "Missed",
@@ -52,6 +53,7 @@ async function Pass({ params, searchParams }: { params: PageProps<"/bk/[token]">
   const cancelled = pass.status === "cancelled";
   const message = cancelled ? `Hi ${b.name}, about my ${pass.service} booking (Ref ${pass.code}).` : bookedMessage(b.name, pass);
   const style = { "--biz": b.brandColor, "--on-biz": b.onBrandColor } as React.CSSProperties;
+  const when = dateBlock(pass.startsAt);
 
   return (
     <div className={`${bizSerif.variable} mx-auto grid max-w-md gap-5 px-4 pb-16 pt-8`} style={style}>
@@ -59,34 +61,58 @@ async function Pass({ params, searchParams }: { params: PageProps<"/bk/[token]">
         ← {b.name}
       </Link>
 
-      <section className="overflow-hidden rounded-card border border-line bg-surface-raised shadow-raised" aria-label="Your booking">
-        <div className="px-5 pb-4 pt-5" style={{ background: "var(--biz)", color: "var(--on-biz)" }}>
-          <p className="text-label flex items-center gap-1.5 opacity-90">
-            <CalendarCheck size={16} aria-hidden="true" />
-            {STATUS[pass.status] ?? "Booked"}
-            {pass.moved && !cancelled ? " · new time" : ""}
+      <section className="bk-ticket" data-cancelled={cancelled || undefined} aria-label="Your booking">
+        <div className="bk-head px-5 pb-5 pt-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="bk-logo shrink-0" aria-hidden="true">
+                {b.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={b.logoUrl} alt="" className="size-full object-cover" />
+                ) : (
+                  b.initials
+                )}
+              </span>
+              <span className="truncate text-[14px] font-semibold opacity-90">{b.name}</span>
+            </div>
+            <span className="bk-stamp" data-quiet={pass.status === "held" || cancelled || undefined}>
+              {pass.status === "booked" || pass.status === "arrived" ? <Check size={14} strokeWidth={3} aria-hidden="true" /> : null}
+              {STATUS[pass.status] ?? "Booked"}
+              {pass.moved && !cancelled ? " · new time" : ""}
+            </span>
+          </div>
+          <div className="mt-5 flex items-end justify-between gap-4">
+            <h1 className="biz-serif min-w-0 text-[32px] leading-[1.05] tracking-[-0.015em]">{pass.service}</h1>
+            <div className={`bk-date shrink-0 ${cancelled ? "line-through" : ""}`}>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] opacity-85">{when.weekday.slice(0, 3)}</span>
+              <span className="biz-serif text-[40px] leading-none">{when.day}</span>
+              <span className="text-[12px] font-semibold uppercase tracking-[0.12em] opacity-85">{when.month}</span>
+            </div>
+          </div>
+          <p className={`mt-3 text-[17px] font-semibold ${cancelled ? "line-through opacity-80" : ""}`}>
+            {when.weekday} at {when.time}
           </p>
-          <h1 className="biz-serif mt-1 text-[30px] leading-tight tracking-[-0.01em]">{pass.service}</h1>
-          <p className={`mt-1 text-[17px] font-semibold ${cancelled ? "line-through opacity-80" : ""}`}>{whenLabel(pass.startsAt)}</p>
         </div>
-        {/* The ticket's tear line. */}
-        <div className="relative h-0 border-t border-dashed border-line" aria-hidden="true" />
-        <dl className="grid gap-3 px-5 py-4">
-          <div className="flex items-center gap-2 text-body">
-            <Clock size={16} className="shrink-0 text-ink-muted" aria-hidden="true" />
+
+        <div className="bk-perf" aria-hidden="true" />
+
+        <dl className="grid gap-3.5 px-5 pb-5 pt-5">
+          <div className="bk-row flex items-center gap-2.5 text-body" style={{ "--i": 0 } as React.CSSProperties}>
+            <Clock size={17} className="shrink-0 text-ink-muted" aria-hidden="true" />
             <dt className="sr-only">How long</dt>
             <dd>{lengthLabel(pass.minutes)}</dd>
           </div>
-          <div className="flex items-center gap-2 text-body">
-            <MapPin size={16} className="shrink-0 text-ink-muted" aria-hidden="true" />
+          <div className="bk-row flex items-start gap-2.5 text-body" style={{ "--i": 1 } as React.CSSProperties}>
+            <MapPin size={17} className="mt-0.5 shrink-0 text-ink-muted" aria-hidden="true" />
             <dt className="sr-only">Where</dt>
             <dd>
               {b.name}, {b.address || place(b.area, b.city)}
             </dd>
           </div>
           {pass.depositPaidKobo ? (
-            <div>
-              <dt className="text-caption text-ink-muted">Deposit</dt>
+            <div className="bk-row flex items-start gap-2.5" style={{ "--i": 2 } as React.CSSProperties}>
+              <Wallet size={17} className="mt-0.5 shrink-0 text-ink-muted" aria-hidden="true" />
+              <dt className="sr-only">Deposit</dt>
               <dd className="text-body font-semibold">
                 {naira(pass.depositPaidKobo / 100)} paid ·{" "}
                 {(() => {
@@ -97,9 +123,12 @@ async function Pass({ params, searchParams }: { params: PageProps<"/bk/[token]">
             </div>
           ) : null}
           {pass.status !== "held" && (
-            <div>
-              <dt className="text-caption text-ink-muted">Booking ref</dt>
-              <dd className="font-mono text-[20px] tracking-[0.06em]">{pass.code}</dd>
+            <div className="bk-row mt-1 flex items-end justify-between gap-3 border-t border-line pt-4" style={{ "--i": 3 } as React.CSSProperties}>
+              <div>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted">Booking ref</dt>
+                <dd className="mt-1 font-mono text-[22px] tracking-[0.08em]">{pass.code}</dd>
+              </div>
+              <span className="text-caption text-ink-muted">Show at the counter</span>
             </div>
           )}
         </dl>
