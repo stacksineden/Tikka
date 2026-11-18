@@ -10,6 +10,9 @@ import { MessageToday } from "@/components/leads/MessageToday";
 import { MoreTime } from "@/components/leads/MoreTime";
 import { SpentEdit } from "@/components/leads/SpentEdit";
 import { BookHerIn } from "@/components/leads/BookHerIn";
+import { SendPayLink } from "@/components/payments/SendPayLink";
+import { paystackMode } from "@/lib/paystack";
+import { dbPayoutState, payReady } from "@/lib/payouts-db";
 import { ActionIcon } from "@/components/tikka/ActionIcon";
 import { whatsappLink } from "@/lib/booking";
 import { whenLabel, type BookingRules } from "@/lib/bookings";
@@ -73,7 +76,9 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
 
   // Bookings (docs/BOOKINGS.md journey 13): who booked, where they came from, and "Book her in".
   const from: From = sp.from === "drops" || sp.from === "bookings" ? sp.from : "all";
-  const [booked, setup] = await Promise.all([getBookingLeads(user), getBookingSetup(user)]);
+  const [booked, setup, payState] = await Promise.all([getBookingLeads(user), getBookingSetup(user), isDbId(b.id) ? dbPayoutState(b.id) : null]);
+  // "Send a pay link" on a Tikka (REVENUE_PLAN 5.3): only once payments are ready for this business.
+  const pay = payReady(payState, paystackMode());
   const byPhone = new Map(booked.map((x) => [x.phone, x]));
   const claimPhones = new Set(all.map((l) => l.phone));
   const bookingOnly = booked.filter((x) => !claimPhones.has(x.phone));
@@ -283,6 +288,9 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
                   {/* "Book her in": the time they said on WhatsApp, connected to their Tikka. */}
                   {bookIn && l.status === "claimed" && !expired && !byPhone.get(l.phone)?.next && (
                     <BookHerIn claimId={l.id} name={l.name} phone={l.phone} businessName={b.name} services={bookIn.services} rules={bookIn.rules} />
+                  )}
+                  {pay.ready && l.status === "claimed" && !expired && (
+                    <SendPayLink businessName={b.name} maxKobo={pay.maxKobo} claim={{ id: l.id, name: l.name, phone: l.phone, reward: l.reward }} variant="btn btn-secondary" />
                   )}
                   {/* Skipped "What did they spend?" at the counter, or typed it wrong: owner only (this page), 30 days. */}
                   {l.status === "redeemed" && canSetSpent(l.redeemedAt ?? l.claimedAt, planNow) && (

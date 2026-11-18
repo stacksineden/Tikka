@@ -142,3 +142,42 @@ export async function deactivateSubaccount(code: string): Promise<void> {
     // Nothing is split to it any more; switching it off is tidiness.
   }
 }
+
+/* ------------------------------------------------- Pay links (REVENUE_PLAN 5.3) */
+
+/**
+ * A checkout split with the business's subaccount: Tikka's main account keeps `tikkaKobo` (1%),
+ * the subaccount gets the rest less Paystack's fee (`bearer: subaccount`, so the business pays it).
+ */
+export async function initializeSplitTransaction(input: {
+  email: string;
+  amountKobo: number;
+  tikkaKobo: number;
+  subaccount: string;
+  reference: string;
+  callbackUrl: string;
+  metadata: Record<string, string>;
+}): Promise<{ authorizationUrl: string }> {
+  const data = await call<{ authorization_url: string }>("/transaction/initialize", {
+    method: "POST",
+    body: JSON.stringify({
+      email: input.email,
+      amount: input.amountKobo,
+      currency: "NGN",
+      reference: input.reference,
+      callback_url: input.callbackUrl,
+      subaccount: input.subaccount,
+      transaction_charge: input.tikkaKobo,
+      bearer: "subaccount",
+      channels: ["card", "bank_transfer", "ussd"],
+      metadata: input.metadata,
+    }),
+  });
+  return { authorizationUrl: data.authorization_url };
+}
+
+/** What Paystack says about a payment: status, amount, its fee and the payer's email. */
+export async function verifyPayment(reference: string): Promise<{ status: string; amountKobo: number; feeKobo: number; email: string | null }> {
+  const data = await call<{ status: string; amount: number; fees: number | null; customer?: { email?: string } }>(`/transaction/verify/${encodeURIComponent(reference)}`);
+  return { status: data.status, amountKobo: data.amount, feeKobo: data.fees ?? 0, email: data.customer?.email ?? null };
+}

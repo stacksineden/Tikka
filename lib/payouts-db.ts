@@ -95,3 +95,11 @@ export async function dbAdminSetPayments(businessId: string, enabled: boolean | 
   const { error } = await sb.rpc("admin_set_payments", { p_business: businessId, p_enabled: enabled, p_max_kobo: maxKobo });
   if (error) throw new Error("Couldn't save the payments setting.");
 }
+
+/** Whether the business can make pay links now: payments open and an account of this key's mode. */
+export function payReady(state: PayoutState | null, mode: "test" | "live" | null): { ready: boolean; maxKobo: number; why?: "closed" | "no_account" | "account_again" } {
+  if (!state || !mode || state.problem) return { ready: false, maxKobo: state?.maxKobo ?? 0, why: "closed" };
+  if (!state.payout) return { ready: false, maxKobo: state.maxKobo, why: "no_account" };
+  if (state.payout.mode !== mode) return { ready: false, maxKobo: state.maxKobo, why: "account_again" };
+  return { ready: true, maxKobo: state.maxKobo };
+}
