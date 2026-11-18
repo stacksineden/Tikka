@@ -70,8 +70,9 @@ async function Home() {
   const ended = drops.find((d) => d.status === "ended" || d.status === "sold_out");
   const recentEnd =
     owner && ended && !live && now.getTime() - new Date(ended.endsAt).getTime() < 14 * 86_400_000 ? await getDropReport(user, ended.id) : null;
-  const nudge = owner ? seasonalNudge(new Date(), ended ? { id: ended.id, name: ended.name, customers: ended.redeemed } : null) : null;
   const scheduled = drops.find((d) => d.status === "scheduled");
+  // "Run it again" only when nothing is running or lined up: not while the re-run is live.
+  const nudge = owner && !live && !scheduled ? seasonalNudge(new Date(), ended ? { id: ended.id, name: ended.name, customers: ended.redeemed } : null) : null;
   const newToday = leads.filter((l) => l.isNew && sameDayWAT(l.claimedAt, now)).length;
 
   return (
