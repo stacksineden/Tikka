@@ -103,6 +103,8 @@ export interface ServiceItem {
   description?: string;
   /** "1 hr", "45 min". */
   duration?: string;
+  /** How long it takes, for the booking calendar (docs/BOOKINGS.md). Unset counts as one hour. */
+  minutes?: number;
   imageUrl?: string;
   /** The part of the photo the card crops around (0–1 each way); the upper third when unset. */
   focal?: { x: number; y: number };

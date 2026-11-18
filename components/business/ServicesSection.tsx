@@ -100,7 +100,7 @@ export function ServicesSection({
             <li key={s.id ?? s.name} className="biz-card biz-rail-item relative">
               <Tag
                 {...(link ? { href: link, target: "_blank", rel: "noopener noreferrer" } : {})}
-                {...(link && sheet ? { "data-book": "", "data-book-name": s.name, "data-book-price": s.priceKind === "ask" || s.price === null ? "" : priceText(s) } : {})}
+                {...(link && sheet ? { "data-book": "", "data-book-id": s.id, "data-book-name": s.name, "data-book-price": s.priceKind === "ask" || s.price === null ? "" : priceText(s) } : {})}
                 className="group flex h-full flex-col"
               >
                 {/* The photo stays clean: no text or fade on it. */}

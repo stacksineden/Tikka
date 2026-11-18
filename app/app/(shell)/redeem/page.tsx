@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { RedeemScreen } from "@/components/redeem/RedeemScreen";
+import { BookingsBoard } from "@/components/bookings/BookingsBoard";
+import { todayKey, watInstant } from "@/lib/bookings";
+import { getBookings, getBookingSetup } from "@/lib/bookings-data";
 import { getBusiness, memberBusinessId } from "@/lib/data";
 import { getSessionUser } from "@/lib/session";
 
@@ -21,7 +25,37 @@ async function Redeem() {
       </div>
     );
   }
-  return <RedeemScreen businessName={b.name} prefix={b.codePrefix} isOwner={user.role === "owner"} />;
+  return (
+    <>
+      <RedeemScreen businessName={b.name} prefix={b.codePrefix} isOwner={user.role === "owner"} />
+      <Suspense>
+        <TodayAtCounter user={user} businessName={b.name} />
+      </Suspense>
+    </>
+  );
+}
+
+/** Today's bookings at the counter (docs/BOOKINGS.md journey 10): Arrived and No-show, never numbers. */
+async function TodayAtCounter({ user, businessName }: { user: NonNullable<Awaited<ReturnType<typeof getSessionUser>>>; businessName: string }) {
+  const setup = await getBookingSetup(user);
+  if (!setup?.setUp) return null;
+  await connection();
+  const day = todayKey(new Date());
+  const list = await getBookings(user, new Date(watInstant(day, 0)), new Date(watInstant(day, 24 * 60)));
+  if (!list.some((x) => x.status !== "cancelled")) return null;
+  return (
+    <div className="mx-auto max-w-md px-4 pb-10">
+      <BookingsBoard
+        bookings={list.filter((x) => x.status !== "cancelled").map((x) => ({ ...x, phone: undefined }))}
+        blocks={[]}
+        services={[]}
+        base={{ capacity: setup.capacity, noticeMinutes: setup.noticeMinutes, aheadDays: setup.aheadDays }}
+        businessName={businessName}
+        staff
+        todayOnly
+      />
+    </div>
+  );
 }
 
 export default function Page() {

@@ -2,8 +2,12 @@ import type { Metadata } from "next";
 import { ArrowRight, Check, Share2 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { ComingIn } from "@/components/leads/ComingIn";
+import { TodayCard } from "@/components/bookings/TodayCard";
+import { getBookings, getBookingSetup } from "@/lib/bookings-data";
+import { todayKey, watInstant } from "@/lib/bookings";
 import { comingIn } from "@/lib/followups";
 import {
   ActivityFeed,
@@ -52,7 +56,8 @@ async function Home() {
   if (user.isNew) redirect("/app/welcome");
 
   const [business, drops] = await Promise.all([getBusiness(user), getDrops(user)]);
-  if (!business || drops.length === 0) return <GettingStarted name={user.name} business={business} />;
+  const today = business && user.role === "owner" ? <TodayBookings user={user} /> : null;
+  if (!business || drops.length === 0) return <GettingStarted name={user.name} business={business} today={today} />;
 
   // Staff never see leads (rule 4); getLeads refuses them.
   const owner = user.role === "owner";
@@ -87,6 +92,7 @@ async function Home() {
       <TopStats drop={live} newToday={newToday} leadsTotal={live?.claimed ?? leads.length} />
       <div className="grid items-start gap-6 xl:grid-cols-[1.35fr_1fr]">
         <div className="grid gap-6">
+          {today}
           {live && <LiveDropPanel drop={live} business={business} now={now} />}
           {owner && <ComingIn days={comingIn(leads, now, 2)} more="/app/leads#coming-in" />}
           {owner && <NewLeads leads={leads} businessName={business.name} now={now} />}
@@ -103,7 +109,17 @@ async function Home() {
   );
 }
 
-function GettingStarted({ name, business }: { name: string; business: Business | null }) {
+/** Today's bookings for Home (bookings use the real clock, the demo too). */
+async function TodayBookings({ user }: { user: NonNullable<Awaited<ReturnType<typeof getSessionUser>>> }) {
+  const setup = await getBookingSetup(user);
+  if (!setup) return null;
+  await connection();
+  const day = todayKey(new Date());
+  const list = setup.setUp ? await getBookings(user, new Date(watInstant(day, 0)), new Date(watInstant(day, 24 * 60))) : [];
+  return <TodayCard setUp={setup.setUp} bookings={list} />;
+}
+
+function GettingStarted({ name, business, today }: { name: string; business: Business | null; today?: React.ReactNode }) {
   const cardDone = !!business;
   const steps = [
     {
@@ -163,6 +179,7 @@ function GettingStarted({ name, business }: { name: string; business: Business |
               </li>
             ))}
           </ol>
+          {today}
           {business && <BioCard slug={business.slug} name={business.name} />}
           {business && <FinishPageChecklist business={business} />}
         </div>

@@ -9,6 +9,12 @@ import { ComingIn } from "@/components/leads/ComingIn";
 import { MessageToday } from "@/components/leads/MessageToday";
 import { MoreTime } from "@/components/leads/MoreTime";
 import { SpentEdit } from "@/components/leads/SpentEdit";
+import { BookHerIn } from "@/components/leads/BookHerIn";
+import { ActionIcon } from "@/components/tikka/ActionIcon";
+import { whatsappLink } from "@/lib/booking";
+import { whenLabel, type BookingRules } from "@/lib/bookings";
+import { getBookingLeads, getBookings, getBookingSetup, serviceLengths, type BookingLead } from "@/lib/bookings-data";
+import { isDbId } from "@/lib/data";
 import { getBusiness, getDrops, getFollowups, getLeads, getReviewAsks, leadsNow } from "@/lib/data";
 import { comingIn, visitPlanLabel } from "@/lib/followups";
 import { naira, shortDate, timeAgo } from "@/lib/format";
@@ -27,9 +33,18 @@ const TIER_OPTIONS: [Tier, string][] = [
   ["thank_you", "Thank-you"],
 ];
 
-function href(f: LeadFilters, patch: Partial<LeadFilters>): string {
+type From = "all" | "drops" | "bookings";
+const FROM: [From, string][] = [
+  ["all", "All"],
+  ["drops", "From drops"],
+  ["bookings", "From bookings"],
+];
+const BOOKED_FROM: Record<string, string> = { page: "Booked on your page", owner: "Booked by you", tikka: "Booked with a Tikka" };
+
+function href(f: LeadFilters, patch: Partial<LeadFilters>, from: From = "all"): string {
   const next = { ...f, ...patch };
   const p = new URLSearchParams();
+  if (from !== "all") p.set("from", from);
   if (next.tab !== "all") p.set("tab", next.tab);
   if (next.dropId) p.set("drop", next.dropId);
   if (next.source) p.set("source", next.source);
@@ -56,13 +71,38 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
   const now = new Date();
   const exportHref = `/api/leads/export${f.dropId ? `?drop=${encodeURIComponent(f.dropId)}` : ""}`;
 
+  // Bookings (docs/BOOKINGS.md journey 13): who booked, where they came from, and "Book her in".
+  const from: From = sp.from === "drops" || sp.from === "bookings" ? sp.from : "all";
+  const [booked, setup] = await Promise.all([getBookingLeads(user), getBookingSetup(user)]);
+  const byPhone = new Map(booked.map((x) => [x.phone, x]));
+  const claimPhones = new Set(all.map((l) => l.phone));
+  const bookingOnly = booked.filter((x) => !claimPhones.has(x.phone));
+  const q = f.q?.toLowerCase();
+  const bookingRows = (from === "bookings" ? booked : bookingOnly).filter((x) => !q || x.name.toLowerCase().includes(q));
+  let bookIn: { rules: BookingRules; services: { id: string; name: string; minutes: number }[] } | null = null;
+  if (setup?.setUp) {
+    const upcoming = await getBookings(user, now, new Date(now.getTime() + (setup.aheadDays + 1) * 86_400_000));
+    const lengths = serviceLengths(isDbId(b.id) ? b.id : user.id, b);
+    bookIn = {
+      rules: {
+        capacity: setup.capacity,
+        noticeMinutes: setup.noticeMinutes,
+        aheadDays: setup.aheadDays,
+        hours: b.hours ?? null,
+        busy: upcoming.filter((x) => x.status !== "cancelled").map((x) => [x.startsAt, x.endsAt]),
+        blocked: setup.blocks.map((k) => [k.startsAt, k.endsAt]),
+      },
+      services: b.services.filter((x) => x.id).map((x) => ({ id: x.id!, name: x.name, minutes: lengths[x.id!] ?? 60 })),
+    };
+  }
+
   return (
     <>
       {live && <LiveRefresh />}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-heading">Leads</h1>
-          <p className="text-body mt-1 text-ink-muted">Everyone who claimed. They&apos;re yours to follow up.</p>
+          <p className="text-body mt-1 text-ink-muted">Everyone who claimed or booked. They&apos;re yours to follow up.</p>
         </div>
         <a href={exportHref} className="btn btn-secondary" download>
           <Download />
@@ -73,12 +113,32 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
       {today.length > 0 && <MessageToday items={today} />}
       <ComingIn days={comingIn(all, planNow)} />
 
+      {booked.length > 0 && (
+        <nav aria-label="Where they came from">
+          <ul className="grid grid-cols-3 gap-1 rounded-md bg-surface-sunken p-1 sm:inline-grid">
+            {FROM.map(([id, label]) => (
+              <li key={id}>
+                <Link
+                  href={href({ ...f, tab: "all" }, {}, id)}
+                  aria-current={from === id ? "page" : undefined}
+                  className={`text-label flex min-h-11 items-center justify-center whitespace-nowrap rounded-md px-3 ${from === id ? "bg-surface-raised text-ink shadow-raised" : "text-ink-muted"}`}
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+
+      {from !== "bookings" && (
+      <>
       <nav aria-label="Lead groups" className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
         <ul className="flex gap-1 rounded-md bg-surface-sunken p-1 sm:inline-flex">
           {LEAD_TABS.map((t) => (
             <li key={t.id}>
               <Link
-                href={href(f, { tab: t.id })}
+                href={href(f, { tab: t.id }, from)}
                 aria-current={f.tab === t.id ? "page" : undefined}
                 className={`text-label flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-md px-3 ${f.tab === t.id ? "bg-surface-raised text-ink shadow-raised" : "text-ink-muted"}`}
               >
@@ -92,6 +152,7 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
 
       <AutoSubmit className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
         {f.tab !== "all" && <input type="hidden" name="tab" value={f.tab} />}
+        {from !== "all" && <input type="hidden" name="from" value={from} />}
         <label className="col-span-2 flex min-h-11 items-center gap-2 rounded-md border border-line-strong bg-surface-raised px-3 sm:min-w-56 sm:flex-1">
           <Search size={18} className="shrink-0 text-ink-muted" aria-hidden="true" />
           <span className="sr-only">Search by name</span>
@@ -197,7 +258,13 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
                     ) : (
                       <span className="tag justify-self-start bg-surface-sunken text-ink-muted">Claimed</span>
                     )}
-                    {plan && <span className="font-semibold text-ink">{plan}</span>}
+                    {byPhone.get(l.phone)?.next ? (
+                      <span className="font-semibold text-ink">
+                        Booked {whenLabel(byPhone.get(l.phone)!.next!.startsAt)} · {byPhone.get(l.phone)!.next!.service}
+                      </span>
+                    ) : (
+                      plan && <span className="font-semibold text-ink">{plan}</span>
+                    )}
                     {l.status === "claimed" && l.expiresAt && (
                       <span className={expired ? "font-semibold text-danger" : undefined}>
                         {expired ? "Expired" : "Use by"} {shortDate(l.expiresAt)}
@@ -213,6 +280,10 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
                   {l.status === "claimed" && (moreUntil || l.extendedAt) && (
                     <MoreTime key={`more-${l.id}`} claimId={l.id} name={l.name} businessName={b.name} until={moreUntil} waTo={waTo} />
                   )}
+                  {/* "Book her in": the time they said on WhatsApp, connected to their Tikka. */}
+                  {bookIn && l.status === "claimed" && !expired && !byPhone.get(l.phone)?.next && (
+                    <BookHerIn claimId={l.id} name={l.name} phone={l.phone} businessName={b.name} services={bookIn.services} rules={bookIn.rules} />
+                  )}
                   {/* Skipped "What did they spend?" at the counter, or typed it wrong: owner only (this page), 30 days. */}
                   {l.status === "redeemed" && canSetSpent(l.redeemedAt ?? l.claimedAt, planNow) && (
                     <SpentEdit key={`spent-${l.id}`} target={{ claimId: l.id }} name={l.name} spent={l.spent} />
@@ -224,11 +295,71 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
         </section>
       )}
 
+      </>
+      )}
+
+      {from !== "drops" && (from === "bookings" || bookingRows.length > 0) && (
+        <BookingLeads rows={bookingRows} title={from === "bookings" ? undefined : "Booked, no Tikka yet"} businessName={b.name} />
+      )}
+
       <p className="text-caption flex items-start gap-2 text-ink-muted">
         <ShieldCheck size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
         Only you see these numbers. Staff accounts can&apos;t open leads.
       </p>
     </>
+  );
+}
+
+/** People who booked (docs/BOOKINGS.md journey 13): one row each, where they came from, their next booking. */
+function BookingLeads({ rows, title, businessName }: { rows: BookingLead[]; title?: string; businessName: string }) {
+  return (
+    <section aria-label={title ?? "People who booked"} className="overflow-hidden rounded-card border border-line bg-surface-raised">
+      <p className="text-caption border-b border-line px-4 py-2.5 text-ink-muted">
+        {title ? `${title} · ` : ""}
+        {rows.length} {rows.length === 1 ? "person" : "people"}
+      </p>
+      {rows.length === 0 ? (
+        <p className="text-body p-4 text-ink-muted">Nobody has booked yet. Share your page link so customers can book.</p>
+      ) : (
+        <ul className="divide-y divide-line">
+          {rows.map((x) => (
+            <li key={x.leadId} className="grid gap-2 px-4 py-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1.4fr)_auto] lg:items-center">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-body font-semibold">{x.name}</span>
+                  {x.optIn && <span className="tag bg-surface-sunken text-ink-muted">Wants offers</span>}
+                  {!x.phoneConfirmed && <span className="tag bg-surface-sunken text-ink-muted">Unverified</span>}
+                </div>
+                <a href={`tel:${x.phone}`} className="text-body mt-0.5 inline-block font-mono tracking-[0.02em] text-ink">
+                  {x.phone}
+                </a>
+              </div>
+              <div className="text-caption grid gap-1 text-ink-muted">
+                {x.next ? (
+                  <span className="font-semibold text-ink">
+                    Booked {whenLabel(x.next.startsAt)} · {x.next.service}
+                  </span>
+                ) : (
+                  <span>No booking coming up</span>
+                )}
+                <span>
+                  {x.sources.map((s) => BOOKED_FROM[s] ?? s).join(" · ")}
+                  {x.claims > 0 ? " · Claimed a Tikka" : ""}
+                </span>
+                <span>
+                  {x.bookings ? `${x.bookings} ${x.bookings === 1 ? "booking" : "bookings"}` : "Booking cancelled"}
+                  {x.came ? ` · came in ${x.came} ${x.came === 1 ? "time" : "times"}` : ""}
+                </span>
+              </div>
+              <a className="btn btn-secondary min-h-11 justify-self-start" target="_blank" rel="noopener noreferrer" href={whatsappLink(x.phone, `Hi ${x.name}, this is ${businessName}. `)}>
+                <ActionIcon kind="whatsapp" />
+                WhatsApp
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 

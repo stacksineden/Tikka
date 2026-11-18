@@ -1,7 +1,8 @@
 import "server-only";
 
 import webpush from "web-push";
-import { LEAD_ALERT_URL, leadAlertText, testAlertText } from "./lead-alert";
+import { whenLabel } from "./bookings";
+import { BOOKING_ALERT_URL, bookingAlertText, LEAD_ALERT_URL, leadAlertText, testAlertText } from "./lead-alert";
 import { adminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
 
@@ -57,6 +58,20 @@ export async function sendLeadAlert(viewToken: string): Promise<void> {
     await sendAll(a.subscriptions, { ...text, tag: `lead-${a.drop_id}`, url: LEAD_ALERT_URL });
   } catch {
     // Alerts are a nice-to-have; a claim never depends on them.
+  }
+}
+
+/** After a booking: tell the business's owner(s). Never throws, never shows the customer's number. */
+export async function sendBookingAlert(bookingId: string): Promise<void> {
+  try {
+    if (!setup()) return;
+    const { data } = await adminClient().rpc("booking_alert", { p_booking: bookingId });
+    const a = data as { business_id: string; business_name: string; first_name: string; service: string; starts_at: string; subscriptions: Sub[] } | null;
+    if (!a || !a.subscriptions?.length) return;
+    const text = bookingAlertText({ businessName: a.business_name, firstName: a.first_name, service: a.service, when: whenLabel(a.starts_at) });
+    await sendAll(a.subscriptions, { ...text, tag: `booking-${bookingId}`, url: BOOKING_ALERT_URL });
+  } catch {
+    // A booking never depends on its alert.
   }
 }
 

@@ -58,6 +58,7 @@ export function ClaimFlow({
   firstVisit = false,
   claimMode = "whatsapp",
   turnstileSiteKey,
+  booking,
 }: {
   businessSlug: string;
   face: CardFace;
@@ -77,6 +78,8 @@ export function ClaimFlow({
   claimMode?: "whatsapp" | "page";
   /** Cloudflare Turnstile's public key for the page claim's bot check, when it's set up. */
   turnstileSiteKey?: string;
+  /** The business takes bookings (docs/BOOKINGS.md 11b): "Book a time to use it", or the booking it has. */
+  booking?: { booked?: { when: string; token: string } };
 }) {
   const [beat, setBeat] = useState<Beat>(
     claimed ? (firstVisit ? "ready" : "revealed") : initialDrop.status === "sold_out" || initialDrop.status === "ended" ? "closed" : "sealed",
@@ -661,7 +664,28 @@ export function ClaimFlow({
                 </div>
               )}
             </div>
-            {cardState?.visitOptions?.length ? (
+            {booking && !cardState?.redeemedAt && !cardState?.expired ? (
+              <div className="tk-section">
+                <div className="tk-box">
+                  {booking.booked ? (
+                    <>
+                      <h2 className="tk-box-h">Booked · {booking.booked.when}</h2>
+                      <a href={`/bk/${booking.booked.token}`} className="tk-btn tk-btn-paper mt-3 w-full">
+                        See your booking
+                      </a>
+                    </>
+                  ) : (
+                    <>
+                      <h2 className="tk-box-h">Book a time to use it</h2>
+                      <p className="tk-redeem-instr">Pick a free time at {face.name}, before your Tikka runs out.</p>
+                      <a href={`/${businessSlug}?tikka=${encodeURIComponent(card.token)}`} className="tk-btn tk-btn-paper mt-3 w-full">
+                        Book a time
+                      </a>
+                    </>
+                  )}
+                </div>
+              </div>
+            ) : cardState?.visitOptions?.length ? (
               <div className="tk-section">
                 <VisitPlan token={card.token} status={cardState} businessName={face.name} onChange={setCardState} remind={card.confirmed !== false} />
               </div>

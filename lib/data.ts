@@ -2551,3 +2551,10 @@ export async function endDropEarly(user: Pick<SessionUser, "id" | "role">, dropI
 function clamp01(n: number): number {
   return Number.isFinite(n) ? Math.round(Math.min(1, Math.max(0, n)) * 1000) / 1000 : 0.5;
 }
+
+/** DEMO: a Tikka for "Book a time to use it" (docs/BOOKINGS.md journey 11b). Real ones: tikka_booking_info(). */
+export function demoTikkaForBooking(token: string): { ownerId: string; firstName: string; expiresAt: string; redeemed: boolean; reward: string; phone?: string } | null {
+  const c = claimStore.get(token);
+  if (!c) return null;
+  return { ownerId: c.ownerId, firstName: c.card.claimer, expiresAt: c.card.expiresAt, redeemed: !!c.redeemedAt, reward: c.card.reward };
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CalendarDays,
   CircleHelp,
   Globe,
   QrCode,
@@ -29,6 +30,7 @@ type Item = { href: string; label: string; Icon: LucideIcon };
 export const NAV: Item[] = [
   { href: "/app", label: "Home", Icon: House },
   { href: "/app/drops", label: "Drops", Icon: Layers },
+  { href: "/app/bookings", label: "Bookings", Icon: CalendarDays },
   { href: "/app/leads", label: "Leads", Icon: Users },
   { href: "/app/reviews", label: "Reviews", Icon: MessageSquareText },
   { href: "/app/page", label: "Your page", Icon: Globe },
@@ -138,7 +140,7 @@ export function MobileHeader({ account, staff = false }: { account: AccountSumma
   );
 }
 
-const MORE_PATHS = ["/app/reviews", "/app/page", "/app/posters", "/app/settings"];
+const MORE_PATHS = ["/app/drops", "/app/reviews", "/app/page", "/app/posters", "/app/settings"];
 
 /** Bottom tab bar on phones. Redeem sits in the middle: it's what gets used at the counter. */
 export function BottomNav({ account }: { account: AccountSummary | null }) {
@@ -149,7 +151,8 @@ export function BottomNav({ account }: { account: AccountSummary | null }) {
 export function BottomBar({ account, path }: { account: AccountSummary | null; path: string }) {
   const [open, setOpen] = useState(false);
   const moreActive = MORE_PATHS.some((p) => path.startsWith(p));
-  const tabs = ["/app", "/app/drops", "/app/redeem", "/app/leads"].map((href) => NAV.find((n) => n.href === href)!);
+  // Bookings is checked every day; Drops (set up now and then) lives in More.
+  const tabs = ["/app", "/app/bookings", "/app/redeem", "/app/leads"].map((href) => NAV.find((n) => n.href === href)!);
 
   return (
     <>
@@ -225,6 +228,7 @@ function MoreSheet({ open, onClose, account, path }: { open: boolean; onClose: (
   }, [path, onClose]);
 
   const rows: { href: string; label: string; Icon: LucideIcon; meta?: string }[] = [
+    { href: "/app/drops", label: "Drops", Icon: Layers, meta: "Your drops and their results" },
     {
       href: "/app/reviews",
       label: "Reviews",

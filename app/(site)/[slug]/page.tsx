@@ -6,6 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Fragment, Suspense } from "react";
 import { BookingSheet } from "@/components/business/BookingSheet";
+import { CalendarSheet } from "@/components/business/CalendarSheet";
 import { bizSerif } from "@/components/business/fonts";
 import { Gallery } from "@/components/business/Gallery";
 import { Reveal } from "@/components/business/Reveal";
@@ -14,9 +15,10 @@ import { NotifyMe } from "@/components/market/NotifyMe";
 import { Logo } from "@/components/site/Logo";
 import { ACTION_LABEL, ActionIcon, actionHref } from "@/components/tikka/ActionIcon";
 import { isSocial } from "@/lib/social";
+import { getBookingRules, getTikkaForBooking, serviceLengths } from "@/lib/bookings-data";
 import { getBusinessBySlug, getBusinessReviews, getPageDrops } from "@/lib/data";
 import { clockTime, count, place, shortDate } from "@/lib/format";
-import { bookingLink, bookingNumber, focalPosition, heroHeadline, serviceGroups, showsLocation, visibleSections, whereLine, type PageDrop } from "@/lib/page";
+import { bookingLink, bookingNumber, focalPosition, priceText, heroHeadline, serviceGroups, showsLocation, visibleSections, whereLine, type PageDrop } from "@/lib/page";
 import { photoSrcSet } from "@/lib/media-path";
 import { collectionLine, portfolioView } from "@/lib/portfolio";
 import { SITE } from "@/lib/qr";
@@ -180,13 +182,14 @@ function DropBand({ b, live, next }: { b: Business; live?: PageDrop; next?: Page
   );
 }
 
-async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"] }) {
+async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slug]">["params"]; searchParams: PageProps<"/[slug]">["searchParams"] }) {
   const { slug } = await params;
+  const sp = await searchParams;
   const found = await getBusinessBySlug(slug);
   if (!found) notFound();
   const b = found.business;
   // The same for every visitor: the public drops, never the signed-in person's own.
-  const [drops, reviews] = await Promise.all([getPageDrops(b.slug, found.ownerId), getBusinessReviews(found.ownerId)]);
+  const [drops, reviews, rules] = await Promise.all([getPageDrops(b.slug, found.ownerId), getBusinessReviews(found.ownerId), getBookingRules(found.ownerId, b)]);
   const live = drops.find((d) => d.status === "live");
   const next = drops.find((d) => d.status === "scheduled");
   const sections = new Set(visibleSections(b, { reviews: reviews.length }));
@@ -197,8 +200,15 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
   // message as their href, so Book works before the script loads.
   const external = b.actions.find((a) => a.kind === "book")?.value.trim() || null;
   const number = bookingNumber(b);
-  const sheet = !external && !!number;
-  const book = external ?? bookingLink(b);
+  // With bookings set up (docs/BOOKINGS.md), Book opens the calendar: only free times, and picking
+  // one books it. Otherwise the WhatsApp request sheet, as before.
+  const bookable = b.services.filter((s) => s.id);
+  const calendar = !external && !!rules && bookable.length > 0;
+  const sheet = calendar || (!external && !!number);
+  const book = external ?? bookingLink(b) ?? (calendar ? "#book" : null);
+  // "Book a time to use it" from a Tikka's card: ?tikka=<card link>. Only this business's, unused Tikkas.
+  const tikkaToken = typeof sp.tikka === "string" ? sp.tikka : null;
+  const tikka = calendar && tikkaToken ? await getTikkaForBooking(tikkaToken, found.ownerId, b) : null;
   const bookProps = { href: book ?? undefined, target: "_blank", rel: "noopener noreferrer", ...(sheet ? { "data-book": "" } : {}) };
   const call = b.actions.find((a) => a.kind === "call");
   const socials = b.actions.filter((a) => isSocial(a.kind));
@@ -358,7 +368,7 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
               <ServicesSection
                 services={b.services}
                 groups={serviceGroups(b.services)}
-                links={b.services.map((s) => external ?? bookingLink(b, s))}
+                links={b.services.map((s) => external ?? bookingLink(b, s) ?? (calendar ? "#book" : null))}
                 sheet={sheet}
                 brand={{ color: b.brandColor, on: b.onBrandColor, initials: b.initials }}
               />
@@ -582,7 +592,17 @@ async function BusinessPage({ params }: { params: PageProps<"/[slug]">["params"]
         </div>
       )}
 
-      {sheet && <BookingSheet business={b.name} number={number!} hours={b.hours} />}
+      {calendar ? (
+        <CalendarSheet
+          slug={b.slug}
+          business={b.name}
+          number={number}
+          services={bookable.map((s) => ({ id: s.id!, name: s.name, minutes: serviceLengths(found.ownerId, b)[s.id!], price: s.priceKind === "ask" || s.price === null ? "" : priceText(s) }))}
+          tikka={tikka ? { token: tikka.token, name: tikka.name, until: tikka.until, reward: tikka.reward, booking: tikka.booking } : undefined}
+        />
+      ) : (
+        sheet && <BookingSheet business={b.name} number={number!} hours={b.hours} />
+      )}
     </div>
   );
 }
@@ -591,7 +611,7 @@ export default function Page(props: PageProps<"/[slug]">) {
   return (
     <main className="min-h-dvh bg-surface-raised">
       <Suspense fallback={<div className="h-dvh bg-surface-raised" />}>
-        <BusinessPage params={props.params} />
+        <BusinessPage params={props.params} searchParams={props.searchParams} />
       </Suspense>
     </main>
   );

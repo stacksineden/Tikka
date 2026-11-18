@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { getBookingRules } from "@/lib/bookings-data";
 import { ClaimFlow } from "@/components/claim/ClaimFlow";
 import { claimMode, turnstileSiteKey } from "@/lib/claim-mode";
 import { faceFromBusiness } from "@/components/tikka/TikkaCard";
@@ -50,9 +51,10 @@ async function Claim({ params, searchParams }: PageProps<"/d/[business]/[drop]">
   if (visitorId) await recordEvent(drop.id, "view", source, visitorId, posterId, (await getSessionUser())?.id);
 
   const owner = await getBusinessBySlug(businessSlug);
-  const [reviews, card] = await Promise.all([
+  const [reviews, card, rules] = await Promise.all([
     owner ? getBusinessReviews(owner.ownerId) : [],
     getBrowserClaim(drop.id, jar.get(claimCookie(drop.id))?.value, visitorId),
+    owner ? getBookingRules(owner.ownerId, owner.business) : null,
   ]);
 
   return (
@@ -67,6 +69,7 @@ async function Claim({ params, searchParams }: PageProps<"/d/[business]/[drop]">
       claimed={card ? { ...card, qr: await qrSvg(card.card.code) } : undefined}
       claimMode={claimMode()}
       turnstileSiteKey={claimMode() === "page" ? turnstileSiteKey() : undefined}
+      booking={rules ? {} : undefined}
     />
   );
 }

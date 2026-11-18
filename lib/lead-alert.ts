@@ -33,3 +33,12 @@ export function testAlertText(businessName: string): { title: string; body: stri
 
 /** Where a tap goes. */
 export const LEAD_ALERT_URL = "/app/leads";
+
+/** "New booking · Glow Studio" / "Adaeze booked Braids for Sat 15 Nov, 2:00pm. Tap to see your bookings." */
+export function bookingAlertText(a: { businessName: string; firstName: string; service: string; when: string }): { title: string; body: string } {
+  const who = a.firstName.trim() || "Someone";
+  return { title: `New booking · ${a.businessName}`, body: `${who} booked ${a.service} for ${a.when}. Tap to see your bookings.` };
+}
+
+/** Where a booking alert's tap goes. */
+export const BOOKING_ALERT_URL = "/app/bookings";

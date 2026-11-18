@@ -3,6 +3,7 @@
 import { Camera, CheckCircle2, Loader2, ScanLine, Smartphone, XCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { checkCodeAction, checkDigitsAction, confirmRedemptionAction, giveMoreTimeAction } from "@/app/app/actions";
+import { BookingAtCounter } from "@/components/bookings/BookingAtCounter";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
 import { visitWhen } from "@/lib/followups";
 import { clockTime, naira, shortDate } from "@/lib/format";
@@ -45,7 +46,9 @@ function buzz(p: number | number[]) {
 
 /** "GS7X4QX" → "GS-7X4QX" as they type. */
 function formatTyped(v: string): string {
-  const s = v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7);
+  // Tikka codes are 2 + 5 characters; booking refs are BK + 6 (docs/BOOKINGS.md journey 10).
+  const raw = v.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const s = raw.slice(0, raw.startsWith("BK") ? 8 : 7);
   return s.length > 2 ? `${s.slice(0, 2)}-${s.slice(2)}` : s;
 }
 
@@ -84,6 +87,7 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
   const [digits, setDigits] = useState("");
   const [checkingDigits, setCheckingDigits] = useState(false);
   const [moreTime, setMoreTime] = useState<{ saving: boolean; error?: string }>({ saving: false });
+  const [bookingCode, setBookingCode] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<Scanner | null>(null);
@@ -196,6 +200,10 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
     setTypedError(undefined);
     if (!typed.trim()) {
       setTypedError("Type the code from their Tikka.");
+      return;
+    }
+    if (/^BK[A-Z0-9]{6}$/.test(typed.replace(/[^A-Z0-9]/g, ""))) {
+      setBookingCode(typed);
       return;
     }
     check(typed, true);
@@ -356,7 +364,7 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
               spellCheck={false}
               enterKeyHint="go"
               inputMode="text"
-              maxLength={8}
+              maxLength={9}
               className="input min-w-0 flex-1 font-mono text-[18px] tracking-[0.12em]"
               aria-invalid={typedError ? true : undefined}
               aria-describedby={typedError ? "redeem-code-err" : undefined}
@@ -373,6 +381,8 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
           <p className="text-caption text-ink-muted">Checking never uses the code. It&apos;s only used when you confirm.</p>
         </form>
       )}
+
+      {bookingCode && <BookingAtCounter key={bookingCode} code={bookingCode} onDone={() => (setBookingCode(null), setTyped(""))} />}
 
       {view.kind === "valid" && (
         <section className="rounded-card bg-success-soft p-5 text-ink" role="status" aria-labelledby="valid-h">

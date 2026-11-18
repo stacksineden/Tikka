@@ -32,12 +32,15 @@ do $$
 declare
   got uuid[];
 begin
-  select array_agg(guid) into got from public.orphan_stream_videos();
+  -- Only this test's videos: a real database may hold leftover videos of its own.
+  select array_agg(guid) into got from public.orphan_stream_videos()
+  where guid in (select v from t where k in ('card', 'folio', 'dropped', 'fresh'));
   assert got = array[(select v from t where k = 'dropped')], 'only the unused, older video: ' || coalesce(got::text, 'none');
 
   -- Removed from the page: it goes too.
   delete from public.business_portfolio where business_id = (select v from t where k = 'biz');
-  select array_agg(guid order by guid) into got from public.orphan_stream_videos();
+  select array_agg(guid order by guid) into got from public.orphan_stream_videos()
+  where guid in (select v from t where k in ('card', 'folio', 'dropped', 'fresh'));
   assert got = array[(select v from t where k = 'folio'), (select v from t where k = 'dropped')], 'removed portfolio video: ' || coalesce(got::text, 'none');
 end $$;
 
