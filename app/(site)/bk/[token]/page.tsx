@@ -7,7 +7,13 @@ import { Suspense } from "react";
 import { bizSerif } from "@/components/business/fonts";
 import { ActionIcon } from "@/components/tikka/ActionIcon";
 import { whatsappLink } from "@/lib/booking";
-import { bookedMessage, lengthLabel, whenLabel } from "@/lib/bookings";
+import { after } from "next/server";
+import { FinishPaying } from "@/components/payments/FinishPaying";
+import { bookedMessage, leftToPay, lengthLabel, whenLabel } from "@/lib/bookings";
+import { dbCompleteDeposit } from "@/lib/bookings-db";
+import { naira } from "@/lib/format";
+import { verifyPayment } from "@/lib/paystack";
+import { sendBookingAlert } from "@/lib/push";
 import { getBookingPass } from "@/lib/bookings-data";
 import { place } from "@/lib/format";
 import { bookingNumber } from "@/lib/page";
@@ -19,14 +25,26 @@ import { bookingNumber } from "@/lib/page";
 export const metadata: Metadata = { title: "Your booking", robots: { index: false, follow: false } };
 
 const STATUS: Record<string, string> = {
+  held: "Waiting for your deposit",
   booked: "Booked",
   arrived: "You came in",
   no_show: "Missed",
   cancelled: "Cancelled",
 };
 
-async function Pass({ params }: { params: PageProps<"/bk/[token]">["params"] }) {
-  const { token } = await params;
+async function Pass({ params, searchParams }: { params: PageProps<"/bk/[token]">["params"]; searchParams: PageProps<"/bk/[token]">["searchParams"] }) {
+  const [{ token }, sp] = await Promise.all([params, searchParams]);
+  // Back from paying the deposit: check with Paystack and record it before showing the pass (the
+  // webhook records it too, whichever comes first).
+  const reference = typeof sp.reference === "string" ? sp.reference : null;
+  if (reference?.startsWith(`bk_${token}_`)) {
+    const v = await verifyPayment(reference).catch(() => null);
+    if (v?.status === "success") {
+      const r = await dbCompleteDeposit(reference, v.amountKobo, v.feeKobo, v.email);
+      const id = r.id;
+      if (r.kind === "paid" && id) after(() => sendBookingAlert(id));
+    }
+  }
   const pass = await getBookingPass(token);
   if (!pass) notFound();
   const b = pass.business;
@@ -66,10 +84,24 @@ async function Pass({ params }: { params: PageProps<"/bk/[token]">["params"] }) 
               {b.name}, {b.address || place(b.area, b.city)}
             </dd>
           </div>
-          <div>
-            <dt className="text-caption text-ink-muted">Booking ref</dt>
-            <dd className="font-mono text-[20px] tracking-[0.06em]">{pass.code}</dd>
-          </div>
+          {pass.depositPaidKobo ? (
+            <div>
+              <dt className="text-caption text-ink-muted">Deposit</dt>
+              <dd className="text-body font-semibold">
+                {naira(pass.depositPaidKobo / 100)} paid ·{" "}
+                {(() => {
+                  const left = leftToPay(pass, pass.depositPaidKobo);
+                  return left === null ? `the rest agreed with ${b.name}` : left > 0 ? `${naira(left / 100)} to pay at ${b.name}` : "nothing more to pay";
+                })()}
+              </dd>
+            </div>
+          ) : null}
+          {pass.status !== "held" && (
+            <div>
+              <dt className="text-caption text-ink-muted">Booking ref</dt>
+              <dd className="font-mono text-[20px] tracking-[0.06em]">{pass.code}</dd>
+            </div>
+          )}
         </dl>
       </section>
 
@@ -88,7 +120,19 @@ async function Pass({ params }: { params: PageProps<"/bk/[token]">["params"] }) 
         </section>
       )}
 
-      {cancelled ? (
+      {pass.status === "held" && pass.depositKobo ? (
+        <section className="grid gap-3 rounded-card border border-line bg-surface-raised p-4">
+          <p className="text-body">
+            {pass.holdLive
+              ? `Your time is held for a few minutes. Pay the ${naira(pass.depositKobo / 100)} deposit to book it.`
+              : `Your deposit wasn't paid, so the time isn't booked yet. Pay ${naira(pass.depositKobo / 100)} to book it if it's still free.`}
+          </p>
+          <FinishPaying token={token} label={`Pay ${naira(pass.depositKobo / 100)} deposit`} />
+          <p className="text-caption text-ink-muted">This deposit holds your time. It isn&apos;t refundable through Tikka. To move or cancel, message {b.name}.</p>
+        </section>
+      ) : null}
+
+      {pass.status === "held" ? null : cancelled ? (
         <p className="text-body rounded-md bg-surface-sunken px-4 py-3">
           {b.name} cancelled this booking. Message them to find another time.
         </p>
@@ -113,7 +157,7 @@ export default function Page(props: PageProps<"/bk/[token]">) {
   return (
     <main data-theme="light" className="min-h-dvh bg-surface-sunken text-ink">
       <Suspense fallback={<div className="h-dvh" />}>
-        <Pass params={props.params} />
+        <Pass params={props.params} searchParams={props.searchParams} />
       </Suspense>
     </main>
   );

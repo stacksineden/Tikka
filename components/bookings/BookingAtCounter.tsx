@@ -3,7 +3,8 @@
 import { CalendarCheck, Check } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { checkBookingCodeAction, markBookingAction } from "@/app/app/bookings-actions";
-import { lengthLabel, PROBLEM_TEXT, whenLabel } from "@/lib/bookings";
+import { leftToPay, lengthLabel, PROBLEM_TEXT, whenLabel } from "@/lib/bookings";
+import { naira } from "@/lib/format";
 import type { BookingCheck } from "@/lib/bookings-data";
 
 const STATUS: Record<string, string> = { booked: "Booked", arrived: "Already marked as came in", no_show: "Marked as no-show", cancelled: "Cancelled" };
@@ -59,6 +60,15 @@ export function BookingAtCounter({ code, onDone }: { code: string; onDone: () =>
         {r.service} · {lengthLabel(r.minutes)}
       </p>
       <p className="text-body font-semibold">{whenLabel(r.startsAt)}</p>
+      {r.depositPaidKobo ? (
+        <p className="text-body-lg mt-2 font-semibold">
+          Deposit paid {naira(r.depositPaidKobo / 100)} ·{" "}
+          {(() => {
+            const left = leftToPay(r, r.depositPaidKobo);
+            return left === null ? "collect the rest you agreed" : left > 0 ? `collect ${naira(left / 100)}` : "nothing to collect";
+          })()}
+        </p>
+      ) : null}
       {r.status === "booked" && !marked && new Date(r.startsAt).getTime() > checkedAt + 3_600_000 && (
         <p className="text-body mt-3 rounded-md bg-surface-raised px-3 py-2">Not today: they&apos;re booked for {whenLabel(r.startsAt)}.</p>
       )}

@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Clock, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ActionIcon } from "@/components/tikka/ActionIcon";
+import { naira } from "@/lib/format";
 import { bookingMonths, slotLabel, whatsappLink, type BookingDay } from "@/lib/booking";
 import { freeDays, lengthLabel, PROBLEM_TEXT, watInstant, whenLabel, type BookingRules } from "@/lib/bookings";
 
@@ -12,6 +13,8 @@ export interface SheetService {
   name: string;
   minutes: number;
   price: string;
+  /** The price in kobo when it's set (for "Pay the rest at the shop"). */
+  priceKobo?: number;
 }
 
 type Step = "service" | "time" | "details" | "booked";
@@ -58,6 +61,9 @@ export function CalendarSheet({
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [offers, setOffers] = useState(false);
+  const [email, setEmail] = useState("");
+  // Each service's deposit (kobo), from the server with the free times (REVENUE_PLAN 5.4).
+  const [deposits, setDeposits] = useState<{ counts: boolean; services: Record<string, number> }>({ counts: true, services: {} });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -65,8 +71,9 @@ export function CalendarSheet({
     setLoading(true);
     try {
       const res = await fetch(`/api/book?slug=${encodeURIComponent(slug)}`, { cache: "no-store" });
-      const data = (await res.json()) as { rules: BookingRules | null };
+      const data = (await res.json()) as { rules: BookingRules | null; deposits?: { counts: boolean; services: Record<string, number> } };
       setRules(data.rules);
+      if (data.deposits) setDeposits(data.deposits);
       return data.rules;
     } catch {
       setError("Couldn't load the free times. Check your connection.");
@@ -127,6 +134,9 @@ export function CalendarSheet({
   const anyFree = days.some((d) => d.slots.length);
   const plain = number ? whatsappLink(number, service ? `Hi ${business}, I'd like to book ${service.name}.` : `Hi ${business}, I'd like to book an appointment.`) : null;
   const when = day && time !== null ? `${day.label}, ${slotLabel(time)}` : "";
+  // A booking with a Tikka never takes a deposit.
+  const deposit = !tikka && service ? (deposits.services[service.id] ?? 0) : 0;
+  const rest = service?.priceKobo != null ? (deposits.counts ? Math.max(0, service.priceKobo - deposit) : service.priceKobo) : null;
 
   function close() {
     ref.current?.close();
@@ -137,6 +147,7 @@ export function CalendarSheet({
     setError("");
     if (!tikka && !name.trim()) return setError(PROBLEM_TEXT.bad_name);
     if (!tikka && phone.replace(/\D/g, "").length < 10) return setError(PROBLEM_TEXT.bad_phone);
+    if (!tikka && deposit && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) return setError("Type your email so Paystack can send your receipt.");
     setBusy(true);
     try {
       const res = await fetch("/api/book", {
@@ -146,10 +157,16 @@ export function CalendarSheet({
           slug,
           serviceId: service.id,
           startsAt: new Date(watInstant(day.key, time)).toISOString(),
-          ...(tikka ? { tikka: tikka.token } : { name, phone, futureOffers: offers }),
+          ...(tikka ? { tikka: tikka.token } : { name, phone, futureOffers: offers, email: deposit ? email : undefined }),
         }),
       });
-      const data = (await res.json()) as { ok: boolean; token?: string; reason?: string };
+      const data = (await res.json()) as { ok: boolean; token?: string; reason?: string; pay?: string };
+      if (data.ok && data.pay) {
+        // A deposit holds the time for 10 minutes: on to Paystack.
+        close();
+        window.location.assign(data.pay);
+        return;
+      }
       if (data.ok && data.token) {
         // Close the sheet first: Next keeps the page it leaves mounted (hidden) for going back, and an
         // open modal dialog there would leave the booking page unclickable until a reload.
@@ -367,8 +384,26 @@ export function CalendarSheet({
               <input type="checkbox" className="mt-1 size-5 shrink-0" checked={offers} onChange={(e) => setOffers(e.target.checked)} />
               <span className="text-body">Tell me about {business}&apos;s offers</span>
             </label>
+            {deposit > 0 && (
+              <div className="grid gap-3 rounded-md border border-line-strong p-4">
+                <p className="text-[16px] font-semibold">
+                  Hold your time with {naira(deposit / 100)}.{" "}
+                  {rest === null
+                    ? `The full price is agreed with ${business}${deposits.counts ? ". This deposit counts towards it." : "."}`
+                    : rest > 0
+                      ? `Pay the rest (${naira(rest / 100)}) at ${business}.`
+                      : "Nothing more to pay at the shop."}
+                </p>
+                <p className="text-caption text-ink-muted">This deposit holds your time. It isn&apos;t refundable through Tikka. To move or cancel, message {business}.</p>
+                <label className="grid gap-1">
+                  <span className="text-label">Your email</span>
+                  <input type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" inputMode="email" placeholder="you@example.com" required />
+                  <span className="text-caption text-ink-muted">Paystack sends your receipt here.</span>
+                </label>
+              </div>
+            )}
             <button type="submit" disabled={busy} className="biz-btn mt-2 min-h-[52px] w-full bg-ink text-surface-raised">
-              {busy ? "Booking…" : "Book"}
+              {busy ? (deposit > 0 ? "Opening Paystack…" : "Booking…") : deposit > 0 ? `Pay ${naira(deposit / 100)} and book` : "Book"}
             </button>
             <p className="text-caption text-center text-ink-muted">
               By booking you agree to Tikka&apos;s{" "}

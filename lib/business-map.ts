@@ -71,6 +71,9 @@ export interface ServiceRow {
   focal_y?: number | string | null;
   /** Added by the bookings migration. */
   minutes?: number | null;
+  /** Added by the deposits migration. */
+  deposit_mode?: "none" | "fixed" | "full" | null;
+  deposit_kobo?: number | null;
 }
 
 export interface PortfolioRow {
@@ -138,6 +141,8 @@ export function serviceFrom(r: ServiceRow): ServiceItem {
     priceKind: r.price_kind,
     duration: opt(r.duration),
     minutes: r.minutes ?? undefined,
+    depositMode: r.deposit_mode ?? undefined,
+    depositKobo: r.deposit_kobo ?? undefined,
     imageUrl: fromStored(r.image_path),
     focal: r.focal_x == null || r.focal_y == null ? undefined : { x: Number(r.focal_x), y: Number(r.focal_y) },
   };
@@ -155,6 +160,8 @@ export function serviceTo(s: ServiceItem) {
     price_kind: priced ? (s.priceKind ?? "fixed") : "ask",
     duration: s.duration?.trim() || null,
     minutes: s.minutes ?? null,
+    deposit_mode: s.depositMode ?? null,
+    deposit_kobo: s.depositMode === "fixed" ? (s.depositKobo ?? null) : null,
     image_path: toStored(s.imageUrl),
     focal_x: s.focal?.x ?? 0.5,
     focal_y: s.focal?.y ?? 0.3,

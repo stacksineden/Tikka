@@ -29,6 +29,7 @@ import {
   dbRemoveBlock,
   dbSaveBookingSettings,
   dbBookingLeads,
+  dbBookingDeposits,
   dbTikkaInfo,
   dbBookForClaim,
   dbCheckBookingCode,
@@ -165,8 +166,17 @@ export function serviceLengths(ownerKey: string, business: Business): Record<str
   return Object.fromEntries(business.services.filter((s) => s.id).map((s) => [s.id!, d?.minutes[s.id!] ?? serviceMinutes(s)]));
 }
 
+/** Each service's deposit for the booking sheet and the business page (the demo takes none). */
+export async function getBookingDeposits(ownerKey: string, business: Business, mode: "test" | "live" | null): Promise<{ counts: boolean; services: Record<string, number> }> {
+  if (!isDbId(ownerKey)) return { counts: true, services: {} };
+  return dbBookingDeposits(business.id, mode);
+}
+
 /** A customer books from the business page (the route has rate-limited and checked the number). */
-export async function bookTime(slug: string, input: { serviceId: string; startsAt: string; firstName: string; phone: string; futureOffers: boolean; visitorId: string }): Promise<BookResult> {
+export async function bookTime(
+  slug: string,
+  input: { serviceId: string; startsAt: string; firstName: string; phone: string; futureOffers: boolean; visitorId: string; mode: "test" | "live" | null; email: string | null },
+): Promise<BookResult> {
   const found = await getBusinessBySlug(slug);
   if (!found) return { kind: "not_found" };
   const { business, ownerId } = found;
@@ -486,7 +496,21 @@ export async function bookForTikka(slug: string, token: string, serviceId: strin
 }
 
 export type BookingCheck =
-  | { kind: "booking"; id: string; code: string; firstName: string; service: string; minutes: number; startsAt: string; status: Booking["status"]; source: Booking["source"] }
+  | {
+      kind: "booking";
+      id: string;
+      code: string;
+      firstName: string;
+      service: string;
+      minutes: number;
+      startsAt: string;
+      status: Booking["status"];
+      source: Booking["source"];
+      depositPaidKobo?: number;
+      priceKobo?: number;
+      priceKind?: string;
+      depositCounts?: boolean;
+    }
   | { kind: "unknown" | "wrong_business" | "no_access" };
 
 /** A BK- code at the counter. Owners and staff; never the number. Read-only. */
@@ -501,6 +525,10 @@ export async function checkBookingCode(user: Pick<SessionUser, "id" | "role" | "
     return {
       kind: "booking", id: String(r.id), code: String(r.code), firstName: String(r.first_name), service: String(r.service),
       minutes: Number(r.minutes), startsAt: String(r.starts_at), status: r.status as Booking["status"], source: r.source as Booking["source"],
+      depositPaidKobo: r.deposit_paid_kobo == null ? undefined : Number(r.deposit_paid_kobo),
+      priceKobo: r.price_kobo == null ? undefined : Number(r.price_kobo),
+      priceKind: (r.price_kind as string | null) ?? undefined,
+      depositCounts: r.deposit_counts == null ? undefined : r.deposit_counts === true,
     };
   }
   const full = `BK-${clean.slice(2)}`;

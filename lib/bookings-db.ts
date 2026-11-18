@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { Booking, BookingRules, BookingSetup } from "./bookings";
+import type { Booking, BookingRules, BookingSetup, DepositSettings, ServiceDepositMode } from "./bookings";
 import { adminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
 
@@ -27,6 +27,10 @@ export function bookingFrom(r: Row): Booking {
     viewToken: (r.view_token as string | null) ?? undefined,
     moved: r.moved === true,
     createdAt: String(r.created_at),
+    depositPaidKobo: r.deposit_paid_kobo == null ? undefined : Number(r.deposit_paid_kobo),
+    priceKobo: r.price_kobo == null ? undefined : Number(r.price_kobo),
+    priceKind: (r.price_kind as Booking["priceKind"]) ?? undefined,
+    depositCounts: r.deposit_counts == null ? undefined : r.deposit_counts === true,
   };
 }
 
@@ -46,7 +50,7 @@ export async function dbBookingRules(businessId: string, from: Date, days: numbe
   };
 }
 
-export type BookResult = { kind: "booked" | "already"; token: string; code?: string; id?: string } | { kind: string };
+export type BookResult = { kind: "booked" | "already" | "pay"; token: string; code?: string; id?: string; deposit_kobo?: number } | { kind: string };
 
 /** book_time(): server only, after the route's rate limits. */
 export async function dbBookTime(input: {
@@ -57,6 +61,8 @@ export async function dbBookTime(input: {
   phone: string;
   futureOffers: boolean;
   visitorId: string;
+  mode: "test" | "live" | null;
+  email: string | null;
 }): Promise<BookResult> {
   const { data, error } = await adminClient().rpc("book_time", {
     p_business: input.businessId,
@@ -66,6 +72,8 @@ export async function dbBookTime(input: {
     p_phone: input.phone,
     p_future: input.futureOffers,
     p_visitor: input.visitorId,
+    p_mode: input.mode,
+    p_email: input.email,
   });
   if (error) return { kind: error.code === "P0002" ? "not_found" : "error" };
   return data as BookResult;
@@ -81,6 +89,13 @@ export interface BookingPass {
   moved: boolean;
   businessSlug: string;
   businessId: string;
+  /** Deposits: what it takes, what was paid, the price when booked, and whether the 10-minute hold is live. */
+  depositKobo?: number;
+  depositPaidKobo?: number;
+  depositCounts?: boolean;
+  priceKobo?: number;
+  priceKind?: string;
+  holdLive?: boolean;
   /** Booked with a Tikka: its card link (code and QR for the counter), its reward, and whether it's used. */
   tikka?: { token: string; reward: string; used: boolean };
 }
@@ -101,6 +116,12 @@ export async function dbBookingPass(token: string): Promise<BookingPass | null> 
     moved: r.moved === true,
     businessSlug: String(r.business_slug),
     businessId: String(r.business_id),
+    depositKobo: r.deposit_kobo == null ? undefined : Number(r.deposit_kobo),
+    depositPaidKobo: r.deposit_paid_kobo == null ? undefined : Number(r.deposit_paid_kobo),
+    depositCounts: r.deposit_counts == null ? undefined : r.deposit_counts === true,
+    priceKobo: r.price_kobo == null ? undefined : Number(r.price_kobo),
+    priceKind: (r.price_kind as string | null) ?? undefined,
+    holdLive: r.hold_live === true,
     tikka: r.tikka_token ? { token: String(r.tikka_token), reward: String(r.tikka_reward ?? ""), used: r.tikka_used === true } : undefined,
   };
 }
@@ -123,6 +144,17 @@ export async function dbBookingSetup(businessId: string): Promise<BookingSetup> 
     capacity: Number(r.capacity),
     noticeMinutes: Number(r.notice_minutes),
     aheadDays: Number(r.ahead_days),
+    deposit: r.deposit
+      ? {
+          mode: ((r.deposit as Row).mode as DepositSettings["mode"]) ?? "off",
+          percent: (r.deposit as Row).percent == null ? undefined : Number((r.deposit as Row).percent),
+          fixedKobo: (r.deposit as Row).fixed_kobo == null ? undefined : Number((r.deposit as Row).fixed_kobo),
+          counts: (r.deposit as Row).counts !== false,
+        }
+      : undefined,
+    serviceDeposits: Object.fromEntries(
+      Object.entries((r.service_deposits as Record<string, { mode: ServiceDepositMode; kobo: number | null }>) ?? {}).map(([id, d]) => [id, { mode: d.mode, kobo: d.kobo ?? undefined }]),
+    ),
     blocks: ((r.blocks as Row[]) ?? []).map((k) => ({
       id: String(k.id),
       startsAt: String(k.starts_at),
@@ -241,4 +273,107 @@ export async function dbCheckBookingCode(businessId: string, code: string): Prom
   const { data, error } = await sb.rpc("check_booking_code", { p_business: businessId, p_code: code });
   if (error) return { kind: "no_access" };
   return (data ?? { kind: "unknown" }) as Row;
+}
+
+/* ------------------------------------------------- deposits (REVENUE_PLAN 5.4) */
+
+/** Each service's deposit (kobo) for the booking sheet and the business page. Public; amounts only. */
+export async function dbBookingDeposits(businessId: string, mode: "test" | "live" | null): Promise<{ counts: boolean; services: Record<string, number> }> {
+  if (!mode) return { counts: true, services: {} };
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("booking_deposits", { p_business: businessId, p_mode: mode });
+  if (error || !data) return { counts: true, services: {} };
+  const r = data as { counts: boolean; services: Record<string, number> };
+  return { counts: r.counts !== false, services: Object.fromEntries(Object.entries(r.services ?? {}).map(([k, v]) => [k, Number(v)])) };
+}
+
+export interface DepositCheckout {
+  id: string;
+  status: string;
+  depositKobo: number;
+  tikkaKobo: number;
+  subaccount: string | null;
+  mode: "test" | "live" | null;
+  email: string | null;
+  holdLive: boolean;
+  businessName: string;
+}
+
+export async function dbDepositCheckout(token: string): Promise<DepositCheckout | null> {
+  if (!/^[0-9a-f]{24}$/.test(token)) return null;
+  const { data, error } = await adminClient().rpc("booking_checkout", { p_token: token });
+  if (error || !data) return null;
+  const r = data as Row;
+  return {
+    id: String(r.id),
+    status: String(r.status),
+    depositKobo: Number(r.deposit_kobo ?? 0),
+    tikkaKobo: Number(r.tikka_kobo ?? 0),
+    subaccount: (r.subaccount as string | null) ?? null,
+    mode: (r.mode as "test" | "live" | null) ?? null,
+    email: (r.email as string | null) ?? null,
+    holdLive: r.hold_live === true,
+    businessName: String(r.business_name),
+  };
+}
+
+export async function dbRehold(token: string): Promise<string> {
+  const { data, error } = await adminClient().rpc("rehold_booking", { p_token: token });
+  if (error) return "error";
+  return String((data as Row)?.kind ?? "error");
+}
+
+export async function dbCompleteDeposit(reference: string, amountKobo: number, feeKobo: number, email: string | null): Promise<{ kind: string; id?: string }> {
+  const { data, error } = await adminClient().rpc("complete_booking_deposit", { p_reference: reference, p_amount_kobo: amountKobo, p_fee_kobo: feeKobo, p_email: email });
+  if (error) return { kind: "error" };
+  return data as { kind: string; id?: string };
+}
+
+export async function dbSaveDepositSettings(
+  businessId: string,
+  s: { mode: DepositSettings["mode"]; percent: number | null; fixedKobo: number | null; counts: boolean; services: Record<string, { mode: ServiceDepositMode | null; kobo?: number | null }> },
+): Promise<string> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("save_deposit_settings", {
+    p_business: businessId,
+    p_mode: s.mode,
+    p_percent: s.percent,
+    p_fixed_kobo: s.fixedKobo,
+    p_counts: s.counts,
+    p_services: s.services,
+  });
+  if (error) return "error";
+  return String((data as Row)?.kind ?? "error");
+}
+
+export interface DepositPaid {
+  id: string;
+  firstName: string;
+  service: string;
+  startsAt: string;
+  status: string;
+  paidKobo: number;
+  feeKobo: number;
+  tikkaKobo: number;
+  paidAt: string;
+  mode: "test" | "live";
+}
+
+/** Deposits paid, for the Money screen (owner only). */
+export async function dbDeposits(businessId: string): Promise<DepositPaid[]> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("get_deposits", { p_business: businessId, p_limit: 200 });
+  if (error) return [];
+  return ((data ?? []) as Row[]).map((r) => ({
+    id: String(r.id),
+    firstName: String(r.first_name),
+    service: String(r.service),
+    startsAt: String(r.starts_at),
+    status: String(r.status),
+    paidKobo: Number(r.paid_kobo ?? 0),
+    feeKobo: Number(r.fee_kobo ?? 0),
+    tikkaKobo: Number(r.tikka_kobo ?? 0),
+    paidAt: String(r.paid_at),
+    mode: (r.mode as "test" | "live") ?? "live",
+  }));
 }

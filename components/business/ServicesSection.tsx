@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, ArrowUpRight, Clock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { photoSrcSet } from "@/lib/media-path";
 import { focalPosition, priceText } from "@/lib/page";
+import { naira } from "@/lib/format";
 import type { ServiceItem } from "@/lib/types";
 
 const GLYPHS = ["○", "✕", "◇", "✦", "△", "□"];
@@ -20,6 +21,7 @@ export function ServicesSection({
   links,
   sheet = false,
   brand,
+  deposits = {},
 }: {
   services: ServiceItem[];
   groups: string[];
@@ -28,6 +30,8 @@ export function ServicesSection({
   /** Cards open the booking sheet (components/business/BookingSheet) instead of their link. */
   sheet?: boolean;
   brand: { color: string; on: string; initials: string };
+  /** Deposits to book, in kobo by service id (REVENUE_PLAN 5.4). */
+  deposits?: Record<string, number>;
 }) {
   const [group, setGroup] = useState<string | null>(null);
   const track = useRef<HTMLUListElement>(null);
@@ -134,6 +138,12 @@ export function ServicesSection({
                       {s.duration}
                     </span>
                   )}
+                  {s.id && deposits[s.id] ? (
+                    <span>
+                      <span aria-hidden="true">· </span>
+                      {naira(deposits[s.id] / 100)} deposit to book
+                    </span>
+                  ) : null}
                 </p>
                 {s.description && <p className="text-body mb-5 mt-3 line-clamp-2 text-ink-muted">{s.description}</p>}
                 {link && (
