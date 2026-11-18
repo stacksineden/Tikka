@@ -1,5 +1,7 @@
 "use server";
 
+import { dbAdminSetPayments } from "@/lib/payouts-db";
+
 import { revalidatePath, updateTag } from "next/cache";
 import { PRICES_TAG } from "@/lib/admin-db";
 import { dbRedeemedOnPage } from "@/lib/team-db";
@@ -795,4 +797,14 @@ export async function endDropEarlyAction(dropId: string): Promise<{ ok: true } |
   const r = await endDropEarly(user, dropId);
   if (r.ok) revalidatePath("/app", "layout");
   return r;
+}
+
+/** Payments for a business (REVENUE_PLAN 5.7): on or off, and the most one payment can be (₦). */
+export async function adminSetPaymentsAction(id: string, form: FormData): Promise<void> {
+  const admin = await getAdmin();
+  if (!admin || !isDbId(id)) return;
+  const enabled = form.get("enabled") === "on";
+  const max = Math.round(Number(String(form.get("max") ?? "").replace(/[^\d.]/g, "")));
+  await dbAdminSetPayments(id, enabled, max >= 100 && max <= 1_000_000 ? max * 100 : null);
+  revalidatePath("/admin");
 }

@@ -10,6 +10,7 @@ import {
   adminSaveTierAction,
   adminSavePackAction,
   adminSetBusinessAction,
+  adminSetPaymentsAction,
   adminSetDropShownAction,
   adminEnquiryStatusAction,
 } from "@/app/app/actions";
@@ -22,6 +23,7 @@ import { getSessionUser } from "@/lib/session";
 import { isDbId } from "@/lib/business-db";
 import { dbAdminEarlyAccess, dbAdminEnquiries } from "@/lib/studio-db";
 import { dbAdminCounterChecks } from "@/lib/admin-db";
+import { dbAdminPaymentSettings } from "@/lib/payouts-db";
 import { counterCheckTotals } from "@/lib/counter-checks";
 import { STUDIO_CATEGORIES } from "@/lib/studio-shared";
 
@@ -51,7 +53,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const real = isDbId(user.id);
-  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog, enquiries, early, checks, earlyPay] = await Promise.all([
+  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog, enquiries, early, checks, earlyPay, paySettings] = await Promise.all([
     adminView(user, q),
     getDropTiers(),
     getAllDropPacks(),
@@ -60,6 +62,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
     real ? dbAdminEarlyAccess() : Promise.resolve({ count: 0, list: [] }),
     real ? dbAdminCounterChecks().catch(() => []) : Promise.resolve([]),
     real ? dbAdminEarlyAccess("payments") : Promise.resolve({ count: 0, list: [] }),
+    real ? dbAdminPaymentSettings() : Promise.resolve({} as Awaited<ReturnType<typeof dbAdminPaymentSettings>>),
   ]);
   const ct = counterCheckTotals(checks);
   const newEnquiries = enquiries.filter((e) => e.status === "new").length;
@@ -373,6 +376,28 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                   </form>
                 )}
               </div>
+              {/* Payments (REVENUE_PLAN 5.7): the pilot switch, the maximum per payment, and the account. */}
+              {isDbId(b.id) && !b.isDemo && (
+                <form action={adminSetPaymentsAction.bind(null, b.id)} className="grid gap-2 rounded-md bg-surface-sunken p-3 sm:grid-cols-[auto_1fr_auto] sm:items-end">
+                  <label className="flex min-h-11 items-center gap-2">
+                    <input type="checkbox" name="enabled" defaultChecked={paySettings[b.id]?.enabled ?? false} className="size-5" />
+                    <span className="text-label">Payments on</span>
+                  </label>
+                  <label className="grid gap-1">
+                    <span className="text-caption text-ink-muted">Most per payment (₦)</span>
+                    <input name="max" inputMode="numeric" defaultValue={String((paySettings[b.id]?.maxKobo ?? 2_000_000) / 100)} className={field} />
+                  </label>
+                  <button type="submit" className="btn btn-secondary min-h-11 px-4 text-label">
+                    Save
+                  </button>
+                  <p className="text-caption text-ink-muted sm:col-span-3">
+                    {paySettings[b.id]?.last4
+                      ? `Paid to ${paySettings[b.id]!.accountName} · ${paySettings[b.id]!.bankName} ••••${paySettings[b.id]!.last4}`
+                      : "No bank account added yet."}
+                    {!b.verified ? " Needs the Verified badge first." : ""}
+                  </p>
+                </form>
+              )}
               <form action={adminGrantDropAction.bind(null, b.id)} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
                 <label className="grid gap-1">
                   <span className="text-caption text-ink-muted">Give a free drop</span>
