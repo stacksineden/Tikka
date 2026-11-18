@@ -6,6 +6,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { PayLinkActions } from "@/components/payments/PayLinkActions";
 import { SendPayLink } from "@/components/payments/SendPayLink";
+import { StayFresh } from "@/components/payments/StayFresh";
 import { getBusiness, isDbId } from "@/lib/data";
 import { naira, shortDate, WAT } from "@/lib/format";
 import { dbPayLinks } from "@/lib/paylinks-db";
@@ -50,6 +51,8 @@ async function Money() {
 
   return (
     <>
+      {/* Payments show the moment Paystack confirms them: no reload needed. */}
+      <StayFresh waiting={links.some((l) => l.status === "open")} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-heading">Money</h1>
