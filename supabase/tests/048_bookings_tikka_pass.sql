@@ -63,7 +63,7 @@ end $$;
 -- A booking without a Tikka: no Tikka on its pass.
 do $$
 declare
-  r jsonb := public.book_time((select v from t where k = 'biz'), (select v from t where k = 'braids'), pg_temp.at('12:00', 2), 'Bisi', '+2348048000003', false, 'v3');
+  r jsonb := public.book_time((select v from t where k = 'biz'), (select v from t where k = 'braids'), pg_temp.at('12:00', 2), 'Bisi', '+2348048000003', false, 'v3', 'test', null);
 begin
   assert public.booking_pass(r ->> 'token') -> 'tikka_token' = 'null'::jsonb, 'no Tikka';
 end $$;

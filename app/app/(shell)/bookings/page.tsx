@@ -11,6 +11,10 @@ import { getBookings, getBookingSetup, serviceLengths } from "@/lib/bookings-dat
 import { getBusiness, isDbId } from "@/lib/data";
 import { SITE } from "@/lib/qr";
 import { getOwnerUser } from "@/lib/session";
+import { DepositSettings } from "@/components/bookings/DepositSettings";
+import { paystackMode } from "@/lib/paystack";
+import { dbPayoutState, payReady } from "@/lib/payouts-db";
+import { dbBookingSetup } from "@/lib/bookings-db";
 
 export const metadata: Metadata = { title: "Bookings" };
 
@@ -39,6 +43,8 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
           </p>
         </div>
         <BookingSetup first={!setup.setUp} hours={b.hours} services={services} initial={setup} />
+        {/* Deposits (REVENUE_PLAN 5.4): once getting paid is ready for the business. */}
+        {setup.setUp && isDbId(b.id) && (await depositsCard(b))}
         {editing && (
           <Link href="/app/bookings" className="btn btn-ghost justify-self-start">
             Back to bookings
@@ -81,6 +87,34 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
         businessName={b.name}
       />
     </>
+  );
+}
+
+async function depositsCard(b: NonNullable<Awaited<ReturnType<typeof getBusiness>>>) {
+  const [state, setup] = await Promise.all([dbPayoutState(b.id), dbBookingSetup(b.id)]);
+  const pay = payReady(state, paystackMode());
+  if (!pay.ready) {
+    return (
+      <section className="rounded-card border border-dashed border-line-strong bg-surface-raised p-4 sm:p-5">
+        <h2 className="text-title">Deposits</h2>
+        <p className="text-body mt-1 text-ink-muted">
+          {pay.why === "closed" ? "Taking deposits is in early access: we're switching getting paid online on for a few businesses first." : "To take deposits, add the bank account they go to."}
+        </p>
+        {pay.why !== "closed" && (
+          <Link href="/app/settings/get-paid" className="btn btn-secondary mt-3 min-h-11">
+            Go to Get paid
+          </Link>
+        )}
+      </section>
+    );
+  }
+  return (
+    <DepositSettings
+      initial={setup.deposit ?? { mode: "off", counts: true }}
+      services={b.services.filter((s) => s.id).map((s) => ({ id: s.id!, name: s.name, priced: s.priceKind === "fixed" && s.price !== null, priceKobo: s.price !== null ? Math.round(s.price * 100) : undefined }))}
+      serviceDeposits={setup.serviceDeposits ?? {}}
+      maxKobo={pay.maxKobo}
+    />
   );
 }
 

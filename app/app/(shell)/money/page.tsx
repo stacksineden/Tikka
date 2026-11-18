@@ -9,6 +9,8 @@ import { SendPayLink } from "@/components/payments/SendPayLink";
 import { getBusiness, isDbId } from "@/lib/data";
 import { naira, shortDate, WAT } from "@/lib/format";
 import { dbPayLinks } from "@/lib/paylinks-db";
+import { dbDeposits } from "@/lib/bookings-db";
+import { whenLabel } from "@/lib/bookings";
 import { paystackMode } from "@/lib/paystack";
 import { dbPayoutState, payReady } from "@/lib/payouts-db";
 import { getOwnerUser } from "@/lib/session";
@@ -35,18 +37,23 @@ async function Money() {
   await connection();
   const state = isDbId(b.id) ? await dbPayoutState(b.id) : null;
   const ready = payReady(state, paystackMode());
-  const links = isDbId(b.id) ? await dbPayLinks(b.id) : [];
+  const [links, deposits] = isDbId(b.id) ? await Promise.all([dbPayLinks(b.id), dbDeposits(b.id)]) : [[], []];
   const now = new Date();
-  const paid = links.filter((l) => l.status === "paid" && l.paidAt && month(l.paidAt) === month(now) && l.mode === paystackMode());
-  const gross = paid.reduce((a, l) => a + (l.paidKobo ?? 0), 0);
-  const fees = paid.reduce((a, l) => a + (l.feeKobo ?? 0) + (l.tikkaKobo ?? 0), 0);
+  const mode = paystackMode();
+  // This month, in this Paystack mode: pay links and booking deposits.
+  const paid = [
+    ...links.filter((l) => l.status === "paid" && l.paidAt && month(l.paidAt) === month(now) && l.mode === mode).map((l) => ({ gross: l.paidKobo ?? 0, fees: (l.feeKobo ?? 0) + (l.tikkaKobo ?? 0) })),
+    ...deposits.filter((d) => month(d.paidAt) === month(now) && d.mode === mode).map((d) => ({ gross: d.paidKobo, fees: d.feeKobo + d.tikkaKobo })),
+  ];
+  const gross = paid.reduce((a, l) => a + l.gross, 0);
+  const fees = paid.reduce((a, l) => a + l.fees, 0);
 
   return (
     <>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-heading">Money</h1>
-          <p className="text-body mt-1 text-ink-muted">Pay links and what came in. It goes to your bank the next working day.</p>
+          <p className="text-body mt-1 text-ink-muted">Pay links, booking deposits and what came in. It goes to your bank the next working day.</p>
         </div>
         {ready.ready && <SendPayLink businessName={b.name} maxKobo={ready.maxKobo} />}
       </div>
@@ -117,6 +124,32 @@ async function Money() {
           </ul>
         )}
       </section>
+
+      {deposits.length > 0 && (
+        <section className="overflow-hidden rounded-card border border-line bg-surface-raised" aria-label="Booking deposits">
+          <p className="text-caption border-b border-line px-4 py-2.5 text-ink-muted">
+            {deposits.length} booking {deposits.length === 1 ? "deposit" : "deposits"}
+          </p>
+          <ul className="divide-y divide-line">
+            {deposits.map((d) => (
+              <li key={d.id} className="flex items-start justify-between gap-3 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-body font-semibold">
+                    {d.firstName} · {d.service}
+                  </p>
+                  <p className="text-caption text-ink-muted">
+                    For {whenLabel(d.startsAt)} · paid {shortDate(d.paidAt)}
+                    {d.status === "cancelled" ? " · booking cancelled" : ""}
+                    {d.mode === "test" && mode === "live" ? " · test" : ""}
+                  </p>
+                  <p className="text-caption text-ink-muted">To your bank: {naira((d.paidKobo - d.feeKobo - d.tikkaKobo) / 100)}</p>
+                </div>
+                <p className="shrink-0 font-mono text-[16px] font-semibold tabular-nums">{naira(d.paidKobo / 100)}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <p className="text-caption flex items-start gap-2 text-ink-muted">
         <ShieldCheck size={16} className="mt-0.5 shrink-0" aria-hidden="true" />

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { LENGTHS } from "@/lib/bookings";
 import { addBooking, blockTime, cancelBooking, checkBookingCode, markBooking, moveBooking, removeBlock, saveBookingSettings, type Act, type BookingCheck } from "@/lib/bookings-data";
 import { getSessionUser } from "@/lib/session";
+import { dbSaveDepositSettings } from "@/lib/bookings-db";
+import { getBusiness, isDbId } from "@/lib/data";
 import { normalizeNgPhone } from "@/lib/setup";
 import { firstName } from "@/lib/claim";
 
@@ -101,4 +103,48 @@ export async function removeBlockAction(id: string): Promise<Act> {
 /** A BK- code typed on Redeem: the booking, never the number. Read-only (owners and staff). */
 export async function checkBookingCodeAction(code: string): Promise<BookingCheck> {
   return checkBookingCode(await user(), String(code ?? "").slice(0, 20));
+}
+
+/**
+ * Deposits (REVENUE_PLAN 5.4): off, a % of the price (with a fixed ₦ for services without one), or a
+ * fixed ₦; whether it counts towards the bill; and any service that differs. Owners only (SQL).
+ */
+export async function saveDepositSettingsAction(input: {
+  mode: "off" | "percent" | "fixed";
+  percent: number | null;
+  fixedNaira: number | null;
+  counts: boolean;
+  services: Record<string, { mode: "none" | "fixed" | "full" | null; naira?: number | null }>;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const u = await user();
+  if (u.role !== "owner") return { ok: false, error: "Only the owner sets deposits." };
+  const b = await getBusiness(u);
+  if (!b || !isDbId(b.id)) return { ok: false, error: "The demo business can't take deposits." };
+  const kobo = (n: number | null | undefined) => (n == null || !Number.isFinite(Number(n)) ? null : Math.round(Number(n) * 100));
+  const fixed = kobo(input.fixedNaira);
+  if (fixed !== null && (fixed < 100000 || fixed > 100000000)) return { ok: false, error: "A fixed deposit is at least ₦1,000." };
+  const services: Record<string, { mode: "none" | "fixed" | "full" | null; kobo?: number | null }> = {};
+  for (const [id, s] of Object.entries(input.services ?? {})) {
+    if (s.mode === "fixed") {
+      const k = kobo(s.naira);
+      if (k === null || k < 100000) return { ok: false, error: "A service's own deposit is at least ₦1,000." };
+      services[id] = { mode: "fixed", kobo: k };
+    } else services[id] = { mode: s.mode === "none" || s.mode === "full" ? s.mode : null };
+  }
+  const kind = await dbSaveDepositSettings(b.id, {
+    mode: input.mode,
+    percent: input.mode === "percent" ? Math.round(Number(input.percent)) : null,
+    fixedKobo: fixed,
+    counts: input.counts !== false,
+    services,
+  });
+  if (kind !== "saved") {
+    return {
+      ok: false,
+      error: kind === "bad_percent" ? "Pick a percentage between 5% and 100%." : kind === "bad_amount" ? "Type the fixed amount." : kind === "not_set_up" ? "Set up bookings first." : "Couldn't save. Try again.",
+    };
+  }
+  refresh();
+  revalidatePath("/[slug]", "page");
+  return { ok: true };
 }

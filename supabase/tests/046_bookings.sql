@@ -32,7 +32,7 @@ create function pg_temp.at(p_hhmm text, p_days int default 7) returns timestampt
   select (((now() at time zone 'Africa/Lagos')::date + p_days) + p_hhmm::time) at time zone 'Africa/Lagos';
 $$;
 create function pg_temp.book(p_service text, p_hhmm text, p_name text, p_phone text, p_future boolean default false) returns text language sql as $$
-  select public.book_time((select v from t where k = 'biz'), (select v from t where k = p_service), pg_temp.at(p_hhmm), p_name, p_phone, p_future, 'v-' || p_phone) ->> 'kind';
+  select public.book_time((select v from t where k = 'biz'), (select v from t where k = p_service), pg_temp.at(p_hhmm), p_name, p_phone, p_future, 'v-' || p_phone, 'test', null) ->> 'kind';
 $$;
 
 -- Before setup: no free times, nothing books.
@@ -78,8 +78,8 @@ begin
   assert pg_temp.book('facial', '17:30', 'Eko', '+2348046000005') = 'closed', 'would end after closing';
   assert pg_temp.book('facial', '08:30', 'Eko', '+2348046000005') = 'closed', 'before opening';
   assert pg_temp.book('facial', '10:15', 'Eko', '+2348046000005') = 'closed', 'off the half-hour grid';
-  assert public.book_time((select v from t where k = 'biz'), (select v from t where k = 'facial'), now() + interval '1 hour', 'Eko', '+2348046000005', false, 'x') ->> 'kind' = 'too_soon', '2 hours notice';
-  assert public.book_time((select v from t where k = 'biz'), (select v from t where k = 'facial'), pg_temp.at('10:00', 120), 'Eko', '+2348046000005', false, 'x') ->> 'kind' = 'too_far', '92 days ahead';
+  assert public.book_time((select v from t where k = 'biz'), (select v from t where k = 'facial'), now() + interval '1 hour', 'Eko', '+2348046000005', false, 'x', 'test', null) ->> 'kind' = 'too_soon', '2 hours notice';
+  assert public.book_time((select v from t where k = 'biz'), (select v from t where k = 'facial'), pg_temp.at('10:00', 120), 'Eko', '+2348046000005', false, 'x', 'test', null) ->> 'kind' = 'too_far', '92 days ahead';
   assert pg_temp.book('facial', '17:00', '  ', '+2348046000005') = 'bad_name', 'a name is needed';
   assert pg_temp.book('facial', '17:00', 'Eko', '0803') = 'bad_phone', 'a real number is needed';
 
@@ -107,7 +107,7 @@ begin
   assert (r ->> 'capacity')::int = 2 and jsonb_array_length(r -> 'busy') = 6, 'six busy times: ' || r::text;
   assert r::text !~ '8046' and r::text !~ 'Ada', 'never names or numbers';
   begin
-    perform public.book_time((select v from t where k = 'biz'), (select v from t where k = 'facial'), pg_temp.at('16:00'), 'Eko', '+2348046000005', false, 'x');
+    perform public.book_time((select v from t where k = 'biz'), (select v from t where k = 'facial'), pg_temp.at('16:00'), 'Eko', '+2348046000005', false, 'x', 'test', null);
     assert false, 'the public books through the server only';
   exception when insufficient_privilege then null;
   end;

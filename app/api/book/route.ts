@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { after, NextResponse } from "next/server";
 import { firstName, VISITOR_COOKIE } from "@/lib/claim";
-import { bookForTikka, bookTime, getBookingRules, type BookResult } from "@/lib/bookings-data";
+import { bookForTikka, bookTime, getBookingDeposits, getBookingRules, type BookResult } from "@/lib/bookings-data";
+import { startDepositCheckout } from "@/lib/deposit-checkout";
+import { paystackMode } from "@/lib/paystack";
 import { isDbId } from "@/lib/data";
 import { sendBookingAlert } from "@/lib/push";
 import { getBusinessBySlug } from "@/lib/data";
@@ -20,7 +22,8 @@ export async function GET(request: Request) {
   const slug = new URL(request.url).searchParams.get("slug") ?? "";
   const found = slug ? await getBusinessBySlug(slug) : null;
   if (!found) return NextResponse.json({ rules: null }, { status: 404, headers: noStore });
-  return NextResponse.json({ rules: await getBookingRules(found.ownerId, found.business) }, { headers: noStore });
+  const [rules, deposits] = await Promise.all([getBookingRules(found.ownerId, found.business), getBookingDeposits(found.ownerId, found.business, paystackMode())]);
+  return NextResponse.json({ rules, deposits }, { headers: noStore });
 }
 
 export async function POST(request: Request) {
@@ -31,6 +34,8 @@ export async function POST(request: Request) {
     name?: string;
     phone?: string;
     futureOffers?: boolean;
+    /** For Paystack's receipt, when the service takes a deposit. */
+    email?: string;
     /** "Book a time to use it": the Tikka's card link. Name and number come from the claim. */
     tikka?: string;
   } | null;
@@ -58,7 +63,17 @@ export async function POST(request: Request) {
       phone,
       futureOffers: body.futureOffers === true,
       visitorId,
+      mode: paystackMode(),
+      email: typeof body.email === "string" ? body.email.trim().slice(0, 120) : null,
     });
+  }
+  // A deposit holds the time for 10 minutes: straight on to Paystack (REVENUE_PLAN 5.4).
+  if (r.kind === "pay" && "token" in r) {
+    const start = await startDepositCheckout(r.token);
+    if (start.kind !== "url") return fail(start.kind === "paystack" ? "paystack" : "closed");
+    const res = NextResponse.json({ ok: true, pay: start.url, token: r.token }, { headers: noStore });
+    if (fresh) res.cookies.set(VISITOR_COOKIE, visitorId, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 365 });
+    return res;
   }
   if (r.kind !== "booked" || !("token" in r)) return fail(r.kind);
   // New booking alert to the owner's phone, after the response: it never slows or blocks the booking.

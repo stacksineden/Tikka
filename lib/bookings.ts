@@ -26,7 +26,7 @@ export interface BookingRules {
 
 export const DEFAULT_RULES: Omit<BookingRules, "busy" | "blocked"> = { capacity: 1, noticeMinutes: 120, aheadDays: 92 };
 
-export type BookingStatus = "booked" | "arrived" | "no_show" | "cancelled";
+export type BookingStatus = "held" | "booked" | "arrived" | "no_show" | "cancelled";
 export type BookingSource = "page" | "owner" | "tikka";
 
 export interface Booking {
@@ -48,6 +48,11 @@ export interface Booking {
   viewToken?: string;
   moved: boolean;
   createdAt: string;
+  /** Deposits (REVENUE_PLAN 5.4): what was paid, and the price when booked (what's left to collect). */
+  depositPaidKobo?: number;
+  priceKobo?: number;
+  priceKind?: "fixed" | "from" | "ask";
+  depositCounts?: boolean;
 }
 
 export interface BookingBlock {
@@ -57,8 +62,20 @@ export interface BookingBlock {
   note?: string;
 }
 
+export type DepositMode = "off" | "percent" | "fixed";
+export type ServiceDepositMode = "none" | "fixed" | "full";
+
+export interface DepositSettings {
+  mode: DepositMode;
+  percent?: number;
+  fixedKobo?: number;
+  counts: boolean;
+}
+
 export interface BookingSetup {
   setUp: boolean;
+  deposit?: DepositSettings;
+  serviceDeposits?: Record<string, { mode: ServiceDepositMode; kobo?: number }>;
   enabled: boolean;
   capacity: number;
   noticeMinutes: number;
@@ -235,4 +252,13 @@ export function canMark(b: Booking, status: "arrived" | "no_show", now: Date): b
 /** The WAT day key for today. */
 export function todayKey(now: Date): string {
   return watParts(now).day;
+}
+
+/**
+ * What's left to pay at the shop after a deposit: the price less the deposit when it counts towards
+ * the bill and the price is set; null when the price isn't set ("the rest agreed with them").
+ */
+export function leftToPay(b: { priceKobo?: number | null; priceKind?: string | null; depositCounts?: boolean | null }, depositKobo: number): number | null {
+  if (b.priceKind !== "fixed" || b.priceKobo == null) return null;
+  return b.depositCounts === false ? b.priceKobo : Math.max(0, b.priceKobo - depositKobo);
 }

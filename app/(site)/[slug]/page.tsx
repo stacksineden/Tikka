@@ -15,7 +15,8 @@ import { NotifyMe } from "@/components/market/NotifyMe";
 import { Logo } from "@/components/site/Logo";
 import { ACTION_LABEL, ActionIcon, actionHref } from "@/components/tikka/ActionIcon";
 import { isSocial } from "@/lib/social";
-import { getBookingRules, getTikkaForBooking, serviceLengths } from "@/lib/bookings-data";
+import { getBookingDeposits, getBookingRules, getTikkaForBooking, serviceLengths } from "@/lib/bookings-data";
+import { paystackMode } from "@/lib/paystack";
 import { getBusinessBySlug, getBusinessReviews, getPageDrops } from "@/lib/data";
 import { clockTime, count, place, shortDate } from "@/lib/format";
 import { bookingLink, bookingNumber, focalPosition, priceText, heroHeadline, serviceGroups, showsLocation, visibleSections, whereLine, type PageDrop } from "@/lib/page";
@@ -209,6 +210,8 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
   // "Book a time to use it" from a Tikka's card: ?tikka=<card link>. Only this business's, unused Tikkas.
   const tikkaToken = typeof sp.tikka === "string" ? sp.tikka : null;
   const tikka = calendar && tikkaToken ? await getTikkaForBooking(tikkaToken, found.ownerId, b) : null;
+  // Deposits (REVENUE_PLAN 5.4): shown on each service card and on the sheet before paying.
+  const deposits = calendar ? await getBookingDeposits(found.ownerId, b, paystackMode()) : { counts: true, services: {} as Record<string, number> };
   const bookProps = { href: book ?? undefined, target: "_blank", rel: "noopener noreferrer", ...(sheet ? { "data-book": "" } : {}) };
   const call = b.actions.find((a) => a.kind === "call");
   const socials = b.actions.filter((a) => isSocial(a.kind));
@@ -370,6 +373,7 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
                 groups={serviceGroups(b.services)}
                 links={b.services.map((s) => external ?? bookingLink(b, s) ?? (calendar ? "#book" : null))}
                 sheet={sheet}
+                deposits={deposits.services}
                 brand={{ color: b.brandColor, on: b.onBrandColor, initials: b.initials }}
               />
             </div>
@@ -597,7 +601,7 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
           slug={b.slug}
           business={b.name}
           number={number}
-          services={bookable.map((s) => ({ id: s.id!, name: s.name, minutes: serviceLengths(found.ownerId, b)[s.id!], price: s.priceKind === "ask" || s.price === null ? "" : priceText(s) }))}
+          services={bookable.map((s) => ({ id: s.id!, name: s.name, minutes: serviceLengths(found.ownerId, b)[s.id!], price: s.priceKind === "ask" || s.price === null ? "" : priceText(s), priceKobo: s.priceKind === "fixed" && s.price !== null ? Math.round(s.price * 100) : undefined }))}
           tikka={tikka ? { token: tikka.token, name: tikka.name, until: tikka.until, reward: tikka.reward, booking: tikka.booking } : undefined}
         />
       ) : (

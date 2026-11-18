@@ -105,6 +105,9 @@ export interface ServiceItem {
   duration?: string;
   /** How long it takes, for the booking calendar (docs/BOOKINGS.md). Unset counts as one hour. */
   minutes?: number;
+  /** Its own deposit when it differs from the business's (REVENUE_PLAN 5.4); kept through page saves. */
+  depositMode?: "none" | "fixed" | "full";
+  depositKobo?: number;
   imageUrl?: string;
   /** The part of the photo the card crops around (0–1 each way); the upper third when unset. */
   focal?: { x: number; y: number };

@@ -12,6 +12,7 @@ import {
   removeBlockAction,
 } from "@/app/app/bookings-actions";
 import { ActionIcon } from "@/components/tikka/ActionIcon";
+import { naira } from "@/lib/format";
 import { slotLabel, whatsappLink } from "@/lib/booking";
 import {
   byDay,
@@ -119,6 +120,7 @@ export function BookingsBoard({
               {b.status === "arrived" && <span className="tag tag--redeemed">Came in</span>}
               {b.status === "no_show" && <span className="tag bg-danger-soft text-danger">No-show</span>}
               {cancelled && <span className="tag bg-surface-sunken text-ink-muted">Cancelled</span>}
+              {b.depositPaidKobo ? <span className="tag bg-success-soft text-success">{naira(b.depositPaidKobo / 100)} paid</span> : null}
               <span className="font-mono">{b.code}</span>
             </p>
           </div>
@@ -293,7 +295,12 @@ export function BookingsBoard({
             )}
           </Sheet>
 
-          <Sheet open={sheet?.kind === "cancel"} onClose={() => setSheet(null)} title={sheet?.kind === "cancel" ? `Cancel ${sheet.b.firstName}'s booking?` : "Cancel booking"} sub={sheet?.kind === "cancel" ? `${sheet.b.service} · ${whenLabel(sheet.b.startsAt)}. The time becomes free for others straight away.` : undefined}>
+          <Sheet open={sheet?.kind === "cancel"} onClose={() => setSheet(null)} title={sheet?.kind === "cancel" ? `Cancel ${sheet.b.firstName}'s booking?` : "Cancel booking"} sub={
+              sheet?.kind === "cancel"
+                ? `${sheet.b.service} · ${whenLabel(sheet.b.startsAt)}. The time becomes free for others straight away.${sheet.b.depositPaidKobo ? ` ${sheet.b.firstName} paid a ${naira(sheet.b.depositPaidKobo / 100)} deposit: refund it yourself if you've agreed to (Tikka doesn't refund).` : ""}`
+                : undefined
+            }
+          >
             {sheet?.kind === "cancel" && (
               <div className="mt-5 grid gap-2">
                 <button
