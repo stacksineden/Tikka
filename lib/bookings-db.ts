@@ -81,6 +81,8 @@ export interface BookingPass {
   moved: boolean;
   businessSlug: string;
   businessId: string;
+  /** Booked with a Tikka: its card link (code and QR for the counter), its reward, and whether it's used. */
+  tikka?: { token: string; reward: string; used: boolean };
 }
 
 /** The customer's booking pass, by its link. Never the phone number. */
@@ -99,6 +101,7 @@ export async function dbBookingPass(token: string): Promise<BookingPass | null> 
     moved: r.moved === true,
     businessSlug: String(r.business_slug),
     businessId: String(r.business_id),
+    tikka: r.tikka_token ? { token: String(r.tikka_token), reward: String(r.tikka_reward ?? ""), used: r.tikka_used === true } : undefined,
   };
 }
 

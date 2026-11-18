@@ -200,6 +200,7 @@ export async function getBookingPass(token: string): Promise<(BookingPass & { bu
     return {
       code: b.code, service: b.service, minutes: b.minutes, startsAt: b.startsAt, status: b.status, firstName: b.firstName,
       moved: b.moved, businessSlug: owner.slug, businessId: owner.id, business: owner,
+      tikka: b.claimId && demoTikkaForBooking(b.claimId) ? { token: b.claimId, reward: demoTikkaForBooking(b.claimId)!.reward, used: demoTikkaForBooking(b.claimId)!.redeemed } : undefined,
     };
   }
   const pass = await dbBookingPass(token);

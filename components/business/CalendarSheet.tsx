@@ -154,7 +154,9 @@ export function CalendarSheet({
         // Close the sheet first: Next keeps the page it leaves mounted (hidden) for going back, and an
         // open modal dialog there would leave the booking page unclickable until a reload.
         close();
-        router.push(`/bk/${data.token}`);
+        // Booked with a Tikka: back to the Tikka card, which has the code for the counter and now
+        // shows the booking. Otherwise the booking pass.
+        router.push(tikka ? `/t/${tikka.token}` : `/bk/${data.token}`);
         return;
       }
       const reason = data.reason ?? "error";
@@ -244,7 +246,10 @@ export function CalendarSheet({
             <p className="rounded-md bg-surface-sunken px-4 py-3 text-[15px] font-semibold">
               {tikka.booking.service} · {whenLabel(tikka.booking.startsAt)}
             </p>
-            <a href={`/bk/${tikka.booking.token}`} className="biz-btn min-h-[52px] w-full bg-ink text-surface-raised">
+            <a href={`/t/${tikka.token}`} className="biz-btn min-h-[52px] w-full bg-ink text-surface-raised">
+              Back to your Tikka
+            </a>
+            <a href={`/bk/${tikka.booking.token}`} className="biz-btn min-h-[52px] w-full border border-line-strong">
               See your booking
             </a>
             <p className="text-caption text-ink-muted">To change it, message {business} from your booking.</p>

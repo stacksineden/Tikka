@@ -1,6 +1,6 @@
 import "@/components/business/site.css";
 import type { Metadata } from "next";
-import { CalendarCheck, Clock, MapPin } from "lucide-react";
+import { CalendarCheck, Clock, MapPin, Ticket } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -72,6 +72,21 @@ async function Pass({ params }: { params: PageProps<"/bk/[token]">["params"] }) 
           </div>
         </dl>
       </section>
+
+      {/* Booked with a Tikka: its code and QR are on the card, which is what the counter needs. */}
+      {pass.tikka && (
+        <section className="rounded-card border border-line bg-surface-raised p-4" aria-label="Your Tikka">
+          <p className="text-label flex items-center gap-1.5 text-ink-muted">
+            <Ticket size={16} aria-hidden="true" />
+            Your Tikka{pass.tikka.used ? " · used" : ""}
+          </p>
+          <p className="text-body-lg mt-1 font-semibold">{pass.tikka.reward}</p>
+          {!pass.tikka.used && <p className="text-body mt-1 text-ink-muted">Show your Tikka at the counter to get it.</p>}
+          <a href={`/t/${pass.tikka.token}`} className="biz-btn mt-3 min-h-12 w-full border border-line-strong">
+            Open your Tikka
+          </a>
+        </section>
+      )}
 
       {cancelled ? (
         <p className="text-body rounded-md bg-surface-sunken px-4 py-3">
