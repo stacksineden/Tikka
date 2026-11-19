@@ -56,7 +56,7 @@ export function Hero() {
           Your posts get views. Tikka turns them into customers who show up and pay.
         </h1>
         <p className="text-body-lg mt-5 max-w-lg text-on-night-muted">
-          Share a Tikka drop. People claim a reward on WhatsApp, book a time and pay a deposit to hold it.
+          Share a limited reward worth coming in for. People claim it on WhatsApp, and a deposit holds their booking.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link href="/sign-up" className="btn btn-paper btn-lg">
@@ -204,7 +204,7 @@ const STEPS = [
   },
   {
     title: "They claim on WhatsApp.",
-    body: "You get their name and number the moment they claim.",
+    body: "You get their name and number the moment they claim. They can book a time and pay a deposit straight away.",
     Visual: StepVisualWhatsApp,
   },
   {
@@ -653,11 +653,11 @@ export function FinalCta() {
         <div className="max-w-xl">
           <h2 className="text-heading sm:text-display-lg">Your first drop can be live today.</h2>
           <p className="text-body-lg mt-3 text-on-night-muted">
-            Pick an offer, share one link, and see who walks in. Free to start.
+            Pick a reward, share one link, and see who shows up and pays. Your first drop is free.
           </p>
         </div>
         <Link href="/sign-up" className="btn btn-paper btn-lg shrink-0">
-          Start free
+          Get your first drop free
         </Link>
       </div>
     </section>

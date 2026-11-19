@@ -20,7 +20,7 @@ import { getDropPacks, getDropTiers, getMarketplaceDrops, getPlatformStats } fro
 
 const TITLE = "Tikka · Turn your views into customers who show up and pay";
 const DESCRIPTION =
-  "Share a Tikka drop. People claim a reward on WhatsApp, book a time and pay a deposit to hold it.";
+  "Share a limited reward worth coming in for. People claim it on WhatsApp, and a deposit holds their booking.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
