@@ -154,8 +154,53 @@ const LEADS: [string, string, string][] = [
   ["Zainab B.", "0813 ••• 6605", "Thank-you"],
 ];
 const COUNT_IN = ["0", "9", "21", "34", "48", "59", "68", "73", "76"];
-const COUNT_NAIRA = ["₦0", "₦212,000", "₦486,000", "₦790,000", "₦1,105,000", "₦1,390,000", "₦1,640,000", "₦1,820,000", "₦1,940,000"];
 const PROMISE = "Your posts get views. Tikka turns them into customers who show up and pay.";
+const SERVICES: [string, string, string][] = [
+  ["Signature facial", "60 min · ₦20,000", "₦5,000 deposit"],
+  ["Chemical peel", "45 min · ₦35,000", "₦8,000 deposit"],
+  ["Brow tint", "20 min · ₦8,000", "No deposit"],
+];
+const BOOKINGS: [string, string, string, boolean][] = [
+  ["Zainab B.", "Sat 13 · 2:00pm", "Deposit paid ₦5,000", true],
+  ["Funke A.", "Sat 13 · 3:30pm", "Deposit paid ₦8,000", true],
+  ["Ngozi E.", "Mon 15 · 10:00am", "Deposit paid ₦5,000", true],
+];
+
+/** A chapter card: a number and a promise, wiped in on the night stage. */
+function Chapter({ start, end, n, title }: { start: number; end: number; n: string; title: string }) {
+  return (
+    <Scene start={start} end={end} fade={0.2}>
+      <div className="sv-night" />
+      <At style={{ position: "absolute", left: 0, right: 0, top: 360, display: "grid", justifyItems: "center", textAlign: "center" }}>
+        <At className="xv-mono" style={{ fontSize: 22, fontWeight: 700, letterSpacing: "0.2em", color: "var(--on-night-muted)", ...enter("xvUp", start + 0.05, 0.35) }}>
+          CHAPTER {n}
+        </At>
+        <At style={{ marginTop: 10, width: 120, height: 3, borderRadius: 3, background: "var(--brand)", transformOrigin: "50% 50%", ...enter("xvStrike", start + 0.15, 0.4) }} />
+        <div className="sv-say sv-say-night" style={{ position: "static", marginTop: 22, fontSize: 46, lineHeight: "52px" }}>
+          {title.split(" ").map((w, i) => (
+            <span key={i} style={{ display: "inline-block", marginRight: "0.26em", ...enter("xvWord", start + 0.2 + i * 0.08, 0.4) }}>
+              {w}
+            </span>
+          ))}
+        </div>
+      </At>
+    </Scene>
+  );
+}
+
+function Phone({ top = 120, zoom = 0.9, at, children }: { top?: number; zoom?: number; at?: number; children: ReactNode }) {
+  return (
+    <At style={{ position: "absolute", left: "50%", top, translate: "-50% 0", ...(at !== undefined ? enter("xvRise", at, 0.5) : {}) }}>
+      <div style={{ zoom }}>
+        <div className="xv-phone">
+          <div className="xv-screen" style={{ background: "var(--surface)" }}>
+            {children}
+          </div>
+        </div>
+      </div>
+    </At>
+  );
+}
 
 export default async function StatusVideoPage() {
   if (process.env.NODE_ENV === "production") notFound();
@@ -164,7 +209,7 @@ export default async function StatusVideoPage() {
   return (
     <main style={{ display: "grid", placeItems: "center", minHeight: "100vh", background: "var(--night)" }}>
       <div className="xv" data-theme="light" data-length={LENGTH}>
-        {/* 1 · The hook (0–5): views, likes, "how much?" around a worried owner */}
+        {/* HOOK · 0–5: views, likes, "how much?" around a worried owner */}
         <Scene start={0} end={5.2} fade={0.01}>
           <div className="sv-light" />
           <At className="sv-ring" style={{ width: 380, height: 380, left: 80, top: 230, animation: `svPulse 2.4s ease-out 0.2s infinite` }} />
@@ -188,307 +233,358 @@ export default async function StatusVideoPage() {
           <Say top={770} at={2.95} words="0 customers." />
         </Scene>
 
-        {/* 2 · The empty chair (5–9) and 3 · the no-show (9–13) */}
-        <Scene start={5} end={13.1}>
+        {/* HOOK · 5–9: the booking that didn't come */}
+        <Scene start={5} end={9.15}>
           <At style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
-            <At style={{ position: "absolute", inset: 0, transformOrigin: "50% 60%", animation: `svPush 8.1s linear 5s both` }}>
+            <At style={{ position: "absolute", inset: 0, transformOrigin: "50% 60%", animation: `svPush 4.2s linear 5s both` }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`${IMG}/chair.webp`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </At>
           </At>
-          <At style={{ position: "absolute", inset: 0, background: "var(--night)", ...enter("svDim", 9, 0.8, "linear") }} />
+          <At style={{ position: "absolute", inset: 0, background: "var(--night)", ...enter("svDim", 7.0, 1.2, "linear") }} />
           <div className="sv-scrim" />
-          <At style={during(5.4, 9.0, 0.3)}>
-            <Say top={700} at={5.5} words="But the chair stays empty." night />
-          </At>
-          {/* the booking that didn't come */}
-          <At style={{ position: "absolute", left: 120, top: 150, ...enter("xvUp", 9.3, 0.4) }}>
+          <At style={{ position: "absolute", left: 120, top: 150, ...enter("xvUp", 5.3, 0.4) }}>
             <div className="xv-chat" style={{ fontSize: 22, lineHeight: "28px", padding: "14px 20px" }}>
               See you 2pm! 😊
               <span style={{ display: "block", textAlign: "right", fontSize: 12, color: "var(--ink-muted)" }}>Booked · Sat</span>
             </div>
           </At>
-          <At className="xv-pill" style={{ position: "absolute", left: 175, top: 278, fontSize: 30, padding: "12px 26px", ...enter("xvPop", 9.9, 0.35) }}>
+          <At className="xv-pill" style={{ position: "absolute", left: 175, top: 278, fontSize: 30, padding: "12px 26px", ...enter("xvPop", 5.8, 0.35) }}>
             <span>🕑</span>
-            <Counter steps={["2:00", "2:05", "2:10", "2:15", "2:20", "2:25", "2:30"]} at={10.0} every={0.3} style={{ fontFamily: "var(--font-mono)", fontWeight: 700 }} />
+            <Counter steps={["2:00", "2:05", "2:10", "2:15", "2:20", "2:25", "2:30"]} at={5.9} every={0.27} style={{ fontFamily: "var(--font-mono)", fontWeight: 700 }} />
           </At>
-          <At style={enter("xvIn", 9.2, 0.3, "linear")}>
-            <Say top={688} at={9.4} words="And the ones who book don't show." night />
-          </At>
+          <Say top={688} at={5.5} words="And the ones who book don't show." night />
         </Scene>
 
-        {/* 4 · Meet Tikka (13–16) */}
-        <Scene start={13} end={16.2}>
+        {/* 9–12: Tikka fixes both */}
+        <Scene start={9} end={12.15}>
           <div className="sv-light" />
-          <At style={{ position: "absolute", left: 0, right: 0, top: 330, display: "grid", justifyItems: "center" }}>
-            <At style={enter("xvBurst", 13.25, 0.7)}>
+          <At style={{ position: "absolute", left: 0, right: 0, top: 320, display: "grid", justifyItems: "center" }}>
+            <At style={enter("xvBurst", 9.2, 0.7)}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/brand/tikka-mark.svg" alt="" width={120} height={120} />
             </At>
-            <At style={{ marginTop: 26, ...enter("xvUp", 13.75, 0.5) }}>
+            <At style={{ marginTop: 26, ...enter("xvUp", 9.65, 0.5) }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/brand/tikka-wordmark.svg" alt="Tikka" width={190} height={60} />
             </At>
           </At>
-          <Say top={720} at={14.1} words="Meet Tikka." />
+          <Say top={720} at={10.1} words="Tikka fixes both." />
         </Scene>
 
-        {/* 5 · Share a drop (16–21): one link flows down to everywhere you post */}
-        <Scene start={16} end={21.2}>
+        <Chapter start={12} end={13.6} n="01" title="Bring new customers in" />
+
+        {/* 13.5–18: share a drop, free to claim */}
+        <Scene start={13.5} end={18.15}>
           <div className="sv-light" />
-          <At style={{ position: "absolute", left: 0, right: 0, top: 112, display: "flex", justifyContent: "center", ...enter("xvRise", 16.1, 0.6) }}>
+          <At style={{ position: "absolute", left: 0, right: 0, top: 112, display: "flex", justifyContent: "center", ...enter("xvRise", 13.55, 0.6) }}>
             <div className="sv-pack" style={{ zoom: 0.56 }}>
               <TikkaPack as="div" businessName={FACE.name} initials={FACE.initials} brandColor={FACE.brandColor} onBrandColor={FACE.onBrandColor} total={600} contents={{ legendary: 12, rare: 60, thankYou: 528 }} />
             </div>
           </At>
-          <At className="xv-pill" style={{ position: "absolute", left: "50%", top: 412, translate: "-50% 0", background: "var(--surface-raised)", color: "var(--ink)", fontSize: 16, boxShadow: "var(--shadow-raised)", ...enter("xvPop", 16.9, 0.35) }}>
-            🔗 usetikka.com/glow-studio
+          <At className="xv-pill" style={{ position: "absolute", left: "50%", top: 412, translate: "-50% 0", background: "var(--surface-raised)", color: "var(--ink)", fontSize: 16, boxShadow: "var(--shadow-raised)", ...enter("xvPop", 14.2, 0.35) }}>
+            <span style={{ whiteSpace: "nowrap" }}>🔗 usetikka.com/d/glow-studio</span>
           </At>
           <svg className="sv-line" viewBox="0 0 540 960" width={540} height={960} style={{ position: "absolute", inset: 0 }} aria-hidden="true">
-            {[
-              "M270 462 C270 520 75 520 75 580",
-              "M270 462 C270 520 205 520 205 580",
-              "M270 462 C270 520 335 520 335 580",
-              "M270 462 C270 520 465 520 465 580",
-            ].map((d, i) => (
-              <path key={d} d={d} style={{ animation: `svDraw .7s ${EASE} ${17.3 + i * 0.12}s both` }} />
+            {["M270 462 C270 520 75 520 75 580", "M270 462 C270 520 205 520 205 580", "M270 462 C270 520 335 520 335 580", "M270 462 C270 520 465 520 465 580"].map((d, i) => (
+              <path key={d} d={d} style={{ animation: `svDraw .6s ${EASE} ${14.5 + i * 0.1}s both` }} />
             ))}
           </svg>
           {(["instagram", "tiktok", "whatsapp"] as Platform[]).map((p, i) => (
-            <At key={p} style={{ position: "absolute", left: [42, 172, 302][i], top: 586, ...floatIn(17.9 + i * 0.15) }}>
+            <At key={p} style={{ position: "absolute", left: [42, 172, 302][i], top: 586, ...floatIn(15.0 + i * 0.13) }}>
               <Icon name={p} size={66} />
             </At>
           ))}
-          <At style={{ position: "absolute", left: 432, top: 586, width: 66, height: 66, borderRadius: 19, background: "var(--surface-raised)", padding: 7, boxShadow: "var(--shadow-raised)", ...floatIn(18.35) }}>
+          <At style={{ position: "absolute", left: 432, top: 586, width: 66, height: 66, borderRadius: 19, background: "var(--surface-raised)", padding: 7, boxShadow: "var(--shadow-raised)", ...floatIn(15.4) }}>
             <div style={{ width: "100%", height: "100%" }} dangerouslySetInnerHTML={{ __html: qr }} />
           </At>
-          <Say top={696} at={18.6} words="Share a limited reward." size={34} />
-          <Say top={740} at={19.4} words="One link, everywhere you post." size={30} />
+          <Say top={696} at={15.6} words="Share a limited reward." size={34} />
+          <Say top={740} at={16.3} words="Free to claim." size={34} />
         </Scene>
 
-        {/* 6 · They claim it (21–28): open, flip, then the card in their chat */}
-        <Scene start={21} end={28.2}>
+        {/* 18–23: they claim it free on WhatsApp */}
+        <Scene start={18} end={23.15}>
           <div className="sv-light" />
-          <At style={{ position: "absolute", left: "50%", top: 120, translate: "-50% 0", ...enter("xvRise", 21.0, 0.5) }}>
-            <div style={{ zoom: 0.9 }}>
-              <div className="xv-phone">
-                <div className="xv-screen">
-                  {/* a · the Tikka opens */}
-                  <div className="xv-layer" style={{ background: "var(--night)", ...during(21.0, 25.0, 0.2) }}>
-                    <div style={{ display: "grid", justifyItems: "center", paddingTop: 40 }}>
-                      <span className="xv-pill" style={{ fontSize: 13, padding: "6px 12px", ...enter("xvIn", 21.3, 0.3, "linear") }}>
-                        <Tick className="size-4" /> Claimed on WhatsApp
-                      </span>
-                      <div style={{ position: "relative", width: 230, height: 322, marginTop: 34 }}>
-                        <At style={{ position: "absolute", inset: -40, borderRadius: 999, background: "radial-gradient(closest-side, var(--rarity-rare), transparent)", ...enter("xvGlowOn", 22.75, 0.5) }} />
-                        <At style={{ position: "absolute", inset: 0, transformOrigin: "50% 90%", ...enter("xvShake", 21.85, 0.45, "ease-in-out") }}>
-                          <At style={{ animation: `xvSquashOut .25s ease-in 22.45s forwards` }}>
-                            <SoloCard zoom={0.82} label="" face={FACE} total={600} claimedBy="Adaeze" />
-                          </At>
-                        </At>
-                        <At style={{ position: "absolute", inset: 0, ...enter("xvSquashIn", 22.7, 0.3, "ease-out") }}>
-                          <SoloCard zoom={0.82} flipped label="" face={FACE} total={600} reveal={RARE} />
-                        </At>
-                        {SPARKS.map((s, i) => (
-                          <At
-                            key={i}
-                            className="xv-spark"
-                            style={{ width: s.size, height: s.size, margin: `${-s.size / 2}px 0 0 ${-s.size / 2}px`, ["--dx" as string]: `${s.dx}px`, ["--dy" as string]: `${s.dy}px`, animation: `xvSparkFly .9s ease-out ${22.75 + s.delay}s both` }}
-                          >
-                            <Spark className="size-full" />
-                          </At>
-                        ))}
-                      </div>
-                      <At style={{ marginTop: 22, fontSize: 24, fontWeight: 800, ...enter("xvWord", 23.1, 0.45) }}>You got a Tikka!</At>
-                    </div>
-                  </div>
-                  {/* b · the card lands in their chat */}
-                  <div className="xv-layer" style={{ background: "var(--surface-sunken)", color: "var(--ink)", ...during(25.0, 28.4, 0.2) }}>
-                    <div className="xv-chat-head">
-                      <Icon name="whatsapp" size={34} />
-                      <span style={{ display: "grid" }}>
-                        <b style={{ fontSize: 15 }}>Tikka</b>
-                        <span style={{ fontSize: 11, color: "var(--on-night-muted)" }}>Business account</span>
-                      </span>
-                    </div>
-                    <div className="xv-chat-body">
-                      <div className="xv-bubble-out">
-                        Claim my Tikka from Glow Studio
-                        <span style={{ display: "block", textAlign: "right", fontSize: 10, color: "var(--ink-muted)" }}>9:41 ✓✓</span>
-                      </div>
-                      <At className="xv-bubble-in" style={enter("xvUp", 25.35, 0.35)}>
-                        <div style={{ display: "grid", placeItems: "center", padding: "6px 0 8px", borderRadius: 10, background: "var(--night)" }}>
-                          <SoloCard zoom={0.42} flipped label="" face={FACE} total={600} reveal={RARE} />
-                        </div>
-                        <p style={{ marginTop: 6 }}>
-                          🎟 You got a Tikka from Glow Studio! 20% off any service · Code <b>GS-7X4QP</b>. Show this at the counter.
-                        </p>
-                      </At>
-                    </div>
-                  </div>
+          <Phone at={18.0}>
+            <div className="xv-layer" style={{ background: "var(--night)", color: "var(--on-night)", ...during(18.0, 21.2, 0.2) }}>
+              <div style={{ display: "grid", justifyItems: "center", paddingTop: 40 }}>
+                <span className="xv-pill" style={{ fontSize: 13, padding: "6px 12px", ...enter("xvIn", 18.2, 0.3, "linear") }}>
+                  <Tick className="size-4" /> Claimed free on WhatsApp
+                </span>
+                <div style={{ position: "relative", width: 230, height: 322, marginTop: 34 }}>
+                  <At style={{ position: "absolute", inset: -40, borderRadius: 999, background: "radial-gradient(closest-side, var(--rarity-rare), transparent)", ...enter("xvGlowOn", 19.45, 0.5) }} />
+                  <At style={{ position: "absolute", inset: 0, transformOrigin: "50% 90%", ...enter("xvShake", 18.6, 0.45, "ease-in-out") }}>
+                    <At style={{ animation: `xvSquashOut .25s ease-in 19.15s forwards` }}>
+                      <SoloCard zoom={0.82} label="" face={FACE} total={600} claimedBy="Adaeze" />
+                    </At>
+                  </At>
+                  <At style={{ position: "absolute", inset: 0, ...enter("xvSquashIn", 19.4, 0.3, "ease-out") }}>
+                    <SoloCard zoom={0.82} flipped label="" face={FACE} total={600} reveal={RARE} />
+                  </At>
+                  {SPARKS.map((s, i) => (
+                    <At
+                      key={i}
+                      className="xv-spark"
+                      style={{ width: s.size, height: s.size, margin: `${-s.size / 2}px 0 0 ${-s.size / 2}px`, ["--dx" as string]: `${s.dx}px`, ["--dy" as string]: `${s.dy}px`, animation: `xvSparkFly .9s ease-out ${19.45 + s.delay}s both` }}
+                    >
+                      <Spark className="size-full" />
+                    </At>
+                  ))}
                 </div>
+                <At style={{ marginTop: 22, fontSize: 24, fontWeight: 800, ...enter("xvWord", 19.8, 0.45) }}>You got a Tikka!</At>
               </div>
             </div>
-          </At>
-          <Say top={704} at={21.6} words="They claim it on WhatsApp." size={34} />
-        </Scene>
-
-        {/* 7 · They book and pay a deposit (28–35) */}
-        <Scene start={28} end={35.2}>
-          <div className="sv-light" />
-          <At style={{ position: "absolute", left: "50%", top: 120, translate: "-50% 0" }}>
-            <div style={{ zoom: 0.9 }}>
-              <div className="xv-phone">
-                <div className="xv-screen" style={{ background: "var(--surface)" }}>
-                  <div className="xv-layer" style={{ color: "var(--ink)", padding: "34px 18px 0", ...during(28.0, 32.6, 0.2) }}>
-                    <p style={{ fontSize: 12, color: "var(--ink-muted)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>Glow Studio · Book</p>
-                    <p style={{ marginTop: 6, fontSize: 20, fontWeight: 800 }}>Signature facial</p>
-                    <p style={{ fontSize: 14, color: "var(--ink-muted)" }}>60 min · ₦20,000</p>
-                    <p style={{ marginTop: 18, fontSize: 13, fontWeight: 700 }}>Pick a day</p>
-                    <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-                      {["Thu 11", "Fri 12", "Sat 13", "Mon 15"].map((d, i) => (
-                        <div key={d} style={{ position: "relative" }}>
-                          <div className="sv-chip">{d}</div>
-                          {i === 2 && <At className="sv-chip sv-chip-on" style={{ position: "absolute", inset: 0, ...enter("xvPop", 29.0, 0.25) }}>{d}</At>}
-                        </div>
-                      ))}
-                    </div>
-                    <p style={{ marginTop: 16, fontSize: 13, fontWeight: 700 }}>Free times</p>
-                    <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-                      {["10:00am", "12:00pm", "2:00pm", "3:30pm", "5:00pm"].map((t, i) => (
-                        <div key={t} style={{ position: "relative" }}>
-                          <div className="sv-chip">{t}</div>
-                          {i === 2 && <At className="sv-chip sv-chip-on" style={{ position: "absolute", inset: 0, ...enter("xvPop", 29.8, 0.25) }}>{t}</At>}
-                        </div>
-                      ))}
-                    </div>
-                    <At style={{ position: "absolute", left: 10, right: 10, bottom: 10, padding: 16, borderRadius: 22, background: "var(--surface-raised)", boxShadow: "var(--shadow-raised)", ...enter("svSlideUp", 30.4, 0.45) }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
-                        <span>Sat 13 · 2:00pm</span>
-                        <b>₦20,000</b>
-                      </div>
-                      <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", fontSize: 16, fontWeight: 800 }}>
-                        <span>Deposit to book</span>
-                        <span>₦5,000</span>
-                      </div>
-                      <div style={{ marginTop: 4, display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--ink-muted)" }}>
-                        <span>Pay at the shop</span>
-                        <span>₦15,000</span>
-                      </div>
-                      <At style={{ marginTop: 14, ...enter("xvTap", 31.7, 0.3, "ease-in-out") }}>
-                        <div className="xv-btn" style={{ fontSize: 17 }}>Pay ₦5,000</div>
-                      </At>
-                    </At>
-                  </div>
-                  <div className="xv-layer" style={{ color: "var(--ink)", display: "grid", placeItems: "center", alignContent: "center", gap: 14, textAlign: "center", ...during(32.6, 35.4, 0.2) }}>
-                    <At style={{ width: 92, height: 92, borderRadius: 999, background: "var(--success)", color: "var(--on-success)", display: "grid", placeItems: "center", ...enter("xvBurst", 32.75, 0.5) }}>
-                      <Tick className="size-12" />
-                    </At>
-                    <At style={{ fontSize: 26, fontWeight: 800, ...enter("xvUp", 33.0, 0.4) }}>You&apos;re booked</At>
-                    <At style={{ fontSize: 16, color: "var(--ink-muted)", lineHeight: "24px", ...enter("xvUp", 33.2, 0.4) }}>
-                      Sat 13 · 2:00pm
-                      <br />
-                      Deposit paid <b style={{ color: "var(--ink)" }}>₦5,000</b>
-                    </At>
-                  </div>
+            <div className="xv-layer" style={{ background: "var(--surface-sunken)", color: "var(--ink)", ...during(21.2, 23.4, 0.2) }}>
+              <div className="xv-chat-head">
+                <Icon name="whatsapp" size={34} />
+                <span style={{ display: "grid" }}>
+                  <b style={{ fontSize: 15 }}>Tikka</b>
+                  <span style={{ fontSize: 11, color: "var(--on-night-muted)" }}>Business account</span>
+                </span>
+              </div>
+              <div className="xv-chat-body">
+                <div className="xv-bubble-out">
+                  Claim my Tikka from Glow Studio
+                  <span style={{ display: "block", textAlign: "right", fontSize: 10, color: "var(--ink-muted)" }}>9:41 ✓✓</span>
                 </div>
+                <At className="xv-bubble-in" style={enter("xvUp", 21.45, 0.35)}>
+                  <div style={{ display: "grid", placeItems: "center", padding: "6px 0 8px", borderRadius: 10, background: "var(--night)" }}>
+                    <SoloCard zoom={0.42} flipped label="" face={FACE} total={600} reveal={RARE} />
+                  </div>
+                  <p style={{ marginTop: 6 }}>
+                    🎟 You got a Tikka from Glow Studio! 20% off any service · Code <b>GS-7X4QP</b>. Show this at the counter.
+                  </p>
+                </At>
               </div>
             </div>
-          </At>
-          <Say top={704} at={28.6} words="They book a time and pay a deposit." size={34} />
+          </Phone>
+          <Say top={696} at={18.4} words="They claim it on WhatsApp." size={34} />
+          <Say top={740} at={19.6} words="No payment." size={34} />
         </Scene>
 
-        {/* 8 · They come in (35–40): the chair fills, the counter checks the code */}
-        <Scene start={35} end={40.2}>
+        {/* 23–27: they come in; you keep every number */}
+        <Scene start={23} end={27.15}>
           <At style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
-            <At style={{ position: "absolute", inset: 0, transformOrigin: "50% 60%", animation: `svPushSlow 5.2s linear 35s both` }}>
+            <At style={{ position: "absolute", inset: 0, transformOrigin: "50% 60%", animation: `svPushSlow 4.2s linear 23s both` }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`${IMG}/chair.webp`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </At>
           </At>
           <div className="sv-scrim" />
-          <At style={{ ...enter("xvBurst", 35.3, 0.6), animation: `xvBurst .6s ${EASE} 35.3s both, svShrinkUp .5s ${EASE} 36.8s forwards` }}>
+          <At style={{ animation: `xvBurst .55s ${EASE} 23.15s both, svShrinkUp .45s ${EASE} 24.1s forwards` }}>
             <Face src="c1.webp" size={200} x={270} y={440} />
-            <At className="xv-pill" style={{ position: "absolute", left: 200, top: 552, background: "var(--success)", color: "var(--on-success)", fontSize: 17, ...enter("xvPop", 35.8, 0.3) }}>
+            <At className="xv-pill" style={{ position: "absolute", left: 200, top: 552, background: "var(--success)", color: "var(--on-success)", fontSize: 17, ...enter("xvPop", 23.55, 0.3) }}>
               <Tick className="size-4" /> Arrived
             </At>
           </At>
-          <At className="sv-card" style={{ position: "absolute", left: 50, right: 50, top: 400, padding: 20, ...enter("svSlideUp", 37.0, 0.5) }}>
+          <At className="sv-card" style={{ position: "absolute", left: 50, right: 50, top: 400, padding: 20, animation: `svSlideUp .45s ${EASE} 24.3s both, xvOut .2s linear 25.4s forwards` }}>
             <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink-muted)" }}>Counter · Glow Studio</p>
             <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 999, background: "var(--success-soft)", color: "var(--success)", fontWeight: 800, fontSize: 15 }}>
               <Tick className="size-4" /> Valid
             </div>
             <p style={{ marginTop: 10, fontSize: 20, fontWeight: 800 }}>Adaeze · 20% off any service</p>
             <p style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--ink-muted)" }}>GS-7X4QP</p>
-            <At style={{ marginTop: 12, padding: "10px 12px", borderRadius: 12, background: "var(--brand-soft)", fontSize: 15, fontWeight: 700, ...enter("xvPop", 37.6, 0.3) }}>
-              Deposit paid ₦5,000 · collect ₦15,000
-            </At>
-            <At style={{ marginTop: 14, ...enter("xvTap", 38.4, 0.3, "ease-in-out") }}>
-              <div className="xv-btn" style={{ fontSize: 17 }}>Confirm</div>
-            </At>
           </At>
-          <Say top={706} at={35.6} words="They show up. You get paid." night size={36} />
-        </Scene>
-
-        {/* 9 · Every lead is yours (40–46): the list fills, then faces orbit the owner */}
-        <Scene start={40} end={46.2}>
-          <div className="sv-light" />
-          <At className="sv-card" style={{ position: "absolute", left: 50, right: 50, top: 140, padding: "18px 18px 8px", ...during(40.0, 43.0, 0.3) }}>
-            <p style={{ fontSize: 18, fontWeight: 800 }}>Leads · 577</p>
-            {LEADS.map(([n, p, t], i) => (
-              <At key={n} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 0", borderTop: i ? "1px solid var(--line)" : undefined, ...enter("svSlideUp", 40.25 + i * 0.22, 0.35) }}>
-                <span style={{ width: 36, height: 36, borderRadius: 999, background: "var(--brand-soft)", color: "var(--brand)", display: "grid", placeItems: "center", fontWeight: 800 }}>{n[0]}</span>
+          <At className="sv-card" style={{ position: "absolute", left: 50, right: 50, top: 380, padding: "16px 18px 6px", ...during(25.6, 27.4, 0.2) }}>
+            <p style={{ fontSize: 17, fontWeight: 800 }}>Leads · 577</p>
+            {LEADS.slice(0, 3).map(([n, p], i) => (
+              <At key={n} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderTop: i ? "1px solid var(--line)" : undefined, ...enter("svSlideUp", 25.7 + i * 0.18, 0.3) }}>
+                <span style={{ width: 32, height: 32, borderRadius: 999, background: "var(--brand-soft)", color: "var(--brand)", display: "grid", placeItems: "center", fontWeight: 800 }}>{n[0]}</span>
                 <span style={{ flex: 1 }}>
-                  <b style={{ display: "block", fontSize: 16 }}>{n}</b>
+                  <b style={{ display: "block", fontSize: 15 }}>{n}</b>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-muted)" }}>{p}</span>
                 </span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-muted)" }}>{t}</span>
               </At>
             ))}
           </At>
-          <At style={during(43.0, 46.4, 0.3)}>
-            <At className="sv-ring" style={{ width: 400, height: 400, left: 70, top: 230 }} />
-            <Face src="owner-smiling.webp" size={230} x={270} y={430} style={enter("xvZoom", 43.0, 0.5)} />
-            <At style={{ position: "absolute", left: 70, top: 230, width: 400, height: 400, animation: `svSpin 24s linear 43s both` }}>
-              {ORBIT.map((src, i) => {
-                const a = (i / ORBIT.length) * Math.PI * 2 - Math.PI / 2;
-                const x = 200 + Math.cos(a) * 200;
-                const y = 200 + Math.sin(a) * 200;
-                return (
-                  <At key={src} style={{ position: "absolute", left: x - 45, top: y - 45, width: 90, height: 90, animation: `svUnspin 24s linear 43s both` }}>
-                    <At style={{ position: "absolute", inset: 0, ...enter("xvPop", 43.3 + i * 0.16, 0.35) }}>
-                      <Face src={src} size={90} x={45} y={45} />
-                    </At>
-                  </At>
-                );
-              })}
-            </At>
-          </At>
-          <Say top={706} at={40.4} words="Every name and number is yours." size={34} />
+          <Say top={696} at={23.3} words="They come in." night size={34} />
+          <Say top={740} at={24.6} words="You keep every number." night size={34} />
         </Scene>
 
-        {/* 10 · The wow (46–51) */}
-        <Scene start={46} end={51.2}>
-          <div className="sv-night" />
-          <At style={{ position: "absolute", left: 0, right: 0, top: 210, textAlign: "center" }}>
-            <At className="xv-kicker" style={enter("xvUp", 46.2, 0.4)}>
-              One drop · 2 weeks
-            </At>
-            <Counter steps={COUNT_IN} at={46.5} every={0.12} style={{ marginTop: 18, fontSize: 120, lineHeight: "124px", fontWeight: 800, letterSpacing: "-0.04em" }} />
-            <At style={{ fontSize: 28, fontWeight: 800, ...enter("xvUp", 46.7, 0.4) }}>came in</At>
-            <Counter steps={COUNT_NAIRA} at={47.9} every={0.17} style={{ marginTop: 36, fontSize: 66, lineHeight: "72px", fontWeight: 800, letterSpacing: "-0.03em", color: "var(--gold)" }} />
-            <At style={{ fontSize: 22, color: "var(--on-night-muted)", ...enter("xvUp", 48.2, 0.4) }}>spent, counted in naira</At>
-          </At>
-          <Say top={706} at={49.4} words="One drop. Real customers." night size={36} />
-        </Scene>
+        <Chapter start={27} end={28.6} n="02" title="Make bookings show up" />
 
-        {/* 11 · The promise (51–55.6), then the end card (55.6–59) */}
-        <Scene start={51} end={55.8}>
+        {/* 28.5–34: your free website, in your bio */}
+        <Scene start={28.5} end={34.15}>
           <div className="sv-light" />
-          <Face src="owner-smiling.webp" size={190} x={270} y={250} style={enter("xvZoom", 51.1, 0.5)} />
+          <At className="sv-bubble" style={{ left: "50%", top: 112, translate: "-50% 0", fontSize: 16, ...enter("xvPop", 28.6, 0.35) }}>
+            <Icon name="instagram" size={34} />
+            <span style={{ display: "grid", lineHeight: "20px" }}>
+              <b>glowstudio.lekki</b>
+              <span style={{ fontWeight: 600, color: "var(--brand)" }}>🔗 usetikka.com/glow-studio</span>
+            </span>
+          </At>
+          <Phone top={190} zoom={0.84} at={28.75}>
+            <div className="xv-layer" style={{ color: "var(--ink)", overflow: "hidden" }}>
+              <At style={{ animation: `svScrollPage 3.6s cubic-bezier(.45,0,.25,1) 30.0s both` }}>
+                <div style={{ height: 150, position: "relative", overflow: "hidden" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`${IMG}/chair.webp`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 30%" }} />
+                </div>
+                <div style={{ padding: "0 16px" }}>
+                  <div style={{ marginTop: -30, width: 60, height: 60, borderRadius: 999, background: FACE.brandColor, color: FACE.onBrandColor, display: "grid", placeItems: "center", fontWeight: 800, fontSize: 20, border: "3px solid var(--surface)", position: "relative" }}>GS</div>
+                  <p style={{ marginTop: 8, fontSize: 22, fontWeight: 800 }}>Glow Studio</p>
+                  <p style={{ fontSize: 13, color: "var(--ink-muted)" }}>Skin &amp; beauty studio · Lekki, Lagos</p>
+                  <p style={{ marginTop: 4, fontSize: 13, fontWeight: 700 }}>★ 4.9 · 128 reviews</p>
+                  <p style={{ marginTop: 14, fontSize: 15, fontWeight: 800 }}>Services</p>
+                  {SERVICES.map(([n, d, dep]) => (
+                    <div key={n} style={{ marginTop: 8, padding: 12, borderRadius: 14, background: "var(--surface-raised)", boxShadow: "var(--shadow-raised)", display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ flex: 1 }}>
+                        <b style={{ display: "block", fontSize: 14 }}>{n}</b>
+                        <span style={{ fontSize: 12, color: "var(--ink-muted)" }}>{d}</span>
+                        <span style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--brand)" }}>{dep}</span>
+                      </span>
+                      <span style={{ fontSize: 12, fontWeight: 800, padding: "6px 12px", borderRadius: 999, background: "var(--brand)", color: "var(--on-brand)" }}>Book</span>
+                    </div>
+                  ))}
+                  <p style={{ marginTop: 16, fontSize: 15, fontWeight: 800 }}>Our work</p>
+                  <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+                    {["c1.webp", "c3.webp", "c5.webp", "owner-smiling.webp", "c4.webp", "c2.webp"].map((src) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={src} src={`${IMG}/${src}`} alt="" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: 8 }} />
+                    ))}
+                  </div>
+                  <p style={{ marginTop: 16, fontSize: 15, fontWeight: 800 }}>Reviews</p>
+                  <div style={{ marginTop: 8, padding: 12, borderRadius: 14, background: "var(--surface-raised)", boxShadow: "var(--shadow-raised)", fontSize: 13 }}>
+                    <b>★★★★★</b> “My skin has never looked this good.” <span style={{ color: "var(--ink-muted)" }}>· Kemi</span>
+                  </div>
+                </div>
+              </At>
+            </div>
+          </Phone>
+          <Say top={720} at={29.0} words="Your free website. In your bio." size={34} />
+        </Scene>
+
+        {/* 34–40: a new customer books and pays a deposit */}
+        <Scene start={34} end={40.15}>
+          <div className="sv-light" />
+          <Phone top={190} zoom={0.84}>
+            <div className="xv-layer" style={{ color: "var(--ink)", padding: "34px 18px 0", ...during(34.0, 38.6, 0.2) }}>
+              <p style={{ fontSize: 12, color: "var(--ink-muted)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>Glow Studio · Book</p>
+              <p style={{ marginTop: 6, fontSize: 20, fontWeight: 800 }}>Signature facial</p>
+              <p style={{ fontSize: 14, color: "var(--ink-muted)" }}>60 min · ₦20,000</p>
+              <p style={{ marginTop: 18, fontSize: 13, fontWeight: 700 }}>Pick a day</p>
+              <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+                {["Thu 11", "Fri 12", "Sat 13", "Mon 15"].map((d, i) => (
+                  <div key={d} style={{ position: "relative" }}>
+                    <div className="sv-chip">{d}</div>
+                    {i === 2 && <At className="sv-chip sv-chip-on" style={{ position: "absolute", inset: 0, ...enter("xvPop", 35.0, 0.25) }}>{d}</At>}
+                  </div>
+                ))}
+              </div>
+              <p style={{ marginTop: 16, fontSize: 13, fontWeight: 700 }}>Free times</p>
+              <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                {["10:00am", "12:00pm", "2:00pm", "3:30pm", "5:00pm"].map((t, i) => (
+                  <div key={t} style={{ position: "relative" }}>
+                    <div className="sv-chip">{t}</div>
+                    {i === 2 && <At className="sv-chip sv-chip-on" style={{ position: "absolute", inset: 0, ...enter("xvPop", 35.8, 0.25) }}>{t}</At>}
+                  </div>
+                ))}
+              </div>
+              <At style={{ position: "absolute", left: 10, right: 10, bottom: 10, padding: 16, borderRadius: 22, background: "var(--surface-raised)", boxShadow: "var(--shadow-raised)", ...enter("svSlideUp", 36.4, 0.45) }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                  <span>Sat 13 · 2:00pm</span>
+                  <b>₦20,000</b>
+                </div>
+                <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", fontSize: 16, fontWeight: 800 }}>
+                  <span>Deposit to book</span>
+                  <span>₦5,000</span>
+                </div>
+                <div style={{ marginTop: 4, display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--ink-muted)" }}>
+                  <span>Pay at the shop</span>
+                  <span>₦15,000</span>
+                </div>
+                <At style={{ marginTop: 14, ...enter("xvTap", 37.7, 0.3, "ease-in-out") }}>
+                  <div className="xv-btn" style={{ fontSize: 17 }}>Pay ₦5,000</div>
+                </At>
+              </At>
+            </div>
+            <div className="xv-layer" style={{ color: "var(--ink)", display: "grid", placeItems: "center", alignContent: "center", gap: 14, textAlign: "center", ...during(38.6, 40.4, 0.2) }}>
+              <At style={{ width: 92, height: 92, borderRadius: 999, background: "var(--success)", color: "var(--on-success)", display: "grid", placeItems: "center", ...enter("xvBurst", 38.75, 0.5) }}>
+                <Tick className="size-12" />
+              </At>
+              <At style={{ fontSize: 26, fontWeight: 800, ...enter("xvUp", 39.0, 0.4) }}>You&apos;re booked, Zainab</At>
+              <At style={{ fontSize: 16, color: "var(--ink-muted)", lineHeight: "24px", ...enter("xvUp", 39.2, 0.4) }}>
+                Sat 13 · 2:00pm
+                <br />
+                Deposit paid <b style={{ color: "var(--ink)" }}>₦5,000</b>
+              </At>
+            </div>
+          </Phone>
+          {/* the new customer, who found the page on Instagram */}
+          <At className="sv-bubble" style={{ left: "50%", top: 106, translate: "-50% 0", padding: "6px 16px 6px 6px", fontSize: 16, ...enter("xvPop", 34.15, 0.4) }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`${IMG}/c5.webp`} alt="" width={52} height={52} style={{ borderRadius: 999, border: "3px solid var(--surface-raised)" }} />
+            <span style={{ display: "grid", lineHeight: "20px" }}>
+              <b>Zainab</b>
+              <span style={{ fontWeight: 600, color: "var(--ink-muted)", fontSize: 14 }}>found you on Instagram</span>
+            </span>
+          </At>
+          <Say top={696} at={34.4} words="They book a time" size={34} />
+          <Say top={740} at={35.4} words="and pay a deposit." size={34} />
+        </Scene>
+
+        {/* 40–45: the owner's side: deposits paid, money in the bank */}
+        <Scene start={40} end={45.15}>
+          <div className="sv-light" />
+          <At className="sv-card" style={{ position: "absolute", left: 40, right: 40, top: 118, padding: "16px 18px 6px", ...enter("svSlideUp", 40.05, 0.45) }}>
+            <p style={{ fontSize: 17, fontWeight: 800 }}>Bookings · Glow Studio</p>
+            {BOOKINGS.map(([n, when, dep], i) => (
+              <At key={n} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderTop: i ? "1px solid var(--line)" : undefined, ...enter("svSlideUp", 40.3 + i * 0.2, 0.3) }}>
+                <span style={{ flex: 1 }}>
+                  <b style={{ display: "block", fontSize: 15 }}>{n}</b>
+                  <span style={{ fontSize: 12, color: "var(--ink-muted)" }}>{when}</span>
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 800, padding: "4px 10px", borderRadius: 999, background: "var(--success-soft)", color: "var(--success)" }}>{dep}</span>
+              </At>
+            ))}
+          </At>
+          <At className="sv-card" style={{ position: "absolute", left: 70, right: 70, top: 420, padding: 18, textAlign: "center", ...enter("xvRise", 41.9, 0.5) }}>
+            <p style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink-muted)" }}>Money</p>
+            <p style={{ marginTop: 6, fontSize: 34, fontWeight: 800, letterSpacing: "-0.02em" }}>₦18,000</p>
+            <p style={{ fontSize: 14, color: "var(--ink-muted)" }}>in deposits · to your bank next working day</p>
+          </At>
+          <Say top={696} at={42.6} words="No-show?" size={36} />
+          <Say top={742} at={43.2} words="The deposit's yours." size={36} />
+        </Scene>
+
+        {/* 45–50: more people in, fewer empty chairs */}
+        <Scene start={45} end={50.15}>
+          <div className="sv-light" />
+          <At className="sv-ring" style={{ width: 400, height: 400, left: 70, top: 170 }} />
+          <Face src="owner-smiling.webp" size={220} x={270} y={370} style={enter("xvZoom", 45.05, 0.5)} />
+          <At style={{ position: "absolute", left: 70, top: 170, width: 400, height: 400, animation: `svSpin 24s linear 45s both` }}>
+            {ORBIT.map((src, i) => {
+              const a = (i / ORBIT.length) * Math.PI * 2 - Math.PI / 2;
+              const x = 200 + Math.cos(a) * 200;
+              const y = 200 + Math.sin(a) * 200;
+              return (
+                <At key={src} style={{ position: "absolute", left: x - 42, top: y - 42, width: 84, height: 84, animation: `svUnspin 24s linear 45s both` }}>
+                  <At style={{ position: "absolute", inset: 0, ...enter("xvPop", 45.3 + i * 0.15, 0.35) }}>
+                    <Face src={src} size={84} x={42} y={42} />
+                  </At>
+                </At>
+              );
+            })}
+          </At>
+          <At style={{ position: "absolute", left: 0, right: 0, top: 604, display: "flex", justifyContent: "center", gap: 10 }}>
+            <At className="xv-pill" style={{ background: "var(--surface-raised)", color: "var(--ink)", fontSize: 16, boxShadow: "var(--shadow-raised)", ...enter("xvPop", 46.2, 0.35) }}>
+              <Counter steps={COUNT_IN} at={46.3} every={0.1} style={{ fontWeight: 800 }} /> new customers
+            </At>
+            <At className="xv-pill" style={{ background: "var(--surface-raised)", color: "var(--ink)", fontSize: 16, boxShadow: "var(--shadow-raised)", ...enter("xvPop", 46.7, 0.35) }}>
+              ₦5,000 on every booking
+            </At>
+          </At>
+          <Say top={704} at={47.2} words="More people in." size={36} />
+          <Say top={750} at={47.9} words="Fewer empty chairs." size={36} />
+        </Scene>
+
+        {/* 50–55.6: the promise, then the end card (55.6–59) */}
+        <Scene start={50} end={55.8}>
+          <div className="sv-light" />
+          <Face src="owner-smiling.webp" size={190} x={270} y={250} style={enter("xvZoom", 50.1, 0.5)} />
           <div className="sv-say" style={{ top: 400, fontSize: 40, lineHeight: "46px" }}>
             {PROMISE.split(" ").map((w, i) => (
-              <span key={i} style={{ display: "inline-block", marginRight: "0.26em", color: i >= 9 ? "var(--brand)" : undefined, ...enter("xvWord", 51.4 + i * 0.2, 0.4) }}>
+              <span key={i} style={{ display: "inline-block", marginRight: "0.26em", color: i >= 9 ? "var(--brand)" : undefined, ...enter("xvWord", 50.4 + i * 0.22, 0.4) }}>
                 {w}
               </span>
             ))}

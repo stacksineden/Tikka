@@ -137,3 +137,4 @@
   height: 440px;
   flex: none;
 }
+@keyframes svScrollPage { from { transform: none; } to { transform: translateY(-470px); } }

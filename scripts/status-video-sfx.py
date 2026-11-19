@@ -65,35 +65,41 @@ def rattle():
 
 cues=[]
 add=lambda at,snd,g=1.0: cues.append((at,snd,g))
-# 1 hook
+# hook: views, no customers
 for a in (0.35,0.75,1.15,1.55): add(a,pop(850+a*200))
 add(2.3,tap(),0.8); add(2.95,thud(),0.9)
-# 2-3 chair, no-show
-add(4.95,whoosh(0.8),0.8)
-add(9.3,pop(1000)); 
-for i in range(7): add(10.0+i*0.3,tick())
-add(12.25,thud(),0.9)
-# 4 meet tikka
-add(12.9,whoosh(0.6,up=True),0.9); add(13.3,ding())
-# 5 share
-add(16.05,whoosh(0.5),0.6); add(16.9,pop(1100),0.8); add(17.3,whoosh(0.7,up=True),0.7)
-for i in range(4): add(17.9+i*0.15,pop(900+i*150),0.8)
-# 6 claim
-add(20.95,whoosh(0.5),0.6); add(21.85,rattle(),0.9); add(22.4,rip()); add(22.75,sparkle()); add(25.35,ding(),0.9)
-# 7 book
-add(29.0,tap()); add(29.8,tap()); add(30.4,whoosh(0.45),0.6); add(31.7,tap()); add(32.75,chime())
-# 8 come in
-add(35.3,door()); add(35.8,pop(1200),0.7); add(36.95,whoosh(0.45),0.6); add(38.4,tap())
-# 9 leads
-for i in range(5): add(40.25+i*0.22,pop(1000+i*80),0.6)
-add(42.95,whoosh(0.5),0.6)
-for i in range(5): add(43.3+i*0.16,pop(1100+i*90),0.7)
-# 10 wow
-for i in range(9): add(46.5+i*0.12,tick(),0.7)
-for i in range(9): add(47.9+i*0.17,tick(),0.7)
-add(49.26,kaching())
-# 11 promise + end
-add(51.1,swell(2.2),0.9); add(55.6,whoosh(0.5,up=True),0.6); add(55.75,ding()); add(56.3,swell(2.0),0.8)
+# hook: the no-show
+add(4.95,whoosh(0.8),0.8); add(5.3,pop(1000))
+for i in range(7): add(5.9+i*0.27,tick())
+add(8.0,thud(),0.9)
+# Tikka fixes both
+add(8.85,whoosh(0.6,up=True),0.9); add(9.2,ding())
+# chapter 01
+add(11.9,whoosh(0.5),0.7); add(12.15,tap(),0.8)
+# share, free to claim
+add(13.5,whoosh(0.5),0.6); add(14.2,pop(1100),0.8); add(14.5,whoosh(0.6,up=True),0.7)
+for i in range(4): add(15.0+i*0.13,pop(900+i*150),0.8)
+# claim on WhatsApp
+add(17.95,whoosh(0.5),0.6); add(18.6,rattle(),0.9); add(19.1,rip()); add(19.45,sparkle()); add(21.45,ding(),0.9)
+# they come in; leads
+add(22.95,door()); add(23.55,pop(1200),0.7); add(24.3,whoosh(0.45),0.6)
+for i in range(3): add(25.7+i*0.18,pop(1000+i*80),0.6)
+# chapter 02
+add(26.9,whoosh(0.5),0.7); add(27.15,tap(),0.8)
+# free website
+add(28.6,pop(1000),0.8); add(28.75,whoosh(0.5),0.6); add(30.0,whoosh(1.2),0.4)
+# booking and deposit
+add(34.15,pop(1100),0.8); add(35.0,tap()); add(35.8,tap()); add(36.4,whoosh(0.45),0.6); add(37.7,tap()); add(38.75,chime())
+# owner side: bookings, money
+add(40.05,whoosh(0.45),0.6)
+for i in range(3): add(40.3+i*0.2,pop(1000+i*90),0.6)
+add(41.9,kaching(),0.9)
+# more people in
+add(45.05,whoosh(0.5),0.6)
+for i in range(5): add(45.3+i*0.15,pop(1100+i*90),0.7)
+for i in range(9): add(46.3+i*0.1,tick(),0.6)
+# promise and end card
+add(50.1,swell(2.2),0.9); add(55.6,whoosh(0.5,up=True),0.6); add(55.75,ding()); add(56.3,swell(2.0),0.8)
 
 mix=np.zeros(int(SR*L))
 for at,s,g in cues:

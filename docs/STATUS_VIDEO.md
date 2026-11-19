@@ -23,19 +23,22 @@ Change a scene's timing in the page and the matching cue times in the SFX script
 
 ## Script (voice lines to record; the same words are on screen)
 
+Two chapters with two different customers, so the free reward and the deposit never meet: a drop is
+free to claim (it brings new people in); a deposit is for booking a time on the business page (it
+makes bookings show up).
+
 | Time | Scene | Voice |
 |---|---|---|
-| 0:00–0:05 | Owner in a circle, Instagram/TikTok/WhatsApp messages around her. "1.2k views. 0 customers." | Your posts get views. Likes. "How much?" |
-| 0:05–0:09 | The empty salon chair | But the chair stays empty. |
-| 0:09–0:13 | "See you 2pm!", the clock runs to 2:30 | And the ones who book… don't show. |
-| 0:13–0:16 | The Tikka logo | Meet Tikka. |
-| 0:16–0:21 | The sealed Tikka, one link flowing to Instagram, TikTok, WhatsApp and the QR poster | Share a limited reward worth coming in for. One link, everywhere you post. |
-| 0:21–0:28 | The Tikka opens (Rare, 20% off any service), then lands in the WhatsApp chat | People claim it on WhatsApp in seconds. |
-| 0:28–0:35 | Booking: Sat 13 · 2:00pm, ₦5,000 deposit, ₦15,000 at the shop, Pay, booked | They pick a time and pay a deposit to hold it. So a no-show doesn't cost you. |
-| 0:35–0:40 | The customer arrives in the chair; the counter: Valid, deposit paid, collect ₦15,000 | They walk in, show their code, and you get paid. |
-| 0:40–0:46 | Leads list, then customers orbiting the smiling owner | And everyone who claims is yours: their name and WhatsApp number, to follow up. |
-| 0:46–0:51 | 76 came in, ₦1,940,000 | One drop. Real customers. Counted in naira. |
-| 0:51–0:59 | The headline, then the end card: Get your first drop free · usetikka.com | Your posts get views. Tikka turns them into customers who show up and pay. Get your first drop free at usetikka.com. |
-
-The example numbers (600 Tikkas, 577 claimed, 76 came in, ₦1,940,000) match the landing page's
-example results.
+| 0:00–0:05 | Owner in a circle, Instagram/TikTok/WhatsApp messages around her. "1.2k views. 0 customers." | Your posts get views. Likes. "How much?" But no one comes in. |
+| 0:05–0:09 | Empty chair, "See you 2pm!", the clock runs to 2:30 | And the ones who book… don't show. |
+| 0:09–0:12 | The Tikka logo. "Tikka fixes both." | Tikka fixes both. |
+| 0:12–0:13.5 | Chapter 01 · Bring new customers in | — |
+| 0:13.5–0:18 | The sealed Tikka, one link to Instagram, TikTok, WhatsApp and the QR. "Free to claim." | Share a limited reward on one link, everywhere you post. |
+| 0:18–0:23 | It opens (Rare · 20% off) and lands in WhatsApp. "No payment." | People claim it free on WhatsApp. Just a reason to come in. |
+| 0:23–0:27 | Adaeze arrives in the chair; the counter says Valid; the Leads list fills | They come in, show the code, and you keep every name and number. |
+| 0:27–0:28.5 | Chapter 02 · Make bookings show up | — |
+| 0:28.5–0:34 | The free business page in an Instagram bio: services and prices with deposits, work photos, reviews | Get a free website for your bio: services, prices, photos and reviews. |
+| 0:34–0:40 | Zainab (found you on Instagram) picks Sat 13 · 2:00pm, pays the ₦5,000 deposit, booked | Customers pick a free time and pay a deposit to hold it. |
+| 0:40–0:45 | The owner's bookings with deposits paid; Money: ₦18,000 to your bank next working day | If they don't show, the deposit's already yours, straight to your bank. |
+| 0:45–0:50 | The smiling owner, customers orbiting; "76 new customers", "₦5,000 on every booking" | More people in. Fewer empty chairs. |
+| 0:50–0:59 | The headline, then the end card: Get your first drop free · usetikka.com | Your posts get views. Tikka turns them into customers who show up and pay. Get your first drop free at usetikka.com. |
