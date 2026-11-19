@@ -260,7 +260,7 @@ General rules for every item:
 
 ### Item 7. The offer in one line (copy)
 
-**Updated 19 Nov 2026 (deposits are built):** the hero is option B, "Your posts get views. Tikka turns those views into customers who come in and spend.", and every page sells deposits as available now: "Take deposits when customers book: Tikka takes 1%, only when customers pay you." No "coming soon" or "early access" for deposits anywhere; a business not yet switched on is told to message Tikka. The wording below is the old one.
+**Updated 19 Nov 2026 (deposits are built):** the hero is "Your posts get views. Tikka turns them into customers who book, pay a deposit and come in." (option B, now with bookings and deposits, about 15 words), the line under it is one short sentence ("Drop a Tikka, get every customer's WhatsApp number, and see what it brought in, in naira."), and every page sells deposits as available now: "Take deposits when customers book: Tikka takes 1%, only when customers pay you." No "coming soon" or "early access" for deposits anywhere; a business not yet switched on is told to message Tikka. The wording below is the old one.
 
 **Requirement:**
 - The landing page hero or pricing intro, the pricing FAQ "What does it cost?" and `content/help/paying-for-drops.json` all use: **"Free to start. Pay for each drop. Deposits coming soon: a small fee only when customers pay you."**

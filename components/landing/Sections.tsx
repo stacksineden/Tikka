@@ -53,12 +53,10 @@ export function Hero() {
       <div className="max-w-xl">
         <Eyebrow onNight>For businesses across Nigeria</Eyebrow>
         <h1 className="mt-4 text-[36px] font-extrabold leading-[40px] tracking-[-0.03em] text-on-night sm:text-display-xl">
-          Your posts get views. Tikka turns those views into customers who come in and spend.
+          Your posts get views. Tikka turns them into customers who book, pay a deposit and come in.
         </h1>
         <p className="text-body-lg mt-5 max-w-lg text-on-night-muted">
-          Share a Tikka drop, a collectible reward behind one link. People claim it on WhatsApp, book a free time on
-          your page and pay a deposit to hold it, so no-shows don&apos;t cost you. You get every name and number, and see
-          exactly what it brought in, in naira.
+          Drop a Tikka, get every customer&apos;s WhatsApp number, and see what it brought in, in naira.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link href="/sign-up" className="btn btn-paper btn-lg">
@@ -90,8 +88,7 @@ export function ProblemLine() {
   return (
     <section className="bg-surface px-5 pt-14 sm:px-6 sm:pt-20">
       <p className="text-body-lg mx-auto max-w-2xl text-center text-ink-muted">
-        Most people who see your business never come in, and you never find out who they were. And the ones who
-        book don&apos;t always show up.
+        Most people who see you never come in. Some who book never show.
       </p>
     </section>
   );

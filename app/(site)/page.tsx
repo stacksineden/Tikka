@@ -18,9 +18,9 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getDropPacks, getDropTiers, getMarketplaceDrops, getPlatformStats } from "@/lib/data";
 
-const TITLE = "Tikka · Turn your views into customers who come in and spend";
+const TITLE = "Tikka · Turn your views into customers who book, pay and come in";
 const DESCRIPTION =
-  "Share a Tikka drop behind one link. People claim on WhatsApp, book a free time and pay a deposit to hold it so no-shows don't cost you, and you see every name, number and naira it brought in.";
+  "Drop a Tikka, get every customer's WhatsApp number, and take deposits so no-shows don't cost you.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
