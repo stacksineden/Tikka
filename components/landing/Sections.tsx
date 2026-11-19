@@ -53,21 +53,21 @@ export function Hero() {
       <div className="max-w-xl">
         <Eyebrow onNight>For businesses across Nigeria</Eyebrow>
         <h1 className="mt-4 text-[36px] font-extrabold leading-[40px] tracking-[-0.03em] text-on-night sm:text-display-xl">
-          Your posts get views. Tikka turns them into customers who book, pay a deposit and come in.
+          Your posts get views. Tikka turns them into customers who show up and pay.
         </h1>
         <p className="text-body-lg mt-5 max-w-lg text-on-night-muted">
-          Drop a Tikka, get every customer&apos;s WhatsApp number, and see what it brought in, in naira.
+          Share a Tikka drop. People claim a reward on WhatsApp, book a time and pay a deposit to hold it.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link href="/sign-up" className="btn btn-paper btn-lg">
-            Start free
+            Get your first drop free
           </Link>
           <a href="#how-it-works" className="btn btn-lg bg-transparent text-on-night ring-1 ring-on-night-muted/40 hover:bg-night-raised">
             See how it works
           </a>
         </div>
         <ul className="text-label mt-8 flex flex-wrap gap-x-5 gap-y-2 text-on-night-muted">
-          {["First drop free", "Deposits cover no-shows", "Customers need no app"].map((t) => (
+          {["Every customer's WhatsApp number", "Deposits cover no-shows", "Customers need no app"].map((t) => (
             <li key={t} className="flex items-center gap-1.5">
               <Tick className="size-4 text-gold" />
               {t}
