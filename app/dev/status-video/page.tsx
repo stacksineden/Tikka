@@ -166,17 +166,17 @@ const BOOKINGS: [string, string, string, boolean][] = [
   ["Ngozi E.", "Mon 15 · 10:00am", "Deposit paid ₦5,000", true],
 ];
 
-/** A chapter card: a number and a promise, wiped in on the night stage. */
+/** A divider card: which fix and which feature ("Tikka fixes both"), and its promise, on the night stage. */
 function Chapter({ start, end, n, title }: { start: number; end: number; n: string; title: string }) {
   return (
     <Scene start={start} end={end} fade={0.2}>
       <div className="sv-night" />
       <At style={{ position: "absolute", left: 0, right: 0, top: 360, display: "grid", justifyItems: "center", textAlign: "center" }}>
         <At className="xv-mono" style={{ fontSize: 22, fontWeight: 700, letterSpacing: "0.2em", color: "var(--on-night-muted)", ...enter("xvUp", start + 0.05, 0.35) }}>
-          CHAPTER {n}
+          {n}
         </At>
         <At style={{ marginTop: 10, width: 120, height: 3, borderRadius: 3, background: "var(--brand)", transformOrigin: "50% 50%", ...enter("xvStrike", start + 0.15, 0.4) }} />
-        <div className="sv-say sv-say-night" style={{ position: "static", marginTop: 22, fontSize: 46, lineHeight: "52px" }}>
+        <div className="sv-say sv-say-night" style={{ position: "static", marginTop: 22, maxWidth: 400, fontSize: 50, lineHeight: "56px" }}>
           {title.split(" ").map((w, i) => (
             <span key={i} style={{ display: "inline-block", marginRight: "0.26em", ...enter("xvWord", start + 0.2 + i * 0.08, 0.4) }}>
               {w}
@@ -272,7 +272,7 @@ export default async function StatusVideoPage() {
           <Say top={720} at={10.1} words="Tikka fixes both." />
         </Scene>
 
-        <Chapter start={12} end={13.6} n="01" title="Bring new customers in" />
+        <Chapter start={12} end={13.6} n="FIX 1 · DROPS" title="Bring new customers in" />
 
         {/* 13.5–18: share a drop, free to claim */}
         <Scene start={13.5} end={18.15}>
@@ -401,7 +401,7 @@ export default async function StatusVideoPage() {
           <Say top={740} at={24.6} words="You keep every number." night size={34} />
         </Scene>
 
-        <Chapter start={27} end={28.6} n="02" title="Make bookings show up" />
+        <Chapter start={27} end={28.6} n="FIX 2 · BOOKINGS" title="Make bookings show up" />
 
         {/* 28.5–34: your free website, in your bio */}
         <Scene start={28.5} end={34.15}>
