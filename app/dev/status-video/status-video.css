@@ -1,0 +1,139 @@
+/* The WhatsApp status explainer (dev only, 9:16, 59s). Built on the explainer's stage, phone and
+   keyframes (app/dev/explainer/explainer.css); this file adds the light, airy look of the status
+   video. Everything is set from page load with a delay so scripts/render-explainer.cjs can seek it.
+   WhatsApp covers the top ~110px (name, progress bar) and bottom ~130px (reply box) of a status
+   at this size, so words and key visuals stay between those. */
+
+/* A soft lavender stage that matches the photos' backdrop, so the portraits sit in it. */
+.sv-light {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 40% at 50% 42%, var(--surface-raised), transparent 70%),
+    radial-gradient(70% 45% at 15% 10%, color-mix(in srgb, var(--brand) 22%, var(--brand-soft)), transparent 70%),
+    radial-gradient(70% 45% at 90% 95%, color-mix(in srgb, var(--brand) 26%, var(--brand-soft)), transparent 70%),
+    var(--brand-soft);
+}
+.sv-night {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 40% at 50% 45%, color-mix(in srgb, var(--brand) 45%, var(--night)), transparent 75%),
+    var(--night);
+}
+
+/* A portrait in a circle: a white ring, a lavender halo and a soft shadow, so it reads as designed,
+   not pasted on. */
+.sv-face {
+  position: absolute;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 6px solid var(--surface-raised);
+  box-shadow:
+    0 0 0 14px color-mix(in srgb, var(--surface-raised) 45%, transparent),
+    0 24px 50px -18px color-mix(in srgb, var(--brand) 70%, transparent);
+}
+.sv-face img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sv-ring {
+  position: absolute;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--brand) 22%, transparent);
+}
+
+/* A frosted message card, like the floating cards in the reference. */
+.sv-bubble {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px 10px 10px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface-raised) 88%, transparent);
+  color: var(--ink);
+  font-size: 19px;
+  line-height: 24px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(23, 17, 47, 0.08), 0 16px 36px -14px color-mix(in srgb, var(--brand) 55%, transparent);
+}
+.sv-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+}
+
+/* The words on screen: big, bold, centered, inside the safe area. */
+.sv-say {
+  position: absolute;
+  left: 34px;
+  right: 34px;
+  text-align: center;
+  font-size: 38px;
+  line-height: 44px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  color: var(--ink);
+}
+.sv-say-night {
+  color: var(--on-night);
+}
+.sv-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, color-mix(in srgb, var(--night) 88%, transparent) 88%);
+}
+.sv-card {
+  border-radius: 22px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  text-align: left;
+  box-shadow: 0 1px 2px rgba(23, 17, 47, 0.08), 0 30px 60px -24px color-mix(in srgb, var(--brand) 65%, transparent);
+}
+.sv-chip {
+  display: grid;
+  place-items: center;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--surface-sunken);
+  font-size: 14px;
+  font-weight: 700;
+}
+.sv-chip-on {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+.sv-line path {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 520;
+}
+
+@keyframes svDraw { from { stroke-dashoffset: 520; } to { stroke-dashoffset: 0; } }
+@keyframes svFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes svPush { from { transform: scale(1); } to { transform: scale(1.12); } }
+@keyframes svPushSlow { from { transform: scale(1.06); } to { transform: scale(1.14); } }
+@keyframes svDim { from { opacity: 0; } to { opacity: 0.45; } }
+@keyframes svSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes svUnspin { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+@keyframes svPulse { 0% { opacity: 0.7; transform: scale(1); } 100% { opacity: 0; transform: scale(1.35); } }
+@keyframes svDrift { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-60px) scale(0.85); } }
+@keyframes svSlideUp { from { opacity: 0; transform: translateY(120px); } to { opacity: 1; transform: none; } }
+@keyframes svShrinkUp { from { transform: none; } to { transform: translateY(-150px) scale(0.62); } }
+/* The pack is placed absolutely inside a 390×440 stage (components/tikka/tikka.css): give it one. */
+.sv-pack {
+  position: relative;
+  width: 390px;
+  height: 440px;
+  flex: none;
+}
