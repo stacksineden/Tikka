@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  CalendarCheck,
   DoorOpen,
   Dumbbell,
   Flower2,
@@ -56,8 +57,8 @@ export function Hero() {
         </h1>
         <p className="text-body-lg mt-5 max-w-lg text-on-night-muted">
           Share a Tikka drop, a collectible reward behind one link. People claim it on WhatsApp, book a free time on
-          your page and pay a deposit to hold it. You get every name and number, and see exactly what it brought in,
-          in naira.
+          your page and pay a deposit to hold it, so no-shows don&apos;t cost you. You get every name and number, and see
+          exactly what it brought in, in naira.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link href="/sign-up" className="btn btn-paper btn-lg">
@@ -68,7 +69,7 @@ export function Hero() {
           </a>
         </div>
         <ul className="text-label mt-8 flex flex-wrap gap-x-5 gap-y-2 text-on-night-muted">
-          {["First drop free", "Bookings and deposits", "Customers need no app"].map((t) => (
+          {["First drop free", "Deposits cover no-shows", "Customers need no app"].map((t) => (
             <li key={t} className="flex items-center gap-1.5">
               <Tick className="size-4 text-gold" />
               {t}
@@ -89,7 +90,8 @@ export function ProblemLine() {
   return (
     <section className="bg-surface px-5 pt-14 sm:px-6 sm:pt-20">
       <p className="text-body-lg mx-auto max-w-2xl text-center text-ink-muted">
-        Most people who see your business never come in, and you never find out who they were.
+        Most people who see your business never come in, and you never find out who they were. And the ones who
+        book don&apos;t always show up.
       </p>
     </section>
   );
@@ -98,13 +100,14 @@ export function ProblemLine() {
 const OUTCOMES: { title: string; body: string; Icon: LucideIcon }[] = [
   { title: "More people through your door.", body: "A reason to come in this week, not someday.", Icon: DoorOpen },
   { title: "A list you can follow up.", body: "Everyone who claimed, with their WhatsApp number, even if they didn't come.", Icon: ListChecks },
+  { title: "No-shows don't cost you.", body: "Customers pay a deposit to hold their time. If they don't come, the deposit is already yours.", Icon: CalendarCheck },
   { title: "Know what your promo made you.", body: "Customers, sales and cost per customer, in naira.", Icon: ReceiptText },
 ];
 
 export function Outcomes() {
   return (
     <section className="bg-surface pt-10 sm:pt-12" aria-label="What you get">
-      <ul className="mx-auto grid max-w-6xl gap-4 px-5 sm:px-6 md:grid-cols-3">
+      <ul className="mx-auto grid max-w-6xl gap-4 px-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         {OUTCOMES.map(({ title, body, Icon }) => (
           <li key={title} className="rounded-card border border-line bg-surface-raised p-5 sm:p-6">
             <span className="grid size-11 place-items-center rounded-md bg-brand-soft text-brand">
@@ -429,7 +432,7 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
         <div className="max-w-2xl">
           <Eyebrow>Pricing</Eyebrow>
           <h2 className="mt-3 text-heading sm:text-display-lg">Free to start. Pay for each drop.</h2>
-          <p className="text-body-lg mt-3 text-ink-muted">Take deposits when customers book: Tikka takes 1%, only when customers pay you.</p>
+          <p className="text-body-lg mt-3 text-ink-muted">Take deposits when customers book, so no-shows don&apos;t cost you. Tikka takes 1%, only when customers pay you.</p>
         </div>
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
           <div className="flex flex-col rounded-card border border-line bg-surface-raised p-6 sm:p-8">
@@ -556,8 +559,8 @@ function faqs(tiers: DropTier[], packs: DropPack[]): { id?: string; q: string; a
       a: `Every business gets a free page at usetikka.com/yourname: your services, prices, photos, reviews, hours and location, plus your live drop. Put it in your Instagram and WhatsApp bio. Customers pick a service and a free time, and it's booked. Add a deposit so no-shows don't cost you. It's free, always, with up to ${PORTFOLIO_FREE.items} photos and videos of your work. While a paid drop runs (and ${OPEN_DAYS_AFTER} days after), your page shows up to ${PORTFOLIO_OPEN.items}, sorted into collections like Bridal or Gele. Nothing is hidden when it closes.`,
     },
     {
-      q: "Can customers pay me a deposit?",
-      a: "Yes. Add your bank account in Tikka, switch deposits on in your booking settings and pick the amount. Customers pay when they book a time on your page, by card or transfer, and the time is theirs. You can also send a pay link for any amount. The money goes to your bank the next working day; Tikka never holds it. Tikka takes 1%, plus Paystack's payment fee.",
+      q: "How do I stop no-shows?",
+      a: "Take a deposit when customers book. Add your bank account in Tikka, switch deposits on in your booking settings and pick the amount. Customers pay when they book a time on your page, by card or transfer, so the time only goes to someone who has paid to hold it. If they don't come, the deposit is already in your account. You can also send a pay link for any amount. The money goes to your bank the next working day; Tikka never holds it. Tikka takes 1%, plus Paystack's payment fee.",
     },
     {
       q: "What's the QR poster?",

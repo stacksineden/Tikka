@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s · Tikka",
   },
   description:
-    "Share a Tikka drop behind one link. People claim on WhatsApp, book a free time and pay a deposit to hold it, and you see every name, number and naira it brought in.",
+    "Share a Tikka drop behind one link. People claim on WhatsApp, book a free time and pay a deposit to hold it so no-shows don't cost you, and you see every name, number and naira it brought in.",
   // Added to an iPhone's home screen, the dashboard opens full screen as "Tikka" (needed for lead alerts there).
   appleWebApp: { capable: true, title: "Tikka", statusBarStyle: "default" },
 };
