@@ -20,6 +20,7 @@ import {
   validateStep3,
   watToIso,
   withThankYouFilled,
+  withGoal,
   type DropDraft,
   audienceOverMax,
   bandFor,
@@ -251,5 +252,24 @@ describe("shortValidityHint", () => {
     expect(shortValidityHint("Wellness", 7)).not.toBeNull();
     expect(shortValidityHint("Beauty", 14)).toBeNull();
     expect(shortValidityHint("Food & drinks", 7)).toBeNull();
+  });
+});
+
+describe("the share kept for new customers follows the goal", () => {
+  it("keeps 70% for new customers and none for the other goals", () => {
+    expect(draft().newReservedPct).toBe(70);
+    expect(withGoal(draft(), "bring_back").newReservedPct).toBe(0);
+    expect(withGoal(draft(), "quiet_days").newReservedPct).toBe(0);
+    expect(withGoal(withGoal(draft(), "bring_back"), "new_customers").newReservedPct).toBe(70);
+  });
+
+  it("keeps the owner's own share when the same goal is picked again", () => {
+    const own = { ...withGoal(draft(), "bring_back"), newReservedPct: 20 };
+    expect(withGoal(own, "bring_back").newReservedPct).toBe(20);
+  });
+
+  it("lets anyone claim once on the other goals", () => {
+    expect(withGoal(draft(), "bring_back").eligibility).toBe("once_per_drop");
+    expect(withGoal(draft(), "new_customers").eligibility).toBe("new_only");
   });
 });

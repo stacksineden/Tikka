@@ -279,8 +279,8 @@ Each drop: status (Draft, Scheduled, Live, Sold out, Ended), goal, dates, cards 
 
 **Screen 1 · "What do you want this drop to do?"** Three big cards:
 - **Get new customers** · "Bring in people who've never been to you." (Who can claim: new customers only; 70% kept for new customers.)
-- **Bring customers back** · "Remind past customers you're here." (Once per drop.)
-- **Fill quiet days** · "Get people in on your slow days." (Adds "Which days can people use it?" to "How many, and when?"; codes only work on those days.)
+- **Bring customers back** · "Remind past customers you're here." (Once per drop; nothing kept for new customers, so past customers are never told "sold out" while Tikkas are left.)
+- **Fill quiet days** · "Get people in on your slow days." (Adds "Which days can people use it?" to "How many, and when?"; codes only work on those days. Once per drop; nothing kept for new customers.)
 
 **Screen 2 · "Start from an offer"**
 - Ready-made offers for the business's category and goal (three each for Beauty & hair and Spa & wellness, one each for the other categories; reviewed in `docs/drop-templates.md` before seeding), each showing its three rewards as they'll read on the card and the bounce-back, with one line on why it works. A ready-made reward written with its condition ("Free deep-conditioning treatment with any service") is split into the reward and its condition, so each sits in its own place on the card.

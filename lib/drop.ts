@@ -363,12 +363,23 @@ export function bandFor(views: number | null | undefined): AudienceBand | null {
   return views < 300 ? "under_300" : views <= 1000 ? "300_1000" : views <= 5000 ? "1000_5000" : "over_5000";
 }
 
-/** Who can claim follows the goal: new customers only for "Get new customers". */
+/** The share kept for new customers that each goal starts with. */
+export function reservedPctFor(goal: Goal): number {
+  return goal === "new_customers" ? 70 : 0;
+}
+
+/**
+ * Who can claim follows the goal: new customers only for "Get new customers". The share kept for
+ * new customers does too: 70% for "Get new customers", none for the others, so past customers
+ * aren't told "sold out" on a drop meant for them. Picking the same goal again keeps the owner's
+ * own share from More options.
+ */
 export function withGoal(d: DropDraft, goal: Goal): DropDraft {
   return {
     ...d,
     goal,
     eligibility: goal === "new_customers" ? "new_only" : d.eligibility === "new_only" ? "once_per_drop" : d.eligibility,
+    newReservedPct: goal === d.goal ? d.newReservedPct : reservedPctFor(goal),
     validWeekdays: goal === "quiet_days" ? (d.validWeekdays ?? [1, 2, 3]) : null,
   };
 }
