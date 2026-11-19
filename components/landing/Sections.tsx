@@ -52,7 +52,7 @@ export function Hero() {
     <section className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] items-center gap-6 px-5 pb-14 pt-6 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-10 lg:pb-20 lg:pt-10">
       <div className="max-w-xl">
         <Eyebrow onNight>For businesses across Nigeria</Eyebrow>
-        <h1 className="mt-4 text-[36px] font-extrabold leading-[40px] tracking-[-0.03em] text-on-night sm:text-display-xl">
+        <h1 className="mt-4 text-[36px] font-extrabold leading-[40px] tracking-[-0.03em] text-on-night sm:text-display-xl sm:leading-[58px] sm:tracking-[-0.025em]">
           Your posts get views. Tikka turns them into customers who show up and pay.
         </h1>
         <p className="text-body-lg mt-5 max-w-lg text-on-night-muted">
