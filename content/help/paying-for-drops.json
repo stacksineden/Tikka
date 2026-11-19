@@ -12,7 +12,7 @@
   "steps": [
     {
       "title": "Free to start",
-      "body": "Your business page, bookings on WhatsApp, your QR poster, your list of everyone who claims, reviews, the counter screen and staff logins are free, always. So is your first drop."
+      "body": "Your business page, bookings, your QR poster, your list of everyone who claims, reviews, the counter screen and staff logins are free, always. So is your first drop."
     },
     {
       "title": "After that, one price per drop",
@@ -30,7 +30,7 @@
   "tips": [
     "Every payment you've made is listed in Payments.",
     "If a paid drop brings fewer than 10 customers, your next drop is free (once).",
-    "Coming soon: take deposits when customers book, so no-shows don't cost you. You'll pay a small fee only when customers pay you."
+    "Take deposits when customers book, so no-shows don't cost you. There's no monthly fee: Tikka takes 1% only when a customer pays you, plus Paystack's payment fee. See \"Take bookings and deposits\"."
   ],
   "published": true
 }

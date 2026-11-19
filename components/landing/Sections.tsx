@@ -13,7 +13,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { PaymentsJoin } from "@/components/payments/PaymentsTeaser";
 import { Spark, Tick } from "@/components/tikka/glyphs";
 import { OPEN_DAYS_AFTER, PORTFOLIO_FREE, PORTFOLIO_OPEN } from "@/lib/portfolio";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
@@ -53,11 +52,12 @@ export function Hero() {
       <div className="max-w-xl">
         <Eyebrow onNight>For businesses across Nigeria</Eyebrow>
         <h1 className="mt-4 text-[36px] font-extrabold leading-[40px] tracking-[-0.03em] text-on-night sm:text-display-xl">
-          Turn people who see your business into customers who walk in.
+          Your posts get views. Tikka turns those views into customers who come in and spend.
         </h1>
         <p className="text-body-lg mt-5 max-w-lg text-on-night-muted">
-          Share a Tikka drop, a collectible reward behind one link. People claim it on WhatsApp and come in to use
-          it. You get every name and number, and see exactly what it brought in, in naira.
+          Share a Tikka drop, a collectible reward behind one link. People claim it on WhatsApp, book a free time on
+          your page and pay a deposit to hold it. You get every name and number, and see exactly what it brought in,
+          in naira.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link href="/sign-up" className="btn btn-paper btn-lg">
@@ -68,7 +68,7 @@ export function Hero() {
           </a>
         </div>
         <ul className="text-label mt-8 flex flex-wrap gap-x-5 gap-y-2 text-on-night-muted">
-          {["First drop free", "Customers need no app", "Set up in minutes"].map((t) => (
+          {["First drop free", "Bookings and deposits", "Customers need no app"].map((t) => (
             <li key={t} className="flex items-center gap-1.5">
               <Tick className="size-4 text-gold" />
               {t}
@@ -429,7 +429,7 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
         <div className="max-w-2xl">
           <Eyebrow>Pricing</Eyebrow>
           <h2 className="mt-3 text-heading sm:text-display-lg">Free to start. Pay for each drop.</h2>
-          <p className="text-body-lg mt-3 text-ink-muted">Deposits coming soon: a small fee only when customers pay you.</p>
+          <p className="text-body-lg mt-3 text-ink-muted">Take deposits when customers book: Tikka takes 1%, only when customers pay you.</p>
         </div>
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
           <div className="flex flex-col rounded-card border border-line bg-surface-raised p-6 sm:p-8">
@@ -439,7 +439,7 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
             <ul className="text-body mt-6 grid gap-3">
               {[
                 `Your business page for your Instagram and WhatsApp bio, with ${PORTFOLIO_FREE.items} photos of your work`,
-                "Bookings on WhatsApp: customers pick a service, day and time",
+                "Bookings: customers pick a free time on your page and get a pass",
                 "Your first drop, from a ready-made offer for your business",
                 "Your QR poster for the counter",
                 "Every person who claims is yours to follow up",
@@ -491,16 +491,18 @@ export function Pricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[]
             <p className="text-caption mt-auto pt-6 text-ink-muted">During the pilot, Tikka pays for every WhatsApp message.</p>
           </div>
         </div>
-        {/* A teaser only (revenue plan item 6): payments aren't built, so nothing here looks like it works. */}
-        <div className="mt-4 flex flex-col gap-3 rounded-card border border-dashed border-brand/40 bg-surface-raised p-5 sm:flex-row sm:items-center sm:gap-5 sm:p-6">
+        {/* Deposits and pay links (REVENUE_PLAN 5.3–5.4): no monthly fee, 1% to Tikka only when a customer pays. */}
+        <div className="mt-4 flex flex-col gap-3 rounded-card border border-line bg-surface-raised p-5 sm:flex-row sm:items-center sm:gap-5 sm:p-6">
           <span className="grid size-10 shrink-0 place-items-center rounded-md bg-brand-soft text-brand">
             <Wallet size={20} aria-hidden="true" />
           </span>
           <p className="text-body min-w-0 flex-1">
-            <span className="font-semibold">Coming soon: take deposits when customers book,</span> so no-shows don&apos;t cost you. A small fee only when
-            customers pay you.
+            <span className="font-semibold">Take deposits when customers book,</span> so no-shows don&apos;t cost you. Send pay links too. The money goes
+            to your bank the next working day. Tikka takes 1%, only when customers pay you.
           </p>
-          <PaymentsJoin />
+          <Link href="/sign-up" className="btn btn-secondary min-h-11 text-label">
+            Start free
+          </Link>
         </div>
       </div>
     </section>
@@ -551,7 +553,11 @@ function faqs(tiers: DropTier[], packs: DropPack[]): { id?: string; q: string; a
     },
     {
       q: "What's the business page?",
-      a: `Every business gets a free page at usetikka.com/yourname: your services, prices, photos, reviews, hours and location, plus your live drop. Put it in your Instagram and WhatsApp bio. Customers can pick a service, day and time and send you the booking on WhatsApp. It's free, always, with up to ${PORTFOLIO_FREE.items} photos and videos of your work. While a paid drop runs (and ${OPEN_DAYS_AFTER} days after), your page shows up to ${PORTFOLIO_OPEN.items}, sorted into collections like Bridal or Gele. Nothing is hidden when it closes.`,
+      a: `Every business gets a free page at usetikka.com/yourname: your services, prices, photos, reviews, hours and location, plus your live drop. Put it in your Instagram and WhatsApp bio. Customers pick a service and a free time, and it's booked. Add a deposit so no-shows don't cost you. It's free, always, with up to ${PORTFOLIO_FREE.items} photos and videos of your work. While a paid drop runs (and ${OPEN_DAYS_AFTER} days after), your page shows up to ${PORTFOLIO_OPEN.items}, sorted into collections like Bridal or Gele. Nothing is hidden when it closes.`,
+    },
+    {
+      q: "Can customers pay me a deposit?",
+      a: "Yes. Add your bank account in Tikka, switch deposits on in your booking settings and pick the amount. Customers pay when they book a time on your page, by card or transfer, and the time is theirs. You can also send a pay link for any amount. The money goes to your bank the next working day; Tikka never holds it. Tikka takes 1%, plus Paystack's payment fee.",
     },
     {
       q: "What's the QR poster?",
@@ -559,7 +565,7 @@ function faqs(tiers: DropTier[], packs: DropPack[]): { id?: string; q: string; a
     },
     {
       q: "What does it cost?",
-      a: `Free to start: your business page, bookings on WhatsApp, your QR poster, your list of everyone who claims, reviews, the counter screen and your first drop cost nothing. After that, each drop is ${drop ? priceLabel(drop.priceKobo) : ""}, whatever its size.${pack ? ` Or buy a season pack of ${count(pack.drops)} drops for ${priceLabel(pack.priceKobo)}.` : ""} Pay by card or transfer. No subscription. Coming soon: take deposits when customers book, for a small fee only when customers pay you.`,
+      a: `Free to start: your business page, bookings, your QR poster, your list of everyone who claims, reviews, the counter screen and your first drop cost nothing. After that, each drop is ${drop ? priceLabel(drop.priceKobo) : ""}, whatever its size.${pack ? ` Or buy a season pack of ${count(pack.drops)} drops for ${priceLabel(pack.priceKobo)}.` : ""} Pay by card or transfer. No subscription. Deposits and pay links have no monthly fee: Tikka takes 1% when a customer pays you, plus Paystack's payment fee.`,
     },
     {
       q: "Does Tikka use AI?",

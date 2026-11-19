@@ -101,7 +101,7 @@ async function depositsCard(b: NonNullable<Awaited<ReturnType<typeof getBusiness
       <section className="rounded-card border border-dashed border-line-strong bg-surface-raised p-4 sm:p-5">
         <h2 className="text-title">Deposits</h2>
         <p className="text-body mt-1 text-ink-muted">
-          {pay.why === "closed" ? "Taking deposits is in early access: we're switching getting paid online on for a few businesses first." : "To take deposits, add the bank account they go to."}
+          {pay.why === "closed" ? "We're getting deposits ready for your business. Message Tikka on WhatsApp and we'll switch them on." : "To take deposits, add the bank account they go to."}
         </p>
         {pay.why !== "closed" && (
           <Link href="/app/settings/get-paid" className="btn btn-secondary mt-3 min-h-11">

@@ -68,7 +68,7 @@ async function Money() {
               ? "Add the bank account payments go to, then you can send pay links."
               : ready.why === "account_again"
                 ? "Add your bank account again: the one saved was added while Tikka was being tested."
-                : "Getting paid online is in early access. We're switching it on for a few businesses first."}
+                : "We're getting payments ready for your business. Message Tikka on WhatsApp and we'll switch them on."}
           </p>
           {ready.why !== "closed" && (
             <Link href="/app/settings/get-paid" className="btn mt-3 min-h-11">

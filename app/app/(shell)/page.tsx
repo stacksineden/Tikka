@@ -23,6 +23,8 @@ import { PaymentsCard } from "@/components/payments/PaymentsTeaser";
 import { LeadAlertsCard } from "@/components/alerts/LeadAlerts";
 import { pushConfigured } from "@/lib/push";
 import { earlyAccessState } from "@/lib/studio-db";
+import { paystackMode } from "@/lib/paystack";
+import { dbPayoutState } from "@/lib/payouts-db";
 import { SoloCard } from "@/components/tikka/SoloCard";
 import { faceFromBusiness } from "@/components/tikka/TikkaCard";
 import {
@@ -50,6 +52,13 @@ function sameDayWAT(a: string, b: Date) {
   return f(new Date(a)) === f(b);
 }
 
+/** The deposits card: owners who haven't added the bank account payments go to, until they hide it. */
+async function depositsCardShown(businessId: string): Promise<boolean> {
+  const [state, teaser] = await Promise.all([isDbId(businessId) ? dbPayoutState(businessId) : null, earlyAccessState(businessId, "payments")]);
+  if (teaser.dismissed.includes("payments_dashboard")) return false;
+  return !(state?.payout && state.payout.mode === paystackMode());
+}
+
 async function Home() {
   const user = await getSessionUser();
   if (!user) redirect("/sign-in");
@@ -65,7 +74,7 @@ async function Home() {
     owner ? getLeads(user) : Promise.resolve([]),
     getActivity(user),
     owner ? getGuaranteeNotice(user) : Promise.resolve(null),
-    owner ? earlyAccessState(business.id, "payments") : Promise.resolve(null),
+    owner ? depositsCardShown(business.id) : Promise.resolve(false),
   ]);
   const live = drops.find((d) => d.status === "live");
   const renderedAt = new Date().toISOString();
@@ -99,7 +108,7 @@ async function Home() {
         </div>
         <div className="grid gap-6">
           <ActivityFeed events={activity} now={now} />
-          {payments && !payments.dismissed.includes("payments_dashboard") && <PaymentsCard onList={payments.onList} canAct />}
+          {payments && <PaymentsCard />}
           <BioCard slug={business.slug} name={business.name} />
           {scheduled && <ComingUp drop={scheduled} />}
           <FinishPageChecklist business={business} />

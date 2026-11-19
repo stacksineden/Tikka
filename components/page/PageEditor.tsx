@@ -371,7 +371,7 @@ function ServicesCard({ b }: { b: Business }) {
           s.run(() => saveServicesAction(list));
         }}
       >
-        <p className="text-caption text-ink-muted">Each one gets a “Book on WhatsApp” button. Add a group (like Hair or Nails) to show them in tabs.</p>
+        <p className="text-caption text-ink-muted">Each one gets a Book button: customers pick a free time once bookings are on, or message you on WhatsApp. Add a group (like Hair or Nails) to show them in tabs.</p>
         <datalist id="service-groups">
           {groups.map((g) => (
             <option key={g} value={g} />

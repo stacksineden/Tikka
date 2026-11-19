@@ -1,0 +1,40 @@
+{
+  "slug": "take-bookings-and-deposits",
+  "title": "Take bookings and deposits",
+  "section": "money",
+  "order": 2,
+  "minutes": 3,
+  "summary": "Customers pick a free time on your page and pay a deposit to hold it, so no-shows don't cost you.",
+  "app": {
+    "href": "/app/bookings",
+    "label": "Open Bookings"
+  },
+  "steps": [
+    {
+      "title": "Turn bookings on",
+      "body": "Open Bookings (on a phone, it's in the tab bar). Say how many customers you can serve at once, how long each service takes and how much notice you need. Your page then shows only the times you're free, and picking one books it. You see every booking in Bookings, with the customer's WhatsApp number."
+    },
+    {
+      "title": "Add the bank account deposits go to",
+      "body": "Go to Settings, then Get paid. Pick your bank and type your account number. Tikka shows the account name from your bank; check it's yours and confirm. The money from every payment goes straight to this account the next working day. Tikka never holds it."
+    },
+    {
+      "title": "Switch deposits on and pick the amount",
+      "body": "Back in Bookings, open Booking settings and switch deposits on. Pick a percentage of the price or a fixed amount (at least ₦1,000), and whether it counts towards the bill. A service can have its own rule, like the full price or no deposit."
+    },
+    {
+      "title": "What your customer sees",
+      "body": "The service shows \"₦X deposit to book\". They pick a time, see the deposit and what's left to pay at your shop, and pay by card or transfer. The time is held for them while they pay, then it's booked and they get a pass with a button to message you on WhatsApp."
+    },
+    {
+      "title": "At the counter",
+      "body": "When they come in, your staff see \"Deposit paid\" and how much is left to collect. Every payment is listed in Money."
+    }
+  ],
+  "tips": [
+    "There's no monthly fee. Tikka takes 1% of each payment, plus Paystack's payment fee.",
+    "Need to take money for something else? Send a pay link from Money for any amount.",
+    "Moving or cancelling a paid booking is between you and your customer: sort it out on WhatsApp."
+  ],
+  "published": true
+}

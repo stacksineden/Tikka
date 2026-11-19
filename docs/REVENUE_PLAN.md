@@ -260,6 +260,8 @@ General rules for every item:
 
 ### Item 7. The offer in one line (copy)
 
+**Updated 19 Nov 2026 (deposits are built):** the hero is option B, "Your posts get views. Tikka turns those views into customers who come in and spend.", and every page sells deposits as available now: "Take deposits when customers book: Tikka takes 1%, only when customers pay you." No "coming soon" or "early access" for deposits anywhere; a business not yet switched on is told to message Tikka. The wording below is the old one.
+
 **Requirement:**
 - The landing page hero or pricing intro, the pricing FAQ "What does it cost?" and `content/help/paying-for-drops.json` all use: **"Free to start. Pay for each drop. Deposits coming soon: a small fee only when customers pay you."**
 - List what's free (page, bookings on WhatsApp, marketplace, QR poster, leads, reviews, counter screen, staff, first drop) and what a paid drop includes (the drop, the ₦ results report, the guarantee, the full portfolio while it runs).

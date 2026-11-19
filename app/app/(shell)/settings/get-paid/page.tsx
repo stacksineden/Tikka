@@ -18,7 +18,7 @@ export const metadata: Metadata = { title: "Get paid" };
 const CLOSED: Record<string, string> = {
   demo: "The demo business can't take payments.",
   suspended: "Your business is suspended, so it can't take payments.",
-  not_enabled: "Getting paid online is in early access. We're switching it on for a few businesses first, and we'll tell you when it's your turn.",
+  not_enabled: "We're getting payments ready for your business. Message Tikka on WhatsApp and we'll switch them on.",
   not_verified: "Getting paid online needs the Verified badge on your business. Talk to Tikka to get verified.",
   not_found: "Set up your business first.",
 };
@@ -38,7 +38,7 @@ async function GetPaid() {
   return (
     <div className="grid gap-4">
       <p className="text-body text-ink-muted">
-        When customers pay you through Tikka (pay links, and deposits soon), the money goes straight to this account the next working day. Tikka never holds it.
+        When customers pay you through Tikka (deposits when they book, and pay links), the money goes straight to this account the next working day. Tikka never holds it.
       </p>
       {problem ? (
         <section className="rounded-card border border-dashed border-line-strong bg-surface-raised p-4 sm:p-5">
