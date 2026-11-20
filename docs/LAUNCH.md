@@ -82,6 +82,7 @@ cron.job_run_details order by start_time desc limit 5;`, and Vercel's logs show
 
 - [ ] Paystack live keys (above), and the webhook URL `https://usetikka.com/api/paystack/webhook`.
 - [ ] Pay for one small drop yourself and check it goes live and shows in `/admin` → Payments.
+- [ ] **Every time a business adds its bank account (Get paid), verify its subaccount in Paystack.** Paystack holds the first payout to a new or updated subaccount until the main account verifies it: Paystack dashboard → Subaccounts → tick the row → Verify Subaccounts (check the bank, account name and number first). Unverified, the business's first deposit or pay link never reaches them. After verifying, payouts go out the next working day, once the balance is at least ₦100. (Found 20 Nov 2026: both pilot subaccounts were Unverified and holding a payout.)
 
 ## 5. Legal (You and the lawyer)
 
