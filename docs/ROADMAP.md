@@ -105,3 +105,8 @@ The slow ones first: they take days to come back.
 - [ ] 6.3 **You:** publish the Google consent screen (and verify the branding if Google asks).
 - [ ] 6.4 **You:** optional: Supabase custom domain, so Google's sign-in says usetikka.com.
 - [ ] 6.5 **Claude:** turn videos back on (remove `NEXT_PUBLIC_TIKKA_VIDEOS`), remove the demo business and demo store, live "Tikkas left" counter on the claim page.
+- [ ] 6.6 **Claude:** fix the marketplace (checked 20 Nov 2026, parked until it gets busier):
+  - The "just claimed" ticker is simulated (`recentClaims()` in `lib/market.ts` invents times and tiers from the hourly count), so a thank-you claim can show as Rare. Read real recent claims instead: tier, business, drop and time only, never names or numbers.
+  - "Tikkas claimed today" is the last 24 hours across drops still listed. Count from midnight WAT, including drops that ended today.
+  - The page only updates on refresh: refresh the numbers and ticker about once a minute while open.
+  - The featured carousel shows admin pins only, so it disappears when a pinned drop ends. Fill it: pins first, then the hottest live drops, then upcoming scheduled ones (about 5 cards).
