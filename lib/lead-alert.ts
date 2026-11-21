@@ -1,5 +1,6 @@
 // What a new lead alert says (web push to the owner's phone). Pure, so the wording is pinned by
 // tests. Never a phone number: the notification shows on the lock screen. No gambling words (rule 8).
+import { naira } from "./format";
 
 export interface LeadAlertInput {
   businessName: string;
@@ -42,3 +43,13 @@ export function bookingAlertText(a: { businessName: string; firstName: string; s
 
 /** Where a booking alert's tap goes. */
 export const BOOKING_ALERT_URL = "/app/bookings";
+
+/** "₦5,000 paid · Glow Studio" / "Bisi paid: Braids balance. It goes to your bank the next working day." */
+export function payAlertText(a: { businessName: string; firstName: string; amountKobo: number; note: string }): { title: string; body: string } {
+  const who = a.firstName.trim() || "A customer";
+  const amount = naira(a.amountKobo / 100);
+  return { title: `${amount} paid · ${a.businessName}`, body: `${who} paid: ${a.note.trim()}. It goes to your bank the next working day.` };
+}
+
+/** Where a payment alert's tap goes. */
+export const PAY_ALERT_URL = "/app/money";

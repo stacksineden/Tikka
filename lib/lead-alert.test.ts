@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bookingAlertText, leadAlertText, testAlertText } from "./lead-alert";
+import { bookingAlertText, leadAlertText, payAlertText, testAlertText } from "./lead-alert";
 
 const GAMBLING = /\b(win|winner|luck|lucky|jackpot|odds|bet|stake|lottery|raffle)\b/i;
 
@@ -37,5 +37,19 @@ describe("bookingAlertText", () => {
     expect(t.title).toBe("New booking · Glow Studio");
     expect(t.body).toBe("Adaeze booked Braids for Sat 15 Nov, 2:00pm. Tap to see your bookings.");
     expect(t.body).not.toMatch(/\d{6,}/);
+  });
+});
+
+describe("payAlertText", () => {
+  it("says how much, who and what for, never a number or email", () => {
+    const t = payAlertText({ businessName: "Glow Studio", firstName: "Bisi", amountKobo: 500000, note: "Braids balance" });
+    expect(t.title).toBe("₦5,000 paid · Glow Studio");
+    expect(t.body).toBe("Bisi paid: Braids balance. It goes to your bank the next working day.");
+    expect(`${t.title} ${t.body}`).not.toMatch(/\+?\d{7,}|@/);
+    expect(`${t.title} ${t.body}`).not.toMatch(GAMBLING);
+  });
+
+  it("works without a name", () => {
+    expect(payAlertText({ businessName: "Glow Studio", firstName: "", amountKobo: 1050000, note: "Deposit" }).body).toBe("A customer paid: Deposit. It goes to your bank the next working day.");
   });
 });

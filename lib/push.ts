@@ -2,7 +2,7 @@ import "server-only";
 
 import webpush from "web-push";
 import { whenLabel } from "./bookings";
-import { BOOKING_ALERT_URL, bookingAlertText, LEAD_ALERT_URL, leadAlertText, testAlertText } from "./lead-alert";
+import { BOOKING_ALERT_URL, bookingAlertText, LEAD_ALERT_URL, leadAlertText, PAY_ALERT_URL, payAlertText, testAlertText } from "./lead-alert";
 import { adminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
 
@@ -72,6 +72,20 @@ export async function sendBookingAlert(bookingId: string): Promise<void> {
     await sendAll(a.subscriptions, { ...text, tag: `booking-${bookingId}`, url: BOOKING_ALERT_URL });
   } catch {
     // A booking never depends on its alert.
+  }
+}
+
+/** After a pay link is paid (the first time only): tell the business's owner(s). Never throws. */
+export async function sendPayLinkAlert(linkId: string): Promise<void> {
+  try {
+    if (!setup()) return;
+    const { data } = await adminClient().rpc("pay_link_alert", { p_link: linkId });
+    const a = data as { business_name: string; first_name: string; amount_kobo: number; note: string; subscriptions: Sub[] } | null;
+    if (!a || !a.subscriptions?.length) return;
+    const text = payAlertText({ businessName: a.business_name, firstName: a.first_name, amountKobo: Number(a.amount_kobo) || 0, note: a.note });
+    await sendAll(a.subscriptions, { ...text, tag: `paid-${linkId}`, url: PAY_ALERT_URL });
+  } catch {
+    // A payment never depends on its alert.
   }
 }
 

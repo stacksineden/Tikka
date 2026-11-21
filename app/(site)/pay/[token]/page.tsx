@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { BadgeCheck, Lock } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { Suspense } from "react";
 import { bizSerif } from "@/components/business/fonts";
 import { PayButton } from "@/components/payments/PayButton";
@@ -12,6 +13,7 @@ import { getBusinessBySlug } from "@/lib/data";
 import { naira, shortDate } from "@/lib/format";
 import { bookingNumber } from "@/lib/page";
 import { dbCompletePayLink, dbPayPage } from "@/lib/paylinks-db";
+import { sendPayLinkAlert } from "@/lib/push";
 import { verifyPayment } from "@/lib/paystack";
 import { siteUrl } from "@/lib/supabase/env";
 
@@ -41,7 +43,11 @@ async function Pay({ params, searchParams }: { params: PageProps<"/pay/[token]">
   const reference = typeof sp.reference === "string" ? sp.reference : null;
   if (reference && reference.startsWith(`pl_${token}_`)) {
     const v = await verifyPayment(reference).catch(() => null);
-    if (v?.status === "success") await dbCompletePayLink(reference, v.amountKobo, v.feeKobo, v.email);
+    if (v?.status === "success") {
+      const r = await dbCompletePayLink(reference, v.amountKobo, v.feeKobo, v.email);
+      const id = r.id;
+      if (r.kind === "paid" && id) after(() => sendPayLinkAlert(id));
+    }
   }
   const link = await dbPayPage(token);
   if (!link) notFound();

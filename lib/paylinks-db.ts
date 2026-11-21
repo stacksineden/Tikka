@@ -121,11 +121,13 @@ export async function dbPayCheckout(token: string): Promise<PayCheckout | null> 
   };
 }
 
-/** Records a successful payment (webhook or the return from checkout). Idempotent. */
-export async function dbCompletePayLink(reference: string, amountKobo: number, feeKobo: number, email: string | null): Promise<string> {
+/** Records a successful payment (webhook or the return from checkout). Idempotent: only the first
+ *  call says "paid" (with the link's id, for the owner's alert); repeats say "already_paid". */
+export async function dbCompletePayLink(reference: string, amountKobo: number, feeKobo: number, email: string | null): Promise<{ kind: string; id?: string }> {
   const { data, error } = await adminClient().rpc("complete_pay_link", { p_reference: reference, p_amount_kobo: amountKobo, p_fee_kobo: feeKobo, p_email: email });
-  if (error) return "error";
-  return String((data as Row)?.kind ?? "error");
+  if (error) return { kind: "error" };
+  const r = data as Row | null;
+  return { kind: String(r?.kind ?? "error"), id: r?.id ? String(r.id) : undefined };
 }
 
 /** At the counter: what was paid online for a Tikka (team only, amounts only). */
