@@ -42,6 +42,7 @@ import { GuaranteeNotice } from "@/components/dashboard/GuaranteeNotice";
 import { LastDropResults, SeasonalNudge } from "@/components/dashboard/RunAgain";
 import { seasonalNudge } from "@/lib/nudges";
 import { WAT } from "@/lib/format";
+import { pageChecklist } from "@/lib/page";
 import { getSessionUser } from "@/lib/session";
 import type { Business } from "@/lib/types";
 
@@ -130,31 +131,60 @@ async function TodayBookings({ user }: { user: NonNullable<Awaited<ReturnType<ty
 
 function GettingStarted({ name, business, today }: { name: string; business: Business | null; today?: React.ReactNode }) {
   const cardDone = !!business;
-  const steps = [
+  // After the card, the page comes next (most owners aren't ready for a drop yet); a drop stays one
+  // tap away and becomes the next step once the page is finished. The page never blocks a drop.
+  const pageItems = business ? pageChecklist(business) : [];
+  const pageDone = pageItems.filter((i) => i.done).length;
+  const pageFinished = cardDone && pageDone === pageItems.length;
+  const steps: {
+    title: string;
+    body: string;
+    href?: string;
+    cta?: string;
+    done: boolean;
+    current: boolean;
+    progress?: string;
+    items?: { label: string; done: boolean }[];
+    later?: { href: string; label: string };
+  }[] = [
     {
       title: "Set up your card",
-      body: cardDone ? "Done. You can change it any time in Settings." : "Logo, colour and one action button. About 3 minutes.",
+      body: cardDone ? "Done. Your digital business card: change it any time in Settings." : "Your digital business card, on the front of every Tikka. Logo, colour and how to reach you. About 3 minutes.",
       href: cardDone ? "/app/settings/card" : "/app/setup",
       cta: cardDone ? "Edit card" : "Set up your card",
       done: cardDone,
       current: !cardDone,
     },
     {
+      title: "Finish your page",
+      body: business
+        ? `usetikka.com/${business.slug}: your services, prices, photos and bookings, ready for your Instagram and WhatsApp bio.`
+        : "Your free website for your Instagram and WhatsApp bio: services, prices, photos and bookings.",
+      href: "/app/page",
+      cta: pageFinished ? "Edit your page" : "Finish your page",
+      done: pageFinished,
+      current: cardDone && !pageFinished,
+      progress: cardDone && !pageFinished ? `${pageDone} of ${pageItems.length}` : undefined,
+      items: cardDone && !pageFinished ? pageItems : undefined,
+    },
+    {
       title: "Create your first drop",
-      body: "How many Tikkas, what's inside, and when it ends.",
+      body: pageFinished ? "How many Tikkas, what's inside, and when it ends. It's free." : "When you're ready. It's free.",
       href: "/app/drops/new",
       cta: "Create a drop",
       done: false,
-      current: cardDone,
+      current: pageFinished,
+      later: cardDone && !pageFinished ? { href: "/app/drops/new", label: "Create a drop now" } : undefined,
     },
     { title: "Share your link", body: "Wherever people see you: your status, Instagram bio, ads, or the QR at your counter.", done: false, current: false },
   ];
+  const next = !cardDone ? "Four steps to your first drop." : pageFinished ? "Next, create your first drop." : "Next, finish your page. It's your free website for your bio.";
   return (
     <div className="mx-auto grid max-w-5xl gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
       <div>
         <h1 className="text-heading">{cardDone ? `Nice card, ${name}` : `Welcome to Tikka, ${name}`}</h1>
         <p className="text-body-lg mt-2 text-ink-muted">
-          {cardDone ? "Next, create your first drop." : "Three steps to your first drop."}
+          {next}
         </p>
       </div>
       <div className="grid items-start gap-6 lg:grid-cols-[1fr_auto]">
@@ -175,8 +205,31 @@ function GettingStarted({ name, business, today }: { name: string; business: Bus
                   {s.done ? <Check size={16} strokeWidth={3} aria-label="Done" /> : i + 1}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-title text-[17px] leading-6">{s.title}</h2>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h2 className="text-title text-[17px] leading-6">{s.title}</h2>
+                    {s.progress && <span className="text-caption shrink-0 text-ink-muted">{s.progress}</span>}
+                  </div>
                   <p className="text-body mt-1 text-ink-muted">{s.body}</p>
+                  {s.items && (
+                    <ul className="mt-3 grid gap-2">
+                      {s.items.map((i) => (
+                        <li key={i.label} className={`text-body flex items-center gap-2.5 ${i.done ? "text-success" : ""}`}>
+                          <span
+                            className={`grid size-5 shrink-0 place-items-center rounded-pill ${i.done ? "bg-success text-on-success" : "border-[1.5px] border-line-strong"}`}
+                          >
+                            {i.done && <Check size={12} strokeWidth={3} aria-hidden="true" />}
+                          </span>
+                          {i.label}
+                          <span className="sr-only">{i.done ? " (done)" : " (to do)"}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {s.later && (
+                    <Link href={s.later.href} className="text-label mt-1 inline-flex min-h-11 items-center text-brand hover:underline">
+                      {s.later.label}
+                    </Link>
+                  )}
                   {s.href && (s.current || s.done) && (
                     <Link href={s.href} className={`btn mt-4 ${s.current ? "" : "btn-secondary"}`}>
                       {s.cta}
@@ -190,7 +243,6 @@ function GettingStarted({ name, business, today }: { name: string; business: Bus
           </ol>
           {today}
           {business && <BioCard slug={business.slug} name={business.name} />}
-          {business && <FinishPageChecklist business={business} />}
         </div>
         <div className="stage hidden flex-col items-center rounded-card bg-night px-8 py-8 lg:flex">
           <SoloCard

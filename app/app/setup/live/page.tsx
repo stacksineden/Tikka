@@ -32,7 +32,7 @@ async function Live() {
         Continue to your dashboard
         <ArrowRight />
       </Link>
-      <p className="text-caption text-ink-muted">Add services, photos, hours and a video any time in Settings › Business profile. Your page updates straight away.</p>
+      <p className="text-caption text-ink-muted">Next on your dashboard: finish your page. Add your services and prices, photos and your about in Your page. It updates straight away.</p>
     </>
   );
 }

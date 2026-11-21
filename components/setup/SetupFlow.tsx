@@ -15,7 +15,7 @@ import { ServicesField } from "./ExtrasFields";
 import { ActionsField, BackgroundField, CategorySelect, ColorField, LocationFields, LogoField, PrefixField, SlugField, TextInput } from "./Fields";
 
 const STEPS = [
-  { title: "Your business", body: "What people see first on your card.", keys: ["name", "tagline", "category", "state", "city"] },
+  { title: "Your business", body: "The name and words customers see first on your card.", keys: ["name", "tagline", "category", "state", "city"] },
   { title: "Your look", body: "Make it unmistakably yours.", keys: ["logo", "brandColor", "background"] },
   { title: "How people reach you", body: "The buttons on your card, your free page address, and your code letters.", keys: ["actions", "action-", "services", "service-", "slug", "codePrefix"] },
 ];
@@ -151,6 +151,15 @@ export function SetupFlow({ initial }: { initial: CardDraft }) {
         </div>
 
         <main ref={formRef} className="px-4 pb-32 pt-6 lg:px-0 lg:pb-8 lg:pt-0">
+          {step === 0 && (
+            <div className="mb-6 rounded-card bg-brand-soft p-4">
+              <p className="text-label text-brand">Your card</p>
+              <p className="text-title mt-1 text-[17px] leading-6">Think of it as your digital business card.</p>
+              <p className="text-body mt-1">
+                It&apos;s the front of every Tikka your customers open: your name, logo, colours and how to reach you. Set it once and every drop uses it.
+              </p>
+            </div>
+          )}
           <h1 className="text-heading">{title}</h1>
           <p className="text-body mt-1 text-ink-muted">{body}</p>
 
