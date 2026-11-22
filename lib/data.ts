@@ -319,6 +319,7 @@ export async function savePage(
   if (!b) return { ok: false, errors: { form: "Set up your card first." } };
   const { about, serveMode, styleChoice, ...page } = input;
   delete page.style; // only styleChoice changes it
+  if (page.galleryTone !== undefined && page.galleryTone !== "dark" && page.galleryTone !== "light") delete page.galleryTone;
   // The page style: "auto" follows the category; anything else isn't a style and is ignored.
   const style = styleChoice === undefined ? b.page?.style : styleChoice === "photography" || styleChoice === "beauty" ? styleChoice : undefined;
   const merged: BusinessPageInput = { ...b.page, ...page, about: about ?? b.about };

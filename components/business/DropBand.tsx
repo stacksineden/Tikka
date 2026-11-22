@@ -13,13 +13,13 @@ export function DropBand({ b, live, next, dark = false }: { b: Pick<Business, "s
       <span key={k} className="flex shrink-0 items-center gap-6 pr-6 font-mono text-[13px] uppercase tracking-[0.12em]">
         <span className="text-gold">● Live now</span>
         <span>{live.name}</span>
-        <span className="text-on-night-muted">{left} Tikkas left</span>
-        <span className="text-on-night-muted">Ends {shortDate(live.endsAt)}</span>
+        <span className={dark ? "pg-muted" : "text-on-night-muted"}>{left} Tikkas left</span>
+        <span className={dark ? "pg-muted" : "text-on-night-muted"}>Ends {shortDate(live.endsAt)}</span>
         <span aria-hidden="true">✦</span>
       </span>
     );
     return (
-      <div data-theme="light" className="stage relative flex items-center overflow-hidden bg-night text-on-night">
+      <div data-theme="light" className={`relative flex items-center overflow-hidden ${dark ? "pg-drop" : "stage bg-night text-on-night"}`}>
         <div className="min-w-0 flex-1 overflow-hidden py-4" aria-hidden="true">
           <div className="biz-marquee">{[0, 1, 2, 3, 4, 5].map(item)}</div>
         </div>

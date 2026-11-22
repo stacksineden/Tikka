@@ -133,7 +133,7 @@ export function PhotoPage({ b, live, next, reviews, sections, book, bookProps, s
     ) : null;
 
   return (
-    <div id="biz" data-theme="light" className="pg" style={style}>
+    <div id="biz" data-theme="light" className={`pg ${page.galleryTone === "light" ? "pg-light" : ""}`} style={style}>
       {/* 0. The contact sheet (once per visit; shown before first paint by the inline script). */}
       {playSheet && (
         <>
@@ -606,7 +606,9 @@ export function PhotoPage({ b, live, next, reviews, sections, book, bookProps, s
           <Link href="/" className="flex items-center gap-2">
             Made with
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/tikka-lockup-reversed.svg" alt="Tikka" width={58} height={17} />
+            <img className="pg-made-dark" src="/brand/tikka-lockup-reversed.svg" alt="Tikka" width={58} height={17} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="pg-made-light" src="/brand/tikka-lockup.svg" alt="Tikka" width={58} height={17} />
           </Link>
         </div>
       </footer>

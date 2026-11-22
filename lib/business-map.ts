@@ -57,6 +57,8 @@ export interface PageRow {
   text_body: string | null;
   /** Added by the photography_style migration; absent on rows read before it. */
   style?: "beauty" | "photography" | null;
+  /** Added by the gallery_tone migration. */
+  gallery_tone?: "dark" | "light" | null;
 }
 
 export interface ServiceRow {
@@ -218,6 +220,7 @@ export function pageFrom(p: PageRow | null, team: TeamRow[], faqs: FaqRow[]): Bu
     textTitle: opt(p.text_title),
     textBody: opt(p.text_body),
     ...(p.style ? { style: p.style } : {}),
+    ...(p.gallery_tone ? { galleryTone: p.gallery_tone } : {}),
   };
 }
 
@@ -235,6 +238,7 @@ export function pageTo(p: BusinessPage | undefined): Omit<PageRow, never> {
     text_title: p?.textTitle?.trim() || null,
     text_body: p?.textBody?.trim() || null,
     style: p?.style ?? null,
+    gallery_tone: p?.galleryTone ?? null,
   };
 }
 

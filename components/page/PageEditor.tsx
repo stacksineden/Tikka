@@ -329,7 +329,9 @@ const STYLES: { id: "auto" | PageStyle; label: string; note: string }[] = [
 function StyleCard({ b }: { b: Business }) {
   const s = useSave();
   const [choice, setChoice] = useState<"auto" | PageStyle>(b.page?.style ?? "auto");
-  const now = choice === "auto" ? (b.category === "Photography" ? "Gallery" : "Classic") : STYLES.find((x) => x.id === choice)!.label;
+  const [tone, setTone] = useState<"dark" | "light">(b.page?.galleryTone ?? "dark");
+  const gallery = choice === "photography" || (choice === "auto" && b.category === "Photography");
+  const now = `${gallery ? "Gallery" : "Classic"}${gallery ? `, ${tone}` : ""}`;
   return (
     <details className="group rounded-card border border-line bg-surface-raised">
       <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 [&::-webkit-details-marker]:hidden">
@@ -356,6 +358,34 @@ function StyleCard({ b }: { b: Business }) {
             <span className="text-caption block text-ink-muted">{m.note}</span>
           </button>
         ))}
+        {gallery && (
+          <div className="mt-3 grid gap-2">
+            <p className="text-label">Gallery background</p>
+            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Gallery background">
+              {(
+                [
+                  ["dark", "Dark", "Studio black"],
+                  ["light", "Light", "Soft white"],
+                ] as const
+              ).map(([id, label, note]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="radio"
+                  aria-checked={tone === id}
+                  onClick={() => {
+                    setTone(id);
+                    s.run(() => savePageAction({ galleryTone: id }));
+                  }}
+                  className={`min-h-11 rounded-md border p-3 text-left ${tone === id ? "border-brand bg-brand-soft" : "border-line"}`}
+                >
+                  <span className="text-body block font-semibold">{label}</span>
+                  <span className="text-caption block text-ink-muted">{note}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {s.saved && (
           <span className="text-label flex items-center gap-1 text-success">
             <Check size={16} aria-hidden="true" /> Saved
