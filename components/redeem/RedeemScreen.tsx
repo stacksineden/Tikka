@@ -85,6 +85,8 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
   const [customer, setCustomer] = useState<"new" | "returning">("new");
   const [confirming, setConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string>();
+  // Paid online and an amount typed: ask once whether it's extra money paid here (never counted twice).
+  const [sureAsk, setSureAsk] = useState(false);
   const [wa, setWa] = useState<WaCheck>({ kind: "none" });
   const [digits, setDigits] = useState("");
   const [checkingDigits, setCheckingDigits] = useState(false);
@@ -124,6 +126,7 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
         if (r.kind === "valid") {
           setTicked(false);
           setBill("");
+          setSureAsk(false);
           setCustomer(r.suggestedStatus);
           setConfirmError(undefined);
           setDigits("");
@@ -265,7 +268,7 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
     }
   }
 
-  async function confirm() {
+  async function confirm(opts: { sure?: boolean; noAmount?: boolean } = {}) {
     if (view.kind !== "valid") return;
     const r = view.result;
     if (wa.kind === "open" || wa.kind === "closed" || wa.kind === "repeat") {
@@ -276,10 +279,17 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
       setConfirmError("Tick the box once they've done it.");
       return;
     }
+    const typed = opts.noAmount ? 0 : (parseNaira(bill) ?? 0);
+    if (paidOnline > 0 && typed > 0 && !opts.sure) {
+      setSureAsk(true);
+      return;
+    }
+    if (opts.noAmount) setBill("");
+    setSureAsk(false);
     setConfirming(true);
     setConfirmError(undefined);
     try {
-      const spent = parseNaira(bill) || null;
+      const spent = typed || null;
       const res = await confirmRedemptionAction(r.code, spent, ticked, customer);
       if (res.ok) {
         buzz(30);
@@ -543,11 +553,17 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
 
             <div className="mt-4 grid gap-1.5">
               <label htmlFor="redeem-bill" className="text-title text-[17px]">
-                What did they spend?
+                {paidOnline > 0 ? "Did they pay anything more here?" : "What did they spend?"}
               </label>
-              <p id="redeem-bill-help" className="text-body -mt-1 text-ink-muted">
-                This adds to your drop&apos;s results.
-              </p>
+              {paidOnline > 0 ? (
+                <p id="redeem-bill-help" className="text-body -mt-1 rounded-md bg-success-soft px-3 py-2 font-medium text-success">
+                  They already paid {naira(paidOnline / 100)} online, and it&apos;s counted. Only type what they paid here today, on top of it.
+                </p>
+              ) : (
+                <p id="redeem-bill-help" className="text-body -mt-1 text-ink-muted">
+                  This adds to your drop&apos;s results.
+                </p>
+              )}
               <div className="flex items-center rounded-md border-2 border-line-strong bg-surface-raised focus-within:outline-2 focus-within:outline-brand">
                 <span className="pl-4 text-[22px] font-bold text-ink-muted" aria-hidden="true">
                   ₦
@@ -559,6 +575,7 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
                   value={bill}
                   onChange={(e) => {
                     setBill(formatNairaInput(e.target.value));
+                    setSureAsk(false);
                   }}
                   placeholder="25,000"
                   aria-describedby="redeem-bill-help"
@@ -566,7 +583,7 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
                   className="h-14 w-0 min-w-0 flex-1 bg-transparent px-2 text-[24px] font-bold tabular-nums outline-none"
                 />
               </div>
-              <p className="text-caption text-ink-muted">Optional. Skip it if you don&apos;t know.</p>
+              <p className="text-caption text-ink-muted">{paidOnline > 0 ? "Leave it empty if they paid nothing more." : "Optional. Skip it if you don't know."}</p>
             </div>
             </>
           )}
@@ -577,8 +594,25 @@ export function RedeemScreen({ businessName, prefix, isOwner = false }: { busine
             </p>
           )}
 
-          <div className="mt-5 grid gap-2">
-            <button type="button" className="btn btn-lg w-full" onClick={confirm} disabled={confirming || waBlocks || (Boolean(view.result.action) && !ticked)}>
+          {sureAsk && (
+            <div role="alertdialog" aria-labelledby="sure-h" className="mt-4 grid gap-3 rounded-md border-2 border-brand bg-surface-raised p-4">
+              <p id="sure-h" className="text-body-lg font-semibold">
+                They already paid {naira(paidOnline / 100)} online. Did they pay {naira(parseNaira(bill) ?? 0)} more here today?
+              </p>
+              <button type="button" className="btn btn-lg w-full" onClick={() => confirm({ sure: true })} disabled={confirming}>
+                Yes, {naira(parseNaira(bill) ?? 0)} more
+              </button>
+              <button type="button" className="btn btn-secondary min-h-12 w-full" onClick={() => confirm({ noAmount: true })} disabled={confirming}>
+                No, they paid nothing more
+              </button>
+              <button type="button" className="text-label min-h-11 text-ink-muted" onClick={() => (setSureAsk(false), document.getElementById("redeem-bill")?.focus())}>
+                Change the amount
+              </button>
+            </div>
+          )}
+
+          <div className={`mt-5 grid gap-2 ${sureAsk ? "hidden" : ""}`}>
+            <button type="button" className="btn btn-lg w-full" onClick={() => confirm()} disabled={confirming || waBlocks || (Boolean(view.result.action) && !ticked)}>
               {confirming ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
               {confirming ? "Confirming…" : "Confirm redemption"}
             </button>
