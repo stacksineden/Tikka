@@ -8,7 +8,7 @@ import { PortfolioEditor } from "@/components/setup/PortfolioEditor";
 import { prepareAbout, prepareCropped, prepareHero, prepareService, uploadPhoto, type MediaKind, type Prepared } from "@/lib/media-client";
 import { focalPosition, heroHeadline, heroLine, PAGE_LIMITS, priceText } from "@/lib/page";
 import type { PortfolioPlan } from "@/lib/portfolio";
-import type { Business, BusinessPage, FaqItem, ServeMode, ServiceItem, TeamMember } from "@/lib/types";
+import type { Business, BusinessPage, FaqItem, PageStyle, ServeMode, ServiceItem, TeamMember } from "@/lib/types";
 
 type Errors = Record<string, string | undefined>;
 
@@ -314,6 +314,55 @@ function ModeCard({ b }: { b: Business }) {
           <Check size={16} aria-hidden="true" /> Saved
         </span>}
     </Card>
+  );
+}
+
+/* ---------------------------------------------------------------- style */
+
+const STYLES: { id: "auto" | PageStyle; label: string; note: string }[] = [
+  { id: "auto", label: "Match my category", note: "Photographers get the gallery, everyone else the classic page." },
+  { id: "beauty", label: "Classic", note: "Services and booking first, with your photos below." },
+  { id: "photography", label: "Gallery", note: "Your photos first: full-screen collections on a dark page." },
+];
+
+/** The page's look, tucked under More options: almost everyone keeps what their category gives them. */
+function StyleCard({ b }: { b: Business }) {
+  const s = useSave();
+  const [choice, setChoice] = useState<"auto" | PageStyle>(b.page?.style ?? "auto");
+  const now = choice === "auto" ? (b.category === "Photography" ? "Gallery" : "Classic") : STYLES.find((x) => x.id === choice)!.label;
+  return (
+    <details className="group rounded-card border border-line bg-surface-raised">
+      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0">
+          <span className="text-body block font-semibold">More options</span>
+          <span className="text-caption block truncate text-ink-muted">Page style: {now}</span>
+        </span>
+        <ChevronDown size={20} className="shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+      </summary>
+      <div className="grid gap-2 px-4 pb-4" role="radiogroup" aria-label="Page style">
+        {STYLES.map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            role="radio"
+            aria-checked={choice === m.id}
+            onClick={() => {
+              setChoice(m.id);
+              s.run(() => savePageAction({ styleChoice: m.id }));
+            }}
+            className={`min-h-11 rounded-md border p-3 text-left ${choice === m.id ? "border-brand bg-brand-soft" : "border-line"}`}
+          >
+            <span className="text-body block font-semibold">{m.label}</span>
+            <span className="text-caption block text-ink-muted">{m.note}</span>
+          </button>
+        ))}
+        {s.saved && (
+          <span className="text-label flex items-center gap-1 text-success">
+            <Check size={16} aria-hidden="true" /> Saved
+          </span>
+        )}
+      </div>
+    </details>
   );
 }
 
@@ -656,6 +705,7 @@ export function PageEditor({ business: b, plan }: { business: Business; plan: Po
           </Link>
         )}
       </Card>
+      <StyleCard b={b} />
       <p className="text-caption px-1 text-ink-muted">Sections you leave empty don&apos;t show on your page. Reviews come from people who redeemed a Tikka.</p>
     </div>
   );

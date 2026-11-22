@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import glow from "./mock/business.json";
-import { bookingLink, focalPosition, heroHeadline, heroLine, whereLine, pageChecklist, pageDropsFrom, priceText, serviceGroups, showsLocation, visibleSections } from "./page";
+import { bookingLink, focalPosition, heroHeadline, heroLine, whereLine, pageChecklist, pageDropsFrom, pageStyle, priceText, serviceGroups, showsLocation, visibleSections } from "./page";
 import type { Business } from "./types";
 
 const base = { ...(glow as unknown as Business), page: undefined, portfolio: [], services: [], about: undefined, hours: undefined, address: undefined };
@@ -120,5 +120,14 @@ describe("pageDropsFrom (the public page's and the poster's drops)", () => {
 
   it("leaves out drops that have ended", () => {
     expect(pageDropsFrom([row({ ends_at: "2026-11-07T11:59:00Z" })], now)).toEqual([]);
+  });
+});
+
+describe("pageStyle", () => {
+  it("follows the category unless the owner picked one", () => {
+    expect(pageStyle({ category: "Photography" })).toBe("photography");
+    expect(pageStyle({ category: "Beauty" })).toBe("beauty");
+    expect(pageStyle({ category: "Beauty", page: { style: "photography" } })).toBe("photography");
+    expect(pageStyle({ category: "Photography", page: { style: "beauty" } })).toBe("beauty");
   });
 });

@@ -54,6 +54,19 @@ The ready-made offers on screen 2 of the drop builder ("Pick an offer"). This fi
 | `beauty-quiet-2` | Fill quiet days | Quiet-day pamper | An extra on slow days costs you little and fills empty chairs. | Free manicure with any service over ₦15,000 | ₦5,000 off any service over ₦20,000 | Free hair wash or nail polish with any service | 10% off your next visit | 14 | Mon–Thu |
 | `beauty-quiet-3` | Fill quiet days | Weekday special | A straight discount, only on the days you need it. | 50% off any service | 20% off any service | Free polish change with any service | 10% off your next visit | 14 | Tue–Thu |
 
+## Photography (`photography`)
+
+For photographers and photo studios. A shoot takes the photographer's time, so the extras are mostly time-light: extra edited photos, a backdrop change, rush delivery.
+
+| ID | Goal | Name | Why it works | Legendary · 2% | Rare · 10% | Thank-you · 88% | Bounce-back | Tikka lasts | Days |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `photo-new-1` | New customers | First shoot treat | A sure saving gets first-timers to book; a free mini shoot gets people talking. | Free 30-minute mini shoot (no purchase) | ₦10,000 off any shoot over ₦40,000 | 2 extra edited photos with any shoot | 10% off your next shoot | 14 | — |
+| `photo-new-2` | New customers | Try our studio | A big saving for a few, and a little extra on every first shoot. | 50% off any studio session | 20% off any shoot | Free backdrop change with any shoot | ₦5,000 off your next shoot over ₦30,000 | 14 | — |
+| `photo-back-1` | Bring customers back | Back in front of the camera | Past clients come back for their next birthday, anniversary or family photo. | Free extra outfit change with any shoot | 25% off any shoot | 3 extra edited photos with any shoot | 10% off your next shoot | 14 | — |
+| `photo-back-2` | Bring customers back | Bring a friend | Every returning client brings someone new to the studio. | Free shoot for your friend (up to ₦30,000) when you book a shoot | 20% off for you and a friend | Free group photo when you both book a shoot | 10% off your next shoot | 14 | — |
+| `photo-quiet-1` | Fill quiet days | Weekday mini sessions | Short weekday sessions fill the days the studio sits empty. | Free 30-minute mini shoot (no purchase) | 30% off any weekday shoot | 2 extra edited photos with any shoot | 10% off your next shoot | 14 | Mon–Thu |
+| `photo-quiet-2` | Fill quiet days | Midweek studio | Puts midweek studio time to work with extras that cost you little. | 50% off any studio session | Free rush delivery with any shoot | Free backdrop change with any shoot | 10% off your next shoot | 14 | Tue–Thu |
+
 ## Spa & wellness (`spa_wellness`)
 
 | ID | Goal | Name | Why it works | Legendary · 2% | Rare · 10% | Thank-you · 88% | Bounce-back | Tikka lasts | Days |
@@ -110,7 +123,7 @@ The ready-made offers on screen 2 of the drop builder ("Pick an offer"). This fi
 
 ## Other services (`other_services`)
 
-For events, laundry, photography, car wash, printing, repairs and other services.
+For events, laundry, car wash, printing, repairs and other services.
 
 | ID | Goal | Name | Why it works | Legendary · 2% | Rare · 10% | Thank-you · 88% | Bounce-back | Tikka lasts | Days |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

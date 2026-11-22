@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photography page style</title>
+<!--
+  Mockup: the "Photography" style of the free business page (usetikka.com/[slug]).
+  Same content as the beauty style (name, line, about, services, collections, portfolio,
+  reviews, FAQs, hours, the live drop, Book) — only the look changes.
+  Photos are placeholders: drop real files into design/page-styles/img/ with the names used
+  below (see photography-image-prompts.md) and they show up; until then a tonal block shows.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Fraunces:ital,opsz,wght@0,9..144,200..500;1,9..144,200..500&display=swap&subset=latin-ext" rel="stylesheet">
+<style>
+  /* Tikka tokens (design/tokens.css, light) */
+  :root {
+    --surface: #FAF7F2; --surface-raised: #FFFFFF; --surface-sunken: #F1ECE4;
+    --ink: #17112F; --ink-muted: #5E5873;
+    --night: #1B1440; --gold: #F4B63F; --on-gold: #17112F;
+    /* The business's own colour (data, set by the owner) */
+    --biz: #B08D57; --on-biz: #17112F;
+    /* This style: an ink room with paper text, so photos carry the colour */
+    --room: var(--ink);
+    --paper: var(--surface);
+    --paper-muted: color-mix(in oklab, var(--surface) 62%, var(--ink));
+    --rule: color-mix(in oklab, var(--surface) 14%, var(--ink));
+    --serif: "Fraunces", Georgia, serif;
+    --sans: "Bricolage Grotesque", system-ui, sans-serif;
+    --ease: cubic-bezier(.2,.7,.2,1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  html, body { overflow-x: clip; }
+  body { background: var(--room); color: var(--paper); font-family: var(--sans); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+  img { display: block; max-width: 100%; }
+  .wrap { width: 100%; max-width: 1320px; margin: 0 auto; padding: 0 16px; }
+  @media (min-width: 768px) { .wrap { padding: 0 40px; } }
+
+  /* Type */
+  .serif { font-family: var(--serif); font-weight: 300; letter-spacing: -0.02em; font-variation-settings: "opsz" 144; }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--paper-muted); }
+  .h2 { font-family: var(--serif); font-weight: 300; font-size: clamp(38px, 7vw, 88px); line-height: .98; letter-spacing: -0.03em; }
+  .h2 em, .serif em { font-style: italic; color: var(--biz); }
+  .lede { font-size: 17px; color: var(--paper-muted); max-width: 34ch; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 24px; border-radius: 999px; font-weight: 600; font-size: 14px; letter-spacing: .02em; transition: transform .2s var(--ease), background .2s; }
+  .btn:active { transform: scale(.98); }
+  .btn-paper { background: var(--paper); color: var(--ink); }
+  .btn-line { border: 1px solid color-mix(in oklab, var(--paper) 40%, transparent); color: var(--paper); }
+  .link { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid currentColor; padding-bottom: 4px; min-height: 32px; }
+
+  /* Photo placeholders: a tonal "photograph" until a real file is dropped in */
+  .ph { position: relative; overflow: hidden; background-color: color-mix(in oklab, var(--ink) 80%, var(--biz)); background-image: var(--img, none), var(--g, none); background-size: cover; background-position: center; }
+  .ph .cap { position: absolute; left: 12px; bottom: 10px; z-index: 1; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: color-mix(in oklab, var(--paper) 55%, transparent); }
+  .t1 { --g: radial-gradient(60% 50% at 50% 38%, color-mix(in oklab, var(--biz) 70%, var(--surface)) 0, transparent 60%), radial-gradient(40% 30% at 50% 85%, color-mix(in oklab, var(--biz) 40%, var(--ink)) 0, transparent 70%), linear-gradient(160deg, color-mix(in oklab, var(--ink) 70%, var(--biz)), var(--ink)); }
+  .t2 { --g: radial-gradient(55% 45% at 35% 40%, color-mix(in oklab, var(--surface) 80%, var(--biz)) 0, transparent 62%), linear-gradient(200deg, color-mix(in oklab, var(--surface-sunken) 60%, var(--biz)), color-mix(in oklab, var(--ink) 60%, var(--biz))); }
+  .t3 { --g: radial-gradient(50% 60% at 60% 45%, color-mix(in oklab, var(--gold) 45%, var(--biz)) 0, transparent 60%), linear-gradient(180deg, color-mix(in oklab, var(--night) 70%, var(--biz)), var(--ink)); }
+  .t4 { --g: radial-gradient(70% 50% at 50% 60%, color-mix(in oklab, var(--surface) 55%, var(--ink)) 0, transparent 65%), linear-gradient(135deg, var(--ink), color-mix(in oklab, var(--ink) 75%, var(--surface))); }
+  .t5 { --g: radial-gradient(45% 40% at 45% 35%, color-mix(in oklab, var(--biz) 55%, var(--gold)) 0, transparent 60%), linear-gradient(170deg, color-mix(in oklab, var(--biz) 45%, var(--ink)), color-mix(in oklab, var(--ink) 85%, var(--biz))); }
+  .t6 { --g: radial-gradient(60% 40% at 50% 30%, var(--surface) 0, transparent 55%), linear-gradient(180deg, var(--surface-sunken), color-mix(in oklab, var(--surface-sunken) 55%, var(--biz))); }
+
+  /* Reveal on scroll (transform and opacity only) */
+  [data-r] { opacity: 0; transform: translateY(28px); transition: opacity 1s var(--ease), transform 1s var(--ease); }
+  [data-r].in { opacity: 1; transform: none; }
+  .imgr { overflow: hidden; }
+  .imgr > .ph { transform: scale(1.08); transition: transform 1.6s var(--ease); }
+  .imgr.in > .ph { transform: scale(1); }
+
+  /* 1. Top bar */
+  .bar { position: fixed; inset: 0 0 auto 0; z-index: 20; transition: background .4s, backdrop-filter .4s; }
+  .bar.solid { background: color-mix(in oklab, var(--ink) 82%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .bar .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 64px; }
+  .bar nav { display: none; gap: 28px; font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
+  .bar nav a { opacity: .8; } .bar nav a:hover { opacity: 1; }
+  @media (min-width: 900px) { .bar nav { display: flex; } }
+  .mark { justify-self: center; font-family: var(--serif); font-size: 22px; font-weight: 300; letter-spacing: .02em; }
+  .bar .btn { justify-self: end; min-height: 44px; padding: 0 18px; font-size: 13px; }
+  .menu { display: inline-grid; place-items: center; width: 44px; height: 44px; justify-self: start; }
+  @media (min-width: 900px) { .menu { display: none; } }
+
+  /* 2. Hero: one cinematic frame, the name set small-caps over it, the name again huge below */
+  .hero { position: relative; height: 100svh; min-height: 600px; display: flex; align-items: flex-end; isolation: isolate; }
+  .hero .ph { position: absolute; inset: 0; z-index: -2; animation: drift 18s var(--ease) both; }
+  @keyframes drift { from { transform: scale(1.12); } to { transform: scale(1); } }
+  .hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, color-mix(in oklab, var(--ink) 55%, transparent) 0, transparent 28%, transparent 50%, color-mix(in oklab, var(--ink) 92%, transparent) 100%); }
+  .hero-in { padding-bottom: 28px; width: 100%; }
+  .hero h1 { font-family: var(--serif); font-weight: 200; font-size: clamp(64px, 17vw, 230px); line-height: .86; letter-spacing: -0.045em; }
+  .hero h1 em { font-style: italic; font-weight: 300; }
+  .hero-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 20px; margin-top: 22px; padding-top: 18px; border-top: 1px solid color-mix(in oklab, var(--paper) 22%, transparent); }
+  .hero-meta p { font-size: 15px; max-width: 36ch; color: color-mix(in oklab, var(--paper) 85%, transparent); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; font-size: 12px; font-weight: 600; background: color-mix(in oklab, var(--paper) 12%, transparent); border: 1px solid color-mix(in oklab, var(--paper) 20%, transparent); backdrop-filter: blur(8px); }
+  .chip .star { color: var(--gold); }
+  .scrollcue { display: none; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; opacity: .7; }
+  @media (min-width: 768px) { .scrollcue { display: block; } .hero-in { padding-bottom: 40px; } }
+
+  /* 3. The live drop band (same as every style) */
+  .drop { display: flex; align-items: stretch; background: var(--night); color: var(--paper); overflow: hidden; }
+  .drop .run { flex: 1; overflow: hidden; display: flex; align-items: center; }
+  .drop .track { display: flex; gap: 28px; white-space: nowrap; padding: 16px 0; animation: run 30s linear infinite; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+  .drop .track b { color: var(--gold); font-weight: 600; }
+  @keyframes run { to { transform: translateX(-50%); } }
+  .drop a { display: flex; align-items: center; gap: 8px; padding: 0 20px; background: var(--gold); color: var(--on-gold); font-weight: 700; font-size: 14px; white-space: nowrap; min-height: 52px; }
+
+  /* 4. Statement */
+  .statement { padding: 96px 0 72px; }
+  .statement .q { font-family: var(--serif); font-weight: 300; font-size: clamp(30px, 5.4vw, 68px); line-height: 1.08; letter-spacing: -0.025em; max-width: 18ch; }
+  .statement .row { display: grid; gap: 32px; margin-top: 48px; }
+  @media (min-width: 900px) { .statement { padding: 160px 0 120px; } .statement .row { grid-template-columns: 1fr 1fr; align-items: end; } }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--rule); }
+  .stats div { padding: 18px 0 0; }
+  .stats b { display: block; font-family: var(--serif); font-weight: 300; font-size: clamp(32px, 6vw, 52px); line-height: 1; }
+  .stats span { font-size: 12px; color: var(--paper-muted); }
+
+  /* 5. Collections: big covers, one after another (the photographer's main thing) */
+  .sec { padding: 72px 0; border-top: 1px solid var(--rule); }
+  @media (min-width: 900px) { .sec { padding: 120px 0; } }
+  .sec-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 40px; }
+  .sec-head .eyebrow { margin-bottom: 16px; display: block; }
+  .cols { display: grid; gap: 48px; }
+  .col a { display: block; }
+  .col .imgr { aspect-ratio: 4 / 5; }
+  .col .imgr .ph { position: absolute; inset: 0; }
+  .col .imgr { position: relative; }
+  .col-t { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 16px; }
+  .col-t h3 { font-family: var(--serif); font-weight: 300; font-size: clamp(28px, 4vw, 44px); line-height: 1; letter-spacing: -0.02em; }
+  .col-t span { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--paper-muted); white-space: nowrap; }
+  .col p { margin-top: 8px; color: var(--paper-muted); font-size: 15px; }
+  @media (min-width: 900px) {
+    .cols { grid-template-columns: repeat(12, 1fr); gap: 80px 40px; }
+    .col:nth-child(4n+1) { grid-column: 1 / span 7; }
+    .col:nth-child(4n+2) { grid-column: 9 / span 4; margin-top: 180px; }
+    .col:nth-child(4n+3) { grid-column: 2 / span 4; }
+    .col:nth-child(4n+4) { grid-column: 7 / span 6; margin-top: 120px; }
+    .col:nth-child(4n+1) .imgr, .col:nth-child(4n+4) .imgr { aspect-ratio: 4 / 3; }
+    .col a:hover .ph { transform: scale(1.03); }
+  }
+
+  /* 6. Portfolio: an editorial grid that keeps each photo's own shape */
+  .grid { columns: 2; column-gap: 8px; }
+  .grid figure { break-inside: avoid; margin-bottom: 8px; position: relative; cursor: zoom-in; }
+  .grid .ph { width: 100%; }
+  .p { aspect-ratio: 4 / 5; } .l { aspect-ratio: 3 / 2; } .s { aspect-ratio: 1; } .tall { aspect-ratio: 2 / 3; }
+  @media (min-width: 768px) { .grid { columns: 3; column-gap: 16px; } .grid figure { margin-bottom: 16px; } }
+  .play { position: absolute; z-index: 2; right: 10px; top: 10px; width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center; background: color-mix(in oklab, var(--ink) 50%, transparent); backdrop-filter: blur(6px); }
+  .filters { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-bottom: 24px; padding-bottom: 4px; }
+  .filters button { flex: none; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--rule); background: none; color: var(--paper-muted); font: 600 13px var(--sans); }
+  .filters button.on { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+
+  /* Full-bleed break: one wide frame between sections */
+  .bleed { position: relative; height: 70svh; min-height: 420px; }
+  .bleed .ph { position: absolute; inset: 0; }
+  .bleed .cap { bottom: auto; top: 12px; }
+  .bleed figcaption { position: absolute; left: 16px; right: 16px; bottom: 24px; z-index: 2; font-family: var(--serif); font-style: italic; font-weight: 300; font-size: clamp(22px, 3.4vw, 40px); max-width: 24ch; }
+  @media (min-width: 768px) { .bleed figcaption { left: 40px; bottom: 40px; } }
+
+  /* 7. The studio: backdrops and sets, swiped sideways */
+  .strip { display: grid; grid-auto-flow: column; grid-auto-columns: 72%; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 16px; scrollbar-width: none; padding: 0 16px; margin: 0 -16px; }
+  @media (min-width: 768px) { .strip { grid-auto-columns: 30%; gap: 20px; padding: 0 40px; margin: 0 -40px; scroll-padding: 0 40px; } }
+  .strip figure { scroll-snap-align: start; }
+  .strip .ph { aspect-ratio: 3 / 4; }
+  .strip figcaption { margin-top: 12px; display: flex; justify-content: space-between; font-size: 14px; }
+  .strip figcaption span { color: var(--paper-muted); }
+
+  /* 8. Sessions (services): same data, same Book, set like a price list */
+  .sessions { border-top: 1px solid var(--rule); }
+  .session { display: grid; grid-template-columns: 1fr auto; grid-template-areas: 'name price' 'meta meta' 'go go'; gap: 6px 16px; padding: 24px 0; border-bottom: 1px solid var(--rule); align-items: baseline; }
+  .session h3 { grid-area: name; } .session .price { grid-area: price; } .session .meta { grid-area: meta; } .session .go { grid-area: go; }
+  .session h3 { font-family: var(--serif); font-weight: 300; font-size: clamp(24px, 3.4vw, 36px); line-height: 1.1; letter-spacing: -0.015em; }
+  .session .price { font-family: var(--serif); font-size: clamp(20px, 2.6vw, 28px); font-weight: 300; text-align: right; }
+  .session .meta { font-size: 14px; color: var(--paper-muted); }
+  .session .meta i { font-style: normal; color: var(--biz); }
+  .session .go { display: flex; gap: 10px; margin-top: 10px; }
+  .session .go .btn { min-height: 44px; padding: 0 18px; font-size: 13px; }
+  @media (min-width: 900px) {
+    .session { grid-template-columns: 1.2fr 1fr auto auto; grid-template-areas: 'name meta price go'; gap: 24px; align-items: center; padding: 30px 0; }
+    .session .go { margin: 0; }
+  }
+
+  /* 9. Kind words: one quote at a time, large */
+  .quote { text-align: center; max-width: 900px; margin: 0 auto; }
+  .quote .stars { color: var(--gold); letter-spacing: 4px; font-size: 14px; }
+  .quote blockquote { font-family: var(--serif); font-weight: 300; font-size: clamp(26px, 4.4vw, 52px); line-height: 1.14; letter-spacing: -0.02em; margin: 24px 0; }
+  .quote cite { font-style: normal; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--paper-muted); }
+  .dots { display: flex; justify-content: center; gap: 4px; margin-top: 28px; }
+  .dots button { width: 44px; height: 44px; background: none; border: 0; display: grid; place-items: center; cursor: pointer; }
+  .dots button::after { content: ""; width: 24px; height: 2px; background: var(--rule); transition: background .3s; }
+  .dots button.on::after { background: var(--paper); }
+  .rating-line { text-align: center; margin-top: 8px; font-size: 13px; color: var(--paper-muted); }
+
+  /* 10. FAQs + visit */
+  .two { display: grid; gap: 56px; }
+  @media (min-width: 900px) { .two { grid-template-columns: 1fr 1fr; gap: 80px; } }
+  details { border-bottom: 1px solid var(--rule); }
+  summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 16px; padding: 20px 0; font-family: var(--serif); font-weight: 300; font-size: 22px; line-height: 1.25; min-height: 44px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font-family: var(--sans); font-weight: 300; font-size: 24px; transition: transform .3s var(--ease); }
+  details[open] summary::after { transform: rotate(45deg); }
+  details p { padding: 0 0 20px; color: var(--paper-muted); max-width: 52ch; }
+  .hours { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 15px; }
+  .hours td { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .hours td:last-child { text-align: right; color: var(--paper-muted); }
+
+  /* 11. Closing frame + footer */
+  .end { position: relative; min-height: 80svh; display: grid; place-items: center; text-align: center; isolation: isolate; padding: 80px 16px; }
+  .end .ph { position: absolute; inset: 0; z-index: -2; }
+  .end::after { content: ""; position: absolute; inset: 0; z-index: -1; background: color-mix(in oklab, var(--ink) 60%, transparent); }
+  .end h2 { font-family: var(--serif); font-weight: 200; font-size: clamp(48px, 11vw, 150px); line-height: .9; letter-spacing: -0.04em; }
+  .end p { margin: 20px auto 32px; max-width: 34ch; color: color-mix(in oklab, var(--paper) 85%, transparent); }
+  footer { padding: 40px 0 120px; font-size: 13px; color: var(--paper-muted); }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
+  footer .made b { color: var(--paper); font-weight: 700; }
+  @media (min-width: 768px) { footer { padding-bottom: 40px; } }
+
+  /* Phone: Book stays within thumb reach */
+  .dock { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 30; display: flex; gap: 8px; transform: translateY(140%); transition: transform .5s var(--ease); }
+  .dock.show { transform: none; }
+  .dock .btn { flex: 1; min-height: 52px; box-shadow: 0 10px 30px color-mix(in oklab, var(--ink) 60%, transparent); }
+  .dock .btn-line { flex: none; width: 52px; padding: 0; background: color-mix(in oklab, var(--ink) 70%, transparent); backdrop-filter: blur(10px); }
+  @media (min-width: 900px) { .dock { display: none; } }
+
+  /* Lightbox */
+  .lb { position: fixed; inset: 0; z-index: 50; background: color-mix(in oklab, var(--ink) 96%, transparent); display: none; place-items: center; padding: 56px 12px; }
+  .lb.open { display: grid; }
+  .lb .ph { width: min(92vw, 70vh); aspect-ratio: 4 / 5; }
+  .lb button { position: absolute; top: 8px; right: 8px; width: 48px; height: 48px; background: none; border: 0; color: var(--paper); font-size: 28px; cursor: pointer; }
+  .lb .n { position: absolute; bottom: 16px; left: 0; right: 0; text-align: center; font-size: 12px; letter-spacing: .2em; color: var(--paper-muted); }
+
+  /* Mockup note */
+  .note { position: fixed; top: 72px; right: 12px; z-index: 40; max-width: 260px; padding: 12px 14px; border-radius: 12px; background: var(--paper); color: var(--ink); font-size: 12px; line-height: 1.45; box-shadow: 0 12px 30px color-mix(in oklab, var(--ink) 50%, transparent); }
+  .note b { display: block; font-size: 13px; margin-bottom: 2px; }
+  .note button { margin-top: 8px; min-height: 32px; padding: 0 10px; border: 1px solid var(--ink); border-radius: 999px; background: none; font: 600 12px var(--sans); cursor: pointer; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
+    [data-r], .imgr > .ph { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="note" id="note"><b>Mockup · Photography style</b>Same content and same booking as the beauty page. Photos are placeholders until we generate them. <br><button onclick="this.parentNode.remove()">Hide note</button></div>
+
+<!-- 1. Top bar -->
+<header class="bar" id="bar">
+  <div class="wrap">
+    <button class="menu" aria-label="Menu" style="background:none;border:0;color:inherit"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h16M3 14h16"/></svg></button>
+    <nav aria-label="Imọlẹ Studio"><a href="#work">Work</a><a href="#sessions">Sessions</a><a href="#studio">The studio</a><a href="#visit">Visit</a></nav>
+    <a class="mark" href="#">Imọlẹ</a>
+    <a class="btn btn-paper" href="#sessions">Book<span class="hide-sm">&nbsp;a session</span></a>
+  </div>
+</header>
+
+<!-- 2. Hero -->
+<section class="hero">
+  <div class="ph t1" style="--img:url(img/hero.jpg)"><span class="cap">Hero · a signature portrait, wide</span></div>
+  <div class="wrap hero-in">
+    <div class="chips"><span class="chip">✓ Verified on Tikka</span><span class="chip"><span class="star">★</span> 4.9 · 86 reviews</span></div>
+    <h1>Imọlẹ <em>Studio</em></h1>
+    <div class="hero-meta">
+      <p>Portraits that feel like you on your best day. Birthdays, couples, family and brand shoots in our Lekki studio.</p>
+      <span class="scrollcue">Lekki, Lagos · Scroll</span>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Live drop -->
+<div class="drop">
+  <div class="run" aria-hidden="true"><div class="track">
+    <span><b>● Live now</b></span><span>December portraits</span><span>142 Tikkas left</span><span>Ends 14 Dec</span><span>✦</span>
+    <span><b>● Live now</b></span><span>December portraits</span><span>142 Tikkas left</span><span>Ends 14 Dec</span><span>✦</span>
+    <span><b>● Live now</b></span><span>December portraits</span><span>142 Tikkas left</span><span>Ends 14 Dec</span><span>✦</span>
+    <span><b>● Live now</b></span><span>December portraits</span><span>142 Tikkas left</span><span>Ends 14 Dec</span><span>✦</span>
+  </div></div>
+  <a href="#">Claim yours ↗</a>
+</div>
+
+<!-- 4. Statement (about) -->
+<section class="statement">
+  <div class="wrap">
+    <p class="eyebrow" data-r>About the studio</p>
+    <p class="q" data-r style="margin-top:20px">We light you slowly, direct you gently, and <em class="serif">hand you photos you'll frame.</em></p>
+    <div class="row">
+      <p class="lede" data-r>Imọlẹ means light. Since 2019 we've photographed over 2,000 birthdays, proposals and families from a calm studio in Lekki, with three backdrops, a dressing room and a stylist on call.</p>
+      <div class="stats" data-r><div><b>2,000+</b><span>sessions</span></div><div><b>3</b><span>sets</span></div><div><b>72h</b><span>to your photos</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Collections -->
+<section class="sec" id="work">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><span class="eyebrow" data-r>Collections</span><h2 class="h2" data-r>Selected <em>work</em></h2></div>
+      <a class="link" href="#portfolio" data-r>All photos ↓</a>
+    </div>
+    <div class="cols">
+      <article class="col" data-r><a href="#"><div class="imgr" data-r><div class="ph t5" style="--img:url(img/col-birthday.jpg)"><span class="cap">Collection cover · birthday</span></div></div><div class="col-t"><h3>Birthdays</h3><span>48 photos</span></div><p>Solo birthday portraits, glam to soft.</p></a></article>
+      <article class="col" data-r><a href="#"><div class="imgr" data-r><div class="ph t2" style="--img:url(img/col-couples.jpg)"><span class="cap">Collection cover · couple</span></div></div><div class="col-t"><h3>Couples</h3><span>32 photos</span></div><p>Pre-wedding and anniversaries.</p></a></article>
+      <article class="col" data-r><a href="#"><div class="imgr" data-r><div class="ph t3" style="--img:url(img/col-maternity.jpg)"><span class="cap">Collection cover · maternity</span></div></div><div class="col-t"><h3>Maternity</h3><span>20 photos</span></div><p>Bumps, gowns and quiet light.</p></a></article>
+      <article class="col" data-r><a href="#"><div class="imgr" data-r><div class="ph t4" style="--img:url(img/col-brand.jpg)"><span class="cap">Collection cover · brand shoot</span></div></div><div class="col-t"><h3>Brand &amp; headshots</h3><span>26 photos</span></div><p>For founders, creatives and teams.</p></a></article>
+    </div>
+  </div>
+</section>
+
+<!-- Full-bleed break -->
+<figure class="bleed imgr" data-r>
+  <div class="ph t3" style="--img:url(img/wide.jpg)"><span class="cap">Wide frame · a landscape favourite</span></div>
+  <figcaption>"Light is the first thing we set, and the last thing we fix."</figcaption>
+</figure>
+
+<!-- 6. Portfolio -->
+<section class="sec" id="portfolio" style="border-top:0">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow" data-r>Portfolio</span><h2 class="h2" data-r>Every <em>frame</em></h2></div></div>
+    <div class="filters" data-r><button class="on">All</button><button>Birthdays</button><button>Couples</button><button>Maternity</button><button>Brand</button></div>
+    <div class="grid" id="grid">
+      <figure data-r><div class="ph t1 p" style="--img:url(img/g1.jpg)"><span class="cap">Portrait</span></div></figure>
+      <figure data-r><div class="ph t6 l" style="--img:url(img/g2.jpg)"><span class="cap">Landscape</span></div></figure>
+      <figure data-r><div class="ph t5 tall" style="--img:url(img/g3.jpg)"><span class="cap">Tall</span></div></figure>
+      <figure data-r><div class="ph t2 s" style="--img:url(img/g4.jpg)"><span class="cap">Square</span></div><span class="play" aria-label="Video">▶</span></figure>
+      <figure data-r><div class="ph t3 p" style="--img:url(img/g5.jpg)"><span class="cap">Portrait</span></div></figure>
+      <figure data-r><div class="ph t4 l" style="--img:url(img/g6.jpg)"><span class="cap">Landscape</span></div></figure>
+      <figure data-r><div class="ph t5 p" style="--img:url(img/g7.jpg)"><span class="cap">Portrait</span></div></figure>
+      <figure data-r><div class="ph t1 tall" style="--img:url(img/g8.jpg)"><span class="cap">Tall</span></div></figure>
+      <figure data-r><div class="ph t6 s" style="--img:url(img/g9.jpg)"><span class="cap">Square</span></div></figure>
+    </div>
+  </div>
+</section>
+
+<!-- 7. The studio: backdrops and sets -->
+<section class="sec" id="studio">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow" data-r>The studio</span><h2 class="h2" data-r>Our <em>sets</em></h2></div><p class="lede" data-r>Pick your backdrop when you book. Swipe to see them.</p></div>
+    <div class="strip" data-r>
+      <figure><div class="ph t6" style="--img:url(img/set-paper.jpg)"><span class="cap">Set · paper backdrop</span></div><figcaption>Warm paper <span>Set 01</span></figcaption></figure>
+      <figure><div class="ph t3" style="--img:url(img/set-velvet.jpg)"><span class="cap">Set · velvet</span></div><figcaption>Velvet room <span>Set 02</span></figcaption></figure>
+      <figure><div class="ph t2" style="--img:url(img/set-daylight.jpg)"><span class="cap">Set · daylight</span></div><figcaption>Daylight corner <span>Set 03</span></figcaption></figure>
+      <figure><div class="ph t4" style="--img:url(img/set-dressing.jpg)"><span class="cap">Dressing room</span></div><figcaption>Dressing room <span>On site</span></figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Sessions (services: same Book and deposits as every style) -->
+<section class="sec" id="sessions">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow" data-r>Sessions</span><h2 class="h2" data-r>Book a <em>session</em></h2></div><p class="lede" data-r>Pick a session and a free time. Your time is held when you book.</p></div>
+    <div class="sessions">
+      <div class="session" data-r><h3>Birthday portraits</h3><p class="meta">1 hour · 1 outfit · 10 edited photos · <i>₦15,000 deposit to book</i></p><span class="price">₦60,000</span><div class="go"><a class="btn btn-paper" href="#">Book</a></div></div>
+      <div class="session" data-r><h3>Couples &amp; pre-wedding</h3><p class="meta">2 hours · 2 looks · 20 edited photos · <i>₦25,000 deposit to book</i></p><span class="price">₦120,000</span><div class="go"><a class="btn btn-paper" href="#">Book</a></div></div>
+      <div class="session" data-r><h3>Maternity</h3><p class="meta">90 minutes · studio gown included · 15 edited photos</p><span class="price">₦85,000</span><div class="go"><a class="btn btn-paper" href="#">Book</a></div></div>
+      <div class="session" data-r><h3>Headshots</h3><p class="meta">30 minutes · 3 edited photos · same-week delivery</p><span class="price">₦35,000</span><div class="go"><a class="btn btn-paper" href="#">Book</a></div></div>
+      <div class="session" data-r><h3>Family portraits</h3><p class="meta">1 hour · up to 6 people · 15 edited photos</p><span class="price">From ₦90,000</span><div class="go"><a class="btn btn-paper" href="#">Book</a></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Kind words -->
+<section class="sec">
+  <div class="wrap">
+    <div class="quote" data-r>
+      <p class="eyebrow">Kind words</p>
+      <div class="stars" style="margin-top:20px">★★★★★</div>
+      <blockquote id="q">"I walked in nervous and walked out with the best photos of my life. They told me exactly where to stand."</blockquote>
+      <cite id="c">Tolu · Birthday portraits</cite>
+      <div class="dots" id="dots"><button class="on" aria-label="Review 1"></button><button aria-label="Review 2"></button><button aria-label="Review 3"></button></div>
+      <p class="rating-line">4.9 from 86 reviews · every review is from a real visit</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10. FAQs + visit -->
+<section class="sec" id="visit">
+  <div class="wrap two">
+    <div>
+      <span class="eyebrow" data-r>Good questions</span>
+      <h2 class="h2" data-r style="margin:16px 0 24px">Before <em>you come</em></h2>
+      <details data-r><summary>How soon do I get my photos?</summary><p>Edited photos land in your WhatsApp within 72 hours. Rush delivery in 24 hours is ₦10,000.</p></details>
+      <details data-r><summary>Can I bring my own makeup artist?</summary><p>Yes. Or book our partner MUA when you pick your time.</p></details>
+      <details data-r><summary>Is the deposit refundable?</summary><p>The deposit holds your time and counts towards your bill. It isn't refundable, but you can move your session once.</p></details>
+    </div>
+    <div>
+      <span class="eyebrow" data-r>Visit</span>
+      <h2 class="h2" data-r style="margin:16px 0 8px">Lekki, <em>Lagos</em></h2>
+      <p class="lede" data-r>14 Admiralty Way, Lekki Phase 1. Parking in front.</p>
+      <table class="hours" data-r><tr><td>Monday – Friday</td><td>10:00 – 19:00</td></tr><tr><td>Saturday</td><td>9:00 – 20:00</td></tr><tr><td>Sunday</td><td>By booking</td></tr></table>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:28px" data-r><a class="btn btn-line" href="#">Get directions</a><a class="btn btn-line" href="#">Message us</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11. Closing frame -->
+<section class="end">
+  <div class="ph t5" style="--img:url(img/end.jpg)"><span class="cap">Closing frame · behind the scenes</span></div>
+  <div>
+    <h2 data-r>Your <em class="serif">turn.</em></h2>
+    <p data-r>Pick a session and a free time. It takes a minute.</p>
+    <a class="btn btn-paper" href="#sessions" data-r>Book a session</a>
+  </div>
+</section>
+
+<footer><div class="wrap"><span>© Imọlẹ Studio · Lekki, Lagos</span><span class="made">Made with <b>tikka</b></span></div></footer>
+
+<div class="dock" id="dock"><a class="btn btn-paper" href="#sessions">Book a session</a><a class="btn btn-line" href="#" aria-label="Message on WhatsApp">✉</a></div>
+
+<div class="lb" id="lb" role="dialog" aria-label="Photo"><button aria-label="Close" onclick="lb.classList.remove('open')">×</button><div class="ph t1" id="lbph"></div><p class="n" id="lbn"></p></div>
+
+<script>
+  // Reveal on scroll: one observer, transform and opacity only.
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('[data-r]').forEach((el) => io.observe(el));
+  // Top bar turns solid past the hero; the phone Book dock appears.
+  const bar = document.getElementById('bar'), dock = document.getElementById('dock');
+  const onScroll = () => { const y = scrollY > innerHeight * 0.7; bar.classList.toggle('solid', scrollY > 40); dock.classList.toggle('show', y); };
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  // Lightbox
+  const lb = document.getElementById('lb'), lbph = document.getElementById('lbph'), lbn = document.getElementById('lbn');
+  const figs = [...document.querySelectorAll('#grid figure')];
+  figs.forEach((f, i) => f.addEventListener('click', () => { const ph = f.querySelector('.ph'); lbph.className = ph.className; lbph.style.cssText = ph.style.cssText; lbn.textContent = `${i + 1} / ${figs.length}`; lb.classList.add('open'); }));
+  addEventListener('keydown', (e) => e.key === 'Escape' && lb.classList.remove('open'));
+  // Reviews
+  const R = [["I walked in nervous and walked out with the best photos of my life. They told me exactly where to stand.", "Tolu · Birthday portraits"], ["Our pre-wedding photos made my mum cry. The velvet room is everything.", "Chidinma & Seyi · Couples"], ["Booked on Monday, shot on Wednesday, photos on Friday. Headshots our whole team now uses.", "Ibrahim · Headshots"]];
+  const dots = [...document.querySelectorAll('#dots button')];
+  dots.forEach((d, i) => d.addEventListener('click', () => { q.textContent = `"${R[i][0]}"`; c.textContent = R[i][1]; dots.forEach((x) => x.classList.toggle('on', x === d)); }));
+</script>
+<style>@media (max-width: 899px) { .hide-sm { display: none; } }</style>
+</body>
+</html>

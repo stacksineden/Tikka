@@ -6,12 +6,13 @@ import { daysLabel, parseDays, parseReward, parseTemplatesMarkdown, shareCounts,
 const fromDoc = parseTemplatesMarkdown(readFileSync("docs/drop-templates.md", "utf8"));
 
 describe("drop templates", () => {
-  it("has 36: three per goal for beauty and spa, one per goal for the other six", () => {
-    expect(fromDoc).toHaveLength(36);
+  it("has 42: three per goal for beauty and spa, two for photography, one for the other six", () => {
+    expect(fromDoc).toHaveLength(42);
     const n = (c: string, g: string) => fromDoc.filter((t) => t.category === c && t.goal === g).length;
     for (const g of ["new_customers", "bring_back", "quiet_days"]) {
       expect(n("beauty_hair", g)).toBe(3);
       expect(n("spa_wellness", g)).toBe(3);
+      expect(n("photography", g)).toBe(2);
       for (const c of ["fitness", "food_drinks", "fashion", "health_clinics", "education", "other_services"]) expect(n(c, g)).toBe(1);
     }
   });
@@ -69,6 +70,7 @@ describe("days and shares", () => {
   });
   it("maps business categories", () => {
     expect(templateCategory("Beauty")).toBe("beauty_hair");
+    expect(templateCategory("Photography")).toBe("photography");
     expect(templateCategory("Events")).toBe("other_services");
     expect(templateCategory("Services")).toBe("other_services");
   });

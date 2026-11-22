@@ -7,6 +7,8 @@ import {
   nigerianE164,
   pageFrom,
   pageTo,
+  portfolioDetailsTo,
+  portfolioFrom,
   privateTo,
   serviceFrom,
   serviceTo,
@@ -118,5 +120,21 @@ describe("the page", () => {
 
   it("has defaults for a page nobody has touched", () => {
     expect(pageTo(undefined)).toMatchObject({ hero_focal_x: 0.5, hero_focal_y: 0.5, show_team: false, headline: null });
+  });
+});
+
+describe("portfolio photo details", () => {
+  const row = { id: "p1", kind: "photo" as const, image_path: "media/a.webp", thumb_path: "media/a-t.webp", caption: null, duration_s: null };
+  it("reads shape, colour and camera when saved, and nothing when not", () => {
+    expect(portfolioFrom({ ...row, width: 1600, height: 2000, tone: "#b98a4e", camera: { camera: "Canon EOS R5" } })).toMatchObject({ width: 1600, height: 2000, tone: "#b98a4e", camera: { camera: "Canon EOS R5" } });
+    const old = portfolioFrom(row);
+    expect(old.width).toBeUndefined();
+    expect(old.tone).toBeUndefined();
+    expect(old.camera).toBeUndefined();
+  });
+  it("only sends details the database accepts", () => {
+    expect(portfolioDetailsTo({ width: 1600.4, height: 2000, tone: "#b98a4e", camera: { iso: "ISO 100" } })).toEqual({ width: 1600, height: 2000, tone: "#b98a4e", camera: { iso: "ISO 100" } });
+    expect(portfolioDetailsTo({ width: 1600, tone: "gold", camera: {} })).toEqual({});
+    expect(portfolioDetailsTo({ camera: { camera: "x".repeat(400) } })).toEqual({});
   });
 });

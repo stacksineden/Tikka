@@ -6,11 +6,12 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { bizSerif } from "@/components/business/fonts";
 import { Gallery } from "@/components/business/Gallery";
+import { PhotoCollection } from "@/components/business/photo/PhotoCollection";
 import { ShareButton } from "@/components/business/ShareButton";
 import { Logo } from "@/components/site/Logo";
 import { getBusinessBySlug } from "@/lib/data";
 import { place } from "@/lib/format";
-import { priceText, showsLocation, whereLine } from "@/lib/page";
+import { pageStyle, priceText, showsLocation, whereLine } from "@/lib/page";
 import { collectionBookingLink, collectionLine, portfolioView } from "@/lib/portfolio";
 import { SITE } from "@/lib/qr";
 
@@ -56,6 +57,13 @@ async function CollectionPage({ params }: { params: Props["params"] }) {
   const bookLabel = c.service ? `Book ${c.service.name}` : "Book on WhatsApp";
   const style = { "--biz": b.brandColor, "--on-biz": b.onBrandColor } as React.CSSProperties;
   const url = `${SITE}/${b.slug}/work/${c.slug}`;
+  if (pageStyle(b) === "photography") {
+    return (
+      <div className={bizSerif.variable}>
+        <PhotoCollection b={b} c={c} others={others} book={book} bookLabel={bookLabel} url={url} where={showsLocation(b) ? place(b.area, b.city) : whereLine(b)} />
+      </div>
+    );
+  }
 
   return (
     <div data-theme="light" className={`biz ${bizSerif.variable}`} style={style}>

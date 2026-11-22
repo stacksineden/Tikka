@@ -141,7 +141,7 @@ export function PortfolioEditor({
       try {
         const prepared = await preparePortfolio(file);
         const [url, thumbUrl] = await Promise.all([uploadPhoto(prepared.url, "portfolio"), uploadPhoto(prepared.thumbUrl, "portfolio")]);
-        const res = await addPhoto({ url, thumbUrl, collectionId: into });
+        const res = await addPhoto({ url, thumbUrl, collectionId: into, ...prepared.details });
         if (!res.ok) {
           setProblem(res.error);
           break;

@@ -50,6 +50,7 @@ export function citiesFor(state: string): string[] {
 /** Marketplace categories (PRD A5). */
 export const CATEGORIES = [
   "Beauty",
+  "Photography",
   "Wellness",
   "Fitness",
   "Food & drinks",

@@ -78,7 +78,26 @@ export interface PortfolioPhoto {
   seconds?: number;
   /** The collection it sits in; none means "More work". */
   collectionId?: string;
+  /** The original's shape in pixels, read at upload (photos uploaded before 27 Nov 2026 have none). */
+  width?: number;
+  height?: number;
+  /** Its main colour, "#rrggbb", read at upload: the Photography page tints the room with it. */
+  tone?: string;
+  /** Camera settings from the original file, when it had them (lib/photo-meta.ts). */
+  camera?: PhotoCamera;
 }
+
+/** What the Photography page shows under a photo: "Canon EOS R5 · RF 85mm F1.2 L · f/1.8 · 1/200s · ISO 100". */
+export interface PhotoCamera {
+  camera?: string;
+  lens?: string;
+  aperture?: string;
+  shutter?: string;
+  iso?: string;
+}
+
+/** The business page's look: "beauty" (the editorial page) or "photography" (the gallery). Only the look changes. */
+export type PageStyle = "beauty" | "photography";
 
 export interface PortfolioCollection {
   id: string;
@@ -142,6 +161,8 @@ export interface BusinessPage {
   showText?: boolean;
   textTitle?: string;
   textBody?: string;
+  /** Picked under "More options"; unset follows the category (pageStyle() in lib/page.ts). */
+  style?: PageStyle;
 }
 
 export type PatternId = "dots" | "stripes" | "grid" | "sparks";

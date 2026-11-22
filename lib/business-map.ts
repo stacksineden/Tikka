@@ -5,7 +5,7 @@
 
 import { fromStored, toStored } from "./media-path";
 import { initialsFrom } from "./setup";
-import type { Business, BusinessPage, CardBackground, PatternId, PortfolioCollection, PortfolioPhoto, ServiceItem, TeamMember, FaqItem } from "./types";
+import type { Business, BusinessPage, CardBackground, PatternId, PhotoCamera, PortfolioCollection, PortfolioPhoto, ServiceItem, TeamMember, FaqItem } from "./types";
 
 export interface BusinessRow {
   id: string;
@@ -55,6 +55,8 @@ export interface PageRow {
   show_text: boolean;
   text_title: string | null;
   text_body: string | null;
+  /** Added by the photography_style migration; absent on rows read before it. */
+  style?: "beauty" | "photography" | null;
 }
 
 export interface ServiceRow {
@@ -85,6 +87,11 @@ export interface PortfolioRow {
   duration_s: number | string | null;
   /** Added by the portfolio_collections migration; absent on rows read before it. */
   collection_id?: string | null;
+  /** Added by the photography_style migration. */
+  width?: number | null;
+  height?: number | null;
+  tone?: string | null;
+  camera?: PhotoCamera | null;
 }
 
 export interface CollectionRow {
@@ -177,7 +184,18 @@ export function portfolioFrom(r: PortfolioRow): PortfolioPhoto {
     caption: opt(r.caption),
     seconds: r.duration_s === null ? undefined : Number(r.duration_s),
     collectionId: opt(r.collection_id),
+    ...(r.width && r.height ? { width: r.width, height: r.height } : {}),
+    ...(r.tone ? { tone: r.tone } : {}),
+    ...(r.camera && Object.keys(r.camera).length ? { camera: r.camera } : {}),
   };
+}
+
+/** The photo details the portfolio insert takes (checked again by the database). */
+export function portfolioDetailsTo(p: Pick<PortfolioPhoto, "width" | "height" | "tone" | "camera">) {
+  const size = p.width && p.height ? { width: Math.round(p.width), height: Math.round(p.height) } : {};
+  const tone = p.tone && /^#[0-9a-f]{6}$/.test(p.tone) ? { tone: p.tone } : {};
+  const camera = p.camera && Object.keys(p.camera).length && JSON.stringify(p.camera).length <= 300 ? { camera: p.camera } : {};
+  return { ...size, ...tone, ...camera };
 }
 
 export function collectionFrom(r: CollectionRow): PortfolioCollection {
@@ -199,6 +217,7 @@ export function pageFrom(p: PageRow | null, team: TeamRow[], faqs: FaqRow[]): Bu
     showText: p.show_text,
     textTitle: opt(p.text_title),
     textBody: opt(p.text_body),
+    ...(p.style ? { style: p.style } : {}),
   };
 }
 
@@ -215,6 +234,7 @@ export function pageTo(p: BusinessPage | undefined): Omit<PageRow, never> {
     show_text: !!p?.showText,
     text_title: p?.textTitle?.trim() || null,
     text_body: p?.textBody?.trim() || null,
+    style: p?.style ?? null,
   };
 }
 

@@ -81,7 +81,7 @@ import { LIMITS, normalizeNgPhone, prefixAlternatives, validateCard, type CardDr
 import type { CheckResult, DigitsResult } from "@/lib/redeem";
 import { parseNaira, type SpentResult } from "@/lib/spent";
 import type { BusinessPageInput } from "@/lib/page";
-import type { Business, OpeningHours, PortfolioCollection, PortfolioPhoto, ServeMode, ServiceItem } from "@/lib/types";
+import type { Business, OpeningHours, PageStyle, PortfolioCollection, PortfolioPhoto, ServeMode, ServiceItem } from "@/lib/types";
 import { requestPhone } from "@/lib/privacy";
 import type { MoreTimeResult, PersonRecord } from "@/lib/data";
 import { dbAdminSetEnquiryStatus } from "@/lib/studio-db";
@@ -385,7 +385,7 @@ export async function dismissGuaranteeAction(): Promise<void> {
 
 export type PageSaveResult = { ok: true } | { ok: false; errors: Record<string, string | undefined> };
 
-export async function savePageAction(input: BusinessPageInput & { serveMode?: ServeMode }): Promise<PageSaveResult> {
+export async function savePageAction(input: BusinessPageInput & { serveMode?: ServeMode; styleChoice?: "auto" | PageStyle }): Promise<PageSaveResult> {
   const user = await getOwnerUser();
   if (!user) return { ok: false, errors: { form: "Only the owner can edit the page." } };
   const r = await savePage(user, input);

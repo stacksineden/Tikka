@@ -8,6 +8,7 @@ import type { RewardType, Tier } from "./types";
 export type Goal = "new_customers" | "bring_back" | "quiet_days";
 export type TemplateCategory =
   | "beauty_hair"
+  | "photography"
   | "spa_wellness"
   | "fitness"
   | "food_drinks"
@@ -82,6 +83,8 @@ export function templateCategory(businessCategory: string): TemplateCategory {
   switch (businessCategory) {
     case "Beauty":
       return "beauty_hair";
+    case "Photography":
+      return "photography";
     case "Wellness":
       return "spa_wellness";
     case "Fitness":

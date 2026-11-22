@@ -2008,5 +2008,509 @@
         "claims24h": 42
       }
     ]
+  },
+  {
+    "ownerId": "seed_imole",
+    "business": {
+      "id": "biz_imole",
+      "slug": "imole-studio",
+      "name": "Imọlẹ Studio",
+      "initials": "IS",
+      "category": "Photography",
+      "area": "Lekki",
+      "city": "Lagos",
+      "state": "Lagos",
+      "brandColor": "#7A5A2E",
+      "onBrandColor": "#FFFFFF",
+      "codePrefix": "IS",
+      "background": {
+        "type": "color"
+      },
+      "tagline": "Portraits that feel like you on your best day.",
+      "about": "Imọlẹ means light. Since 2019 we've photographed birthdays, proposals and families from a calm studio in Lekki, with three sets, a dressing room and a stylist on call. Your edited photos land in your WhatsApp within 72 hours.",
+      "hours": {
+        "weekdays": {
+          "open": true,
+          "from": "10:00",
+          "to": "19:00"
+        },
+        "saturday": {
+          "open": true,
+          "from": "09:00",
+          "to": "20:00"
+        },
+        "sunday": {
+          "open": false,
+          "from": "12:00",
+          "to": "17:00"
+        }
+      },
+      "verified": true,
+      "rating": 4.9,
+      "reviewCount": 86,
+      "actions": [
+        {
+          "kind": "whatsapp",
+          "value": "+2348031110099"
+        },
+        {
+          "kind": "call",
+          "value": "+2348031110099"
+        },
+        {
+          "kind": "instagram",
+          "value": "imolestudio"
+        }
+      ],
+      "services": [
+        {
+          "id": "svc_imole_1",
+          "name": "Birthday portraits",
+          "price": 60000,
+          "priceKind": "fixed",
+          "duration": "1 hr",
+          "description": "1 outfit, 10 edited photos"
+        },
+        {
+          "id": "svc_imole_2",
+          "name": "Couples & pre-wedding",
+          "price": 120000,
+          "priceKind": "fixed",
+          "duration": "2 hrs",
+          "description": "2 looks, 20 edited photos"
+        },
+        {
+          "id": "svc_imole_3",
+          "name": "Maternity",
+          "price": 85000,
+          "priceKind": "fixed",
+          "duration": "90 min",
+          "description": "Studio gown included, 15 edited photos"
+        },
+        {
+          "id": "svc_imole_4",
+          "name": "Headshots",
+          "price": 35000,
+          "priceKind": "fixed",
+          "duration": "30 min",
+          "description": "3 edited photos, same-week delivery"
+        },
+        {
+          "id": "svc_imole_5",
+          "name": "Family portraits",
+          "price": 90000,
+          "priceKind": "from",
+          "duration": "1 hr",
+          "description": "Up to 6 people, 15 edited photos"
+        }
+      ],
+      "hasVideo": false,
+      "address": "14 Admiralty Way, Lekki Phase 1",
+      "portfolio": [
+        {
+          "id": "ph_imole_1",
+          "url": "/demo/photography/col-birthday.jpg",
+          "thumbUrl": "/demo/photography/col-birthday.jpg",
+          "width": 2000,
+          "height": 1500,
+          "tone": "#c9963f",
+          "caption": "Thirty, in gold",
+          "collectionId": "col_bday",
+          "camera": {
+            "camera": "Canon EOS R5",
+            "lens": "RF50mm F1.2 L USM",
+            "aperture": "f/2",
+            "shutter": "1/160s",
+            "iso": "ISO 200"
+          }
+        },
+        {
+          "id": "ph_imole_2",
+          "url": "/demo/photography/g1.jpg",
+          "thumbUrl": "/demo/photography/g1.jpg",
+          "width": 1600,
+          "height": 2000,
+          "tone": "#b8782f",
+          "caption": "Gele and gold",
+          "collectionId": "col_bday",
+          "camera": {
+            "camera": "Canon EOS R5",
+            "lens": "RF85mm F1.2 L USM",
+            "aperture": "f/2",
+            "shutter": "1/200s",
+            "iso": "ISO 100"
+          }
+        },
+        {
+          "id": "ph_imole_3",
+          "url": "/demo/photography/g5.jpg",
+          "thumbUrl": "/demo/photography/g5.jpg",
+          "width": 1600,
+          "height": 2000,
+          "tone": "#6a4058",
+          "caption": "Quiet, in cream",
+          "collectionId": "col_brand",
+          "camera": {
+            "camera": "SONY ILCE-7M4",
+            "lens": "FE 85mm F1.4 GM",
+            "aperture": "f/1.8",
+            "shutter": "1/200s",
+            "iso": "ISO 100"
+          }
+        },
+        {
+          "id": "ph_imole_4",
+          "url": "/demo/photography/col-couples.jpg",
+          "thumbUrl": "/demo/photography/col-couples.jpg",
+          "width": 1600,
+          "height": 2000,
+          "tone": "#cdb89a",
+          "caption": "Ada & Kunle",
+          "collectionId": "col_couples",
+          "camera": {
+            "camera": "SONY ILCE-7M4",
+            "lens": "FE 50mm F1.4 GM",
+            "aperture": "f/2.2",
+            "shutter": "1/250s",
+            "iso": "ISO 160"
+          }
+        },
+        {
+          "id": "ph_imole_5",
+          "url": "/demo/photography/g6.jpg",
+          "thumbUrl": "/demo/photography/g6.jpg",
+          "width": 2100,
+          "height": 1400,
+          "tone": "#a8743a",
+          "caption": "First dance, early",
+          "collectionId": "col_couples",
+          "camera": {
+            "camera": "Canon EOS R5",
+            "lens": "RF28-70mm F2 L USM",
+            "aperture": "f/2",
+            "shutter": "1/30s",
+            "iso": "ISO 800"
+          }
+        },
+        {
+          "id": "ph_imole_6",
+          "url": "/demo/photography/g4.jpg",
+          "thumbUrl": "/demo/photography/g4.jpg",
+          "width": 1800,
+          "height": 1800,
+          "tone": "#6b5038",
+          "caption": "The cap, just so",
+          "collectionId": "col_couples",
+          "camera": {
+            "camera": "Canon EOS R5",
+            "lens": "RF100mm F2.8 L MACRO IS USM",
+            "aperture": "f/3.2",
+            "shutter": "1/200s",
+            "iso": "ISO 400"
+          }
+        },
+        {
+          "id": "ph_imole_7",
+          "url": "/demo/photography/g9.jpg",
+          "thumbUrl": "/demo/photography/g9.jpg",
+          "width": 1800,
+          "height": 1800,
+          "tone": "#c9a35e",
+          "caption": "Gold on satin",
+          "collectionId": "col_couples",
+          "camera": {
+            "camera": "Canon EOS R5",
+            "lens": "RF100mm F2.8 L MACRO IS USM",
+            "aperture": "f/4",
+            "shutter": "1/160s",
+            "iso": "ISO 200"
+          }
+        },
+        {
+          "id": "ph_imole_8",
+          "url": "/demo/photography/col-maternity.jpg",
+          "thumbUrl": "/demo/photography/col-maternity.jpg",
+          "width": 1600,
+          "height": 2000,
+          "tone": "#7a3e62",
+          "caption": "Waiting for Tobi",
+          "collectionId": "col_mat",
+          "camera": {
+            "camera": "Canon EOS R5",
+            "lens": "RF85mm F1.2 L USM",
+            "aperture": "f/1.6",
+            "shutter": "1/200s",
+            "iso": "ISO 125"
+          }
+        },
+        {
+          "id": "ph_imole_9",
+          "url": "/demo/photography/g7.jpg",
+          "thumbUrl": "/demo/photography/g7.jpg",
+          "width": 1600,
+          "height": 2000,
+          "tone": "#e0cdb4",
+          "caption": "Ten days old",
+          "collectionId": "col_mat",
+          "camera": {
+            "camera": "SONY ILCE-7M4",
+            "lens": "FE 50mm F1.2 GM",
+            "aperture": "f/2",
+            "shutter": "1/160s",
+            "iso": "ISO 250"
+          }
+        },
+        {
+          "id": "ph_imole_10",
+          "url": "/demo/photography/g2.jpg",
+          "thumbUrl": "/demo/photography/g2.jpg",
+          "width": 2100,
+          "height": 1400,
+          "tone": "#d7c3a2",
+          "caption": "The Okafors",
+          "collectionId": "col_family",
+          "camera": {
+            "camera": "SONY ILCE-7M4",
+            "lens": "FE 35mm F1.4 GM",
+            "aperture": "f/4",
+            "shutter": "1/160s",
+            "iso": "ISO 200"
+          }
+        },
+        {
+          "id": "ph_imole_11",
+          "url": "/demo/photography/g8.jpg",
+          "thumbUrl": "/demo/photography/g8.jpg",
+          "width": 1400,
+          "height": 2100,
+          "tone": "#33304a",
+          "caption": "First class, finally",
+          "collectionId": "col_family",
+          "camera": {
+            "camera": "NIKON Z 8",
+            "lens": "NIKKOR Z 50mm f/1.2 S",
+            "aperture": "f/2",
+            "shutter": "1/200s",
+            "iso": "ISO 160"
+          }
+        },
+        {
+          "id": "ph_imole_12",
+          "url": "/demo/photography/col-brand.jpg",
+          "thumbUrl": "/demo/photography/col-brand.jpg",
+          "width": 2000,
+          "height": 1500,
+          "tone": "#8a8172",
+          "caption": "Femi, founder",
+          "collectionId": "col_brand",
+          "camera": {
+            "camera": "NIKON Z 8",
+            "lens": "NIKKOR Z MC 105mm f/2.8 VR S",
+            "aperture": "f/4",
+            "shutter": "1/250s",
+            "iso": "ISO 100"
+          }
+        },
+        {
+          "id": "ph_imole_13",
+          "url": "/demo/photography/g3.jpg",
+          "thumbUrl": "/demo/photography/g3.jpg",
+          "width": 1400,
+          "height": 2100,
+          "tone": "#4a3a55",
+          "caption": "Structure",
+          "collectionId": "col_brand",
+          "camera": {
+            "camera": "NIKON Z 8",
+            "lens": "NIKKOR Z 85mm f/1.2 S",
+            "aperture": "f/2.8",
+            "shutter": "1/250s",
+            "iso": "ISO 100"
+          }
+        },
+        {
+          "id": "ph_imole_14",
+          "url": "/demo/photography/wide.jpg",
+          "thumbUrl": "/demo/photography/wide.jpg",
+          "width": 2400,
+          "height": 1350,
+          "tone": "#8e6a3e",
+          "caption": "Light is the first thing we set, and the last thing we fix.",
+          "camera": {
+            "camera": "SONY ILCE-7M4",
+            "lens": "FE 24mm F1.4 GM",
+            "aperture": "f/2.8",
+            "shutter": "1/60s",
+            "iso": "ISO 640"
+          }
+        },
+        {
+          "id": "ph_imole_15",
+          "url": "/demo/photography/set-paper.jpg",
+          "thumbUrl": "/demo/photography/set-paper.jpg",
+          "width": 1500,
+          "height": 2000,
+          "tone": "#e6d9c4",
+          "caption": "Warm paper",
+          "collectionId": "col_sets"
+        },
+        {
+          "id": "ph_imole_16",
+          "url": "/demo/photography/set-velvet.jpg",
+          "thumbUrl": "/demo/photography/set-velvet.jpg",
+          "width": 1500,
+          "height": 2000,
+          "tone": "#5c2a4a",
+          "caption": "Velvet room",
+          "collectionId": "col_sets"
+        },
+        {
+          "id": "ph_imole_17",
+          "url": "/demo/photography/set-daylight.jpg",
+          "thumbUrl": "/demo/photography/set-daylight.jpg",
+          "width": 1500,
+          "height": 2000,
+          "tone": "#cbbfa6",
+          "caption": "Daylight corner",
+          "collectionId": "col_sets"
+        },
+        {
+          "id": "ph_imole_18",
+          "url": "/demo/photography/set-dressing.jpg",
+          "thumbUrl": "/demo/photography/set-dressing.jpg",
+          "width": 1500,
+          "height": 2000,
+          "tone": "#9a7444",
+          "caption": "Dressing room",
+          "collectionId": "col_sets"
+        },
+        {
+          "id": "ph_imole_19",
+          "url": "/demo/photography/end.jpg",
+          "thumbUrl": "/demo/photography/end.jpg",
+          "width": 2400,
+          "height": 1350,
+          "tone": "#a5733c",
+          "caption": "Behind the scenes"
+        }
+      ],
+      "collections": [
+        {
+          "id": "col_bday",
+          "name": "Birthdays",
+          "slug": "birthdays",
+          "serviceName": "Birthday portraits",
+          "coverId": "ph_imole_1"
+        },
+        {
+          "id": "col_couples",
+          "name": "Couples",
+          "slug": "couples",
+          "serviceName": "Couples & pre-wedding",
+          "coverId": "ph_imole_4"
+        },
+        {
+          "id": "col_mat",
+          "name": "Maternity",
+          "slug": "maternity",
+          "serviceName": "Maternity",
+          "coverId": "ph_imole_8"
+        },
+        {
+          "id": "col_family",
+          "name": "Family",
+          "slug": "family",
+          "serviceName": "Family portraits",
+          "coverId": "ph_imole_10"
+        },
+        {
+          "id": "col_brand",
+          "name": "Brand & headshots",
+          "slug": "brand-and-headshots",
+          "serviceName": "Headshots",
+          "coverId": "ph_imole_12"
+        },
+        {
+          "id": "col_sets",
+          "name": "The studio",
+          "slug": "the-studio",
+          "coverId": "ph_imole_15"
+        }
+      ],
+      "foundingMember": true,
+      "guaranteeUsed": false,
+      "isDemo": true,
+      "serveMode": "in_store",
+      "page": {
+        "heroImageUrl": "/demo/photography/hero.jpg",
+        "heroFocal": {
+          "x": 0.6,
+          "y": 0.4
+        },
+        "headline": "We light you slowly, direct you gently, and hand you photos you'll frame.",
+        "subline": "Birthdays, couples, family and brand shoots in our Lekki studio.",
+        "showFaqs": true,
+        "faqs": [
+          {
+            "id": "fq_imole_1",
+            "q": "How soon do I get my photos?",
+            "a": "Edited photos land in your WhatsApp within 72 hours. Rush delivery in 24 hours is ₦10,000."
+          },
+          {
+            "id": "fq_imole_2",
+            "q": "Can I bring my own makeup artist?",
+            "a": "Yes. Or book our partner makeup artist when you pick your time."
+          },
+          {
+            "id": "fq_imole_3",
+            "q": "Can I move my session?",
+            "a": "Yes, once, up to 24 hours before. Message us on WhatsApp."
+          }
+        ]
+      }
+    },
+    "drops": [
+      {
+        "id": "drop_imole-december",
+        "slug": "december-portraits",
+        "name": "December Portraits",
+        "status": "live",
+        "total": 200,
+        "claimed": 58,
+        "redeemed": 11,
+        "revenue": 540000,
+        "startsAt": "2026-10-16T09:00:00+01:00",
+        "endsAt": "2026-10-30T19:00:00+01:00",
+        "finish": "foil",
+        "rewards": [
+          {
+            "tier": "legendary",
+            "type": "free_item",
+            "label": "Free 30-minute mini shoot",
+            "count": 8
+          },
+          {
+            "tier": "rare",
+            "type": "naira_off",
+            "label": "₦10,000 off any shoot over ₦40,000",
+            "count": 32
+          },
+          {
+            "tier": "thank_you",
+            "type": "perk",
+            "label": "2 extra edited photos with any shoot",
+            "count": 160
+          }
+        ],
+        "notifyWaiting": 0,
+        "showOnMarketplace": true,
+        "publishedAt": "2026-10-16T09:00:00+01:00",
+        "tierId": "medium",
+        "tierMaxCards": 1000,
+        "paymentStatus": "paid",
+        "claimsLastHour": 4,
+        "claims24h": 19
+      }
+    ]
   }
 ]
