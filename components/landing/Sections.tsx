@@ -312,8 +312,8 @@ export function Tiers() {
 
 /* ---------------------------------------------------------- Who it's for */
 
-// The pilot's two niches (decided 22 Nov 2026): beauty and photography, service businesses people
-// book and come in to (or who come to them). Each idea is a Rare Tikka they could run.
+// Examples of who Tikka suits, led by the pilot's focus (beauty and photography, 22 Nov 2026); the
+// heading stays broad on purpose. Each idea is a Rare Tikka they could run.
 const AUDIENCE: { title: string; idea: string; Icon: LucideIcon; image?: string }[] = [
   { title: "Makeup artists", idea: "Free gele tying with any glam", Icon: Brush },
   { title: "Hair and barbers", idea: "Free wash with any style", Icon: Scissors },
@@ -329,9 +329,9 @@ export function WhoItsFor() {
       <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div className="max-w-2xl">
           <Eyebrow>Who it&apos;s for</Eyebrow>
-          <h2 className="mt-3 text-heading sm:text-display-lg">Built for beauty and photography.</h2>
+          <h2 className="mt-3 text-heading sm:text-display-lg">Built for places people walk into.</h2>
           <p className="text-body-lg mt-4 text-ink-muted">
-            Makeup, hair, nails, lashes, skincare and photo shoots. A Tikka gives people a reason to book you this
+            If your customers come to a counter, a chair or a table, a Tikka gives them a reason to come in this
             week, and gives you their number the moment they claim.
           </p>
         </div>
