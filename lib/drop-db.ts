@@ -50,6 +50,20 @@ export async function dbDrops(now: Date, rebuild: (d: Drop) => DropDraft): Promi
   }
   const pendingFor = new Map<string, string>();
   for (const p of pending ?? []) if (!pendingFor.has(p.drop_id)) pendingFor.set(p.drop_id, p.id);
+  // "This drop brought in" counts money paid online for its Tikkas too (pay links sent from Leads),
+  // the same as the drop's results (drop_paid_online(), owner only, live payments only).
+  await Promise.all(
+    rows
+      .filter((r) => (counts.get(r.id)?.claimed ?? 0) > 0)
+      .map(async (r) => {
+        const { data } = await sb.rpc("drop_paid_online", { p_drop: r.id });
+        const naira = (Number(data) || 0) / 100;
+        if (naira <= 0) return;
+        const n = counts.get(r.id)!;
+        n.revenue += naira;
+        n.paidOnline = naira;
+      }),
+  );
   const out = rows.map((row) => {
     const drop = dropFrom(row, counts.get(row.id) ?? { claimed: 0, redeemed: 0, revenue: 0 }, now, pendingFor.get(row.id));
     return { drop, draft: draftFrom(row, () => rebuild(drop)) };

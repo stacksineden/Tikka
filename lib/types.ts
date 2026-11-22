@@ -185,6 +185,8 @@ export interface Drop {
   revenue: number;
   /** Redemptions where staff typed what the customer spent (the rest add nothing to `revenue`). */
   spendLogged?: number;
+  /** Naira paid online (pay links sent on this drop's Tikkas, live payments); already inside `revenue`. */
+  paidOnline?: number;
   startsAt: string;
   endsAt: string;
   finish: Finish;

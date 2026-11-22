@@ -86,7 +86,7 @@ async function Money() {
         ].map(([label, value]) => (
           <div key={label} className="rounded-card border border-line bg-surface-raised p-3">
             <p className="text-caption text-ink-muted">{label}</p>
-            <p className="mt-1 font-mono text-[18px] font-semibold tabular-nums">{value}</p>
+            <p className="mt-1 text-[18px] font-bold tabular-nums">{value}</p>
           </div>
         ))}
       </section>
@@ -115,7 +115,7 @@ async function Money() {
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="font-mono text-[16px] font-semibold tabular-nums">{naira(l.amountKobo / 100)}</p>
+                      <p className="text-[16px] font-bold tabular-nums">{naira(l.amountKobo / 100)}</p>
                       <span className={`tag ${cls}`}>{label}</span>
                     </div>
                   </div>
@@ -147,7 +147,7 @@ async function Money() {
                   </p>
                   <p className="text-caption text-ink-muted">To your bank: {naira((d.paidKobo - d.feeKobo - d.tikkaKobo) / 100)}</p>
                 </div>
-                <p className="shrink-0 font-mono text-[16px] font-semibold tabular-nums">{naira(d.paidKobo / 100)}</p>
+                <p className="shrink-0 text-[16px] font-bold tabular-nums">{naira(d.paidKobo / 100)}</p>
               </li>
             ))}
           </ul>

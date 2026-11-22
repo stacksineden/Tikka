@@ -312,7 +312,7 @@ export function TopStats({ drop, newToday, leadsTotal }: { drop?: Drop; newToday
       <Stat label="New leads today" value={count(newToday)} note={`${count(leadsTotal)} leads in total`} />
       <Stat
         label="This drop brought in"
-        value={drop && drop.redeemed > 0 ? nairaShort(drop.revenue) : "₦0"}
+        value={drop && drop.revenue > 0 ? nairaShort(drop.revenue) : "₦0"}
         note={drop ? broughtInNote(drop) : undefined}
         tone="gold"
       />

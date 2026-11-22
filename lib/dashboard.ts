@@ -1,17 +1,19 @@
 // Drop dashboard maths (PRD B6, TECH_PLAN §12). Pure, so every number is pinned by tests; the
 // real numbers come from `events` + `claims` (and drop_daily_stats for charts).
 
-import { count, WAT } from "./format";
+import { count, WAT, nairaShort } from "./format";
 import type { ActivityEvent, Source } from "./types";
 
 /**
  * Under "This drop brought in ₦X": how many visits that's from, and how many of them had a spend
  * typed at the counter, when not all did ("from 6 of 9 visits"). Staff can skip the spend box.
  */
-export function broughtInNote(d: { redeemed: number; spendLogged?: number }): string {
+export function broughtInNote(d: { redeemed: number; spendLogged?: number; paidOnline?: number }): string {
   const visits = (n: number) => `${count(n)} ${n === 1 ? "visit" : "visits"}`;
-  if (d.spendLogged === undefined || d.spendLogged >= d.redeemed) return `from ${visits(d.redeemed)}`;
-  return `from ${count(d.spendLogged)} of ${visits(d.redeemed)}`;
+  const online = d.paidOnline && d.paidOnline > 0 ? ` + ${nairaShort(d.paidOnline)} paid online` : "";
+  if (d.redeemed === 0) return online ? `${nairaShort(d.paidOnline!)} paid online` : `from ${visits(0)}`;
+  if (d.spendLogged === undefined || d.spendLogged >= d.redeemed) return `from ${visits(d.redeemed)}${online}`;
+  return `from ${count(d.spendLogged)} of ${visits(d.redeemed)}${online}`;
 }
 
 export interface FunnelStep {

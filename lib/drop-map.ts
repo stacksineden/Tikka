@@ -57,6 +57,8 @@ export interface DropCounts {
   revenue: number;
   /** How many redemptions had a bill logged. */
   spendLogged?: number;
+  /** Naira paid online for this drop's Tikkas (already inside `revenue`). */
+  paidOnline?: number;
 }
 
 const TIER_TO: Record<Tier, DbTier> = { legendary: "legendary", rare: "rare", thank_you: "common" };
@@ -149,6 +151,7 @@ export function dropFrom(row: DropRow, counts: DropCounts, now: Date, pendingPay
     redeemed: counts.redeemed,
     revenue: counts.revenue,
     spendLogged: counts.spendLogged,
+    paidOnline: counts.paidOnline,
     startsAt: new Date(row.starts_at).toISOString(),
     endsAt: new Date(row.ends_at).toISOString(),
     finish: row.finish,

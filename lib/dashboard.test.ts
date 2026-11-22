@@ -57,4 +57,10 @@ describe("what a drop brought in", () => {
     expect(broughtInNote({ redeemed: 1, spendLogged: 1 })).toBe("from 1 visit");
     expect(broughtInNote({ redeemed: 4 })).toBe("from 4 visits");
   });
+
+  it("adds money paid online for the drop's Tikkas", () => {
+    expect(broughtInNote({ redeemed: 4, spendLogged: 4, paidOnline: 15000 })).toBe("from 4 visits + ₦15K paid online");
+    expect(broughtInNote({ redeemed: 0, paidOnline: 20000 })).toBe("₦20K paid online");
+    expect(broughtInNote({ redeemed: 3, spendLogged: 2, paidOnline: 0 })).toBe("from 2 of 3 visits");
+  });
 });

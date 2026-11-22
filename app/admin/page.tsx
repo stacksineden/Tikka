@@ -194,7 +194,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                       {!b.enabled && <span className="tag ml-2 bg-surface-sunken text-ink-muted">Payments off</span>}
                       {!b.verified && <span className="tag ml-2 bg-gold-soft">Not verified</span>}
                     </p>
-                    <p className="font-mono text-[16px] font-semibold tabular-nums">{naira(b.liveKobo / 100)}</p>
+                    <p className="text-[16px] font-bold tabular-nums">{naira(b.liveKobo / 100)}</p>
                   </div>
                   <p className="text-caption text-ink-muted">
                     {b.last4 ? `${b.bank} ••••${b.last4}${b.mode === "test" ? " (test mode: ask them to add it again)" : ""}` : "No bank account yet"} · up to {naira(b.maxKobo / 100)} a payment ·{" "}
