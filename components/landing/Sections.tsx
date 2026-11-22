@@ -1,15 +1,15 @@
 import {
-  BookOpen,
+  Aperture,
+  Brush,
   CalendarCheck,
+  Camera,
   DoorOpen,
-  Dumbbell,
   Flower2,
   ListChecks,
   ReceiptText,
   QrCode,
   Scissors,
-  Stethoscope,
-  UtensilsCrossed,
+  Sparkles,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -312,13 +312,15 @@ export function Tiers() {
 
 /* ---------------------------------------------------------- Who it's for */
 
+// The pilot's two niches (decided 22 Nov 2026): beauty and photography, service businesses people
+// book and come in to (or who come to them). Each idea is a Rare Tikka they could run.
 const AUDIENCE: { title: string; idea: string; Icon: LucideIcon; image?: string }[] = [
-  { title: "Salons and barbers", idea: "Free wash with any cut", Icon: Scissors },
-  { title: "Spas", idea: "Upgrade to a 90-minute massage", Icon: Flower2 },
-  { title: "Gyms", idea: "A free week with a trainer", Icon: Dumbbell },
-  { title: "Clinics", idea: "Free consultation", Icon: Stethoscope },
-  { title: "Food spots", idea: "Free small chops with any platter", Icon: UtensilsCrossed },
-  { title: "Tutors", idea: "A free trial lesson", Icon: BookOpen },
+  { title: "Makeup artists", idea: "Free gele tying with any glam", Icon: Brush },
+  { title: "Hair and barbers", idea: "Free wash with any style", Icon: Scissors },
+  { title: "Nails and lashes", idea: "Free nail art with any full set", Icon: Sparkles },
+  { title: "Skincare and spas", idea: "Upgrade to a 90-minute massage", Icon: Flower2 },
+  { title: "Photographers", idea: "2 extra edited photos with any shoot", Icon: Camera },
+  { title: "Photo studios", idea: "Free backdrop change with any session", Icon: Aperture },
 ];
 
 export function WhoItsFor() {
@@ -327,9 +329,9 @@ export function WhoItsFor() {
       <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div className="max-w-2xl">
           <Eyebrow>Who it&apos;s for</Eyebrow>
-          <h2 className="mt-3 text-heading sm:text-display-lg">Built for places people walk into.</h2>
+          <h2 className="mt-3 text-heading sm:text-display-lg">Built for beauty and photography.</h2>
           <p className="text-body-lg mt-4 text-ink-muted">
-            If your customers come to a counter, a chair or a table, a Tikka gives them a reason to come in this
+            Makeup, hair, nails, lashes, skincare and photo shoots. A Tikka gives people a reason to book you this
             week, and gives you their number the moment they claim.
           </p>
         </div>
