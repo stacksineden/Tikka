@@ -427,6 +427,291 @@
     "sort": 3
   },
   {
+    "id": "photo-new-1",
+    "category": "photography",
+    "goal": "new_customers",
+    "name": "First shoot treat",
+    "why": "A sure saving gets first-timers to book; a free mini shoot gets people talking.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free 30-minute mini shoot",
+        "minSpend": null,
+        "requiresPurchase": false
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "naira_off",
+        "value": 10000,
+        "what": "any shoot",
+        "minSpend": 40000,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "perk",
+        "value": null,
+        "what": "2 extra edited photos with any shoot",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next shoot",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "photo-new-2",
+    "category": "photography",
+    "goal": "new_customers",
+    "name": "Try our studio",
+    "why": "A big saving for a few, and a little extra on every first shoot.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "percent_off",
+        "value": 50,
+        "what": "any studio session",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 20,
+        "what": "any shoot",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free backdrop change with any shoot",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "naira_off",
+      "value": 5000,
+      "what": "your next shoot",
+      "minSpend": 30000,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 2
+  },
+  {
+    "id": "photo-back-1",
+    "category": "photography",
+    "goal": "bring_back",
+    "name": "Back in front of the camera",
+    "why": "Past clients come back for their next birthday, anniversary or family photo.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free extra outfit change with any shoot",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 25,
+        "what": "any shoot",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "perk",
+        "value": null,
+        "what": "3 extra edited photos with any shoot",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next shoot",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 1
+  },
+  {
+    "id": "photo-back-2",
+    "category": "photography",
+    "goal": "bring_back",
+    "name": "Bring a friend",
+    "why": "Every returning client brings someone new to the studio.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free shoot for your friend (up to ₦30,000) when you book a shoot",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 20,
+        "what": "for you and a friend",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free group photo when you both book a shoot",
+        "minSpend": null,
+        "requiresPurchase": false
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next shoot",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": null,
+    "sort": 2
+  },
+  {
+    "id": "photo-quiet-1",
+    "category": "photography",
+    "goal": "quiet_days",
+    "name": "Weekday mini sessions",
+    "why": "Short weekday sessions fill the days the studio sits empty.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "free_item",
+        "value": null,
+        "what": "Free 30-minute mini shoot",
+        "minSpend": null,
+        "requiresPurchase": false
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "percent_off",
+        "value": 30,
+        "what": "any weekday shoot",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "perk",
+        "value": null,
+        "what": "2 extra edited photos with any shoot",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next shoot",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "sort": 1
+  },
+  {
+    "id": "photo-quiet-2",
+    "category": "photography",
+    "goal": "quiet_days",
+    "name": "Midweek studio",
+    "why": "Puts midweek studio time to work with extras that cost you little.",
+    "rewards": [
+      {
+        "tier": "legendary",
+        "share": 2,
+        "type": "percent_off",
+        "value": 50,
+        "what": "any studio session",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "rare",
+        "share": 10,
+        "type": "free_item",
+        "value": null,
+        "what": "Free rush delivery with any shoot",
+        "minSpend": null,
+        "requiresPurchase": true
+      },
+      {
+        "tier": "thank_you",
+        "share": 88,
+        "type": "free_item",
+        "value": null,
+        "what": "Free backdrop change with any shoot",
+        "minSpend": null,
+        "requiresPurchase": true
+      }
+    ],
+    "bounceBack": {
+      "type": "percent_off",
+      "value": 10,
+      "what": "your next shoot",
+      "minSpend": null,
+      "validityDays": 30
+    },
+    "validityDays": 14,
+    "validWeekdays": [
+      2,
+      3,
+      4
+    ],
+    "sort": 2
+  },
+  {
     "id": "spa-new-1",
     "category": "spa_wellness",
     "goal": "new_customers",

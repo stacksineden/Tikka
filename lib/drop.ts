@@ -332,7 +332,7 @@ export function blankDraft(now: Date): DropDraft {
 }
 
 /** Categories where people plan a visit ahead (hair, events, clinics), so 7 days is often too short. */
-const PLAN_AHEAD = new Set(["Beauty", "Wellness", "Fashion", "Events", "Health"]);
+const PLAN_AHEAD = new Set(["Beauty", "Photography", "Wellness", "Fashion", "Events", "Health"]);
 
 /**
  * The builder's nudge when an owner picks 7 days in a category where people book ahead: a short

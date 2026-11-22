@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Photography page style</title>
+<!--
+  Design prototype v2 (not app code): the "Photography" style of the free business page.
+  Same content and the same booking as the beauty style; only the experience changes.
+  Photos: drop files into design/page-styles/img/ with the names in PHOTOS below
+  (prompts in photography-image-prompts.md). Until then each photo is a tonal placeholder in
+  its own colour. When a real file loads, its shape and main colour are read from the file,
+  the way the real page would read them at upload.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Fraunces:ital,opsz,wght@0,9..144,200..500;1,9..144,200..500&family=Space+Mono:wght@400;700&display=swap&subset=latin-ext" rel="stylesheet">
+<style>
+  /* Tikka tokens (design/tokens.css, light) */
+  :root {
+    --surface: #FAF7F2; --surface-sunken: #F1ECE4;
+    --ink: #17112F; --night: #1B1440; --gold: #F4B63F; --on-gold: #17112F;
+    --biz: #B08D57; /* the business's own colour (owner data) */
+    --paper: var(--surface);
+    --muted: color-mix(in oklab, var(--surface) 60%, var(--ink));
+    --rule: color-mix(in oklab, var(--surface) 13%, transparent);
+    --serif: "Fraunces", Georgia, serif;
+    --sans: "Bricolage Grotesque", system-ui, sans-serif;
+    --mono: "Space Mono", ui-monospace, monospace;
+    --ease: cubic-bezier(.2,.7,.2,1);
+    --slow: cubic-bezier(.65,0,.35,1);
+  }
+  /* The room: ink, tinted by the photo in front of you */
+  @property --tint { syntax: "<color>"; inherits: true; initial-value: #B08D57; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { overflow-x: clip; }
+  body { --room: color-mix(in oklab, var(--ink) 84%, var(--tint)); background: var(--room); color: var(--paper); font-family: var(--sans); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; transition: --tint 1.6s var(--ease); }
+  body.lock { overflow: hidden; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .wrap { width: 100%; max-width: 1360px; margin: 0 auto; padding: 0 16px; }
+  @media (min-width: 768px) { .wrap { padding: 0 40px; } }
+
+  /* Film grain over everything (static, so it costs nothing while scrolling) */
+  body::after { content: ""; position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: .08; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 12px; }
+  .eyebrow .n { font-family: var(--mono); letter-spacing: .05em; color: var(--biz); }
+  .eyebrow::after { content: ""; height: 1px; width: 48px; background: var(--rule); }
+  .h2 { font-family: var(--serif); font-weight: 300; font-size: clamp(42px, 8vw, 104px); line-height: .95; letter-spacing: -0.035em; font-variation-settings: "opsz" 144; }
+  .h2 em, .it { font-style: italic; color: color-mix(in oklab, var(--biz) 80%, var(--surface)); }
+  .lede { font-size: 17px; color: var(--muted); max-width: 36ch; }
+  .mono { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 24px; border-radius: 999px; font-weight: 600; font-size: 14px; letter-spacing: .02em; transition: transform .2s var(--ease); }
+  .btn:active { transform: scale(.98); }
+  .btn-paper { background: var(--paper); color: var(--ink); }
+  .btn-line { border: 1px solid color-mix(in oklab, var(--paper) 35%, transparent); }
+
+  /* A photograph: its own colour as a placeholder, the real file fading from blur to sharp on top */
+  .ph { position: relative; overflow: hidden; background-color: color-mix(in oklab, var(--c, var(--biz)) 30%, var(--ink));
+    background-image: radial-gradient(52% 44% at var(--x, 50%) var(--y, 40%), color-mix(in oklab, var(--c, var(--biz)) 78%, var(--surface)) 0, transparent 72%), linear-gradient(170deg, color-mix(in oklab, var(--c, var(--biz)) 55%, var(--ink)), color-mix(in oklab, var(--c, var(--biz)) 16%, var(--ink))); }
+  .ph > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; filter: blur(18px); transform: scale(1.05); transition: opacity .9s var(--ease), filter .9s var(--ease), transform 1.2s var(--ease); }
+  .ph > img.ok { opacity: 1; filter: none; transform: none; }
+
+  [data-r] { opacity: 0; transform: translateY(32px); transition: opacity 1.1s var(--ease), transform 1.1s var(--ease); }
+  [data-r].in { opacity: 1; transform: none; }
+
+  /* ---------- 0. The contact sheet (opening) ---------- */
+  #sheet { position: fixed; inset: 0; z-index: 100; background: var(--surface); color: var(--ink); display: grid; place-items: center; overflow: hidden; transition: opacity .6s var(--ease); }
+  #sheet.gone { opacity: 0; pointer-events: none; }
+  .sheet-in { width: min(94vw, 1100px); display: grid; gap: 14px; }
+  #strips { display: grid; gap: 14px; }
+  .sheet-head { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: color-mix(in oklab, var(--ink) 55%, var(--surface)); transition: opacity .3s; }
+  .strip35 { position: relative; background: var(--ink); padding: 16px 8px; display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 6px; opacity: 0; }
+  .strip35::before, .strip35::after { content: ""; position: absolute; left: 0; right: 0; height: 8px; background: radial-gradient(circle at 50% 50%, var(--surface) 0 2.2px, transparent 2.6px) 0 0 / 12px 8px repeat-x; opacity: .9; }
+  .strip35::before { top: 4px; } .strip35::after { bottom: 4px; }
+  .strip35 .fr { position: relative; aspect-ratio: 3 / 2; }
+  .strip35 .fr .ph { position: absolute; inset: 0; }
+  .strip35 .fr i { position: absolute; bottom: -13px; left: 0; font: 700 8px var(--mono); font-style: normal; color: var(--biz); letter-spacing: .08em; }
+  .strip35:nth-child(odd) { transform: translateX(-30px); } .strip35:nth-child(even) { transform: translateX(30px); }
+  #sheet.play .strip35 { animation: stripIn .9s var(--ease) forwards; animation-delay: calc(var(--k) * 110ms + 100ms); }
+  @keyframes stripIn { to { opacity: 1; transform: none; } }
+  .pencil { position: absolute; inset: -12px -14px; width: calc(100% + 28px); height: calc(100% + 24px); pointer-events: none; overflow: visible; z-index: 2; }
+  .pencil path { fill: none; stroke: var(--biz); stroke-width: 3; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 420; stroke-dashoffset: 420; }
+  #sheet.circle .pencil path { transition: stroke-dashoffset .7s var(--slow); stroke-dashoffset: 0; }
+  #sheet.zoom .strip35 { transition: opacity .5s; opacity: 0 !important; animation: none; }
+  #sheet.zoom .sheet-head { opacity: 0; }
+  .zoomer { position: fixed; z-index: 101; transform-origin: 0 0; transition: transform 1s var(--slow); }
+  .zoomer .ph { position: absolute; inset: 0; }
+  .skip { position: absolute; bottom: 16px; right: 12px; min-height: 44px; padding: 0 16px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in oklab, var(--ink) 55%, var(--surface)); }
+  @media (max-width: 767px) { #strips { gap: 20px; } .strip35 { gap: 4px; padding: 13px 6px; } }
+
+  /* ---------- 1. Top bar ---------- */
+  .bar { position: fixed; inset: 0 0 auto 0; z-index: 30; transition: background .5s; }
+  .bar.solid { background: color-mix(in oklab, var(--room) 82%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .bar .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 64px; }
+  .bar nav { display: none; gap: 30px; font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; }
+  .bar nav a { opacity: .75; transition: opacity .2s; } .bar nav a:hover { opacity: 1; }
+  .mark { justify-self: center; font-family: var(--serif); font-size: 24px; font-weight: 300; }
+  .bar .btn { justify-self: end; min-height: 44px; padding: 0 18px; font-size: 13px; }
+  .menu { width: 44px; height: 44px; display: grid; place-items: center; }
+  @media (min-width: 900px) { .bar nav { display: flex; } .menu { display: none; } }
+
+  /* ---------- 2. Hero ---------- */
+  .hero { position: relative; height: 100svh; min-height: 620px; isolation: isolate; display: flex; align-items: flex-end; }
+  .hero > .ph { position: absolute; inset: 0; z-index: -2; }
+  .hero.live > .ph { animation: settle 14s var(--ease) both; }
+  @keyframes settle { from { transform: scale(1.08); } to { transform: scale(1); } }
+  .hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, color-mix(in oklab, var(--ink) 55%, transparent), transparent 26%, transparent 46%, color-mix(in oklab, var(--ink) 92%, transparent)); }
+  .hero-in { width: 100%; padding-bottom: 28px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; font-size: 12px; font-weight: 600; background: color-mix(in oklab, var(--paper) 10%, transparent); border: 1px solid color-mix(in oklab, var(--paper) 22%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .chip b { color: var(--gold); }
+  .hero h1 { font-family: var(--serif); font-weight: 200; font-size: clamp(66px, 18vw, 250px); line-height: .84; letter-spacing: -0.05em; font-variation-settings: "opsz" 144; }
+  .hero h1 em { font-style: italic; font-weight: 300; }
+  .hero-meta { display: grid; gap: 14px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--rule); }
+  .hero-meta p { max-width: 38ch; color: color-mix(in oklab, var(--paper) 86%, transparent); }
+  .exif-line { display: flex; flex-wrap: wrap; gap: 6px 16px; color: color-mix(in oklab, var(--paper) 62%, transparent); }
+  @media (min-width: 768px) { .hero-meta { grid-template-columns: 1fr auto; align-items: end; } .hero-in { padding-bottom: 44px; } }
+
+  /* ---------- 3. Live drop ---------- */
+  .drop { display: flex; align-items: stretch; background: var(--night); overflow: hidden; position: relative; z-index: 2; }
+  .drop .run { flex: 1; overflow: hidden; display: flex; align-items: center; }
+  .drop .track { display: flex; gap: 28px; white-space: nowrap; padding: 16px 0; animation: run 32s linear infinite; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+  .drop .track b { color: var(--gold); font-weight: 600; }
+  @keyframes run { to { transform: translateX(-50%); } }
+  .drop a { display: flex; align-items: center; gap: 8px; padding: 0 20px; background: var(--gold); color: var(--on-gold); font-weight: 700; font-size: 14px; white-space: nowrap; min-height: 52px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+  /* ---------- 4. Statement ---------- */
+  .statement { padding: 104px 0 88px; }
+  .statement .q { font-family: var(--serif); font-weight: 300; font-size: clamp(32px, 5.6vw, 76px); line-height: 1.06; letter-spacing: -0.03em; max-width: 17ch; margin-top: 24px; font-variation-settings: "opsz" 144; }
+  .statement .row { display: grid; gap: 36px; margin-top: 56px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--rule); }
+  .stats div { padding-top: 18px; }
+  .stats b { display: block; font-family: var(--serif); font-weight: 300; font-size: clamp(34px, 6vw, 56px); line-height: 1; }
+  .stats span { font-size: 12px; color: var(--muted); }
+  @media (min-width: 900px) { .statement { padding: 180px 0 140px; } .statement .row { grid-template-columns: 1fr 1fr; align-items: end; } }
+
+  /* ---------- 5. Exhibitions ---------- */
+  .sec { padding: 80px 0; position: relative; }
+  @media (min-width: 900px) { .sec { padding: 140px 0; } }
+  .sec-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 20px 40px; margin-bottom: 44px; }
+  .sec-head .h2 { margin-top: 18px; }
+  #exh { padding-bottom: 40px; }
+  .wall { display: grid; gap: 56px; padding: 0 16px; }
+  .ex-card { display: block; text-align: left; width: 100%; }
+  .ex-card .frame { position: relative; aspect-ratio: 4 / 5; overflow: hidden; }
+  .ex-card .frame .ph { position: absolute; inset: 0; transition: transform 1.4s var(--ease); }
+  .ex-card .frame::after { content: "Open exhibition"; position: absolute; left: 50%; bottom: 18px; translate: -50% 0; padding: 12px 20px; border-radius: 999px; background: color-mix(in oklab, var(--ink) 45%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; white-space: nowrap; transition: opacity .4s, translate .4s var(--ease); }
+  .ex-card:hover .frame .ph { transform: scale(1.04); }
+  .ex-meta { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: baseline; margin-top: 18px; }
+  .ex-meta .mono { color: var(--biz); }
+  .ex-meta h3 { font-family: var(--serif); font-weight: 300; font-size: clamp(30px, 4vw, 48px); line-height: 1; letter-spacing: -0.025em; }
+  .ex-meta span:last-child { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .ex-card p { margin-top: 8px; color: var(--muted); font-size: 15px; }
+  @media (min-width: 900px) {
+    #exh-pin .stick { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+    #exh-pin .sec-head { margin-bottom: 28px; }
+    .wall { display: flex; gap: 56px; padding: 0 40px; width: max-content; will-change: transform; align-items: flex-start; }
+    .ex-card { width: min(28vw, 400px); flex: none; }
+    #exh-pin .stick { padding-top: 64px; }
+    .ex-card .frame { aspect-ratio: auto; height: 46vh; }
+    .ex-card:nth-child(even) { margin-top: 5vh; }
+    .ex-card .frame::after { opacity: 0; translate: -50% 8px; }
+    .ex-card:hover .frame::after, .ex-card:focus-visible .frame::after { opacity: 1; translate: -50% 0; }
+    .wall-progress { margin: 28px 40px 0; height: 1px; background: var(--rule); position: relative; }
+    .wall-progress i { position: absolute; inset: 0; background: var(--paper); transform-origin: 0 50%; transform: scaleX(0); }
+  }
+  @media (max-width: 899px) { .wall-progress { display: none; } }
+
+  /* Light leak: a warm glow that passes across a frame once */
+  .leak { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 2; }
+  .leak::before { content: ""; position: absolute; top: -20%; bottom: -20%; width: 70%; left: -80%; background: radial-gradient(closest-side, color-mix(in oklab, var(--gold) 55%, transparent), color-mix(in oklab, var(--biz) 25%, transparent) 55%, transparent); mix-blend-mode: screen; opacity: 0; }
+  .leak.in::before { animation: leak 3.2s var(--ease) .3s both; }
+  @keyframes leak { 0% { transform: translateX(0) rotate(8deg); opacity: 0; } 30% { opacity: .55; } 100% { transform: translateX(260%) rotate(8deg); opacity: 0; } }
+
+  .bleed { position: relative; height: 78svh; min-height: 440px; margin: 0; }
+  .bleed > .ph { position: absolute; inset: 0; }
+  .bleed::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 50%, color-mix(in oklab, var(--ink) 70%, transparent)); z-index: 1; }
+  .bleed figcaption { position: absolute; left: 16px; right: 16px; bottom: 28px; z-index: 3; display: grid; gap: 10px; }
+  .bleed figcaption q { font-family: var(--serif); font-style: italic; font-weight: 300; font-size: clamp(24px, 3.6vw, 46px); line-height: 1.12; max-width: 22ch; }
+  @media (min-width: 768px) { .bleed figcaption { left: 40px; bottom: 44px; } }
+
+  /* ---------- 6. The photo book ---------- */
+  .filters { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px 28px; padding: 0 16px 4px; }
+  .filters button { flex: none; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--rule); color: var(--muted); font-weight: 600; font-size: 13px; transition: background .3s, color .3s; }
+  .filters button.on { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+  #book { display: grid; gap: 8px; transition: opacity .3s; }
+  #book.fade { opacity: 0; }
+  .spread { display: flex; gap: 8px; }
+  .spread-n { display: flex; justify-content: space-between; color: var(--muted); padding: 4px 0 16px; }
+  .pic { position: relative; flex: var(--r) 1 0%; aspect-ratio: var(--r); cursor: zoom-in; display: block; }
+  .pic .ph { position: absolute; inset: 0; transition: transform 1s var(--ease); }
+  .pic .num { position: absolute; left: 8px; bottom: 7px; z-index: 2; font: 400 9px var(--mono); letter-spacing: .08em; color: color-mix(in oklab, var(--paper) 80%, transparent); }
+  .pic::before, .pic::after { content: ""; position: absolute; z-index: 2; width: 12px; height: 12px; border-color: color-mix(in oklab, var(--paper) 60%, transparent); border-style: solid; opacity: 0; transition: opacity .3s; }
+  .pic::before { top: 10px; left: 10px; border-width: 1px 0 0 1px; }
+  .pic::after { right: 10px; bottom: 10px; border-width: 0 1px 1px 0; }
+  .pic:hover::before, .pic:hover::after, .pic:focus-visible::before, .pic:focus-visible::after { opacity: 1; }
+  .pic:hover .ph { transform: scale(1.025); }
+  @media (hover: none) { .pic::before, .pic::after { opacity: .7; } }
+  @media (min-width: 768px) { #book, .spread { gap: 16px; } }
+
+  /* ---------- 7. Sets ---------- */
+  .sets { display: grid; grid-auto-flow: column; grid-auto-columns: 74%; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 16px; scrollbar-width: none; padding: 0 16px; margin: 0 -16px; }
+  .sets figure { scroll-snap-align: start; }
+  .sets .ph { aspect-ratio: 3 / 4; }
+  .sets figcaption { margin-top: 14px; display: flex; justify-content: space-between; align-items: baseline; }
+  .sets figcaption b { font-family: var(--serif); font-weight: 300; font-size: 22px; }
+  .sets figcaption span { color: var(--muted); }
+  @media (min-width: 768px) { .sets { grid-auto-columns: 31%; gap: 20px; padding: 0 40px; margin: 0 -40px; scroll-padding: 0 40px; } }
+
+  /* ---------- 8. Sessions ---------- */
+  .sessions { border-top: 1px solid var(--rule); }
+  .session { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name price" "meta meta" "go go"; gap: 6px 16px; padding: 26px 0; border-bottom: 1px solid var(--rule); align-items: baseline; }
+  .session h3 { grid-area: name; font-family: var(--serif); font-weight: 300; font-size: clamp(26px, 3.4vw, 38px); line-height: 1.08; letter-spacing: -0.02em; }
+  .session .price { grid-area: price; font-family: var(--serif); font-weight: 300; font-size: clamp(20px, 2.6vw, 28px); text-align: right; }
+  .session .meta { grid-area: meta; font-size: 14px; color: var(--muted); }
+  .session .meta i { font-style: normal; color: color-mix(in oklab, var(--biz) 80%, var(--surface)); }
+  .session .go { grid-area: go; margin-top: 10px; }
+  .session .go .btn { min-height: 44px; padding: 0 20px; font-size: 13px; }
+  @media (min-width: 900px) { .session { grid-template-columns: 1.2fr 1fr auto auto; grid-template-areas: "name meta price go"; gap: 28px; align-items: center; } .session .go { margin: 0; } }
+
+  /* ---------- 9. Kind words ---------- */
+  .quote { text-align: center; max-width: 940px; margin: 0 auto; }
+  .quote .eyebrow { justify-content: center; } .quote .eyebrow::after { display: none; }
+  .quote .stars { color: var(--gold); letter-spacing: 5px; font-size: 13px; margin-top: 22px; }
+  .quote blockquote { font-family: var(--serif); font-weight: 300; font-size: clamp(27px, 4.6vw, 56px); line-height: 1.12; letter-spacing: -0.025em; margin: 24px 0; transition: opacity .3s; }
+  .quote cite { font-style: normal; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .dots { display: flex; justify-content: center; margin-top: 24px; }
+  .dots button { width: 44px; height: 44px; display: grid; place-items: center; }
+  .dots button::after { content: ""; width: 24px; height: 2px; background: var(--rule); transition: background .3s; }
+  .dots button.on::after { background: var(--paper); }
+
+  /* ---------- 10. FAQs + visit ---------- */
+  .two { display: grid; gap: 64px; }
+  @media (min-width: 900px) { .two { grid-template-columns: 1fr 1fr; gap: 96px; } }
+  details { border-bottom: 1px solid var(--rule); }
+  summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 16px; padding: 20px 0; font-family: var(--serif); font-weight: 300; font-size: 22px; line-height: 1.25; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font-family: var(--sans); font-weight: 200; font-size: 26px; line-height: 1; transition: transform .3s var(--ease); }
+  details[open] summary::after { transform: rotate(45deg); }
+  details p { padding-bottom: 20px; color: var(--muted); max-width: 52ch; }
+  .hours { width: 100%; border-collapse: collapse; margin-top: 24px; }
+  .hours td { padding: 13px 0; border-bottom: 1px solid var(--rule); }
+  .hours td:last-child { text-align: right; color: var(--muted); }
+
+  /* ---------- 11. Closing ---------- */
+  .end { position: relative; min-height: 86svh; display: grid; place-items: center; text-align: center; isolation: isolate; padding: 96px 16px; }
+  .end > .ph { position: absolute; inset: 0; z-index: -2; }
+  .end::after { content: ""; position: absolute; inset: 0; z-index: -1; background: color-mix(in oklab, var(--ink) 58%, transparent); }
+  .end h2 { font-family: var(--serif); font-weight: 200; font-size: clamp(56px, 13vw, 180px); line-height: .88; letter-spacing: -0.05em; }
+  .end p { margin: 22px auto 34px; max-width: 32ch; color: color-mix(in oklab, var(--paper) 86%, transparent); }
+  footer { padding: 40px 0 120px; font-size: 13px; color: var(--muted); }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
+  footer b { color: var(--paper); }
+  @media (min-width: 900px) { footer { padding-bottom: 40px; } }
+
+  .dock { position: fixed; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 40; display: flex; gap: 8px; transform: translateY(150%); transition: transform .5s var(--ease); }
+  .dock.show { transform: none; }
+  .dock .btn { flex: 1; min-height: 52px; box-shadow: 0 12px 32px color-mix(in oklab, var(--ink) 60%, transparent); }
+  .dock .btn-line { flex: none; width: 52px; padding: 0; background: color-mix(in oklab, var(--ink) 65%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  @media (min-width: 900px) { .dock { display: none; } }
+
+  /* ---------- Full-screen layers ---------- */
+  .ov { position: fixed; inset: 0; z-index: 60; background: color-mix(in oklab, var(--ink) 90%, var(--tint)); opacity: 0; visibility: hidden; transition: opacity .5s var(--ease), visibility 0s .5s, --tint 1.2s var(--ease); }
+  .ov.open { opacity: 1; visibility: visible; transition: opacity .5s var(--ease), --tint 1.2s var(--ease); }
+  .ov-top { position: absolute; inset: 0 0 auto 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 8px 10px 16px; background: linear-gradient(180deg, color-mix(in oklab, var(--ink) 70%, transparent), transparent); }
+  .ov-top h3 { font-family: var(--serif); font-weight: 300; font-size: 20px; line-height: 1.1; }
+  .ov-top .mono { color: var(--muted); }
+  .x { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 999px; }
+  .x:hover { background: color-mix(in oklab, var(--paper) 10%, transparent); }
+
+  /* The exhibition */
+  #exTrack { position: absolute; inset: 0; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; overscroll-behavior: contain; }
+  .slide { height: 100svh; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 72px 16px 44px; }
+  .slide .pic { flex: none; width: min(100%, calc(66svh * var(--r))); }
+  .slide-cap { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; width: min(100%, calc(66svh * var(--r))); color: var(--muted); }
+  .slide-cap b { color: var(--paper); font-family: var(--serif); font-weight: 300; font-size: 17px; letter-spacing: 0; }
+  .slide.title { text-align: center; }
+  .slide.title h2 { font-family: var(--serif); font-weight: 200; font-size: clamp(54px, 12vw, 150px); line-height: .9; letter-spacing: -0.045em; }
+  .slide.title p { color: var(--muted); max-width: 32ch; }
+  .slide.title .hint { margin-top: 20px; color: var(--muted); }
+  .ex-progress { position: absolute; z-index: 5; left: 16px; right: 16px; bottom: 16px; height: 1px; background: var(--rule); }
+  .ex-progress i { position: absolute; inset: 0; background: var(--paper); transform-origin: 0 50%; transform: scaleX(0); }
+  @media (min-width: 900px) {
+    #exTrack { overflow-y: hidden; overflow-x: auto; scroll-snap-type: x mandatory; display: flex; align-items: center; }
+    .slide { height: 100vh; flex: none; padding: 80px 3vw 56px; }
+    .slide.title { width: 56vw; }
+    .slide .pic, .slide-cap { width: min(80vw, calc(70vh * var(--r))); }
+    .ov-top { padding: 16px 20px 16px 40px; }
+    .ex-progress { left: 40px; right: 40px; bottom: 24px; }
+  }
+
+  /* The viewer */
+  #vw { z-index: 70; background: color-mix(in oklab, var(--ink) 94%, var(--tint)); }
+  .vw-stage { position: absolute; inset: 64px 0 172px; display: grid; place-items: center; touch-action: none; overflow: hidden; }
+  .vw-img { position: relative; overflow: hidden; user-select: none; -webkit-user-select: none; transition: transform .45s var(--ease), opacity .3s; box-shadow: 0 30px 80px color-mix(in oklab, var(--ink) 70%, transparent); }
+  .vw-img .ph { position: absolute; inset: 0; transition: transform .45s var(--ease); transform-origin: var(--ox, 50%) var(--oy, 50%); }
+  .vw-img.zoomed .ph { transform: scale(2.4); cursor: grab; }
+  .vw-img.drag, .vw-img.drag .ph { transition: none; }
+  .loupe { position: fixed; z-index: 75; width: 220px; height: 220px; border-radius: 999px; pointer-events: none; opacity: 0; transform: scale(.6); transition: opacity .2s, transform .25s var(--ease); border: 1px solid color-mix(in oklab, var(--paper) 60%, transparent); box-shadow: 0 20px 50px color-mix(in oklab, var(--ink) 70%, transparent); background-repeat: no-repeat; }
+  .loupe.on { opacity: 1; transform: none; }
+  .loupe::after { content: "2.5×"; position: absolute; bottom: 14px; left: 50%; translate: -50% 0; font: 700 9px var(--mono); padding: 3px 6px; border-radius: 4px; background: color-mix(in oklab, var(--ink) 60%, transparent); color: var(--paper); }
+  .vw-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 16px max(16px, env(safe-area-inset-bottom)); display: grid; gap: 12px; }
+  .vw-info h4 { font-family: var(--serif); font-weight: 300; font-size: 22px; line-height: 1.15; }
+  .vw-info .col { color: var(--muted); }
+  .exif { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .exif span { font: 400 10px var(--mono); letter-spacing: .04em; padding: 5px 8px; border: 1px solid var(--rule); border-radius: 4px; color: color-mix(in oklab, var(--paper) 78%, transparent); }
+  .vw-actions .btn { width: 100%; min-height: 48px; }
+  .vw-nav, .film { display: none; }
+  .hint-swipe { position: absolute; left: 50%; top: 50%; translate: -50% -50%; z-index: 6; padding: 10px 16px; border-radius: 999px; background: color-mix(in oklab, var(--ink) 60%, transparent); backdrop-filter: blur(8px); font-size: 12px; pointer-events: none; opacity: 0; transition: opacity .5s; white-space: nowrap; }
+  .hint-swipe.on { opacity: 1; }
+  @media (min-width: 900px) {
+    .vw-stage { inset: 72px 120px 180px; }
+    .vw-nav { display: grid; place-items: center; position: absolute; top: calc(50% - 50px); translate: 0 -50%; z-index: 6; width: 56px; height: 56px; border-radius: 999px; border: 1px solid var(--rule); transition: background .2s; }
+    .vw-nav:hover { background: color-mix(in oklab, var(--paper) 10%, transparent); }
+    .vw-nav.prev { left: 32px; } .vw-nav.next { right: 32px; }
+    .vw-info { padding: 0 40px 24px; grid-template-columns: 1fr auto; align-items: end; }
+    .vw-actions .btn { width: auto; }
+    .film { display: flex; gap: 6px; grid-column: 1 / -1; overflow-x: auto; scrollbar-width: none; padding: 6px 2px 2px; }
+    .film button { flex: none; height: 46px; aspect-ratio: var(--r); position: relative; opacity: .45; transition: opacity .2s; outline: 1px solid transparent; outline-offset: 2px; }
+    .film button .ph { position: absolute; inset: 0; }
+    .film button.on { opacity: 1; outline-color: var(--paper); }
+    .film button:hover { opacity: .85; }
+  }
+
+  .note { position: fixed; top: 72px; right: 12px; z-index: 50; max-width: 270px; padding: 12px 14px; border-radius: 12px; background: var(--paper); color: var(--ink); font-size: 12px; line-height: 1.45; box-shadow: 0 12px 30px color-mix(in oklab, var(--ink) 50%, transparent); }
+  .note b { display: block; font-size: 13px; margin-bottom: 2px; }
+  .note div { display: flex; gap: 6px; margin-top: 8px; }
+  .note button { min-height: 32px; padding: 0 10px; border: 1px solid var(--ink); border-radius: 999px; font-weight: 600; font-size: 12px; color: var(--ink); }
+
+  :focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
+  @media (max-width: 899px) { .wide-only { display: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
+    [data-r] { opacity: 1; transform: none; }
+    #sheet { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="sheet" aria-hidden="true">
+  <div class="sheet-in">
+    <div class="sheet-head"><span>Imọlẹ Studio · Contact sheet</span><span>Roll 07</span></div>
+    <div id="strips"></div>
+  </div>
+  <button class="skip" id="skip">Skip ›</button>
+</div>
+
+<div class="note" id="note"><b>Prototype · Photography style</b>Same content and booking as the beauty page. Try: open an exhibition, tap a photo, swipe, double-tap to zoom.<div><button id="replay">Replay opening</button><button id="hideNote">Hide</button></div></div>
+
+<header class="bar" id="bar">
+  <div class="wrap">
+    <button class="menu" aria-label="Menu"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 8h16M3 14h16"/></svg></button>
+    <nav aria-label="Imọlẹ Studio"><a href="#exh">Exhibitions</a><a href="#portfolio">Portfolio</a><a href="#sessions">Sessions</a><a href="#visit">Visit</a></nav>
+    <a class="mark" href="#top">Imọlẹ</a>
+    <a class="btn btn-paper" href="#sessions">Book<span class="wide-only">&nbsp;a session</span></a>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero" id="hero">
+  <div data-photo="hero"></div>
+  <div class="wrap hero-in">
+    <div class="chips"><span class="chip">✓ Verified on Tikka</span><span class="chip"><b>★</b> 4.9 · 86 reviews</span></div>
+    <h1>Imọlẹ <em>Studio</em></h1>
+    <div class="hero-meta">
+      <p>Portraits that feel like you on your best day. Birthdays, couples, family and brand shoots in our Lekki studio.</p>
+      <div class="exif-line mono" id="heroExif"></div>
+    </div>
+  </div>
+</section>
+
+<div class="drop">
+  <div class="run" aria-hidden="true"><div class="track" id="dropTrack"></div></div>
+  <p class="sr">Live now: December portraits, 142 Tikkas left, ends 14 Dec.</p>
+  <a href="#">Claim yours ↗</a>
+</div>
+
+<section class="statement">
+  <div class="wrap">
+    <p class="eyebrow" data-r><span class="n">01</span>About the studio</p>
+    <p class="q" data-r>We light you slowly, direct you gently, and <em class="it">hand you photos you'll frame.</em></p>
+    <div class="row">
+      <p class="lede" data-r>Imọlẹ means light. Since 2019 we've photographed over 2,000 birthdays, proposals and families from a calm studio in Lekki, with three sets, a dressing room and a stylist on call.</p>
+      <div class="stats" data-r><div><b>2,000+</b><span>sessions</span></div><div><b>3</b><span>sets</span></div><div><b>72h</b><span>to your photos</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="exh" class="sec">
+  <div id="exh-pin">
+    <div class="stick">
+      <div class="wrap"><div class="sec-head">
+        <div><p class="eyebrow" data-r><span class="n">02</span>Collections</p><h2 class="h2" data-r>The <em>exhibitions</em></h2></div>
+        <p class="lede" data-r>Each one opens full screen. Take your time.</p>
+      </div></div>
+      <div class="wall" id="wall"></div>
+      <div class="wall-progress"><i id="wallBar"></i></div>
+    </div>
+  </div>
+</section>
+
+<figure class="bleed">
+  <div data-photo="wide"></div>
+  <div class="leak"></div>
+  <figcaption><q>Light is the first thing we set, and the last thing we fix.</q><span class="mono" style="color:color-mix(in oklab,var(--paper) 65%,transparent)">Dayo, lead photographer</span></figcaption>
+</figure>
+
+<section class="sec" id="portfolio">
+  <div class="wrap">
+    <div class="sec-head"><div><p class="eyebrow" data-r><span class="n">03</span>Portfolio</p><h2 class="h2" data-r>Every <em>frame</em></h2></div><p class="lede" data-r>Tap any photo to see it full screen.</p></div>
+    <div class="filters" id="filters"></div>
+    <div id="book"></div>
+  </div>
+</section>
+
+<section class="sec" id="studio">
+  <div class="wrap">
+    <div class="sec-head"><div><p class="eyebrow" data-r><span class="n">04</span>The studio</p><h2 class="h2" data-r>Our <em>sets</em></h2></div><p class="lede" data-r>Three sets and a dressing room. Swipe through them.</p></div>
+    <div class="sets" id="sets"></div>
+  </div>
+</section>
+
+<section class="sec" id="sessions">
+  <div class="wrap">
+    <div class="sec-head"><div><p class="eyebrow" data-r><span class="n">05</span>Sessions</p><h2 class="h2" data-r>Book a <em>session</em></h2></div><p class="lede" data-r>Pick a session and a free time. Your time is held when you book.</p></div>
+    <div class="sessions">
+      <div class="session" data-r><h3>Birthday portraits</h3><p class="meta">1 hour · 1 outfit · 10 edited photos · <i>₦15,000 deposit to book</i></p><span class="price">₦60,000</span><div class="go"><a class="btn btn-paper" href="#">Book</a></div></div>
+      <div class="session" data-r><h3>Couples &amp; pre-wedding</h3><p class="meta">2 hours · 2 looks · 20 edited photos · <i>₦25,000 deposit to book</i></p><span class="price">₦120,000</span><div class="go"><a class="btn btn-paper" href="#">Book</a></div></div>
+      <div class="session" data-r><h3>Maternity</h3><p class="meta">90 minutes · studio gown included · 15 edited photos</p><span class="price">₦85,000</span><div class="go"><a class="btn btn-paper" href="#">Book</a></div></div>
+      <div class="session" data-r><h3>Headshots</h3><p class="meta">30 minutes · 3 edited photos · same-week delivery</p><span class="price">₦35,000</span><div class="go"><a class="btn btn-paper" href="#">Book</a></div></div>
+      <div class="session" data-r><h3>Family portraits</h3><p class="meta">1 hour · up to 6 people · 15 edited photos</p><span class="price">From ₦90,000</span><div class="go"><a class="btn btn-paper" href="#">Book</a></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="quote" data-r>
+      <p class="eyebrow">Kind words</p>
+      <div class="stars">★★★★★</div>
+      <blockquote id="q">“I walked in nervous and walked out with the best photos of my life. They told me exactly where to stand.”</blockquote>
+      <cite id="c">Tolu · Birthday portraits</cite>
+      <div class="dots" id="dots"><button class="on" aria-label="Review 1"></button><button aria-label="Review 2"></button><button aria-label="Review 3"></button></div>
+      <p style="margin-top:6px;font-size:13px;color:var(--muted)">4.9 from 86 reviews · every review is from a real visit</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="visit">
+  <div class="wrap two">
+    <div>
+      <p class="eyebrow" data-r><span class="n">06</span>Good questions</p>
+      <h2 class="h2" data-r style="margin:18px 0 28px">Before <em>you come</em></h2>
+      <details data-r><summary>How soon do I get my photos?</summary><p>Edited photos land in your WhatsApp within 72 hours. Rush delivery in 24 hours is ₦10,000.</p></details>
+      <details data-r><summary>Can I bring my own makeup artist?</summary><p>Yes. Or book our partner makeup artist when you pick your time.</p></details>
+      <details data-r><summary>Is the deposit refundable?</summary><p>The deposit holds your time and counts towards your bill. It isn't refundable, but you can move your session once.</p></details>
+    </div>
+    <div>
+      <p class="eyebrow" data-r><span class="n">07</span>Visit</p>
+      <h2 class="h2" data-r style="margin:18px 0 10px">Lekki, <em>Lagos</em></h2>
+      <p class="lede" data-r>14 Admiralty Way, Lekki Phase 1. Parking in front.</p>
+      <table class="hours" data-r><tr><td>Monday – Friday</td><td>10:00 – 19:00</td></tr><tr><td>Saturday</td><td>9:00 – 20:00</td></tr><tr><td>Sunday</td><td>By booking</td></tr></table>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:28px" data-r><a class="btn btn-line" href="#">Get directions</a><a class="btn btn-line" href="#">Message us</a></div>
+    </div>
+  </div>
+</section>
+
+<section class="end">
+  <div data-photo="end"></div>
+  <div class="leak"></div>
+  <div style="position:relative;z-index:3">
+    <h2 data-r>Your <em class="it">turn.</em></h2>
+    <p data-r>Pick a session and a free time. It takes a minute.</p>
+    <a class="btn btn-paper" href="#sessions" data-r>Book a session</a>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap"><span>© Imọlẹ Studio · Lekki, Lagos</span><span>Made with <b>tikka</b></span></div></footer>
+<div class="dock" id="dock"><a class="btn btn-paper" href="#sessions">Book a session</a><a class="btn btn-line" href="#" aria-label="Message on WhatsApp"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 16l1-3.5A7 7 0 1 1 8 15.5z"/></svg></a></div>
+
+<div class="ov" id="ex" role="dialog" aria-modal="true" aria-labelledby="exTitle">
+  <div class="ov-top"><div><h3 id="exTitle"></h3><span class="mono" id="exCount"></span></div><button class="x" id="exClose" aria-label="Close"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 5l12 12M17 5L5 17"/></svg></button></div>
+  <div id="exTrack"></div>
+  <div class="ex-progress"><i id="exBar"></i></div>
+</div>
+
+<div class="ov" id="vw" role="dialog" aria-modal="true" aria-label="Photo">
+  <div class="ov-top"><span class="mono" id="vwCount"></span><button class="x" id="vwClose" aria-label="Close"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 5l12 12M17 5L5 17"/></svg></button></div>
+  <button class="vw-nav prev" id="vwPrev" aria-label="Previous photo"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M14 4l-7 7 7 7"/></svg></button>
+  <button class="vw-nav next" id="vwNext" aria-label="Next photo"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 4l7 7-7 7"/></svg></button>
+  <div class="vw-stage" id="vwStage"><div class="vw-img" id="vwImg"></div><div class="hint-swipe" id="hint">Swipe · double-tap to zoom</div></div>
+  <div class="vw-info">
+    <div><h4 id="vwTitle"></h4><span class="mono col" id="vwCol"></span><div class="exif" id="vwExif"></div></div>
+    <div class="vw-actions"><a class="btn btn-paper" href="#sessions" id="vwBook">Book a session like this</a></div>
+    <div class="film" id="film"></div>
+  </div>
+</div>
+<div class="loupe" id="loupe"></div>
+
+<script>
+/* ---------- Data: what the page already has, plus what Tikka would read from each file at upload ---------- */
+// r = width / height, c = main colour, x/y = where the light sits (placeholder only).
+const CAM = { r5: "Canon EOS R5", a7: "Sony α7 IV", z8: "Nikon Z8" };
+const PHOTOS = {
+  hero:            { f: "hero.jpg",          r: 1.5,   c: "#B98A4E", x: "62%", y: "38%", t: "Ọmọ́lárá in champagne", col: "birthdays", cam: "r5", lens: "RF 85mm f/1.2L", ap: "f/1.8", sh: "1/200s", iso: "ISO 100" },
+  "col-birthday":  { f: "col-birthday.jpg",  r: 1.333, c: "#C9963F", x: "45%", y: "40%", t: "Thirty, in gold",       col: "birthdays", cam: "r5", lens: "RF 50mm f/1.2L", ap: "f/2.0", sh: "1/160s", iso: "ISO 200" },
+  "col-couples":   { f: "col-couples.jpg",   r: 0.8,   c: "#CDB89A", x: "50%", y: "36%", t: "Ada & Kunle",           col: "couples",   cam: "a7", lens: "FE 50mm f/1.4 GM", ap: "f/2.2", sh: "1/250s", iso: "ISO 160" },
+  "col-maternity": { f: "col-maternity.jpg", r: 0.8,   c: "#7A3E62", x: "58%", y: "42%", t: "Waiting for Tobi",      col: "maternity", cam: "r5", lens: "RF 85mm f/1.2L", ap: "f/1.6", sh: "1/200s", iso: "ISO 125" },
+  "col-brand":     { f: "col-brand.jpg",     r: 1.333, c: "#8A8172", x: "40%", y: "34%", t: "Femi, founder",         col: "brand",     cam: "z8", lens: "Z 105mm f/2.8 MC", ap: "f/4.0", sh: "1/250s", iso: "ISO 100" },
+  g1: { f: "g1.jpg", r: 0.8,   c: "#B8782F", x: "50%", y: "34%", t: "Gele and gold",        col: "birthdays", cam: "r5", lens: "RF 85mm f/1.2L", ap: "f/2.0", sh: "1/200s", iso: "ISO 100" },
+  g2: { f: "g2.jpg", r: 1.5,   c: "#D7C3A2", x: "50%", y: "45%", t: "The Okafors",          col: "family",    cam: "a7", lens: "FE 35mm f/1.4 GM", ap: "f/4.0", sh: "1/160s", iso: "ISO 200" },
+  g3: { f: "g3.jpg", r: 0.667, c: "#4A3A55", x: "46%", y: "30%", t: "Structure",            col: "brand",     cam: "z8", lens: "Z 85mm f/1.2 S", ap: "f/2.8", sh: "1/250s", iso: "ISO 100" },
+  g4: { f: "g4.jpg", r: 1,     c: "#6B5038", x: "55%", y: "40%", t: "The cap, just so",     col: "couples",   cam: "r5", lens: "RF 100mm f/2.8L Macro", ap: "f/3.2", sh: "1/200s", iso: "ISO 400" },
+  g5: { f: "g5.jpg", r: 0.8,   c: "#6A4058", x: "50%", y: "38%", t: "Quiet, in cream",      col: "brand",     cam: "a7", lens: "FE 85mm f/1.4 GM", ap: "f/1.8", sh: "1/200s", iso: "ISO 100" },
+  g6: { f: "g6.jpg", r: 1.5,   c: "#A8743A", x: "40%", y: "50%", t: "First dance, early",   col: "couples",   cam: "r5", lens: "RF 28–70mm f/2L", ap: "f/2.0", sh: "1/30s", iso: "ISO 800" },
+  g7: { f: "g7.jpg", r: 0.8,   c: "#E0CDB4", x: "50%", y: "45%", t: "Ten days old",         col: "maternity", cam: "a7", lens: "FE 50mm f/1.2 GM", ap: "f/2.0", sh: "1/160s", iso: "ISO 250" },
+  g8: { f: "g8.jpg", r: 0.667, c: "#33304A", x: "50%", y: "30%", t: "First class, finally", col: "family",    cam: "z8", lens: "Z 50mm f/1.2 S", ap: "f/2.0", sh: "1/200s", iso: "ISO 160" },
+  g9: { f: "g9.jpg", r: 1,     c: "#C9A35E", x: "48%", y: "52%", t: "Gold on satin",        col: "couples",   cam: "r5", lens: "RF 100mm f/2.8L Macro", ap: "f/4.0", sh: "1/160s", iso: "ISO 200" },
+  wide: { f: "wide.jpg", r: 1.777, c: "#8E6A3E", x: "36%", y: "45%", t: "Setting the light", col: "studio", cam: "a7", lens: "FE 24mm f/1.4 GM", ap: "f/2.8", sh: "1/60s", iso: "ISO 640" },
+  "set-paper":    { f: "set-paper.jpg",    r: 0.75, c: "#E6D9C4", x: "50%", y: "36%", t: "Warm paper",      col: "studio" },
+  "set-velvet":   { f: "set-velvet.jpg",   r: 0.75, c: "#5C2A4A", x: "60%", y: "44%", t: "Velvet room",     col: "studio" },
+  "set-daylight": { f: "set-daylight.jpg", r: 0.75, c: "#CBBFA6", x: "38%", y: "30%", t: "Daylight corner", col: "studio" },
+  "set-dressing": { f: "set-dressing.jpg", r: 0.75, c: "#9A7444", x: "50%", y: "40%", t: "Dressing room",   col: "studio" },
+  end: { f: "end.jpg", r: 1.777, c: "#A5733C", x: "55%", y: "45%", t: "Behind the scenes", col: "studio" },
+};
+const COLLECTIONS = [
+  { id: "birthdays", name: "Birthdays", line: "Solo birthday portraits, glam to soft.", cover: "col-birthday", photos: ["col-birthday", "g1", "hero", "g5", "g9", "g3"] },
+  { id: "couples", name: "Couples", line: "Pre-wedding, proposals and anniversaries.", cover: "col-couples", photos: ["col-couples", "g6", "g4", "g9", "g2"] },
+  { id: "maternity", name: "Maternity", line: "Bumps, gowns and very new people.", cover: "col-maternity", photos: ["col-maternity", "g7", "g5", "g1"] },
+  { id: "family", name: "Family", line: "Every generation in one frame.", cover: "g2", photos: ["g2", "g8", "g7", "g6"] },
+  { id: "brand", name: "Brand & headshots", line: "For founders, creatives and teams.", cover: "col-brand", photos: ["col-brand", "g3", "g5", "g8"] },
+];
+const PORTFOLIO = ["g1", "g2", "g3", "col-couples", "g6", "g7", "g4", "col-birthday", "g5", "g8", "g9", "col-maternity", "col-brand", "hero"];
+const SETS = ["set-paper", "set-velvet", "set-daylight", "set-dressing"];
+const $ = (id) => document.getElementById(id);
+const colName = (id) => (COLLECTIONS.find((c) => c.id === id) || {}).name || "The studio";
+const pad = (n, l = 3) => String(n).padStart(l, "0");
+const desktop = () => matchMedia("(min-width: 900px)").matches;
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- Photos ---------- */
+function ph(id, lazy = true) {
+  const p = PHOTOS[id];
+  return `<div class="ph" data-id="${id}" data-c style="--c:${p.c};--x:${p.x};--y:${p.y}"><img alt="${p.t}" ${lazy ? 'loading="lazy"' : ""} decoding="async" src="img/${p.f}"></div>`;
+}
+function wire(root = document) {
+  root.querySelectorAll(".ph > img:not([data-w])").forEach((img) => {
+    img.dataset.w = 1;
+    if (img.complete && img.naturalWidth) onLoad(img);
+    else { img.addEventListener("load", () => onLoad(img), { once: true }); img.addEventListener("error", () => img.remove(), { once: true }); }
+  });
+}
+let relayout;
+function onLoad(img) {
+  img.classList.add("ok");
+  const id = img.parentElement.dataset.id, p = PHOTOS[id];
+  if (!p || p.real) return;
+  p.real = true; p.src = img.currentSrc || img.src;
+  try { // the photo's main colour, from an 8×8 copy of it
+    const cv = document.createElement("canvas"); cv.width = cv.height = 8;
+    const cx = cv.getContext("2d"); cx.drawImage(img, 0, 0, 8, 8);
+    const d = cx.getImageData(0, 0, 8, 8).data; let R = 0, G = 0, B = 0;
+    for (let i = 0; i < d.length; i += 4) { R += d[i]; G += d[i + 1]; B += d[i + 2]; }
+    p.c = `rgb(${R / 64 | 0} ${G / 64 | 0} ${B / 64 | 0})`;
+    document.querySelectorAll(`[data-id="${id}"]`).forEach((el) => el.style.setProperty("--c", p.c));
+  } catch (e) {}
+  const r = img.naturalWidth / img.naturalHeight; // the photo's real shape
+  if (Math.abs(r - p.r) > 0.04) { p.r = r; clearTimeout(relayout); relayout = setTimeout(() => buildBook(false), 200); }
+}
+
+/* ---------- Fill the page ---------- */
+document.querySelectorAll("[data-photo]").forEach((el) => { el.outerHTML = ph(el.dataset.photo, el.dataset.photo !== "hero"); });
+{ const p = PHOTOS.hero; $("heroExif").innerHTML = `<span>No. 07</span><span>${CAM[p.cam]}</span><span>${p.lens}</span><span>${p.ap}</span><span>${p.sh}</span>`; }
+$("dropTrack").innerHTML = Array(4).fill('<span><b>● Live now</b></span><span>December portraits</span><span>142 Tikkas left</span><span>Ends 14 Dec</span><span>✦</span>').join("");
+$("sets").innerHTML = SETS.map((id, i) => `<figure>${ph(id)}<figcaption><b>${PHOTOS[id].t}</b><span class="mono">${i < 3 ? "Set " + pad(i + 1, 2) : "On site"}</span></figcaption></figure>`).join("");
+$("wall").innerHTML = COLLECTIONS.map((c, i) => `<button class="ex-card" data-ex="${i}" aria-label="Open the ${c.name} exhibition"><div class="frame">${ph(c.cover)}</div><div class="ex-meta"><span class="mono">${pad(i + 1, 2)}</span><h3>${c.name}</h3><span>${c.photos.length} photos</span></div><p>${c.line}</p></button>`).join("");
+
+/* ---------- The photo book: rows of equal height, every photo in its own shape, never cropped ---------- */
+let filter = "all";
+$("filters").innerHTML = [["all", "All"], ...COLLECTIONS.map((c) => [c.id, c.name])].map(([id, n]) => `<button data-f="${id}" class="${id === "all" ? "on" : ""}">${n}</button>`).join("");
+const bookList = () => PORTFOLIO.filter((id) => filter === "all" || PHOTOS[id].col === filter);
+function buildBook(fade = true) {
+  const book = $("book"), list = bookList(), wide = desktop();
+  const target = wide ? 2.7 : 1.7; // how wide a row is, counted in photo widths
+  const rows = []; let row = [], sum = 0;
+  list.forEach((id) => {
+    const r = PHOTOS[id].r;
+    if (!wide && r > 1.3 && row.length) { rows.push(row); row = []; sum = 0; } // on a phone a wide photo gets its own spread
+    row.push(id); sum += r;
+    if (sum >= target || (!wide && r > 1.3)) { rows.push(row); row = []; sum = 0; }
+  });
+  if (row.length) rows.push(row);
+  const draw = () => {
+    let n = 0;
+    book.innerHTML = rows.map((rw, ri) => `<div class="spread">${rw.map((id) => { n++; return `<button class="pic" style="--r:${PHOTOS[id].r}" data-open="${list.indexOf(id)}" aria-label="Open ${PHOTOS[id].t}">${ph(id)}<span class="num">${pad(n)}</span></button>`; }).join("")}</div>` +
+      (ri % 2 === 1 || ri === rows.length - 1 ? `<div class="spread-n mono"><span>Spread ${pad(Math.ceil((ri + 1) / 2), 2)}</span><span>${filter === "all" ? "All work" : colName(filter)}</span></div>` : "")).join("");
+    wire(book); watchTint(book); book.classList.remove("fade");
+  };
+  if (fade) { book.classList.add("fade"); setTimeout(draw, 300); } else draw();
+}
+$("filters").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  filter = b.dataset.f; document.querySelectorAll("#filters button").forEach((x) => x.classList.toggle("on", x === b)); buildBook();
+});
+$("book").addEventListener("click", (e) => { const b = e.target.closest("[data-open]"); if (b) openViewer(bookList(), +b.dataset.open, filter === "all" ? "Portfolio" : colName(filter)); });
+
+/* ---------- The room takes the colour of the photo in front of you ---------- */
+const tintIO = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) document.body.style.setProperty("--tint", e.target.style.getPropertyValue("--c")); }), { rootMargin: "-45% 0px -45% 0px" });
+function watchTint(root = document) { root.querySelectorAll("[data-c]").forEach((el) => { if (el.closest("main")) tintIO.observe(el); }); }
+
+/* ---------- Reveal, bar, dock, the exhibitions wall ---------- */
+const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -10% 0px" });
+document.querySelectorAll("[data-r], .leak").forEach((el) => io.observe(el));
+const bar = $("bar"), dock = $("dock"), pin = $("exh-pin"), wall = $("wall"), wallBar = $("wallBar");
+function sizeWall() { // desktop: the wall slides sideways while you scroll down
+  if (!desktop()) { pin.style.height = ""; wall.style.transform = ""; return; }
+  pin.style.height = innerHeight + Math.max(0, wall.scrollWidth - innerWidth) + "px";
+}
+function onScroll() {
+  bar.classList.toggle("solid", scrollY > 40);
+  dock.classList.toggle("show", scrollY > innerHeight * .7);
+  if (!desktop()) return;
+  const span = pin.offsetHeight - innerHeight;
+  const k = span > 0 ? Math.min(1, Math.max(0, -pin.getBoundingClientRect().top / span)) : 0;
+  wall.style.transform = `translateX(${-k * Math.max(0, wall.scrollWidth - innerWidth)}px)`;
+  wallBar.style.transform = `scaleX(${k})`;
+}
+addEventListener("scroll", onScroll, { passive: true });
+let lastDesk = desktop();
+addEventListener("resize", () => { if (desktop() !== lastDesk) { lastDesk = desktop(); buildBook(false); } sizeWall(); onScroll(); if (vw.classList.contains("open")) paintViewer(); });
+
+/* ---------- The exhibition ---------- */
+const ex = $("ex"), exTrack = $("exTrack"), exBar = $("exBar");
+let exList = [], exName = "";
+function openExhibition(i) {
+  const c = COLLECTIONS[i], next = COLLECTIONS[(i + 1) % COLLECTIONS.length];
+  exList = c.photos; exName = c.name; $("exTitle").textContent = c.name;
+  exTrack.innerHTML =
+    `<section class="slide title"><span class="mono" style="color:var(--biz)">Exhibition ${pad(i + 1, 2)}</span><h2>${c.name}</h2><p>${c.line}</p><span class="hint mono">${desktop() ? "Scroll →" : "Scroll ↓"}</span></section>` +
+    c.photos.map((id, k) => { const p = PHOTOS[id]; return `<section class="slide" style="--r:${p.r}"><button class="pic" style="--r:${p.r}" data-k="${k}" aria-label="Open ${p.t}">${ph(id, false)}</button><div class="slide-cap mono"><b>${p.t}</b><span>${pad(k + 1)} / ${pad(c.photos.length)}</span></div></section>`; }).join("") +
+    `<section class="slide title"><span class="mono" style="color:var(--biz)">End of exhibition</span><h2 style="font-size:clamp(44px,8vw,96px)">Book a session like this</h2><p>Pick a session and a free time.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px"><a class="btn btn-paper" href="#sessions" data-close>Book a session</a><button class="btn btn-line" data-ex-next="${(i + 1) % COLLECTIONS.length}">Next: ${next.name} →</button></div></section>`;
+  wire(exTrack); exTrack.scrollTo(0, 0);
+  ex.style.setProperty("--tint", PHOTOS[c.cover].c);
+  ex.classList.add("open"); document.body.classList.add("lock");
+  exProgress();
+}
+function closeEx() { ex.classList.remove("open"); if (!vw.classList.contains("open")) document.body.classList.remove("lock"); }
+function exProgress() {
+  const d = desktop();
+  const max = d ? exTrack.scrollWidth - exTrack.clientWidth : exTrack.scrollHeight - exTrack.clientHeight;
+  exBar.style.transform = `scaleX(${max > 0 ? (d ? exTrack.scrollLeft : exTrack.scrollTop) / max : 0})`;
+  const slides = [...exTrack.children], mid = d ? innerWidth / 2 : innerHeight / 2;
+  let cur = 0;
+  slides.forEach((s, i) => { const r = s.getBoundingClientRect(); const a = d ? r.left : r.top, b = d ? r.right : r.bottom; if (a <= mid && b > mid) cur = i; });
+  const k = cur - 1;
+  $("exCount").textContent = cur === 0 ? `${exList.length} photos` : k >= exList.length ? "The end" : `${pad(k + 1)} / ${pad(exList.length)}`;
+  if (k >= 0 && k < exList.length) ex.style.setProperty("--tint", PHOTOS[exList[k]].c);
+}
+exTrack.addEventListener("scroll", exProgress, { passive: true });
+exTrack.addEventListener("wheel", (e) => { if (!desktop() || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; e.preventDefault(); exTrack.scrollBy({ left: e.deltaY * 1.2 }); }, { passive: false });
+exTrack.addEventListener("click", (e) => {
+  const p = e.target.closest("[data-k]"); if (p) return openViewer(exList, +p.dataset.k, exName);
+  const n = e.target.closest("[data-ex-next]"); if (n) return openExhibition(+n.dataset.exNext);
+  if (e.target.closest("[data-close]")) closeEx();
+});
+$("exClose").addEventListener("click", closeEx);
+wall.addEventListener("click", (e) => { const b = e.target.closest("[data-ex]"); if (b) openExhibition(+b.dataset.ex); });
+
+/* ---------- The viewer: swipe, double-tap zoom, loupe, camera settings, film strip ---------- */
+const vw = $("vw"), vwImg = $("vwImg"), stage = $("vwStage"), loupe = $("loupe");
+let vList = [], vIdx = 0, vFrom = "";
+function paintViewer() {
+  const id = vList[vIdx], p = PHOTOS[id], s = stage.getBoundingClientRect();
+  let w = s.width * (desktop() ? 1 : .94), h = w / p.r;
+  if (h > s.height) { h = s.height; w = h * p.r; }
+  vwImg.style.width = w + "px"; vwImg.style.height = h + "px";
+  vwImg.innerHTML = ph(id, false); wire(vwImg); vwImg.classList.remove("zoomed"); panX = panY = 0;
+  vw.style.setProperty("--tint", p.c);
+  $("vwCount").textContent = `${pad(vIdx + 1)} / ${pad(vList.length)} · ${vFrom}`;
+  $("vwTitle").textContent = p.t;
+  $("vwCol").textContent = colName(p.col);
+  $("vwExif").innerHTML = p.cam ? [CAM[p.cam], p.lens, p.ap, p.sh, p.iso].map((x) => `<span>${x}</span>`).join("") : "";
+  document.querySelectorAll("#film button").forEach((b, i) => b.classList.toggle("on", i === vIdx));
+  const on = document.querySelector("#film button.on"); on && on.scrollIntoView({ inline: "center", block: "nearest" });
+}
+function openViewer(list, i, from) {
+  vList = list; vIdx = i; vFrom = from || "";
+  $("film").innerHTML = list.map((id, k) => `<button style="--r:${PHOTOS[id].r}" data-v="${k}" aria-label="Photo ${k + 1}">${ph(id)}</button>`).join("");
+  wire($("film"));
+  vw.classList.add("open"); document.body.classList.add("lock");
+  requestAnimationFrame(paintViewer);
+  if (!desktop() && !openViewer.hinted) { openViewer.hinted = true; $("hint").classList.add("on"); setTimeout(() => $("hint").classList.remove("on"), 2200); }
+}
+function closeViewer() { vw.classList.remove("open"); loupe.classList.remove("on"); if (!ex.classList.contains("open")) document.body.classList.remove("lock"); }
+function go(dir) {
+  if (vList.length < 2) return;
+  vwImg.style.transition = "transform .26s var(--ease), opacity .26s";
+  vwImg.style.transform = `translateX(${-dir * 40}vw)`; vwImg.style.opacity = 0;
+  setTimeout(() => {
+    vIdx = (vIdx + dir + vList.length) % vList.length; paintViewer();
+    vwImg.style.transition = "none"; vwImg.style.transform = `translateX(${dir * 30}vw)`;
+    requestAnimationFrame(() => requestAnimationFrame(() => { vwImg.style.transition = ""; vwImg.style.transform = ""; vwImg.style.opacity = 1; }));
+  }, 250);
+}
+$("vwPrev").addEventListener("click", () => go(-1));
+$("vwNext").addEventListener("click", () => go(1));
+$("vwClose").addEventListener("click", closeViewer);
+$("vwBook").addEventListener("click", () => { closeViewer(); closeEx(); });
+$("film").addEventListener("click", (e) => { const b = e.target.closest("[data-v]"); if (b) { vIdx = +b.dataset.v; paintViewer(); } });
+addEventListener("keydown", (e) => {
+  if (vw.classList.contains("open")) { if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1); if (e.key === "Escape") closeViewer(); return; }
+  if (ex.classList.contains("open") && e.key === "Escape") closeEx();
+});
+// Swipe to move, double-tap to zoom where you tapped, drag to look around while zoomed
+let sx = 0, sy = 0, dx = 0, down = false, lastTap = 0, panX = 0, panY = 0, startPan = [0, 0];
+function zoomAt(cx, cy) {
+  const inner = vwImg.querySelector(".ph");
+  if (vwImg.classList.contains("zoomed")) { vwImg.classList.remove("zoomed"); inner.style.translate = ""; panX = panY = 0; return; }
+  const r = vwImg.getBoundingClientRect();
+  vwImg.style.setProperty("--ox", ((cx - r.left) / r.width * 100) + "%");
+  vwImg.style.setProperty("--oy", ((cy - r.top) / r.height * 100) + "%");
+  vwImg.classList.add("zoomed"); loupe.classList.remove("on");
+}
+stage.addEventListener("pointerdown", (e) => {
+  if (!e.target.closest("#vwImg")) return;
+  down = true; sx = e.clientX; sy = e.clientY; dx = 0; startPan = [panX, panY];
+  vwImg.classList.add("drag"); stage.setPointerCapture(e.pointerId);
+});
+stage.addEventListener("pointermove", (e) => {
+  if (e.pointerType === "mouse" && !down) moveLoupe(e);
+  if (!down) return;
+  dx = e.clientX - sx; const dy = e.clientY - sy;
+  if (vwImg.classList.contains("zoomed")) { panX = startPan[0] + dx / 2.4; panY = startPan[1] + dy / 2.4; vwImg.querySelector(".ph").style.translate = `${panX}px ${panY}px`; }
+  else vwImg.style.transform = `translateX(${dx}px) rotate(${dx / 60}deg)`;
+});
+stage.addEventListener("pointerup", (e) => {
+  if (!down) return; down = false; vwImg.classList.remove("drag");
+  const moved = Math.abs(dx) > 8 || Math.abs(e.clientY - sy) > 8;
+  if (!vwImg.classList.contains("zoomed")) { if (dx < -60) go(1); else if (dx > 60) go(-1); else vwImg.style.transform = ""; }
+  if (!moved) { const now = Date.now(); if (now - lastTap < 320) { zoomAt(e.clientX, e.clientY); lastTap = 0; } else lastTap = now; }
+});
+stage.addEventListener("pointerleave", () => loupe.classList.remove("on"));
+function moveLoupe(e) { // desktop: a magnifier that shows the photo at 2.5×
+  if (!desktop() || vwImg.classList.contains("zoomed")) return;
+  const r = vwImg.getBoundingClientRect();
+  if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) { loupe.classList.remove("on"); return; }
+  const p = PHOTOS[vList[vIdx]], Z = 2.5, L = 220, fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+  loupe.style.backgroundImage = `${p.real ? `url(${p.src}), ` : ""}radial-gradient(52% 44% at ${p.x} ${p.y}, color-mix(in oklab, ${p.c} 78%, var(--surface)) 0, transparent 72%), linear-gradient(170deg, color-mix(in oklab, ${p.c} 55%, var(--ink)), color-mix(in oklab, ${p.c} 16%, var(--ink)))`;
+  loupe.style.backgroundColor = `color-mix(in oklab, ${p.c} 30%, var(--ink))`;
+  loupe.style.backgroundSize = `${r.width * Z}px ${r.height * Z}px`;
+  loupe.style.backgroundPosition = `${-(fx * r.width * Z - L / 2)}px ${-(fy * r.height * Z - L / 2)}px`;
+  loupe.style.left = e.clientX - L / 2 + "px"; loupe.style.top = e.clientY - L / 2 + "px";
+  loupe.classList.add("on");
+}
+
+/* ---------- Kind words ---------- */
+const R = [["I walked in nervous and walked out with the best photos of my life. They told me exactly where to stand.", "Tolu · Birthday portraits"], ["Our pre-wedding photos made my mum cry. The velvet room is everything.", "Chidinma & Seyi · Couples"], ["Booked on Monday, shot on Wednesday, photos on Friday. Our whole team uses them now.", "Ibrahim · Headshots"]];
+const dots = [...document.querySelectorAll("#dots button")];
+dots.forEach((d, i) => d.addEventListener("click", () => { $("q").style.opacity = 0; setTimeout(() => { $("q").textContent = `“${R[i][0]}”`; $("c").textContent = R[i][1]; $("q").style.opacity = 1; }, 300); dots.forEach((x) => x.classList.toggle("on", x === d)); }));
+
+/* ---------- The contact sheet: frames, one circled in grease pencil, which grows into the opening photo ---------- */
+const sheet = $("sheet"), hero = $("hero");
+let sheetTimers = [];
+function buildSheet() {
+  const cols = desktop() ? 5 : 3, rowsN = desktop() ? 4 : 5, pick = 7;
+  const pool = ["g1", "g2", "col-couples", "g6", "g3", "g7", "col-birthday", "g4", "g8", "g5", "col-maternity", "g9", "col-brand", "g2", "g6", "g1", "g3", "g7", "g4", "g9"];
+  let n = 0, html = "";
+  for (let r = 0; r < rowsN; r++) {
+    html += `<div class="strip35" style="--cols:${cols};--k:${r}">`;
+    for (let c = 0; c < cols; c++, n++) {
+      const id = n === pick ? "hero" : pool[n % pool.length];
+      html += `<div class="fr"${n === pick ? ' id="picked"' : ""}>${ph(id, false)}<i>${pad(n + 1, 2)}A ▸</i>${n === pick ? '<svg class="pencil" viewBox="0 0 100 70" preserveAspectRatio="none"><path d="M52 4 C 84 2, 98 18, 96 36 C 94 58, 70 67, 46 66 C 18 65, 3 52, 4 34 C 5 16, 24 5, 56 6 C 62 6, 66 8, 70 10"/></svg>' : ""}</div>`;
+    }
+    html += "</div>";
+  }
+  $("strips").innerHTML = html; wire(sheet);
+}
+function finishSheet() {
+  sheetTimers.forEach(clearTimeout); sheetTimers = [];
+  sheet.classList.add("gone"); hero.classList.add("live");
+  setTimeout(() => document.querySelectorAll(".zoomer").forEach((z) => z.remove()), 650);
+  document.body.classList.remove("lock");
+}
+function playSheet() {
+  scrollTo({ top: 0, behavior: "instant" });
+  sheet.className = ""; hero.classList.remove("live"); buildSheet(); document.body.classList.add("lock");
+  sheetTimers.push(setTimeout(() => sheet.classList.add("play"), 60));
+  sheetTimers.push(setTimeout(() => sheet.classList.add("circle"), 1300));
+  sheetTimers.push(setTimeout(() => {
+    const fr = $("picked"), r = fr.getBoundingClientRect();
+    const z = document.createElement("div"); z.className = "zoomer";
+    Object.assign(z.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px" });
+    z.innerHTML = ph("hero", false); document.body.appendChild(z); wire(z);
+    fr.style.visibility = "hidden"; sheet.classList.add("zoom");
+    const s = Math.max(innerWidth / r.width, innerHeight / r.height);
+    requestAnimationFrame(() => requestAnimationFrame(() => { z.style.transform = `translate(${(innerWidth - r.width * s) / 2 - r.left}px, ${(innerHeight - r.height * s) / 2 - r.top}px) scale(${s})`; }));
+  }, 2200));
+  sheetTimers.push(setTimeout(finishSheet, 3300));
+}
+$("skip").addEventListener("click", (e) => { e.stopPropagation(); finishSheet(); });
+sheet.addEventListener("click", finishSheet);
+$("replay").addEventListener("click", playSheet);
+$("hideNote").addEventListener("click", () => $("note").remove());
+
+/* ---------- Start ---------- */
+wire(); buildBook(false); watchTint(); sizeWall(); onScroll();
+let seen = false; try { seen = sessionStorage.getItem("tk-sheet") === "1"; sessionStorage.setItem("tk-sheet", "1"); } catch (e) {}
+if (reduced || seen) { sheet.style.transition = "none"; finishSheet(); requestAnimationFrame(() => (sheet.style.transition = "")); } else playSheet();
+addEventListener("load", () => { sizeWall(); onScroll(); });
+</script>
+</body>
+</html>

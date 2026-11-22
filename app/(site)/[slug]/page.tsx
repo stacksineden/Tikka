@@ -6,20 +6,21 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Fragment, Suspense } from "react";
 import { BookingSheet } from "@/components/business/BookingSheet";
+import { DropBand } from "@/components/business/DropBand";
+import { PhotoPage } from "@/components/business/photo/PhotoPage";
 import { CalendarSheet } from "@/components/business/CalendarSheet";
 import { bizSerif } from "@/components/business/fonts";
 import { Gallery } from "@/components/business/Gallery";
 import { Reveal } from "@/components/business/Reveal";
 import { ServicesSection } from "@/components/business/ServicesSection";
-import { NotifyMe } from "@/components/market/NotifyMe";
 import { Logo } from "@/components/site/Logo";
 import { ACTION_LABEL, ActionIcon, actionHref } from "@/components/tikka/ActionIcon";
 import { isSocial } from "@/lib/social";
 import { getBookingDeposits, getBookingRules, getTikkaForBooking, serviceLengths } from "@/lib/bookings-data";
 import { paystackMode } from "@/lib/paystack";
 import { getBusinessBySlug, getBusinessReviews, getPageDrops } from "@/lib/data";
-import { clockTime, count, place, shortDate } from "@/lib/format";
-import { bookingLink, bookingNumber, focalPosition, priceText, heroHeadline, serviceGroups, showsLocation, visibleSections, whereLine, type PageDrop } from "@/lib/page";
+import { count, place } from "@/lib/format";
+import { bookingLink, bookingNumber, focalPosition, priceText, heroHeadline, pageStyle, serviceGroups, showsLocation, visibleSections, whereLine } from "@/lib/page";
 import { photoSrcSet } from "@/lib/media-path";
 import { collectionLine, portfolioView } from "@/lib/portfolio";
 import { SITE } from "@/lib/qr";
@@ -129,60 +130,6 @@ function Mark({ b }: { b: Business }) {
   );
 }
 
-/** The live drop band: a moving ticker, the only place the page promotes anything. */
-function DropBand({ b, live, next }: { b: Business; live?: PageDrop; next?: PageDrop }) {
-  if (live) {
-    const left = count(live.left);
-    const item = (k: number) => (
-      <span key={k} className="flex shrink-0 items-center gap-6 pr-6 font-mono text-[13px] uppercase tracking-[0.12em]">
-        <span className="text-gold">● Live now</span>
-        <span>{live.name}</span>
-        <span className="text-on-night-muted">{left} Tikkas left</span>
-        <span className="text-on-night-muted">Ends {shortDate(live.endsAt)}</span>
-        <span aria-hidden="true">✦</span>
-      </span>
-    );
-    return (
-      <div data-theme="light" className="stage relative flex items-center overflow-hidden bg-night text-on-night">
-        <div className="min-w-0 flex-1 overflow-hidden py-4" aria-hidden="true">
-          <div className="biz-marquee">{[0, 1, 2, 3, 4, 5].map(item)}</div>
-        </div>
-        <p className="sr-only">
-          Live now: {live.name}, {left} Tikkas left, ends {shortDate(live.endsAt)}.
-        </p>
-        <Link href={`/d/${b.slug}/${live.slug}`} className="biz-btn shrink-0 self-stretch bg-gold text-on-gold">
-          Claim yours
-          <ArrowUpRight aria-hidden="true" />
-        </Link>
-      </div>
-    );
-  }
-  return (
-    <div className="border-y border-[var(--biz-rule)] px-4 py-4 sm:px-8">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
-        <p className="text-body text-ink-muted">
-          {next ? (
-            <>
-              <b className="text-ink">{next.name}</b> opens {shortDate(next.startsAt)}, {clockTime(next.startsAt)}.
-            </>
-          ) : (
-            <>Be the first to hear when {b.name} has something new.</>
-          )}
-        </p>
-        <NotifyMe
-          businessSlug={b.slug}
-          businessName={b.name}
-          dropSlug={next?.slug}
-          opensLabel={next ? `${shortDate(next.startsAt)}, ${clockTime(next.startsAt)}` : undefined}
-          className="biz-btn border border-ink bg-transparent text-ink"
-        >
-          {next ? "Notify me" : "Get notified"}
-        </NotifyMe>
-      </div>
-    </div>
-  );
-}
-
 async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slug]">["params"]; searchParams: PageProps<"/[slug]">["searchParams"] }) {
   const { slug } = await params;
   const sp = await searchParams;
@@ -229,6 +176,43 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
   // Section labels are numbered in page order, counting only the sections this page shows.
   const numbered = (["about", "services", "portfolio", "reviews", "team", "faqs", "location"] as const).filter((k) => sections.has(k));
   const n = (k: (typeof numbered)[number]) => numbered.indexOf(k) + 1;
+
+  const sheets = (
+    <>
+      {calendar ? (
+        <CalendarSheet
+          slug={b.slug}
+          business={b.name}
+          number={number}
+          services={bookable.map((s) => ({ id: s.id!, name: s.name, minutes: serviceLengths(found.ownerId, b)[s.id!], price: s.priceKind === "ask" || s.price === null ? "" : priceText(s), priceKobo: s.priceKind === "fixed" && s.price !== null ? Math.round(s.price * 100) : undefined }))}
+          tikka={tikka ? { token: tikka.token, name: tikka.name, until: tikka.until, reward: tikka.reward, booking: tikka.booking } : undefined}
+        />
+      ) : (
+        sheet && <BookingSheet business={b.name} number={number!} hours={b.hours} />
+      )}
+    </>
+  );
+
+  // Photographers get the gallery (lib/page.ts pageStyle()): the same content and booking, another look.
+  if (pageStyle(b) === "photography") {
+    return (
+      <div className={bizSerif.variable}>
+        <PhotoPage
+          b={b}
+          live={live}
+          next={next}
+          reviews={reviews}
+          sections={sections}
+          book={book}
+          bookProps={bookProps}
+          sheet={sheet}
+          serviceLinks={b.services.map((s) => external ?? bookingLink(b, s) ?? (calendar ? "#book" : null))}
+          deposits={deposits.services}
+        />
+        {sheets}
+      </div>
+    );
+  }
 
   return (
     <div id="biz" data-theme="light" className={`biz ${bizSerif.variable}`} style={style}>
@@ -596,17 +580,7 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
         </div>
       )}
 
-      {calendar ? (
-        <CalendarSheet
-          slug={b.slug}
-          business={b.name}
-          number={number}
-          services={bookable.map((s) => ({ id: s.id!, name: s.name, minutes: serviceLengths(found.ownerId, b)[s.id!], price: s.priceKind === "ask" || s.price === null ? "" : priceText(s), priceKobo: s.priceKind === "fixed" && s.price !== null ? Math.round(s.price * 100) : undefined }))}
-          tikka={tikka ? { token: tikka.token, name: tikka.name, until: tikka.until, reward: tikka.reward, booking: tikka.booking } : undefined}
-        />
-      ) : (
-        sheet && <BookingSheet business={b.name} number={number!} hours={b.hours} />
-      )}
+      {sheets}
     </div>
   );
 }

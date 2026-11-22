@@ -2,8 +2,10 @@
 // background 1200×600 WebP, video ≤30 s and ≤20 MB with a poster frame captured here).
 
 import { SMALL_SUFFIX } from "./media-path";
+import { parseExif, toneHex } from "./photo-meta";
 import { LIMITS } from "./setup";
 import { browserClient } from "./supabase/client";
+import type { PhotoCamera, PortfolioPhoto } from "./types";
 import { HEVC_PROBLEM, videoCodec } from "./video-codec";
 
 function loadImage(file: File): Promise<HTMLImageElement> {
@@ -145,12 +147,42 @@ async function withSmall(file: File, edges: number[]): Promise<{ full: string; s
   return { full: shrink(img, edges, FULL_BUDGET), small: shrink(img, [SMALL_EDGE, 900, 800], SMALL_BUDGET) };
 }
 
-/** Portfolio photo: the whole photo up to 1600px with a phone copy, plus a 400px square thumbnail. */
-export async function preparePortfolio(file: File): Promise<{ url: Prepared; thumbUrl: string }> {
-  const img = await readPhoto(file);
+/** The photo's main colour, from an 8×8 copy of it. */
+function toneOf(img: HTMLImageElement): string | undefined {
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 8;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, 0, 0, 8, 8);
+    const d = ctx.getImageData(0, 0, 8, 8).data;
+    let r = 0, g = 0, b = 0;
+    for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+    return toneHex(r / 64, g / 64, b / 64);
+  } catch {
+    return undefined;
+  }
+}
+
+/** Camera settings from the original file's first 128 KB (where a JPEG keeps its EXIF block). */
+async function cameraOf(file: File): Promise<PhotoCamera | undefined> {
+  try {
+    return parseExif(await file.slice(0, 128 * 1024).arrayBuffer());
+  } catch {
+    return undefined;
+  }
+}
+
+export type PhotoDetails = Pick<PortfolioPhoto, "width" | "height" | "tone" | "camera">;
+
+/** Portfolio photo: the whole photo up to 1600px with a phone copy, a 400px square thumbnail, and
+ *  the original's shape, main colour and camera settings (the WebP copies keep none of them). */
+export async function preparePortfolio(file: File): Promise<{ url: Prepared; thumbUrl: string; details: PhotoDetails }> {
+  const [img, camera] = await Promise.all([readPhoto(file), cameraOf(file)]);
+  const tone = toneOf(img);
   return {
     url: { full: shrink(img, [1600, 1400, 1200, 1000], FULL_BUDGET), small: shrink(img, [SMALL_EDGE, 900, 800], SMALL_BUDGET) },
     thumbUrl: cropTo(img, 400, 400),
+    details: { width: img.naturalWidth, height: img.naturalHeight, ...(tone ? { tone } : {}), ...(camera ? { camera } : {}) },
   };
 }
 

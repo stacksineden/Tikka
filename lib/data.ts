@@ -84,6 +84,7 @@ import type {
   Lead,
   MarketDrop,
   MarketPin,
+  PageStyle,
   PortfolioPhoto,
   PublicDrop,
   Review,
@@ -311,12 +312,15 @@ const newId = (prefix: string) => `${prefix}_${randomBytes(5).toString("hex")}`;
 /** "Your page": the hero, about, optional sections and how customers use their Tikka. Owners only. */
 export async function savePage(
   user: Pick<SessionUser, "id" | "role">,
-  input: BusinessPageInput & { serveMode?: ServeMode },
+  input: BusinessPageInput & { serveMode?: ServeMode; styleChoice?: "auto" | PageStyle },
 ): Promise<{ ok: true; business: Business } | { ok: false; errors: PageErrors }> {
   if (user.role !== "owner") return { ok: false, errors: { form: "Only the owner can edit the page." } };
   const b = await getBusiness(user);
   if (!b) return { ok: false, errors: { form: "Set up your card first." } };
-  const { about, serveMode, ...page } = input;
+  const { about, serveMode, styleChoice, ...page } = input;
+  delete page.style; // only styleChoice changes it
+  // The page style: "auto" follows the category; anything else isn't a style and is ignored.
+  const style = styleChoice === undefined ? b.page?.style : styleChoice === "photography" || styleChoice === "beauty" ? styleChoice : undefined;
   const merged: BusinessPageInput = { ...b.page, ...page, about: about ?? b.about };
   const errors = validatePage(merged);
   if (Object.keys(errors).length) return { ok: false, errors };
@@ -328,6 +332,7 @@ export async function savePage(
     page: {
       ...b.page,
       ...page,
+      style,
       // "" means the photo was removed.
       heroImageUrl: page.heroImageUrl === "" ? undefined : (page.heroImageUrl ?? b.page?.heroImageUrl),
       aboutImageUrl: page.aboutImageUrl === "" ? undefined : (page.aboutImageUrl ?? b.page?.aboutImageUrl),

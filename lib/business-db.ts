@@ -7,6 +7,7 @@ import {
   businessFrom,
   cardTo,
   pageTo,
+  portfolioDetailsTo,
   privateTo,
   serviceTo,
   type BusinessRow,
@@ -197,6 +198,7 @@ async function savePortfolioDb(sb: SupabaseClient, id: string, prev: Business["p
         caption: p.caption?.trim() || null,
         duration_s: p.kind === "video" ? (p.seconds ?? 0) : null,
         position,
+        ...portfolioDetailsTo(p),
         // Straight into a collection (the database refuses when collections are locked).
         ...(p.collectionId && isDbId(p.collectionId) ? { collection_id: p.collectionId } : {}),
       });

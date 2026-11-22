@@ -3,7 +3,7 @@
 
 import { naira, place } from "./format";
 import { normalizeNgPhone } from "./setup";
-import type { Business, BusinessPage, Drop, ServiceItem } from "./types";
+import type { Business, BusinessPage, Drop, PageStyle, ServiceItem } from "./types";
 
 export const PAGE_LIMITS = {
   services: 12,
@@ -27,6 +27,7 @@ export const PAGE_LIMITS = {
 /** Suggested headline from the category: "Hair and beauty in Lekki". */
 const CATEGORY_LINE: Record<string, string> = {
   Beauty: "Hair and beauty",
+  Photography: "Photography",
   Wellness: "Spa and wellness",
   Fitness: "Fitness and training",
   "Food & drinks": "Food and drinks",
@@ -36,6 +37,11 @@ const CATEGORY_LINE: Record<string, string> = {
   Events: "Events",
   Services: "Services",
 };
+
+/** The page's look: the owner's pick under "More options", else from the category (Photography → the gallery). */
+export function pageStyle(b: Pick<Business, "page" | "category">): PageStyle {
+  return b.page?.style ?? (b.category === "Photography" ? "photography" : "beauty");
+}
 
 export function heroHeadline(b: Pick<Business, "page" | "category" | "area" | "serveMode">): string {
   if (b.page?.headline?.trim()) return b.page.headline.trim();
