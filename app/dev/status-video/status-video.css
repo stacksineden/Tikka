@@ -138,3 +138,4 @@
   flex: none;
 }
 @keyframes svScrollPage { from { transform: none; } to { transform: translateY(-470px); } }
+@keyframes svFly { 0% { opacity: 0; transform: translate(0, 0) scale(0.6); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1); } }

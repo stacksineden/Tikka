@@ -81,13 +81,16 @@ add(13.5,whoosh(0.5),0.6); add(14.2,pop(1100),0.8); add(14.5,whoosh(0.6,up=True)
 for i in range(4): add(15.0+i*0.13,pop(900+i*150),0.8)
 # claim on WhatsApp
 add(17.95,whoosh(0.5),0.6); add(18.6,rattle(),0.9); add(19.1,rip()); add(19.45,sparkle()); add(21.45,ding(),0.9)
-# they come in; leads
-add(22.95,door()); add(23.55,pop(1200),0.7); add(24.3,whoosh(0.45),0.6)
-for i in range(3): add(25.7+i*0.18,pop(1000+i*80),0.6)
+# friends share it
+add(22.95,whoosh(0.5),0.6); add(23.4,pop(1000),0.8)
+for i in range(3): add(23.7+i*0.2,whoosh(0.35,up=True),0.4); add(24.2+i*0.2,pop(1050+i*90),0.7)
+# they come in; you see who's serious
+add(25.95,door()); add(26.5,pop(1200),0.7); add(27.1,whoosh(0.45),0.6)
+for i in range(3): add(28.35+i*0.15,pop(1000+i*80),0.6)
 # chapter 02
-add(26.9,whoosh(0.5),0.7); add(27.15,tap(),0.8)
+add(29.5,whoosh(0.5),0.7); add(29.75,tap(),0.8)
 # free website
-add(28.6,pop(1000),0.8); add(28.75,whoosh(0.5),0.6); add(30.0,whoosh(1.2),0.4)
+add(31.1,pop(1000),0.8); add(31.2,whoosh(0.5),0.6); add(31.6,whoosh(1.2),0.4)
 # booking and deposit
 add(34.15,pop(1100),0.8); add(35.0,tap()); add(35.8,tap()); add(36.4,whoosh(0.45),0.6); add(37.7,tap()); add(38.75,chime())
 # owner side: bookings, money

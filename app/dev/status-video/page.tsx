@@ -153,7 +153,11 @@ const LEADS: [string, string, string][] = [
   ["Chidi N.", "0902 ••• 1174", "Rare"],
   ["Zainab B.", "0813 ••• 6605", "Thank-you"],
 ];
-const COUNT_IN = ["0", "9", "21", "34", "48", "59", "68", "73", "76"];
+const FRIENDS = [
+  { src: "c2.webp", x: 110, y: 520 },
+  { src: "c3.webp", x: 270, y: 560 },
+  { src: "c4.webp", x: 430, y: 520 },
+];
 const PROMISE = "Your posts get views. Tikka turns them into customers who show up and pay.";
 const SERVICES: [string, string, string][] = [
   ["Signature facial", "60 min · ₦20,000", "₦5,000 deposit"],
@@ -217,20 +221,21 @@ export default async function StatusVideoPage() {
           <At style={enter("xvZoom", 0, 0.6)}>
             <Face src="owner-worried.webp" size={270} x={270} y={420} />
           </At>
-          <Bubble icon="instagram" x={34} y={160} at={0.35}>
-            <span>♥ 1.2k likes</span>
+          {/* A silent audience: lots of views, nobody reaching out. */}
+          <Bubble icon="whatsapp" x={28} y={160} at={0.35}>
+            <span>Status · 1.2k viewed</span>
           </Bubble>
-          <Bubble icon="tiktok" x={300} y={214} at={0.75}>
-            <span>So fine 😍</span>
+          <Bubble icon="tiktok" x={292} y={214} at={0.75}>
+            <span>8.4k views</span>
           </Bubble>
-          <Bubble icon="whatsapp" x={28} y={590} at={1.15}>
-            <span>How much?</span>
+          <Bubble icon="instagram" x={28} y={590} at={1.15}>
+            <span>♥ 640 likes</span>
           </Bubble>
-          <Bubble icon="instagram" x={290} y={640} at={1.55}>
-            <span>DM price pls</span>
+          <Bubble icon="instagram" x={262} y={640} at={1.55}>
+            <span style={{ color: "var(--ink-muted)" }}>No new messages</span>
           </Bubble>
-          <Say top={724} at={2.3} words="1.2k views." />
-          <Say top={770} at={2.95} words="0 customers." />
+          <Say top={724} at={2.3} words="1.2k watched." />
+          <Say top={770} at={2.95} words="Nobody came in." />
         </Scene>
 
         {/* HOOK · 5–9: the booking that didn't come */}
@@ -272,7 +277,7 @@ export default async function StatusVideoPage() {
           <Say top={720} at={10.1} words="Tikka fixes both." />
         </Scene>
 
-        <Chapter start={12} end={13.6} n="FIX 1 · DROPS" title="Bring new customers in" />
+        <Chapter start={12} end={13.6} n="FIX 1 · DROPS" title="Turn viewers into customers" />
 
         {/* 13.5–18: share a drop, free to claim */}
         <Scene start={13.5} end={18.15}>
@@ -362,22 +367,45 @@ export default async function StatusVideoPage() {
           <Say top={740} at={19.6} words="No payment." size={34} />
         </Scene>
 
-        {/* 23–27: they come in; you keep every number */}
-        <Scene start={23} end={27.15}>
+        {/* 23–26: friends share it */}
+        <Scene start={23} end={26.15}>
+          <div className="sv-light" />
+          <At style={{ position: "absolute", left: "50%", top: 120, translate: "-50% 0", ...enter("xvZoom", 23.05, 0.45) }}>
+            <SoloCard zoom={0.5} flipped label="" face={FACE} total={600} reveal={RARE} />
+          </At>
+          <At className="xv-pill" style={{ position: "absolute", left: "50%", top: 330, translate: "-50% 0", background: "var(--surface-raised)", color: "var(--ink)", fontSize: 15, boxShadow: "var(--shadow-raised)", ...enter("xvPop", 23.4, 0.3) }}>
+            <Icon name="whatsapp" size={22} /> Shared with friends
+          </At>
+          {FRIENDS.map((f, i) => (
+            <At key={f.src}>
+              <At
+                style={{ position: "absolute", left: 252, top: 360, width: 36, height: 50, borderRadius: 7, background: FACE.brandColor, boxShadow: "var(--shadow-raised)", ["--dx" as string]: `${f.x - 270}px`, ["--dy" as string]: `${f.y - 385}px`, animation: `svFly .7s ${EASE} ${23.7 + i * 0.2}s both` }}
+              />
+              <At style={{ position: "absolute", left: 0, top: 0, ...enter("xvPop", 24.2 + i * 0.2, 0.35) }}>
+                <Face src={f.src} size={104} x={f.x} y={f.y} />
+              </At>
+            </At>
+          ))}
+          <Say top={696} at={23.6} words="Friends share it." size={34} />
+          <Say top={740} at={24.4} words="More people come." size={34} />
+        </Scene>
+
+        {/* 26–29.7: they come in; you see who is serious */}
+        <Scene start={26} end={29.75}>
           <At style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
-            <At style={{ position: "absolute", inset: 0, transformOrigin: "50% 60%", animation: `svPushSlow 4.2s linear 23s both` }}>
+            <At style={{ position: "absolute", inset: 0, transformOrigin: "50% 60%", animation: `svPushSlow 3.8s linear 26s both` }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`${IMG}/chair.webp`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </At>
           </At>
           <div className="sv-scrim" />
-          <At style={{ animation: `xvBurst .55s ${EASE} 23.15s both, svShrinkUp .45s ${EASE} 24.1s forwards` }}>
+          <At style={{ animation: `xvBurst .55s ${EASE} 26.15s both, svShrinkUp .45s ${EASE} 26.95s forwards` }}>
             <Face src="c1.webp" size={200} x={270} y={440} />
-            <At className="xv-pill" style={{ position: "absolute", left: 200, top: 552, background: "var(--success)", color: "var(--on-success)", fontSize: 17, ...enter("xvPop", 23.55, 0.3) }}>
+            <At className="xv-pill" style={{ position: "absolute", left: 200, top: 552, background: "var(--success)", color: "var(--on-success)", fontSize: 17, ...enter("xvPop", 26.5, 0.3) }}>
               <Tick className="size-4" /> Arrived
             </At>
           </At>
-          <At className="sv-card" style={{ position: "absolute", left: 50, right: 50, top: 400, padding: 20, animation: `svSlideUp .45s ${EASE} 24.3s both, xvOut .2s linear 25.4s forwards` }}>
+          <At className="sv-card" style={{ position: "absolute", left: 50, right: 50, top: 400, padding: 20, animation: `svSlideUp .45s ${EASE} 27.1s both, xvOut .2s linear 28.1s forwards` }}>
             <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink-muted)" }}>Counter · Glow Studio</p>
             <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 999, background: "var(--success-soft)", color: "var(--success)", fontWeight: 800, fontSize: 15 }}>
               <Tick className="size-4" /> Valid
@@ -385,10 +413,10 @@ export default async function StatusVideoPage() {
             <p style={{ marginTop: 10, fontSize: 20, fontWeight: 800 }}>Adaeze · 20% off any service</p>
             <p style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--ink-muted)" }}>GS-7X4QP</p>
           </At>
-          <At className="sv-card" style={{ position: "absolute", left: 50, right: 50, top: 380, padding: "16px 18px 6px", ...during(25.6, 27.4, 0.2) }}>
+          <At className="sv-card" style={{ position: "absolute", left: 50, right: 50, top: 380, padding: "16px 18px 6px", ...during(28.25, 29.9, 0.2) }}>
             <p style={{ fontSize: 17, fontWeight: 800 }}>Leads · 577</p>
             {LEADS.slice(0, 3).map(([n, p], i) => (
-              <At key={n} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderTop: i ? "1px solid var(--line)" : undefined, ...enter("svSlideUp", 25.7 + i * 0.18, 0.3) }}>
+              <At key={n} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderTop: i ? "1px solid var(--line)" : undefined, ...enter("svSlideUp", 28.35 + i * 0.15, 0.3) }}>
                 <span style={{ width: 32, height: 32, borderRadius: 999, background: "var(--brand-soft)", color: "var(--brand)", display: "grid", placeItems: "center", fontWeight: 800 }}>{n[0]}</span>
                 <span style={{ flex: 1 }}>
                   <b style={{ display: "block", fontSize: 15 }}>{n}</b>
@@ -397,25 +425,25 @@ export default async function StatusVideoPage() {
               </At>
             ))}
           </At>
-          <Say top={696} at={23.3} words="They come in." night size={34} />
-          <Say top={740} at={24.6} words="You keep every number." night size={34} />
+          <Say top={696} at={26.3} words="They come in." night size={34} />
+          <Say top={740} at={27.4} words={"You see who's serious."} night size={34} />
         </Scene>
 
-        <Chapter start={27} end={28.6} n="FIX 2 · BOOKINGS" title="Make bookings show up" />
+        <Chapter start={29.6} end={31.15} n="FIX 2 · BOOKINGS" title="Make bookings show up" />
 
-        {/* 28.5–34: your free website, in your bio */}
-        <Scene start={28.5} end={34.15}>
+        {/* 31–34: your free website, in your bio */}
+        <Scene start={31} end={34.15}>
           <div className="sv-light" />
-          <At className="sv-bubble" style={{ left: "50%", top: 112, translate: "-50% 0", fontSize: 16, ...enter("xvPop", 28.6, 0.35) }}>
+          <At className="sv-bubble" style={{ left: "50%", top: 112, translate: "-50% 0", fontSize: 16, ...enter("xvPop", 31.1, 0.35) }}>
             <Icon name="instagram" size={34} />
             <span style={{ display: "grid", lineHeight: "20px" }}>
               <b>glowstudio.lekki</b>
               <span style={{ fontWeight: 600, color: "var(--brand)" }}>🔗 usetikka.com/glow-studio</span>
             </span>
           </At>
-          <Phone top={190} zoom={0.84} at={28.75}>
+          <Phone top={190} zoom={0.84} at={31.2}>
             <div className="xv-layer" style={{ color: "var(--ink)", overflow: "hidden" }}>
-              <At style={{ animation: `svScrollPage 3.6s cubic-bezier(.45,0,.25,1) 30.0s both` }}>
+              <At style={{ animation: `svScrollPage 2.5s cubic-bezier(.45,0,.25,1) 31.6s both` }}>
                 <div style={{ height: 150, position: "relative", overflow: "hidden" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`${IMG}/chair.webp`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 30%" }} />
@@ -451,7 +479,7 @@ export default async function StatusVideoPage() {
               </At>
             </div>
           </Phone>
-          <Say top={720} at={29.0} words="Your free website. In your bio." size={34} />
+          <Say top={720} at={31.3} words="Your free website. In your bio." size={34} />
         </Scene>
 
         {/* 34–40: a new customer books and pays a deposit */}
@@ -568,7 +596,7 @@ export default async function StatusVideoPage() {
           </At>
           <At style={{ position: "absolute", left: 0, right: 0, top: 604, display: "flex", justifyContent: "center", gap: 10 }}>
             <At className="xv-pill" style={{ background: "var(--surface-raised)", color: "var(--ink)", fontSize: 16, boxShadow: "var(--shadow-raised)", ...enter("xvPop", 46.2, 0.35) }}>
-              <Counter steps={COUNT_IN} at={46.3} every={0.1} style={{ fontWeight: 800 }} /> new customers
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", color: "var(--ink-muted)" }}>EXAMPLE</span> One drop: ₦1.94M
             </At>
             <At className="xv-pill" style={{ background: "var(--surface-raised)", color: "var(--ink)", fontSize: 16, boxShadow: "var(--shadow-raised)", ...enter("xvPop", 46.7, 0.35) }}>
               ₦5,000 on every booking
