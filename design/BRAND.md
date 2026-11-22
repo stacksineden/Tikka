@@ -53,6 +53,15 @@ A Tikka is co-branded: the business owns the face, Tikka owns the frame.
 - The card front is `--biz`; the back is `night-raised` (so it stands off the night stage); the stub on the back takes the rarity colour.
 - On the Free plan the front stub carries a small "Tikka" lockup and the claim page footer reads "Create Tikkas for your business".
 
+### The business page
+
+The business page (`usetikka.com/[slug]`, its collection pages too) is the business's own website, not a Tikka screen. Tikka's colour rules don't apply there (decided 22 Nov 2026):
+
+- **Tikka shows in two places only:** "Made with Tikka" in the footer, and the live drop band's gold **Claim yours** button (the Tikka product inside their page, so a drop looks the same everywhere). The band itself takes the page's colours.
+- **The gallery (Photography style)** is neutral black (`#0c0c0c`, the default) or soft white (`#f5f4f1`, text `#151515`), picked by the owner under "More options". Never Tikka's indigo: a colour cast around a photo changes how the photo looks. The room may shift a few percent towards the photo in front of you, no more.
+- **The business's own colour** is the only accent, used sparingly (small labels, italic words in headings).
+- No colour picker for backgrounds: two good choices keep every page professional.
+
 ### Type
 
 - **Bricolage Grotesque** for everything except codes: `display-xl` for the reveal headline ("You got a Tikka!"), `display-lg` for reward values and result numbers, `heading` and `title` for structure, `body-lg` on the claim page, `body` in the dashboard, `label` for buttons and table headers, `caption` for metadata. It is a variable font with an optical-size axis: let `opsz` follow the size so small text stays open and large text gets tight and characterful.

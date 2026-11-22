@@ -163,6 +163,8 @@ export interface BusinessPage {
   textBody?: string;
   /** Picked under "More options"; unset follows the category (pageStyle() in lib/page.ts). */
   style?: PageStyle;
+  /** The gallery's background, picked under "More options"; unset is dark. */
+  galleryTone?: "dark" | "light";
 }
 
 export type PatternId = "dots" | "stripes" | "grid" | "sparks";

@@ -30,7 +30,7 @@ export function PhotoCollection({ b, c, others, book, bookLabel, url, where }: {
   const n = c.photos.length;
 
   return (
-    <div id="biz" data-theme="light" className="pg" style={style}>
+    <div id="biz" data-theme="light" className={`pg ${b.page?.galleryTone === "light" ? "pg-light" : ""}`} style={style}>
       <header className="pg-bar solid">
         <div className="pg-wrap">
           <Link href={`/${b.slug}#exhibitions`} className="pg-logo" style={{ minHeight: 44 }}>
@@ -134,7 +134,9 @@ export function PhotoCollection({ b, c, others, book, bookLabel, url, where }: {
           <Link href="/" className="flex items-center gap-2">
             Made with
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/tikka-lockup-reversed.svg" alt="Tikka" width={58} height={17} />
+            <img className="pg-made-dark" src="/brand/tikka-lockup-reversed.svg" alt="Tikka" width={58} height={17} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="pg-made-light" src="/brand/tikka-lockup.svg" alt="Tikka" width={58} height={17} />
           </Link>
         </div>
       </footer>

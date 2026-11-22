@@ -86,6 +86,7 @@ content/studio/               Tikka Studio content: case studies, our ad and con
 ## Brand in code
 
 - Colours come only from the tokens in `design/tokens.css` (`--brand`, `--gold`, `--night`, `--ink`, `--surface`, rarity colours…). Never hard-code another hex. Never use WhatsApp green (#25D366) as a Tikka colour.
+- One exception: the business page is the business's own website (design/BRAND.md, "The business page"). Tikka shows there only as "Made with Tikka" and the drop band's gold Claim button. The gallery (Photography style) is neutral black or soft white (`business_page.gallery_tone`, Dark or Light under "More options"; `components/business/photo/photo.css`), never Tikka's indigo.
 - Gold is scarce: the claim button, rewards, the rare tier and the logo stub only.
 - Fonts: Bricolage Grotesque (everything) and Space Mono (codes, serials, counters), from Google Fonts with the `latin-ext` subset so ₦ renders. One exception: the business page sets its headlines in Fraunces (serif), loaded only there (`components/business/fonts.ts`); see design/BRAND.md.
 - The claim page is always on the night stage (`--night`). The dashboard is light by default.
