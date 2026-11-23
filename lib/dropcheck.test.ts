@@ -49,6 +49,42 @@ describe("drop check", () => {
     expect(ids(heavy)).toContain("big_legendary");
     expect(tierCount(applyFix(heavy, "big_legendary"), "legendary")).toBe(10);
   });
+
+  // Divora Beauty's "We miss you": both action cards, the % only in the words.
+  const withRewards = (d: DropDraft, give: Partial<Record<"legendary" | "rare" | "thank_you", Partial<DropDraft["rewards"][number]>>>): DropDraft => ({
+    ...d,
+    rewards: d.rewards.map((r) => (give[r.tier] ? { ...r, ...give[r.tier] } : r)),
+  });
+  const action = (what: string) => ({ type: "action" as const, value: null, what, action: "Follow us on TikTok", text: what });
+
+  it("warns when a rarer card gives less, and the fix swaps them, keeping the counts", () => {
+    const d = withRewards(fromTemplate("beauty-back-1"), { legendary: action("40% off any services in December"), rare: { ...action("50% off any service"), terms: "First visit only" } });
+    const w = dropCheck(d).find((x) => x.id === "tier_order");
+    expect(w?.text).toBe("Your Rare card gives more than your Legendary card.");
+    expect(w?.fix).toBe("Swap Rare and Legendary");
+    const fixed = applyFix(d, "tier_order");
+    expect(ids(fixed)).not.toContain("tier_order");
+    const leg = fixed.rewards.find((r) => r.tier === "legendary")!;
+    const rare = fixed.rewards.find((r) => r.tier === "rare")!;
+    expect([leg.what, leg.terms, rare.what]).toEqual(["50% off any service", "First visit only", "40% off any services in December"]);
+    expect([tierCount(fixed, "legendary"), tierCount(fixed, "rare")]).toEqual([tierCount(d, "legendary"), tierCount(d, "rare")]);
+  });
+
+  it("checks Rare against Thank-you, and ₦ off too", () => {
+    const pct = withRewards(fromTemplate("beauty-back-1"), { legendary: { type: "percent_off", value: 40, what: "any service" }, rare: { type: "percent_off", value: 15, what: "any service" }, thank_you: { type: "percent_off", value: 20, what: "any service" } });
+    expect(dropCheck(pct).find((x) => x.id === "tier_order")?.fix).toBe("Swap Thank-you and Rare");
+    const naira = withRewards(fromTemplate("beauty-back-1"), { legendary: { type: "naira_off", value: 2000, what: "any service" }, rare: action("₦5,000 off any service") });
+    expect(ids(naira)).toContain("tier_order");
+  });
+
+  it("stays quiet in the right order, with equal amounts, or when the rewards can't be compared", () => {
+    const base = fromTemplate("beauty-back-1");
+    const pct = (n: number) => ({ type: "percent_off" as const, value: n, what: "any service" });
+    expect(ids(withRewards(base, { legendary: pct(50), rare: pct(20) }))).not.toContain("tier_order");
+    expect(ids(withRewards(base, { legendary: pct(20), rare: pct(20) }))).not.toContain("tier_order");
+    expect(ids(withRewards(base, { legendary: { type: "free_item", value: null, what: "Free braids" }, rare: pct(50) }))).not.toContain("tier_order");
+    expect(ids(withRewards(base, { legendary: { type: "naira_off", value: 10, what: "any service" }, rare: pct(50) }))).not.toContain("tier_order");
+  });
 });
 
 describe("drafts from templates", () => {
