@@ -297,6 +297,8 @@ export interface DepositCheckout {
   email: string | null;
   holdLive: boolean;
   businessName: string;
+  /** The business may take payments right now (private.payments_problem()). */
+  paymentsOk: boolean;
 }
 
 export async function dbDepositCheckout(token: string): Promise<DepositCheckout | null> {
@@ -314,6 +316,7 @@ export async function dbDepositCheckout(token: string): Promise<DepositCheckout 
     email: (r.email as string | null) ?? null,
     holdLive: r.hold_live === true,
     businessName: String(r.business_name),
+    paymentsOk: r.payments_ok !== false,
   };
 }
 

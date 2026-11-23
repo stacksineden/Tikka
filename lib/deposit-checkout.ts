@@ -15,6 +15,7 @@ export async function startDepositCheckout(token: string): Promise<StartResult> 
   let co = await dbDepositCheckout(token);
   if (!co) return { kind: "not_found" };
   if (co.status !== "held") return { kind: co.status === "booked" || co.status === "arrived" ? "paid" : "taken" };
+  if (!co.paymentsOk) return { kind: "closed" };
   if (!co.holdLive) {
     const r = await dbRehold(token);
     if (r !== "held") return { kind: r === "taken" ? "taken" : "not_found" };

@@ -117,7 +117,8 @@ export async function dbPayCheckout(token: string): Promise<PayCheckout | null> 
     subaccount: String(r.subaccount),
     mode: r.mode as "test" | "live",
     businessName: String(r.business_name),
-    open: r.enabled === true && r.suspended !== true,
+    // The same payment rule as everywhere (supabase/migrations/20261130100000_checkout_rule.sql).
+    open: r.enabled === true && r.suspended !== true && r.payments_ok !== false,
   };
 }
 
