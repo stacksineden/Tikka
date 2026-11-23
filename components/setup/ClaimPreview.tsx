@@ -16,7 +16,7 @@ export type PreviewBusiness = Pick<
   /** So the owner can play their video in the preview, as customers will. */
   Partial<Pick<Business, "videoUrl">>;
 
-const SAMPLE_TOTAL = 500;
+const SAMPLE_TOTAL = 50;
 const SAMPLE_LEFT = 23;
 // Sample drop: the real rewards come from the drop builder.
 const SAMPLE_DROP: DropItem[] = [
@@ -123,7 +123,7 @@ export function ClaimPreview({
               total={TOTAL}
               finish={drop?.finish ?? "foil"}
               claimedBy={after ? "Adaeze" : undefined}
-              reveal={{ tier: shown.tier, reward: shown.reward, code, expiry: expiry.replace(/^\w+ /, ""), serial: "0412", claimer: "Adaeze" }}
+              reveal={{ tier: shown.tier, reward: shown.reward, code, expiry: expiry.replace(/^\w+ /, ""), serial: "0012", claimer: "Adaeze" }}
             />
           </div>
 

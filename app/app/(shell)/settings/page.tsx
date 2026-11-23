@@ -66,7 +66,7 @@ async function Hub() {
       <h1 className="text-heading">Settings</h1>
 
       <Link href="/app/settings/card" className="stage flex items-center gap-4 overflow-hidden rounded-card bg-night p-4 pr-5 text-on-night">
-        <SoloCard zoom={0.36} face={faceFromBusiness(b)} total={500} label={`${b.name}'s Tikka card`} />
+        <SoloCard zoom={0.36} face={faceFromBusiness(b)} total={50} label={`${b.name}'s Tikka card`} />
         <div className="min-w-0 flex-1">
           <div className="text-title truncate">{b.name}</div>
           <div className="text-caption mt-0.5 text-on-night-muted">

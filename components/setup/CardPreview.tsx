@@ -13,10 +13,10 @@ export function CardPreview({ face, prefix, compact = false }: { face: CardFace;
       <div className={compact ? "card-preview-compact" : "card-preview-full"}>
         <SoloCard
           face={face}
-          total={500}
+          total={50}
           finish="foil"
           flipped={flipped}
-          reveal={{ tier: "rare", reward: "20% off any service", code: `${prefix || "XX"}-7X4QP`, expiry: "31 Dec", serial: "0412", claimer: "Adaeze" }}
+          reveal={{ tier: "rare", reward: "20% off any service", code: `${prefix || "XX"}-7X4QP`, expiry: "31 Dec", serial: "0012", claimer: "Adaeze" }}
           label={`Preview of ${face.name || "your"} Tikka card${flipped ? ", back" : ""}`}
         />
       </div>

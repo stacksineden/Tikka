@@ -146,7 +146,7 @@ async function DropsList() {
     return (
       <div className="grid items-center gap-6 rounded-card border border-line bg-surface-raised p-6 sm:grid-cols-[auto_1fr]">
         <div className="stage mx-auto rounded-card bg-night p-5">
-          <SoloCard zoom={0.5} face={faceFromBusiness(business)} total={500} finish="foil" label={`${business.name}'s Tikka card`} />
+          <SoloCard zoom={0.5} face={faceFromBusiness(business)} total={50} finish="foil" label={`${business.name}'s Tikka card`} />
         </div>
         <div>
           <h2 className="text-title">No drops yet</h2>

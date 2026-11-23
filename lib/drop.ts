@@ -309,7 +309,7 @@ export function blankDraft(now: Date): DropDraft {
   const base: DropDraft = {
     goal: "new_customers",
     name: "",
-    total: 500,
+    total: 50,
     startMode: "now",
     startsAt: addDays(now, 1, 9),
     endsAt: addDays(now, 14, 21),

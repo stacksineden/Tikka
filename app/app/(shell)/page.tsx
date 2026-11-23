@@ -263,7 +263,7 @@ function GettingStarted({ name, business, today }: { name: string; business: Bus
                     onBrandColor: "#FFFFFF",
                   }
             }
-            total={500}
+            total={50}
             label={business ? `${business.name}'s Tikka card` : "A preview of your Tikka card"}
           />
           <p className="text-caption mt-5 max-w-[220px] text-center text-on-night-muted">

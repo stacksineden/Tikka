@@ -45,17 +45,17 @@ describe("drop check", () => {
 
   it("warns when legendary is over 10%, and brings it to 2%", () => {
     const d = fromTemplate("spa-new-1");
-    const heavy = { ...d, mix: "custom" as const, rewards: d.rewards.map((r) => (r.tier === "legendary" ? { ...r, count: 100 } : r)) };
+    const heavy = { ...d, total: 500, mix: "custom" as const, rewards: d.rewards.map((r) => (r.tier === "legendary" ? { ...r, count: 100 } : r)) };
     expect(ids(heavy)).toContain("big_legendary");
     expect(tierCount(applyFix(heavy, "big_legendary"), "legendary")).toBe(10);
   });
 });
 
 describe("drafts from templates", () => {
-  it("scales to 2/10/88, sets the goal's rules, days and bounce-back", () => {
+  it("scales to 4/16/80 at 50, sets the goal's rules, days and bounce-back", () => {
     const d = fromTemplate("beauty-quiet-1");
-    expect(d.total).toBe(500);
-    expect([tierCount(d, "legendary"), tierCount(d, "rare"), tierCount(d, "thank_you")]).toEqual([10, 50, 440]);
+    expect(d.total).toBe(50);
+    expect([tierCount(d, "legendary"), tierCount(d, "rare"), tierCount(d, "thank_you")]).toEqual([2, 8, 40]);
     expect(d.goal).toBe("quiet_days");
     expect(d.validWeekdays).toEqual([1, 2, 3]);
     expect(d.name).toBe("Midweek glow");
