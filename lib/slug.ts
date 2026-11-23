@@ -3,7 +3,7 @@
 /** Words that would clash with Tikka's own pages, now or later. */
 export const RESERVED_SLUGS = new Set([
   "drops", "d", "t", "b", "app", "admin", "api", "og", "login", "logout", "signup", "sign-up", "signin", "sign-in",
-  "check-email", "forgot-password", "reset-password", "pricing", "terms", "privacy", "help", "support", "about",
+  "check-email", "forgot-password", "reset-password", "pricing", "terms", "privacy", "acceptable-use", "help", "support", "about",
   "settings", "account", "dashboard", "blog", "careers", "contact", "legal", "static", "assets", "brand", "mock",
   "favicon", "icon", "robots", "sitemap", "tikka", "usetikka", "marketplace", "search", "new", "www", "mail",
   "studio", "spark", "dev", "q", "auth",

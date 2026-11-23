@@ -119,6 +119,10 @@ const sections: LegalSection[] = [
     body: (
       <ul>
         <li>Don&apos;t use Tikka to mislead people, to break the law, or to send spam.</li>
+        <li>
+          Businesses that take payments from customers through Tikka also follow our{" "}
+          <Link href="/acceptable-use" className="text-brand underline">acceptable use policy</Link>.
+        </li>
         <li>Don&apos;t try to claim more than your share, for example with numbers that aren&apos;t yours, or interfere with how Tikka works.</li>
         <li>Tikka may hide a drop or review, or suspend an account, that breaks these terms. We&apos;ll tell businesses why, unless the law stops us.</li>
       </ul>
