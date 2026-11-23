@@ -1,6 +1,7 @@
 "use server";
 
-import { dbAdminSetPayments } from "@/lib/payouts-db";
+import { dbAdminSetPayments, dbReviewKyc } from "@/lib/payouts-db";
+import { limitFromInput } from "@/lib/kyc";
 
 import { revalidatePath, updateTag } from "next/cache";
 import { PRICES_TAG } from "@/lib/admin-db";
@@ -800,6 +801,17 @@ export async function endDropEarlyAction(dropId: string): Promise<{ ok: true } |
 }
 
 /** Payments for a business (REVENUE_PLAN 5.7): on or off, and the most one payment can be (₦). */
+/** Admin: an ID check's decision. Approve marks the business Verified with payments on at the limit set; Ask again needs a reason the owner sees. */
+export async function adminReviewKycAction(id: string, form: FormData): Promise<void> {
+  const admin = await getAdmin();
+  if (!admin || !isDbId(id)) return;
+  const approve = form.get("decision") === "approve";
+  const limit = limitFromInput(String(form.get("limit") ?? ""));
+  const note = String(form.get("note") ?? "").trim().slice(0, 200);
+  await dbReviewKyc(id, approve, approve ? null : note || null, approve ? limit : null);
+  revalidatePath("/admin");
+}
+
 export async function adminSetPaymentsAction(id: string, form: FormData): Promise<void> {
   const admin = await getAdmin();
   if (!admin || !isDbId(id)) return;

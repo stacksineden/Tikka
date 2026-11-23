@@ -24,7 +24,8 @@ import { getSessionUser } from "@/lib/session";
 import { isDbId } from "@/lib/business-db";
 import { dbAdminEarlyAccess, dbAdminEnquiries } from "@/lib/studio-db";
 import { dbAdminCounterChecks } from "@/lib/admin-db";
-import { collectionLimitKobo, dbAdminMoney, dbAdminPaymentSettings } from "@/lib/payouts-db";
+import { collectionLimitKobo, dbAdminMoney, dbAdminPaymentSettings, dbKycQueue } from "@/lib/payouts-db";
+import { KycReview } from "@/components/admin/KycReview";
 import { counterCheckTotals } from "@/lib/counter-checks";
 import { STUDIO_CATEGORIES } from "@/lib/studio-shared";
 
@@ -54,7 +55,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const real = isDbId(user.id);
-  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog, enquiries, early, checks, earlyPay, paySettings, cash] = await Promise.all([
+  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog, enquiries, early, checks, earlyPay, paySettings, cash, kycRows] = await Promise.all([
     adminView(user, q),
     getDropTiers(),
     getAllDropPacks(),
@@ -65,7 +66,9 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
     real ? dbAdminEarlyAccess("payments") : Promise.resolve({ count: 0, list: [] }),
     real ? dbAdminPaymentSettings() : Promise.resolve({} as Awaited<ReturnType<typeof dbAdminPaymentSettings>>),
     real ? dbAdminMoney() : Promise.resolve(null),
+    real ? dbKycQueue() : Promise.resolve([]),
   ]);
+  const kycWaiting = kycRows.filter((r) => r.kyc?.status === "submitted").length;
   // The Paystack Starter limit (REVENUE_PLAN 5.6): everything collected, live, counts.
   const limit = collectionLimitKobo();
   const collected = cash ? cash.dropPaymentsKobo + cash.payLinksKobo + cash.depositsKobo : 0;
@@ -403,6 +406,16 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
         )}
       </Section>
 
+      {real && (
+        <Section
+          id="kyc-h"
+          title={`ID checks${kycWaiting ? ` · ${count(kycWaiting)} to review` : ""}`}
+          note="Before payments go on: a clear, valid ID; the name matches the bank account (the owner's or the business's); the business is real (its page and socials); a registered number matches on the CAC search; it sells allowed, in-person services. Set the limit from its own prices."
+        >
+          <KycReview rows={kycRows} now={new Date()} />
+        </Section>
+      )}
+
       <Section id="biz-h" title="Businesses">
         <form className="flex gap-2" role="search">
           <label className="flex min-h-11 flex-1 items-center gap-2 rounded-md border border-line-strong/50 bg-surface-raised px-3">
@@ -467,7 +480,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                     {paySettings[b.id]?.last4
                       ? `Paid to ${paySettings[b.id]!.accountName} · ${paySettings[b.id]!.bankName} ••••${paySettings[b.id]!.last4}${paySettings[b.id]!.mode === "test" ? " (added in test mode)" : ""}`
                       : "No bank account added yet."}
-                    {!b.verified ? " Needs the Verified badge first." : ""}
+                    {!b.verified ? " Needs the Verified badge first." : ""} Payments also need an approved ID (ID checks, above).
                   </p>
                 </form>
               )}

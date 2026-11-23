@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { getBusiness, isDbId } from "@/lib/data";
 import { createSubaccount, deactivateSubaccount, listBanks, paystackConfigured, paystackMode, resolveAccount, type Bank } from "@/lib/paystack";
-import { dbPayoutState, dbRemovePayout, dbSavePayout } from "@/lib/payouts-db";
+import { bankOpen, dbPayoutState, dbRemovePayout, dbSavePayout, dbSubmitKyc } from "@/lib/payouts-db";
+import { cacNumber, ID_TYPES, REGISTERED, type IdType, type Registered } from "@/lib/kyc";
 import { tooMany } from "@/lib/rate-limit";
 import { getOwnerUser } from "@/lib/session";
 
@@ -37,7 +38,7 @@ export type CheckResult = { kind: "found"; name: string } | { kind: "not_found" 
 /** Step 1: the name on the account, from the bank. */
 export async function checkAccountAction(bankCode: string, accountNumber: string): Promise<CheckResult> {
   const o = await owned();
-  if (!o || o.state.problem || !paystackConfigured()) return { kind: "closed" };
+  if (!o || !bankOpen(o.state) || !paystackConfigured()) return { kind: "closed" };
   const number = String(accountNumber ?? "").replace(/\D/g, "");
   if (!ACCOUNT.test(number) || typeof bankCode !== "string" || !bankCode) return { kind: "bad_number" };
   if (await tooMany({ headers: await headers() }, "resolve_account", o.business.id)) return { kind: "slow_down" };
@@ -54,7 +55,7 @@ export type SaveResult = { kind: "saved"; name: string } | { kind: "closed" | "b
 /** Step 2: "Yes, this is my account". Creates the Paystack subaccount and saves it. */
 export async function savePayoutAction(bankCode: string, accountNumber: string): Promise<SaveResult> {
   const o = await owned();
-  if (!o || o.state.problem || !paystackConfigured()) return { kind: "closed" };
+  if (!o || !bankOpen(o.state) || !paystackConfigured()) return { kind: "closed" };
   const number = String(accountNumber ?? "").replace(/\D/g, "");
   if (!ACCOUNT.test(number)) return { kind: "bad_number" };
   if (await tooMany({ headers: await headers() }, "resolve_account", o.business.id)) return { kind: "slow_down" };
@@ -107,4 +108,32 @@ export async function removePayoutAction(): Promise<{ ok: boolean }> {
   revalidatePath("/app/settings/get-paid");
   revalidatePath("/app/settings");
   return { ok: true };
+}
+
+export type KycResult = { kind: "submitted" } | { kind: "bad" | "missing_file" | "already_verified" | "closed" | "failed"; message?: string };
+
+/** The owner's ID (and CAC papers if registered). The photos are already in their own private folder. */
+export async function submitKycAction(input: { idType: string; idName: string; idPhoto: string; registered: string; cacNumber?: string; cacPhoto?: string }): Promise<KycResult> {
+  const o = await owned();
+  if (!o) return { kind: "closed" };
+  const idType = ID_TYPES.find((t) => t.id === input.idType)?.id as IdType | undefined;
+  const registered = REGISTERED.find((r) => r.id === input.registered)?.id as Registered | undefined;
+  const name = String(input.idName ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
+  if (!idType || !registered || name.length < 3 || !input.idPhoto) return { kind: "bad", message: "Fill in every step first." };
+  const cac = registered === "no" ? null : cacNumber(registered, String(input.cacNumber ?? ""));
+  if (registered !== "no" && (!cac || !input.cacPhoto)) return { kind: "bad", message: "Add your CAC number and certificate, or pick Not registered yet." };
+  const kind = await dbSubmitKyc({
+    businessId: o.business.id,
+    idType,
+    idName: name,
+    idPhoto: input.idPhoto,
+    registered,
+    cacNumber: cac,
+    cacPhoto: registered === "no" ? null : (input.cacPhoto ?? null),
+  });
+  revalidatePath("/app/settings/get-paid");
+  revalidatePath("/app");
+  if (kind === "submitted") return { kind };
+  if (kind === "missing_file" || kind === "already_verified") return { kind };
+  return { kind: kind === "error" ? "failed" : "closed" };
 }

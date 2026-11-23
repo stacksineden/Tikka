@@ -250,6 +250,24 @@ export async function uploadPhoto(prepared: Prepared, kind: MediaKind): Promise<
   return uploadMedia(await blob(prepared.full), kind, `${id}.s.webp`);
 }
 
+/**
+ * An ID or CAC photo for Get paid: up to 1800px so the text stays readable, into the owner's own
+ * folder of the private `kyc` bucket (only Tikka admins can open it). Returns the stored path.
+ */
+export async function uploadKycPhoto(file: File, kind: "id" | "cac"): Promise<string> {
+  const img = await readPhoto(file);
+  const data = shrink(img, [1800, 1600, 1400, 1200], 1_400_000);
+  const sb = browserClient();
+  const { data: s } = await sb.auth.getSession();
+  const user = s.session?.user;
+  if (!user) throw new Error("Sign in again to add your documents.");
+  const path = `${user.id}/kyc/${kind}-${crypto.randomUUID()}.webp`;
+  const blob = await (await fetch(data)).blob();
+  const { error } = await sb.storage.from("kyc").upload(path, blob, { contentType: "image/webp" });
+  if (error) throw new Error(/size|large/i.test(error.message) ? "That photo is too big. Try another." : "That upload didn't go through. Try again.");
+  return path;
+}
+
 /** Refuses HEVC ("High Efficiency" iPhone video): many Android phones can't play it. */
 export async function checkPlayable(file: File): Promise<void> {
   if (videoCodec(new Uint8Array(await file.arrayBuffer())) === "hevc") throw new Error(HEVC_PROBLEM);
