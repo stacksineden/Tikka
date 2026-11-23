@@ -50,6 +50,19 @@ describe("a card from the database", () => {
     expect(used).toMatchObject({ redeemedAt: "2026-10-22T12:00:00.000Z", review: "open", visitOptions: undefined });
     expect(statusFrom(json({ expires_at: "2026-10-20T22:59:00Z" }), now)).toMatchObject({ expired: true, visitOptions: undefined });
   });
+
+  it("links the next-visit Tikka a used card made", () => {
+    const next = { view_token: "vt2", reward: "10% off your next visit", expires_at: "2026-11-21T22:59:00Z", redeemed_at: null };
+    expect(statusFrom(json({ redeemed_at: "2026-10-22T12:00:00Z", next_visit: next }), now).nextVisit).toEqual({
+      token: "vt2",
+      reward: "10% off your next visit",
+      expiresAt: "2026-11-21T22:59:00.000Z",
+      redeemedAt: undefined,
+    });
+    expect(statusFrom(json({ next_visit: { ...next, redeemed_at: "2026-11-01T10:00:00Z" } }), now).nextVisit?.redeemedAt).toBe("2026-11-01T10:00:00.000Z");
+    expect(statusFrom(json({ next_visit: null }), now).nextVisit).toBeUndefined();
+    expect(statusFrom(json(), now).nextVisit).toBeUndefined();
+  });
 });
 
 describe("the claim message", () => {

@@ -102,6 +102,8 @@ export function ClaimFlow({
   const [phoneError, setPhoneError] = useState<string>();
   const turnstile = useTurnstile(onPage && beat === "claim" ? turnstileSiteKey : undefined);
   const [cardState, setCardState] = useState<CardStatus | undefined>(claimed?.status);
+  // The next-visit Tikka this used card made, while it's still to use.
+  const nextVisit = cardState?.redeemedAt && cardState.nextVisit && !cardState.nextVisit.redeemedAt ? cardState.nextVisit : undefined;
   const [announce, setAnnounce] = useState("");
   // Click-to-claim: the TK-XXXXX code and the WhatsApp link it goes out in.
   const [intent, setIntent] = useState<{ token: string; waUrl: string } | null>(null);
@@ -621,15 +623,20 @@ export function ClaimFlow({
                   <div className="tk-redeem-meta">
                     {card.reward} · used on {shortDate(cardState.redeemedAt)}
                   </div>
-                  <p className="tk-redeem-instr">Thanks for visiting {face.name}. Keep an eye out for their next drop.</p>
-                  {cardState.nextVisit && !cardState.nextVisit.redeemedAt && (
-                    <a className="tk-next" href={`/t/${cardState.nextVisit.token}`}>
-                      <span>
-                        <span className="tk-next-k">Your next-visit Tikka</span>
-                        {cardState.nextVisit.reward} · till {shortDate(cardState.nextVisit.expiresAt)}
-                      </span>
-                      <span aria-hidden="true">→</span>
-                    </a>
+                  {nextVisit ? (
+                    <>
+                      <p className="tk-redeem-instr">Thanks for visiting {face.name}. Here&apos;s something for your next visit.</p>
+                      <a className="tk-next" href={`/t/${nextVisit.token}`}>
+                        <Spark className="tk-next-spark" />
+                        <span className="min-w-0 flex-1">
+                          <span className="tk-next-k">Your next-visit Tikka</span>
+                          {nextVisit.reward} · till {shortDate(nextVisit.expiresAt)}
+                        </span>
+                        <span aria-hidden="true">→</span>
+                      </a>
+                    </>
+                  ) : (
+                    <p className="tk-redeem-instr">Thanks for visiting {face.name}. Keep an eye out for their next drop.</p>
                   )}
                 </div>
               ) : cardState?.expired ? (
@@ -713,7 +720,19 @@ export function ClaimFlow({
 
       {!(holdBeat || beat === "flipping" || beat === "opening") && (
         <div className="tk-cta">
-          {beat === "revealed" ? (
+          {beat === "revealed" && nextVisit ? (
+            // Used, with a next-visit Tikka waiting: the main button takes them to it.
+            <a className="tk-btn tk-btn-gold" href={`/t/${nextVisit.token}`}>
+              <Spark />
+              See your next-visit Tikka
+            </a>
+          ) : beat === "revealed" && card?.kind === "bounce_back" ? (
+            // The next-visit Tikka is theirs alone (not the drop's stock): bring them back, don't share it.
+            <a className="tk-btn tk-btn-gold" href={booking && !booking.booked ? `/${businessSlug}?tikka=${encodeURIComponent(card.token)}` : `/${businessSlug}`}>
+              <CalendarIcon />
+              Book your next visit
+            </a>
+          ) : beat === "revealed" ? (
             <button type="button" className="tk-btn tk-btn-gold" onClick={() => share(`I got a Tikka from ${face.name}. Every Tikka holds something: open yours.`)}>
               <ShareIcon />
               Share my Tikka
@@ -747,7 +766,13 @@ export function ClaimFlow({
           )}
           <p className="tk-cta-note" aria-live="polite">
             {note ??
-              (beat === "revealed"
+              (beat === "revealed" && nextVisit
+                ? `${nextVisit.reward} · till ${shortDate(nextVisit.expiresAt)}`
+                : beat === "revealed" && card?.kind === "bounce_back"
+                  ? cardState?.redeemedAt || cardState?.expired
+                    ? `Thanks for coming back to ${face.name}`
+                    : `Just for you · use it by ${shortDate(card.expiresAt)}`
+                  : beat === "revealed"
                 ? `${count(drop.left)} of ${count(drop.total)} left for your friends`
                 : beat === "sealed" && status === "live"
                   ? "Free · takes a minute"
@@ -970,6 +995,15 @@ function ChatIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.4-4A8 8 0 1 1 20 11.5z" />
+    </svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M16 3v4M8 3v4M3 10h18" />
     </svg>
   );
 }

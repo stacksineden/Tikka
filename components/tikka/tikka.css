@@ -1673,14 +1673,20 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 52px;
+  min-height: 64px;
   margin-top: 12px;
-  padding: 10px 14px;
+  padding: 12px 14px;
   border-radius: var(--radius-md);
   background: var(--gold-soft);
   color: var(--ink);
-  font: 600 15px/20px var(--font-sans);
+  font: 600 16px/22px var(--font-sans);
   text-decoration: none;
+}
+.tk-next-spark {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--gold-text);
 }
 .tk-next-k {
   display: block;

@@ -134,6 +134,13 @@ begin
   assert bb.kind = 'bounce_back' and bb.card_id is null and bb.lead_id = main.lead_id and bb.phone = main.phone, 'bounce-back for the same person';
   assert bb.code ~ '^RT-' and bb.code <> main.code and bb.view_token <> main.view_token, 'its own code and link';
   assert bb.expires_at = private.last_day(now(), 30), 'lasts 30 days to 23:59 WAT';
+  -- The used card's page shows it (card_json), and the next-visit card points to nothing further.
+  assert private.card_json(main.id) -> 'next_visit' ->> 'view_token' = bb.view_token, 'the used card links its next-visit Tikka';
+  assert private.card_json(main.id) -> 'next_visit' ->> 'reward' = '₦2,000 off your next visit', 'with its reward';
+  assert (private.card_json(main.id) -> 'next_visit' ->> 'expires_at')::timestamptz = bb.expires_at, 'and its use-by';
+  assert private.card_json(main.id) -> 'next_visit' ->> 'redeemed_at' is null, 'not used yet';
+  assert private.card_json(bb.id) -> 'next_visit' = 'null'::jsonb, 'a next-visit Tikka has none of its own';
+  assert private.card_json(main.id) - 'next_visit' ? 'code', 'the rest of the card is unchanged';
   insert into codes values ('bb', bb.code);
 end $$;
 

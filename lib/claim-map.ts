@@ -27,6 +27,8 @@ export interface CardJson {
   phone_confirmed?: boolean;
   /** Typed in with the counter check on, not checked yet. */
   counter_check?: boolean;
+  /** The next-visit Tikka this used card made (drop Tikkas on a drop with one), else null. */
+  next_visit?: { view_token: string; reward: string; expires_at: string; redeemed_at: string | null } | null;
 }
 
 const TIER: Record<CardJson["tier"], Tier> = { legendary: "legendary", rare: "rare", common: "thank_you" };
@@ -61,6 +63,14 @@ export function statusFrom(j: CardJson, now: Date): CardStatus {
     plannedVisitDate: j.planned_visit_date ?? undefined,
     plannedVisitPart: j.planned_visit_part ?? undefined,
     visitOptions: canPlan ? visitOptions(now, new Date(j.expires_at).toISOString(), j.valid_weekdays) : undefined,
+    nextVisit: j.next_visit
+      ? {
+          token: j.next_visit.view_token,
+          reward: j.next_visit.reward,
+          expiresAt: new Date(j.next_visit.expires_at).toISOString(),
+          redeemedAt: j.next_visit.redeemed_at ? new Date(j.next_visit.redeemed_at).toISOString() : undefined,
+        }
+      : undefined,
   };
 }
 
