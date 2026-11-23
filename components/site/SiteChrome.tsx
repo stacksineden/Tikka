@@ -70,6 +70,7 @@ export function SiteFooter() {
             <li><Link className="hover:text-ink" href="/#faq">FAQs</Link></li>
             <li><Link className="hover:text-ink" href="/privacy">Privacy policy</Link></li>
             <li><Link className="hover:text-ink" href="/terms">Terms</Link></li>
+            <li><Link className="hover:text-ink" href="/acceptable-use">Acceptable use</Link></li>
           </ul>
         </div>
       </div>

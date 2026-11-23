@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Clock, ShieldCheck, TriangleAlert } from "lucide-react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { GetPaidForm } from "@/components/payments/GetPaidForm";
@@ -122,7 +123,14 @@ async function GetPaid() {
       )}
       <p className="text-caption flex items-start gap-2 text-ink-muted">
         <ShieldCheck size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-        Payments are processed by Paystack. Tikka keeps your bank, the last 4 digits and the account name, and your ID only for checking your business.
+        <span>
+          Payments are processed by Paystack. Tikka keeps your bank, the last 4 digits and the account name, and your ID only for checking your business. Taking
+          payments means you follow our{" "}
+          <Link href="/acceptable-use" className="underline">
+            acceptable use policy
+          </Link>
+          .
+        </span>
       </p>
     </div>
   );
