@@ -24,7 +24,8 @@ import { LeadAlertsCard } from "@/components/alerts/LeadAlerts";
 import { pushConfigured } from "@/lib/push";
 import { earlyAccessState } from "@/lib/studio-db";
 import { paystackMode } from "@/lib/paystack";
-import { dbPayoutState } from "@/lib/payouts-db";
+import { dbPayoutState, type PayoutState } from "@/lib/payouts-db";
+import { KycNotice } from "@/components/payments/KycNotice";
 import { SoloCard } from "@/components/tikka/SoloCard";
 import { faceFromBusiness } from "@/components/tikka/TikkaCard";
 import {
@@ -54,8 +55,8 @@ function sameDayWAT(a: string, b: Date) {
 }
 
 /** The deposits card: owners who haven't added the bank account payments go to, until they hide it. */
-async function depositsCardShown(businessId: string): Promise<boolean> {
-  const [state, teaser] = await Promise.all([isDbId(businessId) ? dbPayoutState(businessId) : null, earlyAccessState(businessId, "payments")]);
+async function depositsCardShown(businessId: string, state: PayoutState | null): Promise<boolean> {
+  const teaser = await earlyAccessState(businessId, "payments");
   if (teaser.dismissed.includes("payments_dashboard")) return false;
   return !(state?.payout && state.payout.mode === paystackMode());
 }
@@ -71,11 +72,12 @@ async function Home() {
 
   // Staff never see leads (rule 4); getLeads refuses them.
   const owner = user.role === "owner";
+  const payState = owner && isDbId(business.id) ? await dbPayoutState(business.id) : null;
   const [leads, activity, guarantee, payments] = await Promise.all([
     owner ? getLeads(user) : Promise.resolve([]),
     getActivity(user),
     owner ? getGuaranteeNotice(user) : Promise.resolve(null),
-    owner ? depositsCardShown(business.id) : Promise.resolve(false),
+    owner ? depositsCardShown(business.id, payState) : Promise.resolve(false),
   ]);
   const live = drops.find((d) => d.status === "live");
   const renderedAt = new Date().toISOString();
@@ -94,6 +96,7 @@ async function Home() {
     <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <HomeHeader name={user.name} now={now} />
       {owner && <ClaimPrompt since={renderedAt} />}
+      {owner && <KycNotice state={payState} />}
       {/* New lead alerts on this phone: real owners only, once the keys are set (lib/push.ts). */}
       {owner && isDbId(business.id) && pushConfigured() && <LeadAlertsCard vapidKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!} />}
       {guarantee && <GuaranteeNotice message={guarantee} />}

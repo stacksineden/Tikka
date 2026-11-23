@@ -147,6 +147,13 @@ const sections: LegalSection[] = [
           for your alerts and daily summary, your staff&apos;s emails, and your payments. Payments are handled by Paystack; we never see your card number.
         </p>
         <p>
+          If you take payments from your customers through Tikka, we also collect the bank account they go to (the bank, the last 4 digits and the account name
+          from your bank), a photo of the owner&apos;s ID with the name on it, and, if your business is registered, your CAC number and certificate. We use them only
+          to check your business before switching payments on, to meet our payment partner&apos;s rules, and to deal with disputes or fraud. They&apos;re stored
+          privately: only Tikka&apos;s review team can see them, never your customers or staff. We keep them while your business takes payments and for 12 months
+          after, unless the law needs us to keep them longer.
+        </p>
+        <p>
           You decide how you use your customers&apos; details. You agree to use them only to follow up the people who claimed your Tikkas, to respect STOP, and not to
           sell or share them (see our <Link href="/terms" className="text-brand underline">terms</Link>).
         </p>
