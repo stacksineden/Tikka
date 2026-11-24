@@ -20,7 +20,7 @@ export function RemoveCard({ cardId }: { cardId: string }) {
     );
   }
   return (
-    <div className="grid gap-2 rounded-md border border-line p-3 sm:col-span-full">
+    <div className="col-span-full grid w-full basis-full gap-2 rounded-md border border-line p-3">
       <p className="text-caption">Remove this card? Cards you&apos;ve already printed keep opening your page.</p>
       <div className="flex gap-2">
         <button type="button" className="btn btn-secondary min-h-11 flex-1 px-3 text-label" onClick={() => setConfirm(false)}>

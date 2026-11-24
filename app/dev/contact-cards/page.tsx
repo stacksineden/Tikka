@@ -50,6 +50,12 @@ async function Studio({ slug }: { slug: string }) {
         </div>
       ))}
       <div style={{ display: "grid", gap: 8 }}>
+        <h3 className="text-title">Long page address (30 characters)</h3>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+          <CardFace b={{ ...b, slug: "marilkaybeautyandcontentstudio" }} card={base} side="back" qr={qr} bookingsOn />
+        </div>
+      </div>
+      <div style={{ display: "grid", gap: 8 }}>
         <h3 className="text-title">With bleed (print)</h3>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
           <CardFace b={b} card={base} side="front" bookingsOn bleed />

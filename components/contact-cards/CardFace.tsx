@@ -12,6 +12,7 @@ import {
   cardStyle,
   contactLines,
   fitMm,
+  linkLayout,
   pageLink,
   whatWeDo,
   type ContactCard,
@@ -192,14 +193,24 @@ function Back({ b, card, qr, bookingsOn }: { b: CardBusiness; card: CardSettings
           <div className="ccard-qr-tile" dangerouslySetInnerHTML={{ __html: qr ? qr.replace("<svg", '<svg width="100%" height="100%" role="img" aria-label="QR code to the business page"') : "" }} />
           <div>
             <div className="ccard-cta">{cardCta(bookingsOn, b.category)}</div>
-            <div className="ccard-link ccard-mono" style={{ fontSize: `${Math.min(1.95, fitMm(pageLink(b.slug), 1.95, 27, 0.62))}mm` }}>
-              {pageLink(b.slug)}
-            </div>
+            <PageLink slug={b.slug} />
           </div>
         </div>
       </div>
       <div className="ccard-made">Made with Tikka</div>
     </>
+  );
+}
+
+/** The link under the QR: one line, or two (after "usetikka.com/") for long page addresses. */
+function PageLink({ slug }: { slug: string }) {
+  const { sizeMm, wrap } = linkLayout(slug);
+  const [site, path] = pageLink(slug).split("/");
+  return (
+    <div className="ccard-link ccard-mono" style={{ fontSize: `${sizeMm}mm`, ...(wrap ? { whiteSpace: "normal", overflowWrap: "anywhere", lineHeight: 1.25 } : {}) }}>
+      {site}/{wrap === "after-site" && <wbr />}
+      {path}
+    </div>
   );
 }
 

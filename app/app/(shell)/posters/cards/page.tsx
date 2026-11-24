@@ -57,7 +57,8 @@ async function Cards() {
           </div>
           <div className="grid gap-2">
             <span className="text-label">Print</span>
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+            {/* items-start: the Remove confirmation sits on its own line and never stretches the buttons. */}
+            <div className="grid grid-cols-2 items-start gap-2 sm:flex sm:flex-wrap">
               <Link href={`/app/posters/cards/${c.id}/print?format=printer`} className="btn btn-secondary min-h-11 px-3 text-label">
                 <Printer />
                 For a printer

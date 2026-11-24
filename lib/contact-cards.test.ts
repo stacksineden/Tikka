@@ -7,6 +7,7 @@ import {
   cardInk,
   cardQrColors,
   fitMm,
+  linkLayout,
   cardCta,
   cardHeading,
   cardInstagram,
@@ -193,5 +194,18 @@ describe("layout and colour", () => {
       expect(contrast(qr.dark, qr.light)).toBeGreaterThanOrEqual(10);
       expect(contrast(cardInk({ brandColor: hex }), "#FFFFFF")).toBeGreaterThanOrEqual(7);
     }
+  });
+});
+
+describe("the page link under the QR", () => {
+  it("prints on one line when it fits at a readable size", () => {
+    expect(linkLayout("glow")).toEqual({ sizeMm: 1.95, wrap: false });
+    const glow = linkLayout("glowstudio");
+    expect(glow.wrap).toBe(false);
+    expect(glow.sizeMm).toBeGreaterThanOrEqual(1.8);
+  });
+  it("wraps a long address at a readable size instead of shrinking it", () => {
+    expect(linkLayout("imole-studio")).toEqual({ sizeMm: 1.8, wrap: "after-site" });
+    expect(linkLayout("marilkaybeautyandcontentstudio")).toEqual({ sizeMm: 1.8, wrap: "anywhere" });
   });
 });
