@@ -156,7 +156,7 @@ export interface LeadRow {
   extended_at?: string | null;
 }
 
-const SOURCES: Source[] = ["wa", "ig", "qr", "web", "ads", "market", "direct"];
+const SOURCES: Source[] = ["wa", "ig", "qr", "web", "ads", "market", "card", "direct"];
 
 /** One row of get_leads() as the Leads page shows it: the owner sees the full name and number (rule 4). */
 export function leadFrom(r: LeadRow): Lead {

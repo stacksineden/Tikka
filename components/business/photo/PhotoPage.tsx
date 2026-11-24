@@ -24,6 +24,8 @@ const SETS_NAME = /\b(studio|sets?|backdrops?)\b/i;
 
 export interface PhotoPageProps {
   b: Business;
+  /** They came from a business card scan: the drop band passes it on. */
+  fromCard?: boolean;
   live?: PageDrop;
   next?: PageDrop;
   reviews: Review[];
@@ -81,7 +83,7 @@ function Heading({ n, label, children, id }: { n: number; label: string; childre
   );
 }
 
-export function PhotoPage({ b, live, next, reviews, sections, book, bookProps, sheet, serviceLinks, deposits }: PhotoPageProps) {
+export function PhotoPage({ b, live, next, reviews, sections, book, bookProps, sheet, serviceLinks, deposits, fromCard = false }: PhotoPageProps) {
   const page = b.page ?? {};
   const work = portfolioView(b);
   const sets = work.collections.find((c) => SETS_NAME.test(c.name));
@@ -239,7 +241,7 @@ export function PhotoPage({ b, live, next, reviews, sections, book, bookProps, s
       </section>
 
       {/* 3. The live drop */}
-      <DropBand b={b} live={live} next={next} dark />
+      <DropBand b={b} live={live} next={next} dark fromCard={fromCard} />
 
       {/* 4. About */}
       {sections.has("about") && (

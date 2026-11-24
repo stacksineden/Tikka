@@ -59,7 +59,7 @@ export interface LeadFilters {
 }
 
 const TIERS: Tier[] = ["legendary", "rare", "thank_you"];
-const SOURCES: Source[] = ["wa", "ig", "qr", "web", "ads", "market", "direct"];
+const SOURCES: Source[] = ["wa", "ig", "qr", "web", "ads", "market", "card", "direct"];
 
 /** Filters from the page's query string; anything unexpected is ignored. */
 export function parseLeadFilters(sp: Record<string, string | string[] | undefined>): LeadFilters {
@@ -95,6 +95,7 @@ export const SOURCE_LABEL: Record<Source, string> = {
   web: "Web",
   ads: "Ads",
   market: "Marketplace",
+  card: "Business card",
   direct: "Direct",
 };
 

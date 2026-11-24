@@ -139,6 +139,8 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
   // The same for every visitor: the public drops, never the signed-in person's own.
   const [drops, reviews, rules] = await Promise.all([getPageDrops(b.slug, found.ownerId), getBusinessReviews(found.ownerId), getBookingRules(found.ownerId, b)]);
   const live = drops.find((d) => d.status === "live");
+  // A business card scan (/c/[code] → ?c=card): the drop band passes it on to the claim page.
+  const fromCard = sp.c === "card";
   const next = drops.find((d) => d.status === "scheduled");
   const sections = new Set(visibleSections(b, { reviews: reviews.length }));
   const page = b.page ?? {};
@@ -198,6 +200,7 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
     return (
       <div className={bizSerif.variable}>
         <PhotoPage
+          fromCard={fromCard}
           b={b}
           live={live}
           next={next}
@@ -304,7 +307,7 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
       </header>
 
       {/* 2. The live drop band */}
-      <DropBand b={b} live={live} next={next} />
+      <DropBand b={b} live={live} next={next} fromCard={fromCard} />
 
       {/* 3. About: its label, a big statement, then the story. */}
       {sections.has("about") && (

@@ -28,6 +28,7 @@ describe("claim helpers", () => {
   it("reads the source from ?c=", () => {
     expect(parseSource("ig")).toBe("ig");
     expect(parseSource(["qr", "wa"])).toBe("qr");
+    expect(parseSource("card")).toBe("card"); // a business card scan (docs/BUSINESS_CARDS.md)
     expect(parseSource("tiktok")).toBe("direct");
     expect(parseSource(undefined)).toBe("direct");
   });

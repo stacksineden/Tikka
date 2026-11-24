@@ -26,7 +26,7 @@ export function claimCookie(dropId: string): string {
 
 const TIER_ORDER: Tier[] = ["legendary", "rare", "thank_you"];
 
-export const SOURCES: Source[] = ["wa", "ig", "qr", "web", "ads", "market"];
+export const SOURCES: Source[] = ["wa", "ig", "qr", "web", "ads", "market", "card"];
 
 /** `?c=` on the drop link → source. Anything else is "direct". */
 export function parseSource(c: string | string[] | undefined): Source {
