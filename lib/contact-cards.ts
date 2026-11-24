@@ -250,7 +250,9 @@ export function newContactCard(businessId: string, code: string, now: Date, pers
  */
 export function fitMm(text: string, maxMm: number, widthMm: number, em = 0.54): number {
   const chars = Math.max(1, [...text].length);
-  return Math.round(Math.min(maxMm, widthMm / (chars * em)) * 10) / 10;
+  const fit = widthMm / (chars * em);
+  // Rounded down, so a shrunk headline is never a hair wider than its space.
+  return fit >= maxMm ? maxMm : Math.floor(fit * 10) / 10;
 }
 
 /** Bold sets the name on two lines: the first word, then the rest ("Glow" / "Studio"). */
@@ -267,4 +269,20 @@ export function cardQrColors(b: Pick<Business, "brandColor">): { dark: string; l
 /** Small text on a light card in the business's colour: darkened until it reads clearly. */
 export function cardInk(b: Pick<Business, "brandColor">): string {
   return deepen(b.brandColor, 7);
+}
+
+/** The column under the QR, in mm, and the smallest size the page link may print at. */
+export const LINK_WIDTH_MM = 27;
+export const LINK_MIN_MM = 1.8;
+
+/**
+ * How the page link prints under the QR: one line when it fits at a readable size (1.8 mm or
+ * more), else two lines at 1.8 mm, never shrunk to a smudge. The break goes after
+ * "usetikka.com/" when the address fits on the second line; a longer address wraps where it must
+ * (page addresses are at most 30 characters, so two lines always hold it).
+ */
+export function linkLayout(slug: string): { sizeMm: number; wrap: false | "after-site" | "anywhere" } {
+  const oneLine = fitMm(pageLink(slug), 1.95, LINK_WIDTH_MM, 0.62);
+  if (oneLine >= LINK_MIN_MM) return { sizeMm: oneLine, wrap: false };
+  return { sizeMm: LINK_MIN_MM, wrap: fitMm(slug, LINK_MIN_MM, LINK_WIDTH_MM, 0.62) >= LINK_MIN_MM ? "after-site" : "anywhere" };
 }
