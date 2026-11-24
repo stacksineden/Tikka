@@ -2361,7 +2361,7 @@ export async function acceptInvite(token: string, name: string, userId: string):
 
 // visitor_hash = sha256(visitor_id + daily salt): no raw ids kept (TECH_PLAN §12).
 const salts: Map<string, string> = ((globalThis as { __tikkaSalts?: Map<string, string> }).__tikkaSalts ??= new Map());
-function visitorHash(visitorId: string, now: Date): string {
+export function visitorHash(visitorId: string, now: Date): string {
   const day = now.toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" });
   let salt = salts.get(day);
   if (!salt) salts.set(day, (salt = randomBytes(16).toString("hex")));

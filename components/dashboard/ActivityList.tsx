@@ -18,6 +18,7 @@ const SOURCE_LABEL: Record<string, string> = {
   web: "your website",
   ads: "ads",
   market: "the marketplace",
+  card: "a business card",
 };
 
 function describe(e: ActivityEvent): { text: React.ReactNode; Icon: React.ElementType; tone: string } {

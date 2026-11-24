@@ -6,8 +6,9 @@ import { updateSession } from "@/lib/supabase/proxy";
 export async function proxy(request: NextRequest) {
   // Claim pages: an anonymous visitor id (random, 1 year) for link activity (TECH_PLAN §12).
   // Set on the request too, so the very first view already counts.
-  // Poster scans (/q/…) get it too, so a scan counts once per person.
-  if (request.nextUrl.pathname.startsWith("/d/") || request.nextUrl.pathname.startsWith("/q/")) {
+  // Poster scans (/q/…) and business card scans (/c/…) get it too, so a scan counts once per person.
+  const path = request.nextUrl.pathname;
+  if (path.startsWith("/d/") || path.startsWith("/q/") || path.startsWith("/c/")) {
     if (request.cookies.has(VISITOR_COOKIE)) return NextResponse.next();
     const id = crypto.randomUUID();
     request.cookies.set(VISITOR_COOKIE, id);
@@ -47,5 +48,5 @@ function demoRole(cookie: string): string | undefined {
 }
 
 export const config = {
-  matcher: ["/app/:path*", "/admin/:path*", "/admin", "/d/:path*", "/q/:path*"],
+  matcher: ["/app/:path*", "/admin/:path*", "/admin", "/d/:path*", "/q/:path*", "/c/:path*"],
 };

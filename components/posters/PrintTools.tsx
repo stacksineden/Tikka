@@ -28,11 +28,11 @@ export function FitSheet({ widthMm, children }: { widthMm: number; children: Rea
   );
 }
 
-export function PrintBar({ back, formats, current, tip }: { back: string; formats: { id: string; label: string; href: string }[]; current: string; tip: string }) {
+export function PrintBar({ back, backLabel = "Back to posters", formats, current, tip }: { back: string; backLabel?: string; formats: { id: string; label: string; href: string }[]; current: string; tip: string }) {
   return (
     <div className="print-hide sticky top-0 z-10 grid gap-3 border-b border-line bg-surface-raised px-4 py-3">
       <div className="flex items-center gap-2">
-        <Link href={back} className="grid size-11 place-items-center rounded-md text-ink" aria-label="Back to posters">
+        <Link href={back} className="grid size-11 place-items-center rounded-md text-ink" aria-label={backLabel}>
           <ChevronLeft size={20} aria-hidden="true" />
         </Link>
         <span className="text-label min-w-0 flex-1 truncate">Print kit</span>

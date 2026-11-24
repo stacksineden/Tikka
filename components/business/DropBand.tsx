@@ -6,7 +6,8 @@ import type { PageDrop } from "@/lib/page";
 import type { Business } from "@/lib/types";
 
 /** The live drop band: a moving ticker, the only place the page promotes anything. */
-export function DropBand({ b, live, next, dark = false }: { b: Pick<Business, "slug" | "name">; live?: PageDrop; next?: PageDrop; dark?: boolean }) {
+/** `fromCard`: they came from a business card scan, so a claim from here counts as "Business card". */
+export function DropBand({ b, live, next, dark = false, fromCard = false }: { b: Pick<Business, "slug" | "name">; live?: PageDrop; next?: PageDrop; dark?: boolean; fromCard?: boolean }) {
   if (live) {
     const left = count(live.left);
     const item = (k: number) => (
@@ -26,7 +27,7 @@ export function DropBand({ b, live, next, dark = false }: { b: Pick<Business, "s
         <p className="sr-only">
           Live now: {live.name}, {left} Tikkas left, ends {shortDate(live.endsAt)}.
         </p>
-        <Link href={`/d/${b.slug}/${live.slug}`} className="biz-btn shrink-0 self-stretch bg-gold text-on-gold">
+        <Link href={`/d/${b.slug}/${live.slug}${fromCard ? "?c=card" : ""}`} className="biz-btn shrink-0 self-stretch bg-gold text-on-gold">
           Claim yours
           <ArrowUpRight aria-hidden="true" />
         </Link>

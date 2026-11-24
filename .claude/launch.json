@@ -20,6 +20,18 @@
         "design/page-styles"
       ],
       "port": 4310
+    },
+    {
+      "name": "design",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4311",
+        "-d",
+        "design"
+      ],
+      "port": 4311
     }
   ]
 }

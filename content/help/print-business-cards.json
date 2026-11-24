@@ -1,0 +1,36 @@
+{
+  "slug": "print-business-cards",
+  "title": "Print your business cards",
+  "section": "start",
+  "order": 4,
+  "minutes": 3,
+  "summary": "Free business cards in your own colours. The QR opens your page, so people can see your work and book.",
+  "app": {
+    "href": "/app/posters/cards",
+    "label": "Open Business cards"
+  },
+  "steps": [
+    {
+      "title": "Open Business cards",
+      "body": "On a phone, tap More, then Posters & cards, then Business cards. On a computer, it's Posters & cards in the menu on the left. Your card is already made from your page: your logo, name, number, Instagram and where you are."
+    },
+    {
+      "title": "Pick a style",
+      "body": "Tap Change design and choose Classic, Photo, Minimal or Bold. Photo puts one of the photos from your page on the front. Tap the card to see the back."
+    },
+    {
+      "title": "Choose whose card it is",
+      "body": "It can be the business's card, or a card for someone on your team with their name and role on the back. Every card has the same QR to your page. To make another, tap \"Make a card for someone on your team\"."
+    },
+    {
+      "title": "Print it",
+      "body": "Tap \"For a printer\" to get a file any printer can use, with the edges and cut marks they need. Ask for thick card (400–450gsm), matte or soft-touch. Or tap \"A4 sheet, 10 cards\" to print at home or at a business centre: print both pages on one sheet, two-sided, then cut along the marks."
+    }
+  ],
+  "tips": [
+    "Change your number or Instagram on your page and your card follows. Print again to get the new details on paper.",
+    "The QR keeps working even if you change your page link or remove the card, so cards you've handed out never go dead.",
+    "Business cards shows how many people scanned your cards this month."
+  ],
+  "published": true
+}

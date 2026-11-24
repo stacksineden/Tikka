@@ -99,3 +99,18 @@ export const SWATCHES = [
   { hex: "#5B2A86", name: "Plum" },
   { hex: "#2B2B2B", name: "Charcoal" },
 ] as const;
+
+/**
+ * The brand colour, darkened until it holds `min`:1 against white: for small text on a light card
+ * and for QR codes, which scanners read best near black. Keeps the hue, so it still reads as theirs.
+ */
+export function deepen(hex: string, min = 7): string {
+  const base = normalizeHex(hex) ?? ON_INK;
+  if (contrast(base, ON_WHITE) >= min) return base;
+  const [h, s, l] = toHsl(base);
+  for (let light = l - 0.02; light > 0; light -= 0.02) {
+    const candidate = fromHsl(h, s, light);
+    if (contrast(candidate, ON_WHITE) >= min) return candidate;
+  }
+  return ON_INK;
+}

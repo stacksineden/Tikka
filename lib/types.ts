@@ -12,8 +12,8 @@ export type Finish = "matte" | "foil" | "holo";
 
 export type DropStatus = "draft" | "scheduled" | "live" | "sold_out" | "ended";
 
-/** Where a visitor came from: `?c=` on the drop link, or "direct" when there's none. */
-export type Source = "wa" | "ig" | "qr" | "web" | "ads" | "market" | "direct";
+/** Where a visitor came from: `?c=` on the drop link, or "direct" when there's none. "card": a business card scan (docs/BUSINESS_CARDS.md). */
+export type Source = "wa" | "ig" | "qr" | "web" | "ads" | "market" | "card" | "direct";
 
 export interface Business {
   id: string;
