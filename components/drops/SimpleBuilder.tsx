@@ -395,7 +395,7 @@ function Builder({
                   {quote.kind === "voucher" ? coveredBy(quote.voucher) : quote.kind === "paid" ? `${quote.tier.label} · ${priceLabel(quote.amountKobo)}` : "Talk to us"}
                 </p>
                 <p className="text-caption text-ink-muted">
-                  {count(draft.total)} Tikkas{quote.kind === "paid" && business.foundingMember ? " · founding member price" : ""}
+                  {count(draft.total)} Tikkas{quote.kind === "paid" && business.foundingMember && quote.tier.foundingPriceKobo < quote.tier.priceKobo ? " · founding member price" : ""}
                 </p>
                 {guaranteeLine(quote) && <p className="text-body mt-1">{guaranteeLine(quote)}</p>}
               </section>

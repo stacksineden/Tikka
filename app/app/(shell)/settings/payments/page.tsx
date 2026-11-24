@@ -87,7 +87,7 @@ async function Payments({ searchParams }: { searchParams: PageProps<"/app/settin
           {drop && <span className="text-title text-[17px] tabular-nums">{priceLabel(priceFor(drop, business.foundingMember))}</span>}
         </div>
         <p className="text-body mt-1 text-ink-muted">The same price for any drop, big or small.</p>
-        {business.foundingMember && <p className="text-caption mt-1 text-ink-muted">Founding member price, for life.</p>}
+        {business.foundingMember && drop && drop.foundingPriceKobo < drop.priceKobo && <p className="text-caption mt-1 text-ink-muted">Founding member price.</p>}
         {drop?.guaranteeMinRedemptions && (
           <p className="text-caption mt-2 text-ink-muted">
             Paid drops come with a promise: if one brings fewer than {count(drop.guaranteeMinRedemptions)} customers, your next drop is free (once).
