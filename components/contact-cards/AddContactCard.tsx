@@ -1,7 +1,8 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { addContactCardAction } from "@/app/app/contact-card-actions";
 import { PERSON_MAX } from "@/lib/contact-cards";
 import type { TeamMember } from "@/lib/types";
@@ -9,6 +10,15 @@ import type { TeamMember } from "@/lib/types";
 /** "Make a card for someone on your team": the team on their page is one tap away. */
 export function AddContactCard({ team }: { team: TeamMember[] }) {
   const [state, action, pending] = useActionState(addContactCardAction, undefined);
+  const router = useRouter();
+  // Made: open it to design, once. The list stays alive in the background, so coming back to it
+  // (Done in the editor) runs this effect again; the ref stops it opening the same card twice.
+  const opened = useRef<string | null>(null);
+  useEffect(() => {
+    if (!state?.id || opened.current === state.id) return;
+    opened.current = state.id;
+    router.push(`/app/posters/cards/${state.id}`);
+  }, [state?.id, router]);
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   return (

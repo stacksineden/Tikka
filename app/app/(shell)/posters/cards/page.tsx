@@ -7,6 +7,7 @@ import { AddContactCard } from "@/components/contact-cards/AddContactCard";
 import { CardFace } from "@/components/contact-cards/CardFace";
 import { FitCard } from "@/components/contact-cards/FitCard";
 import { PostersTabs } from "@/components/contact-cards/PostersTabs";
+import { RemoveCard } from "@/components/contact-cards/RemoveCard";
 import { getBookingSetup } from "@/lib/bookings-data";
 import { cardQrColors, contactScanPath, MAX_CONTACT_CARDS } from "@/lib/contact-cards";
 import { getContactCards } from "@/lib/contact-cards-data";
@@ -65,6 +66,7 @@ async function Cards() {
                 <Printer />
                 A4 sheet, 10 cards
               </Link>
+              {cards.length > 1 && <RemoveCard cardId={c.id} />}
             </div>
           </div>
         </section>

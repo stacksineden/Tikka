@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { addContactCard, removeContactCard, saveContactCard, type ContactCardChoices } from "@/lib/contact-cards-data";
 import { isContactStyle } from "@/lib/contact-cards";
 import { getOwnerUser } from "@/lib/session";
@@ -13,8 +12,8 @@ function refresh() {
   revalidatePath("/app/posters/cards");
 }
 
-/** "Make a card for someone on your team": makes it, then opens it to design. */
-export async function addContactCardAction(_prev: { error?: string } | undefined, form: FormData): Promise<{ error?: string }> {
+/** "Make a card for someone on your team": makes it; the form then opens it to design. */
+export async function addContactCardAction(_prev: { error?: string; id?: string } | undefined, form: FormData): Promise<{ error?: string; id?: string }> {
   const user = await getOwnerUser();
   if (!user) return { error: "Only the owner can make business cards." };
   const name = String(form.get("name") ?? "");
@@ -22,7 +21,7 @@ export async function addContactCardAction(_prev: { error?: string } | undefined
   const r = await addContactCard(user, name, String(form.get("role") ?? ""));
   if (!r.ok) return { error: r.error };
   refresh();
-  redirect(`/app/posters/cards/${r.card.id}`);
+  return { id: r.card.id };
 }
 
 export async function saveContactCardAction(cardId: string, choices: ContactCardChoices): Promise<{ error?: string }> {
@@ -51,5 +50,5 @@ export async function removeContactCardAction(cardId: string): Promise<{ error?:
   const error = await removeContactCard(user, cardId);
   if (error) return { error };
   refresh();
-  redirect("/app/posters/cards");
+  return {};
 }
