@@ -391,6 +391,13 @@ Every person who claims is the owner's to follow up, in full, with no per-person
 - Account: email, password, sign out, and **New lead notifications on this phone** (below).
 - **New lead alerts (web push, owners only):** a notification on the owner's phone each time someone claims, even with Tikka closed: "New lead · Glow Studio" / "Adaeze just claimed a Rare Tikka: 20% off any service. Tap to message them." A tap opens Leads. Claims close together for the same drop replace each other as one notification ("4 new leads · Glow Studio"). Never the phone number (it shows on the lock screen). Turned on per phone: a "Get told about every new lead" card on Home (Turn on alerts → the phone's Allow; hidden once on, or hidden on that phone), and a switch with "Send a test notification" in Settings → Account. On an iPhone it works only from Tikka added to the home screen (iOS 16.4+), so there the card shows the three steps (Share → Add to Home Screen → open Tikka from the icon). The dashboard is installable for this (app name Tikka, the app icon). Staff never get lead alerts. Sending never slows or blocks a claim; a phone that stops accepting is forgotten. Off until the VAPID keys are set (`docs/LAUNCH.md`).
 
+### B10a. Business cards (free, like posters)
+Requirement in `docs/BUSINESS_CARDS.md` (agreed 24 Nov 2026). In short:
+- Every business, free and without a drop, makes premium business cards in its own brand (four styles: Classic, Photo, Minimal, Bold), for the business or for a person on its team, and prints them from a print kit (for a printer, or an A4 sheet of 10).
+- The front is the brand only; the back has the name (or a person's name and role), WhatsApp number, Instagram, area, a QR to the business page with "Scan to book" (bookings on) or "Scan to see our work", the page link, and "Made with Tikka". Nothing that expires: no rewards, prices or drop.
+- Each card has a permanent code, `usetikka.com/c/[code]`, that always opens the business page (never a drop), keeps working when the page link changes or the card is removed, and counts scans as the "Business card" source.
+- Owners only, in "Posters & cards".
+
 ### B11. Tikka Studio `/studio`
 Tikka Studio is Tikka's tailor-made, done-for-you service: websites, WhatsApp systems, lead follow-up, ads and content, and drops run for a business. It is our agency's work, now under the Tikka brand only: the former agency's name, logo, colours and links never appear (its old domain has lapsed, so there are no redirects). Studio uses Tikka's tokens, fonts and light layout. Public, server-rendered, no sign-in, fast on 4G.
 
