@@ -1,6 +1,6 @@
 # Business cards
 
-Agreed with the owner on 24 Nov 2026 (prototype: `design/business-cards/prototype.html`). Free for every business, like posters. This file is the requirement; PRD B10a points here.
+Agreed with the owner on 24 Nov 2026 (prototype: `design/business-cards/prototype.html`). Built 24 Nov 2026 (migrations `20261202100000_contact_cards.sql` and `20261203100000_card_source.sql`, database tests 059 and 060; help: `content/help/print-business-cards.json`). Free for every business, like posters. This file is the requirement; PRD B10a points here.
 
 ## Why
 Businesses kept asking for something to hand out. A poster sells today's drop; a business card sits in a wallet for months. So the card carries only what doesn't run out: who the business is, how to reach them, and one QR that opens their business page to see their work and book.

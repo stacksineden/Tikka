@@ -7,12 +7,12 @@
   "summary": "Print once and keep it up for good. People scan it and see whatever you're running.",
   "app": {
     "href": "/app/posters",
-    "label": "Open Posters"
+    "label": "Open Posters & cards"
   },
   "steps": [
     {
       "title": "Open Posters",
-      "body": "On a phone, tap More, then Posters. On a computer, it's in the menu on the left."
+      "body": "On a phone, tap More, then Posters & cards. On a computer, it's Posters & cards in the menu on the left."
     },
     {
       "title": "Choose the line on your poster",
