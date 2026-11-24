@@ -134,30 +134,18 @@ const CATEGORY_WORDS: Record<string, string> = {
   Services: "Services",
 };
 
-/** What fits on the card's "what we do" line, in characters. */
-export const WHAT_MAX = 38;
+/** The longest tagline the card prints under the name, in characters (taglines go up to 60). */
+export const ABOUT_MAX = 44;
 
 /**
- * "Facials · Peels · Brows & lashes": up to three service groups (else services) that fit on one
- * line, in the owner's order. With none, the category in words ("Hair and beauty").
+ * The line under the name: what the business is, in its own words. Their tagline ("Beauty and
+ * Content Studio") when it's short enough for one line, else the category in words ("Hair and
+ * beauty"). Never a list of services.
  */
-export function whatWeDo(b: Pick<Business, "services" | "category">): string {
-  const names: string[] = [];
-  for (const s of b.services) {
-    const n = (s.group?.trim() || s.name.trim()).replace(/\s+/g, " ");
-    if (n && !names.some((x) => x.toLowerCase() === n.toLowerCase())) names.push(n);
-  }
-  // Up to three, skipping a name that doesn't fit so a long one doesn't end the line early.
-  let line = "";
-  let used = 0;
-  for (const n of names) {
-    if (used === 3) break;
-    const next = line ? `${line} · ${n}` : n;
-    if (next.length > WHAT_MAX) continue;
-    line = next;
-    used++;
-  }
-  return line || CATEGORY_WORDS[b.category] || b.category;
+export function aboutLine(b: Pick<Business, "tagline" | "category">): string {
+  const tagline = (b.tagline ?? "").trim().replace(/\s+/g, " ").replace(/\.$/, "");
+  if (tagline && tagline.length <= ABOUT_MAX) return tagline;
+  return CATEGORY_WORDS[b.category] || b.category;
 }
 
 /** The number on the card: the WhatsApp button's, else the Call button's, as "0803 000 0000". */
@@ -203,9 +191,9 @@ export function contactLines(card: Pick<ContactCard, "showPhone" | "showInstagra
 }
 
 /** The back's heading: the person's name and role, or the business. */
-export function cardHeading(card: Pick<ContactCard, "personName" | "personRole">, b: Pick<Business, "name" | "services" | "category">): { name: string; sub: string } {
+export function cardHeading(card: Pick<ContactCard, "personName" | "personRole">, b: Pick<Business, "name" | "tagline" | "category">): { name: string; sub: string } {
   if (card.personName) return { name: card.personName, sub: card.personRole ? `${card.personRole} · ${b.name}` : b.name };
-  return { name: b.name, sub: whatWeDo(b) };
+  return { name: b.name, sub: aboutLine(b) };
 }
 
 /* ------------------------------------------------------------- validation */

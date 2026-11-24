@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- print pages use plain <img> so the browser's PDF keeps them crisp at any size. */
 import { bizSerif } from "@/components/business/fonts";
 import {
+  aboutLine,
   boldLines,
   CARD_BLEED_MM,
   CARD_MM,
@@ -14,7 +15,6 @@ import {
   fitMm,
   linkLayout,
   pageLink,
-  whatWeDo,
   type ContactCard,
 } from "@/lib/contact-cards";
 import { deepen } from "@/lib/color";
@@ -76,7 +76,7 @@ export function CardFace({ b, card, side, qr, bookingsOn, bleed = false }: Props
 }
 
 function Front({ b, style }: { b: CardBusiness; style: ReturnType<typeof cardStyle> }) {
-  const what = whatWeDo(b);
+  const what = aboutLine(b);
   if (style === "classic") {
     return (
       <>
@@ -96,10 +96,11 @@ function Front({ b, style }: { b: CardBusiness; style: ReturnType<typeof cardSty
   if (style === "photo") {
     return (
       <>
-        <div style={{ position: "absolute", left: "5mm", top: "5mm" }}>
-          <Mark b={b} size={8} ring />
-        </div>
+        {/* The brand block: logo, name and tagline together over the darker bottom of the photo. */}
         <div style={{ position: "absolute", left: "5mm", right: "5mm", bottom: "5mm" }}>
+          <div style={{ marginBottom: "2.4mm" }}>
+            <Mark b={b} size={12} ring />
+          </div>
           <div className="ccard-serif" style={{ fontSize: `${fitMm(b.name, 7, SPAN)}mm`, fontWeight: 300, letterSpacing: "-0.02em" }}>
             {b.name}
           </div>
@@ -164,7 +165,9 @@ function Back({ b, card, qr, bookingsOn }: { b: CardBusiness; card: CardSettings
             <div className="ccard-serif" style={{ fontSize: `${fitMm(head.name, 4.1, 44)}mm`, lineHeight: 1.1, letterSpacing: "-0.01em" }}>
               {head.name}
             </div>
-            <div className="ccard-sub ccard-one-line">{head.sub}</div>
+            <div className="ccard-sub ccard-one-line" style={{ fontSize: `${Math.max(1.9, fitMm(head.sub, 2.35, 44, 0.5))}mm` }}>
+              {head.sub}
+            </div>
           </div>
           <ul className="ccard-lines">
             {lines.phone && (

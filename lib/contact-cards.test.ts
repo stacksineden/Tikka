@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ALPHABET } from "./codes";
 import { contrast } from "./color";
 import {
+  aboutLine,
   availableStyles,
   boldLines,
   cardInk,
@@ -24,7 +25,6 @@ import {
   normalizeContactCode,
   pageLink,
   validatePerson,
-  whatWeDo,
 } from "./contact-cards";
 import { seededRng } from "./deck";
 import type { Business, PortfolioPhoto } from "./types";
@@ -119,13 +119,11 @@ describe("the photo", () => {
 });
 
 describe("the lines", () => {
-  it("say what they do in one line", () => {
-    expect(whatWeDo(biz())).toBe("Facials · Peels · Brows & lashes");
-    expect(whatWeDo(biz({ services: [] }))).toBe("Hair and beauty");
-    expect(whatWeDo(biz({ services: [{ name: "Birthday portraits", price: 1 }, { name: "Couples & pre-wedding", price: 1 }, { name: "Maternity", price: 1 }] }))).toBe("Birthday portraits · Maternity");
-    for (const line of [whatWeDo(biz({ services: Array.from({ length: 6 }, (_, i) => ({ name: `A really long service name ${i}`, price: 1 })) }))]) {
-      expect(line.length).toBeLessThanOrEqual(38);
-    }
+  it("say what the business is, in its own words", () => {
+    expect(aboutLine(biz({ tagline: "Beauty and Content Studio" }))).toBe("Beauty and Content Studio");
+    expect(aboutLine(biz({ tagline: "Facials, peels and glow-ups since 2019." }))).toBe("Facials, peels and glow-ups since 2019");
+    expect(aboutLine(biz({ tagline: undefined }))).toBe("Hair and beauty");
+    expect(aboutLine(biz({ category: "Photography", tagline: "Portraits that feel like you on your best day, every day" }))).toBe("Photography");
   });
   it("use the WhatsApp number, else the Call number, written the Nigerian way", () => {
     expect(cardPhone(biz())).toBe("0803 000 0000");
@@ -157,7 +155,7 @@ describe("the lines", () => {
   it("head the back with the person, or the business", () => {
     expect(cardHeading({ personName: "Funmi Adeyemi", personRole: "Founder" }, biz())).toEqual({ name: "Funmi Adeyemi", sub: "Founder · Glow Studio" });
     expect(cardHeading({ personName: "Ada" }, biz())).toEqual({ name: "Ada", sub: "Glow Studio" });
-    expect(cardHeading({}, biz())).toEqual({ name: "Glow Studio", sub: "Facials · Peels · Brows & lashes" });
+    expect(cardHeading({}, biz({ tagline: "Beauty and Content Studio" }))).toEqual({ name: "Glow Studio", sub: "Beauty and Content Studio" });
   });
 });
 

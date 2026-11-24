@@ -16,8 +16,9 @@ Businesses kept asking for something to hand out. A poster sells today's drop; a
 
 ## What's on it
 - **Size:** 85 × 55 mm, with 3 mm bleed.
-- **Front:** the brand only. Logo (or initials), name, one line of what they do (Classic, Minimal, Bold), or a portfolio photo with the name and tagline (Photo).
-- **Back:** the business name and what they do, or a person's name and role ("Funmi Adeyemi, Founder & skin therapist · Glow Studio"); WhatsApp number, Instagram, area ("Lekki, Lagos"); the QR with "Scan to book" when bookings are on, else "Scan to see our work"; the page link; "Made with Tikka".
+- **Front:** the brand only. Logo (or initials), name and what the business is (Classic, Minimal, Bold), or a portfolio photo with the logo, name and tagline together at the bottom (Photo).
+- **"What the business is"** is their tagline when it fits on one line (up to 44 characters, e.g. "Beauty and Content Studio"), else the category in words ("Hair and beauty"). Never a list of services (decided 25 Nov 2026).
+- **Back:** the business name and what the business is, or a person's name and role ("Funmi Adeyemi, Founder & skin therapist · Glow Studio"); WhatsApp number, Instagram, area ("Lekki, Lagos"); the QR with "Scan to book" when bookings are on, else "Scan to see our work"; the page link; "Made with Tikka".
 - Any of phone, Instagram and area can be hidden (More options). A line with nothing to show (no Instagram) hides itself.
 
 ## Styles
