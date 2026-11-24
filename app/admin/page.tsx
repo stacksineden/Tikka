@@ -16,6 +16,7 @@ import {
 } from "@/app/app/actions";
 import { PrivacyRequests } from "@/components/admin/PrivacyRequests";
 import { SaveButton } from "@/components/admin/SaveButton";
+import { ActionForm } from "@/components/admin/ActionForm";
 import { Logo } from "@/components/site/Logo";
 import { adminPrivacyLog, adminView, getAllDropPacks, getDropTiers } from "@/lib/data";
 import { count, naira, place, shortDate } from "@/lib/format";
@@ -239,14 +240,14 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                 <p className="text-caption text-ink-muted">Why: {r.reasons.join(" · ")}</p>
                 <div className="grid grid-cols-2 gap-2 sm:flex">
                   <form action={adminDecideAction.bind(null, r.targetType, r.targetId, true)}>
-                    <button type="submit" className="btn min-h-11 w-full px-4 text-label">
+                    <SaveButton className="btn min-h-11 w-full px-4 text-label" done="Hidden">
                       Hide
-                    </button>
+                    </SaveButton>
                   </form>
                   <form action={adminDecideAction.bind(null, r.targetType, r.targetId, false)}>
-                    <button type="submit" className="btn btn-secondary min-h-11 w-full px-4 text-label">
+                    <SaveButton className="btn btn-secondary min-h-11 w-full px-4 text-label" done="Kept">
                       Keep
-                    </button>
+                    </SaveButton>
                   </form>
                 </div>
               </li>
@@ -290,9 +291,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                     <option value="converted">Converted</option>
                     <option value="closed">Closed</option>
                   </select>
-                  <button type="submit" className="btn btn-secondary min-h-11 px-4 text-label">
-                    Save
-                  </button>
+                  <SaveButton className="btn btn-secondary min-h-11 px-4 text-label">Save</SaveButton>
                 </form>
               </li>
             ))}
@@ -380,9 +379,9 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                     </p>
                   </div>
                   <form action={adminSetDropShownAction.bind(null, d.id, !d.shown)}>
-                    <button type="submit" className={`btn min-h-11 px-3 text-label ${d.shown ? "btn-secondary" : ""}`}>
+                    <SaveButton className={`btn min-h-11 px-3 text-label ${d.shown ? "btn-secondary" : ""}`} done="Done">
                       {d.shown ? "Hide from marketplace" : "Show on marketplace"}
-                    </button>
+                    </SaveButton>
                   </form>
                 </div>
                 {d.shown && (
@@ -395,9 +394,9 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                       <span className="text-caption text-ink-muted">Line under it (optional)</span>
                       <input name="blurb" maxLength={140} defaultValue={d.pin?.blurb ?? ""} className={field} />
                     </label>
-                    <button type="submit" className="btn btn-secondary min-h-11 px-4 text-label">
+                    <SaveButton className="btn btn-secondary min-h-11 px-4 text-label">
                       {d.pin ? "Update pin" : "Pin"}
-                    </button>
+                    </SaveButton>
                   </form>
                 )}
               </li>
@@ -512,7 +511,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
         <ul className="grid gap-3">
           {paidTiers.map((t) => (
             <li key={t.id} className={card}>
-              <form action={adminSaveTierAction.bind(null, t.id)} className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
+              <ActionForm action={adminSaveTierAction.bind(null, t.id)} className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
                 <p className="text-body font-semibold sm:col-span-4">
                   {t.label} <span className="font-normal text-ink-muted">· any size up to {count(t.maxCards)} Tikkas</span>
                 </p>
@@ -528,15 +527,12 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                   <span className="text-caption text-ink-muted">Guarantee: at least</span>
                   <input name="guaranteeMin" inputMode="numeric" defaultValue={t.guaranteeMinRedemptions ?? ""} className={field} />
                 </label>
-                <button type="submit" className="btn btn-secondary min-h-11 px-4 text-label">
-                  Save
-                </button>
-              </form>
+              </ActionForm>
             </li>
           ))}
           {salePacks.map((p) => (
             <li key={p.id} className={card}>
-              <form action={adminSavePackAction.bind(null, p.id)} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
+              <ActionForm action={adminSavePackAction.bind(null, p.id)} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
                 <p className="text-body font-semibold sm:col-span-4">Season pack · {count(p.drops)} drops</p>
                 <label className="grid gap-1">
                   <span className="text-caption text-ink-muted">Price (₦)</span>
@@ -550,10 +546,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                   <input type="checkbox" name="active" defaultChecked={p.active} className="size-5" />
                   <span className="text-label">On sale</span>
                 </label>
-                <button type="submit" className="btn btn-secondary min-h-11 px-4 text-label">
-                  Save
-                </button>
-              </form>
+              </ActionForm>
             </li>
           ))}
         </ul>

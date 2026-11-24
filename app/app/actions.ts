@@ -86,6 +86,7 @@ import type { Business, OpeningHours, PageStyle, PortfolioCollection, PortfolioP
 import { requestPhone } from "@/lib/privacy";
 import type { MoreTimeResult, PersonRecord } from "@/lib/data";
 import { dbAdminSetEnquiryStatus } from "@/lib/studio-db";
+import type { AdminFormState } from "@/components/admin/ActionForm";
 
 export type Extras = Partial<Pick<Business, "tagline" | "about" | "hours" | "services" | "hasVideo" | "videoUrl" | "videoPosterUrl" | "address" | "slug">>;
 export type SaveResult = { ok: true } | { ok: false; errors: Errors };
@@ -511,27 +512,39 @@ export async function adminGrantDropAction(id: string, form: FormData): Promise<
 
 const naira = (form: FormData, key: string) => Number(String(form.get(key) ?? "").replace(/[^\d.]/g, ""));
 
-export async function adminSaveTierAction(id: string, form: FormData): Promise<void> {
+export async function adminSaveTierAction(id: string, _prev: AdminFormState, form: FormData): Promise<AdminFormState> {
   const admin = await getAdmin();
-  if (!admin) return;
+  if (!admin) return { error: "Only Tikka admins can change prices." };
   const price = naira(form, "price");
   const founding = naira(form, "founding");
   const min = Math.floor(Number(form.get("guaranteeMin") ?? 0));
-  if (![price, founding].every((n) => Number.isFinite(n) && n > 0)) return;
-  await adminSaveTier(admin, id, { priceKobo: Math.round(price * 100), foundingPriceKobo: Math.round(founding * 100), guaranteeMinRedemptions: min > 0 ? min : null });
+  if (!(Number.isFinite(price) && price > 0)) return { error: "Enter a price above ₦0." };
+  if (!(Number.isFinite(founding) && founding > 0)) return { error: "Enter a founding price above ₦0." };
+  if (!Number.isFinite(min) || min < 0) return { error: "The guarantee is a whole number, or leave it empty." };
+  try {
+    await adminSaveTier(admin, id, { priceKobo: Math.round(price * 100), foundingPriceKobo: Math.round(founding * 100), guaranteeMinRedemptions: min > 0 ? min : null });
+  } catch {
+    return { error: "Couldn't save. Try again." };
+  }
   updateTag(PRICES_TAG);
   revalidatePath("/admin");
+  return { savedAt: Date.now() };
 }
 
-export async function adminSavePackAction(id: string, form: FormData): Promise<void> {
+export async function adminSavePackAction(id: string, _prev: AdminFormState, form: FormData): Promise<AdminFormState> {
   const admin = await getAdmin();
-  if (!admin) return;
+  if (!admin) return { error: "Only Tikka admins can change prices." };
   const price = naira(form, "price");
   const founding = naira(form, "founding");
-  if (!Number.isFinite(price) || price <= 0) return;
-  await adminSavePack(admin, id, Math.round(price * 100), form.get("active") === "on", Number.isFinite(founding) && founding > 0 ? Math.round(founding * 100) : undefined);
+  if (!Number.isFinite(price) || price <= 0) return { error: "Enter a price above ₦0." };
+  try {
+    await adminSavePack(admin, id, Math.round(price * 100), form.get("active") === "on", Number.isFinite(founding) && founding > 0 ? Math.round(founding * 100) : undefined);
+  } catch {
+    return { error: "Couldn't save. Try again." };
+  }
   updateTag(PRICES_TAG);
   revalidatePath("/admin");
+  return { savedAt: Date.now() };
 }
 
 /** The moderation queue: hide or keep. */
