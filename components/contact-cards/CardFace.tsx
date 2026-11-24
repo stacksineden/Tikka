@@ -202,14 +202,14 @@ function Back({ b, card, qr, bookingsOn }: { b: CardBusiness; card: CardSettings
   );
 }
 
-/** The link under the QR: one line, or two (after "usetikka.com/") for long page addresses. */
+/** The link under the QR: one line, or two fixed lines for long page addresses (linkLayout()). */
 function PageLink({ slug }: { slug: string }) {
-  const { sizeMm, wrap } = linkLayout(slug);
-  const [site, path] = pageLink(slug).split("/");
+  const { sizeMm, lines } = linkLayout(slug);
   return (
-    <div className="ccard-link ccard-mono" style={{ fontSize: `${sizeMm}mm`, ...(wrap ? { whiteSpace: "normal", overflowWrap: "anywhere", lineHeight: 1.25 } : {}) }}>
-      {site}/{wrap === "after-site" && <wbr />}
-      {path}
+    <div className="ccard-link ccard-mono" style={{ fontSize: `${sizeMm}mm`, lineHeight: 1.25 }} aria-label={pageLink(slug)}>
+      {lines.map((line) => (
+        <div key={line}>{line}</div>
+      ))}
     </div>
   );
 }
