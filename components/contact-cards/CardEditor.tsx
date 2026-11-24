@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- small portfolio thumbnails, already 400px WebP. */
 import { Check, ChevronLeft, Printer, RotateCcw } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { removeContactCardAction, saveContactCardAction } from "@/app/app/contact-card-actions";
 import { CardFace, type CardBusiness, type CardSettings } from "@/components/contact-cards/CardFace";
@@ -26,6 +27,7 @@ import type { TeamMember } from "@/lib/types";
 // Whose card → check and save), with the real card above, front or back as the step needs.
 
 type Step = "style" | "photo" | "who" | "finish";
+const STEP_LABEL: Record<Step, string> = { style: "Style", photo: "Photo", who: "Whose card", finish: "Check" };
 
 interface Props {
   b: CardBusiness;
@@ -59,15 +61,25 @@ export function CardEditor({ b, card, qr, bookingsOn, team, canRemove }: Props) 
   const [side, setSide] = useState<"front" | "back">("front");
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const router = useRouter();
 
   const settings: CardSettings = { style, photoId, personName: personName.trim() || undefined, personRole: personRole.trim() || undefined, rounded, showPhone, showInstagram, showPlace };
+  // "Saved" holds only while nothing has changed since: any change brings Save back.
+  const choicesKey = JSON.stringify(settings);
+  const [savedKey, setSavedKey] = useState<string | null>(null);
+  const saved = savedKey === choicesKey;
+
+  const whoProblem = () => (who === "other" && !personName.trim() ? "Add their name." : validatePerson(personName, personRole));
+  /** Moves to any step; leaving "Whose card" checks the name first. */
   const go = (next: Step) => {
+    if (step === "who" && next !== "who") {
+      const problem = whoProblem();
+      if (problem) return setError(problem);
+    }
     setStep(next);
     setSide(next === "who" ? "back" : "front");
     setError(null);
-    setSaved(false);
   };
 
   const pickWho = (value: string) => {
@@ -100,7 +112,7 @@ export function CardEditor({ b, card, qr, bookingsOn, team, canRemove }: Props) 
         showPlace,
       });
       if (r.error) setError(r.error);
-      else setSaved(true);
+      else setSavedKey(choicesKey);
     });
   };
 
@@ -133,9 +145,20 @@ export function CardEditor({ b, card, qr, bookingsOn, team, canRemove }: Props) 
       </div>
 
       <div className="grid gap-4 rounded-card border border-line bg-surface-raised p-4 sm:p-6">
-        <p className="text-caption font-semibold text-ink-muted">
-          Step {at + 1} of {steps.length}
-        </p>
+        {/* Every step is one tap away, so changing one thing doesn't mean pressing Next through the rest. */}
+        <nav aria-label="Steps" className="-mx-1 flex gap-1 overflow-x-auto px-1 [scrollbar-width:none]">
+          {steps.map((s, i) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => go(s)}
+              aria-current={s === step ? "step" : undefined}
+              className={`text-caption min-h-11 shrink-0 rounded-pill px-3 font-semibold ${s === step ? "bg-brand text-on-brand" : "bg-surface-sunken text-ink-muted"}`}
+            >
+              {i + 1}. {STEP_LABEL[s]}
+            </button>
+          ))}
+        </nav>
 
         {step === "style" && (
           <fieldset className="grid gap-3">
@@ -256,7 +279,8 @@ export function CardEditor({ b, card, qr, bookingsOn, team, canRemove }: Props) 
                         onClick={() =>
                           start(async () => {
                             const r = await removeContactCardAction(card.id);
-                            if (r?.error) setError(r.error);
+                            if (r.error) setError(r.error);
+                            else router.push("/app/posters/cards");
                           })
                         }
                       >
@@ -281,7 +305,7 @@ export function CardEditor({ b, card, qr, bookingsOn, team, canRemove }: Props) 
         )}
 
         <div className="flex gap-2 pt-1">
-          {at > 0 ? (
+          {step === "finish" && saved ? null : at > 0 ? (
             <button type="button" className="btn btn-secondary min-h-12 px-4" onClick={() => go(steps[at - 1])}>
               <ChevronLeft />
               Back
@@ -292,7 +316,12 @@ export function CardEditor({ b, card, qr, bookingsOn, team, canRemove }: Props) 
               Cards
             </Link>
           )}
-          {step === "finish" ? (
+          {step === "finish" && saved ? (
+            <Link href="/app/posters/cards" className="btn btn-lg min-h-12 flex-1">
+              <Check />
+              Done
+            </Link>
+          ) : step === "finish" ? (
             <button type="button" className="btn btn-lg min-h-12 flex-1" onClick={save} disabled={pending}>
               {pending ? "Saving…" : "Save card"}
             </button>
@@ -300,13 +329,7 @@ export function CardEditor({ b, card, qr, bookingsOn, team, canRemove }: Props) 
             <button
               type="button"
               className="btn btn-lg min-h-12 flex-1"
-              onClick={() => {
-                if (step === "who") {
-                  const problem = who === "other" && !personName.trim() ? "Add their name." : validatePerson(personName, personRole);
-                  if (problem) return setError(problem);
-                }
-                go(steps[at + 1]);
-              }}
+              onClick={() => go(steps[at + 1])}
             >
               Next
             </button>
