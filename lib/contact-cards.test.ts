@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { ALPHABET } from "./codes";
+import { contrast } from "./color";
 import {
   availableStyles,
+  boldLines,
+  cardInk,
+  cardQrColors,
+  fitMm,
   cardCta,
   cardHeading,
   cardInstagram,
@@ -116,7 +121,7 @@ describe("the lines", () => {
   it("say what they do in one line", () => {
     expect(whatWeDo(biz())).toBe("Facials · Peels · Brows & lashes");
     expect(whatWeDo(biz({ services: [] }))).toBe("Hair and beauty");
-    expect(whatWeDo(biz({ services: [{ name: "Birthday portraits", price: 1 }, { name: "Couples & pre-wedding", price: 1 }, { name: "Maternity", price: 1 }] }))).toBe("Birthday portraits");
+    expect(whatWeDo(biz({ services: [{ name: "Birthday portraits", price: 1 }, { name: "Couples & pre-wedding", price: 1 }, { name: "Maternity", price: 1 }] }))).toBe("Birthday portraits · Maternity");
     for (const line of [whatWeDo(biz({ services: Array.from({ length: 6 }, (_, i) => ({ name: `A really long service name ${i}`, price: 1 })) }))]) {
       expect(line.length).toBeLessThanOrEqual(38);
     }
@@ -167,5 +172,26 @@ describe("a person's card", () => {
     const c = newContactCard("b1", "AC7KQM", new Date("2026-11-24T10:00:00Z"), { name: " Ada ", role: " Lash artist " });
     expect(c).toMatchObject({ code: "AC7KQM", personName: "Ada", personRole: "Lash artist", rounded: false, showPhone: true, showInstagram: true, showPlace: true, scansMonth: 0 });
     expect(newContactCard("b1", "AC7KQM", new Date(), { role: "Founder" }).personRole).toBeUndefined();
+  });
+});
+
+describe("layout and colour", () => {
+  it("shrinks a long headline to fit, never grows a short one", () => {
+    expect(fitMm("Glow Studio", 6.4, 71)).toBe(6.4);
+    expect(fitMm("The Very Long Beauty And Wellness Studio Lekki", 6.4, 71)).toBeLessThan(6.4);
+    expect(fitMm("", 6.4, 71)).toBe(6.4);
+  });
+  it("sets Bold on two lines", () => {
+    expect(boldLines("Glow Studio")).toEqual(["Glow", "Studio"]);
+    expect(boldLines("Mama Put Kitchen")).toEqual(["Mama", "Put Kitchen"]);
+    expect(boldLines("Glow")).toEqual(["Glow", ""]);
+  });
+  it("keeps the QR and small text readable in any brand colour", () => {
+    for (const hex of ["#9C3B5C", "#7A5A2E", "#F4D35E", "#FFFFFF", "#2B2B2B"]) {
+      const qr = cardQrColors({ brandColor: hex });
+      expect(qr.light).toBe("#FFFFFF");
+      expect(contrast(qr.dark, qr.light)).toBeGreaterThanOrEqual(10);
+      expect(contrast(cardInk({ brandColor: hex }), "#FFFFFF")).toBeGreaterThanOrEqual(7);
+    }
   });
 });

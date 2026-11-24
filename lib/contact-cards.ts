@@ -4,6 +4,7 @@
 // uses, its photo, what each line says, and the permanent code behind its QR.
 
 import { ALPHABET } from "./codes";
+import { deepen, ON_WHITE } from "./color";
 import { cryptoRng, type Rng } from "./deck";
 import { place } from "./format";
 import { formatNgPhone, normalizeNgPhone } from "./setup";
@@ -137,8 +138,8 @@ const CATEGORY_WORDS: Record<string, string> = {
 export const WHAT_MAX = 38;
 
 /**
- * "Facials · Peels · Brows & lashes": the service groups (else services) that fit on one line,
- * in the owner's order. With none, the category in words ("Hair and beauty").
+ * "Facials · Peels · Brows & lashes": up to three service groups (else services) that fit on one
+ * line, in the owner's order. With none, the category in words ("Hair and beauty").
  */
 export function whatWeDo(b: Pick<Business, "services" | "category">): string {
   const names: string[] = [];
@@ -146,11 +147,15 @@ export function whatWeDo(b: Pick<Business, "services" | "category">): string {
     const n = (s.group?.trim() || s.name.trim()).replace(/\s+/g, " ");
     if (n && !names.some((x) => x.toLowerCase() === n.toLowerCase())) names.push(n);
   }
+  // Up to three, skipping a name that doesn't fit so a long one doesn't end the line early.
   let line = "";
-  for (const n of names.slice(0, 3)) {
+  let used = 0;
+  for (const n of names) {
+    if (used === 3) break;
     const next = line ? `${line} · ${n}` : n;
-    if (next.length > WHAT_MAX) break;
+    if (next.length > WHAT_MAX) continue;
     line = next;
+    used++;
   }
   return line || CATEGORY_WORDS[b.category] || b.category;
 }
@@ -235,4 +240,31 @@ export function newContactCard(businessId: string, code: string, now: Date, pers
     scansMonth: 0,
     scansTotal: 0,
   };
+}
+
+/* ----------------------------------------------------------------- layout */
+
+/**
+ * A headline's size in mm so it fits `widthMm` on one line: `maxMm`, or smaller for long words.
+ * Fraunces averages about half an em per character, a little more for capitals.
+ */
+export function fitMm(text: string, maxMm: number, widthMm: number, em = 0.54): number {
+  const chars = Math.max(1, [...text].length);
+  return Math.round(Math.min(maxMm, widthMm / (chars * em)) * 10) / 10;
+}
+
+/** Bold sets the name on two lines: the first word, then the rest ("Glow" / "Studio"). */
+export function boldLines(name: string): [string, string] {
+  const words = name.trim().split(/\s+/);
+  return [words[0] ?? "", words.slice(1).join(" ")];
+}
+
+/** The QR in the business's colour, deep enough for any phone camera, on white. */
+export function cardQrColors(b: Pick<Business, "brandColor">): { dark: string; light: string } {
+  return { dark: deepen(b.brandColor, 10), light: ON_WHITE };
+}
+
+/** Small text on a light card in the business's colour: darkened until it reads clearly. */
+export function cardInk(b: Pick<Business, "brandColor">): string {
+  return deepen(b.brandColor, 7);
 }
