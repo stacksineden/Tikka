@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { PosterFace } from "@/components/posters/PosterFace";
+import { PostersTabs } from "@/components/contact-cards/PostersTabs";
 import { AddPoster, HookLine } from "@/components/posters/PosterForms";
 import { bestRewardNow, getBusiness, getPosters } from "@/lib/data";
 import { count } from "@/lib/format";
@@ -67,9 +68,12 @@ async function Posters() {
 export default function PostersPage() {
   return (
     <div className="mx-auto grid max-w-5xl gap-5 px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-8">
-      <div>
-        <h1 className="text-heading">Posters</h1>
-        <p className="text-body mt-1 text-ink-muted">Print once, keep up for good. People scan it and see whatever you&apos;re running.</p>
+      <div className="grid gap-4">
+        <div>
+          <h1 className="text-heading">Posters &amp; cards</h1>
+          <p className="text-body mt-1 text-ink-muted">Print once, keep up for good. People scan it and see whatever you&apos;re running.</p>
+        </div>
+        <PostersTabs current="posters" />
       </div>
       <Suspense fallback={<div className="h-96 rounded-card bg-surface-sunken" />}>
         <Posters />

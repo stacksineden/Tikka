@@ -1,6 +1,7 @@
 import "server-only";
 
 import { randomBytes } from "node:crypto";
+import { connection } from "next/server";
 import {
   contactTarget,
   isContactStyle,
@@ -66,6 +67,7 @@ const live = (list: DemoCard[] | undefined) => (list ?? []).filter((c) => !c.rem
  */
 export async function getContactCards(user: User): Promise<ContactCard[]> {
   if (user.role !== "owner") return [];
+  await connection(); // scans and the DEMO store change at runtime: always read them fresh
   if (isDbId(user.id)) {
     const cards = await dbContactCards(user.id);
     if (cards.length > 0) return cards;
@@ -147,6 +149,7 @@ export async function removeContactCard(user: User, cardId: string): Promise<str
 
 /** A scan of usetikka.com/c/[code]: counts it and says where to send them (the business page). Public. */
 export async function scanContactCard(code: string, visitorId: string | undefined): Promise<string | null> {
+  await connection();
   const now = new Date();
   const hash = visitorId ? visitorHash(visitorId, now) : "";
   for (const [ownerId, list] of store) {

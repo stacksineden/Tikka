@@ -31,13 +31,13 @@ Businesses kept asking for something to hand out. A poster sells today's drop; a
 Photo needs a photo: it uses the one the owner picks, else their first portfolio photo; with no photos, Photo isn't offered and the default falls back to Classic.
 
 ## Owner's screen
-- **Posters becomes "Posters & cards"**, with a Business cards tab. In `components/dashboard/Nav.tsx` for both the More sheet and the sidebar.
+- **Posters becomes "Posters & cards"**, with a Business cards tab (`/app/posters/cards`; each card's editor at `/app/posters/cards/[id]`). In `components/dashboard/Nav.tsx` for both the More sheet and the sidebar.
 - The first card ("The business") is made from their page the first time they open the tab, so most owners just tap **Print**.
 - One decision per step: **Card style** → **Photo** (Photo style only, from their own portfolio) → **Whose card** (the business, or a person: name and role, prefilled from the team on their page). **More options:** rounded corners; hide phone, Instagram or area.
 - A live card they can flip. Checked at 375px first.
 - Up to 20 cards (one per person). Each shows its scans: "23 scans this month".
 
-## Print kit (`/app/contact-cards/[id]/print`)
+## Print kit (`/app/posters/cards/[id]/print`)
 Same as posters: a page at the exact paper size, "Save as PDF".
 - **For a printer:** front and back as two 91 × 61 mm pages (85 × 55 plus bleed), with crop marks.
 - **A4 sheet:** 10 cards per page, fronts on page 1, backs on page 2 mirrored for two-sided printing, crop marks in the margins.
