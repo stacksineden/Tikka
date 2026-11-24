@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Pencil } from "lucide-react";
+import { Pencil, Printer } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -53,6 +53,19 @@ async function Cards() {
             <FitCard>
               <CardFace b={b} card={c} side="back" qr={qrs[i]} bookingsOn={bookingsOn} />
             </FitCard>
+          </div>
+          <div className="grid gap-2">
+            <span className="text-label">Print</span>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+              <Link href={`/app/posters/cards/${c.id}/print?format=printer`} className="btn btn-secondary min-h-11 px-3 text-label">
+                <Printer />
+                For a printer
+              </Link>
+              <Link href={`/app/posters/cards/${c.id}/print?format=sheet`} className="btn btn-secondary min-h-11 px-3 text-label">
+                <Printer />
+                A4 sheet, 10 cards
+              </Link>
+            </div>
           </div>
         </section>
       ))}

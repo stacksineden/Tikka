@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element -- small portfolio thumbnails, already 400px WebP. */
-import { Check, ChevronLeft, RotateCcw } from "lucide-react";
+import { Check, ChevronLeft, Printer, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { removeContactCardAction, saveContactCardAction } from "@/app/app/contact-card-actions";
@@ -223,10 +223,22 @@ export function CardEditor({ b, card, qr, bookingsOn, team, canRemove }: Props) 
               </div>
             </details>
             {saved && (
-              <p role="status" className="text-label flex items-center gap-2 rounded-md bg-success-soft px-3 py-2 text-success">
-                <Check size={16} aria-hidden="true" />
-                Saved.
-              </p>
+              <div className="grid gap-2">
+                <p role="status" className="text-label flex items-center gap-2 rounded-md bg-success-soft px-3 py-2 text-success">
+                  <Check size={16} aria-hidden="true" />
+                  Saved. Print it now or any time from Business cards.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href={`/app/posters/cards/${card.id}/print?format=printer`} className="btn btn-secondary min-h-11 px-3 text-label">
+                    <Printer />
+                    For a printer
+                  </Link>
+                  <Link href={`/app/posters/cards/${card.id}/print?format=sheet`} className="btn btn-secondary min-h-11 px-3 text-label">
+                    <Printer />
+                    A4 sheet
+                  </Link>
+                </div>
+              </div>
             )}
             {canRemove && (
               <div className="border-t border-line pt-3">
