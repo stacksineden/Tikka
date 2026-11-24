@@ -199,13 +199,19 @@ describe("layout and colour", () => {
 
 describe("the page link under the QR", () => {
   it("prints on one line when it fits at a readable size", () => {
-    expect(linkLayout("glow")).toEqual({ sizeMm: 1.95, wrap: false });
+    expect(linkLayout("glow")).toEqual({ sizeMm: 1.95, lines: ["usetikka.com/glow"] });
     const glow = linkLayout("glowstudio");
-    expect(glow.wrap).toBe(false);
+    expect(glow.lines).toEqual(["usetikka.com/glowstudio"]);
     expect(glow.sizeMm).toBeGreaterThanOrEqual(1.8);
   });
-  it("wraps a long address at a readable size instead of shrinking it", () => {
-    expect(linkLayout("imole-studio")).toEqual({ sizeMm: 1.8, wrap: "after-site" });
-    expect(linkLayout("marilkaybeautyandcontentstudio")).toEqual({ sizeMm: 1.8, wrap: "anywhere" });
+  it("splits a long address into the same two lines everywhere, never shrinking it", () => {
+    expect(linkLayout("imole-studio")).toEqual({ sizeMm: 1.8, lines: ["usetikka.com/", "imole-studio"] });
+    expect(linkLayout("marilkaybeautyandcontentstudio")).toEqual({ sizeMm: 1.8, lines: ["usetikka.com/marilkayb", "eautyandcontentstudio"] });
+  });
+  it("always fits two lines for the longest page address", () => {
+    const longest = "a".repeat(30);
+    const { lines } = linkLayout(longest);
+    expect(lines).toHaveLength(2);
+    for (const l of lines) expect(l.length * 1.8 * 0.62).toBeLessThanOrEqual(27);
   });
 });

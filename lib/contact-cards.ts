@@ -277,12 +277,16 @@ export const LINK_MIN_MM = 1.8;
 
 /**
  * How the page link prints under the QR: one line when it fits at a readable size (1.8 mm or
- * more), else two lines at 1.8 mm, never shrunk to a smudge. The break goes after
- * "usetikka.com/" when the address fits on the second line; a longer address wraps where it must
- * (page addresses are at most 30 characters, so two lines always hold it).
+ * more), else two lines at 1.8 mm, never shrunk to a smudge. Tikka picks the break itself, so
+ * every phone, computer and printer shows the same lines (a browser left to wrap picks its own):
+ * after "usetikka.com/" when the address fits on the second line, else in the middle. Page
+ * addresses are at most 30 characters, so two lines always hold it.
  */
-export function linkLayout(slug: string): { sizeMm: number; wrap: false | "after-site" | "anywhere" } {
-  const oneLine = fitMm(pageLink(slug), 1.95, LINK_WIDTH_MM, 0.62);
-  if (oneLine >= LINK_MIN_MM) return { sizeMm: oneLine, wrap: false };
-  return { sizeMm: LINK_MIN_MM, wrap: fitMm(slug, LINK_MIN_MM, LINK_WIDTH_MM, 0.62) >= LINK_MIN_MM ? "after-site" : "anywhere" };
+export function linkLayout(slug: string): { sizeMm: number; lines: string[] } {
+  const link = pageLink(slug);
+  const oneLine = fitMm(link, 1.95, LINK_WIDTH_MM, 0.62);
+  if (oneLine >= LINK_MIN_MM) return { sizeMm: oneLine, lines: [link] };
+  if (fitMm(slug, LINK_MIN_MM, LINK_WIDTH_MM, 0.62) >= LINK_MIN_MM) return { sizeMm: LINK_MIN_MM, lines: [link.slice(0, link.length - slug.length), slug] };
+  const half = Math.ceil(link.length / 2);
+  return { sizeMm: LINK_MIN_MM, lines: [link.slice(0, half), link.slice(half)] };
 }
