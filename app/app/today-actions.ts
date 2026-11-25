@@ -4,8 +4,11 @@
 
 import { revalidatePath } from "next/cache";
 import { markBooking, seedDemoDay } from "@/lib/bookings-data";
-import { getBusiness } from "@/lib/data";
-import { addExpense, payBalance, recordSale, seedLedger } from "@/lib/ledger-data";
+import { phoneKey } from "@/lib/clients";
+import { getBusiness, isDbId } from "@/lib/data";
+import { addExpense, getLedger, payBalance, recordSale, seedLedger } from "@/lib/ledger-data";
+import { createDemoPayLink } from "@/lib/paylinks-demo";
+import { siteUrl } from "@/lib/supabase/env";
 import { EXPENSE_KINDS, type ExpenseKind, type PayMethod } from "@/lib/ledger";
 import { getOwnerUser } from "@/lib/session";
 
@@ -28,6 +31,42 @@ export async function paidAction(input: { bookingId?: string; name: string; item
   if (input.bookingId) await markBooking(user, input.bookingId, "arrived");
   const ok = await recordSale(user, input, new Date());
   return ok ? done() : { ok: false as const };
+}
+
+/**
+ * "Pay link" on Today: a link for what a booked customer owes (the visit is saved as owed until they
+ * pay), or for a balance under Still owed. Paying the link clears it (lib/paylinks-demo.ts).
+ */
+export async function payLinkTodayAction(input: {
+  saleId?: string;
+  booking?: { bookingId: string; name: string; item: string; totalNaira: number; phone?: string };
+  linkNaira: number;
+  note: string;
+}): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const user = await getOwnerUser();
+  const b = user ? await getBusiness(user) : null;
+  if (!user || !b || isDbId(b.id)) return { ok: false, error: "Pay links from Today only work with the demo for now." };
+  let saleId = input.saleId ? String(input.saleId) : null;
+  let name = "";
+  let phone: string | undefined;
+  const now = new Date();
+  if (input.booking) {
+    const bk = input.booking;
+    await markBooking(user, String(bk.bookingId), "arrived");
+    saleId = await recordSale(user, { bookingId: String(bk.bookingId), name: bk.name, item: bk.item, totalNaira: bk.totalNaira, paidNaira: 0, method: "pay_link", phone: bk.phone }, now);
+    name = bk.name;
+    phone = bk.phone;
+  } else if (saleId) {
+    const sale = (await getLedger(user)).sales.find((s) => s.id === saleId);
+    if (!sale) return { ok: false, error: "That sale isn't there any more." };
+    name = sale.name;
+    phone = sale.phone;
+  }
+  if (!saleId) return { ok: false, error: "That didn't work. Try again." };
+  const r = await createDemoPayLink(user, b.slug, { amountKobo: Math.round(Number(input.linkNaira) * 100), note: String(input.note ?? ""), name, phone: phoneKey(phone) ?? undefined, for: { kind: "balance", saleId } }, now);
+  if (r.kind !== "created") return { ok: false, error: r.kind === "too_small" ? "The smallest pay link is ₦100." : r.kind === "bad_note" ? "Say what it's for." : r.kind === "too_big" ? "That's more than one pay link can be for now." : "That didn't work. Try again." };
+  revalidatePath("/app", "layout");
+  return { ok: true, url: `${siteUrl()}/pay/${r.token}` };
 }
 
 export async function payBalanceAction(saleId: string, naira: number, method: PayMethod) {

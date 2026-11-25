@@ -8,7 +8,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { matchWalkInAction, saveClientNoteAction } from "@/app/app/client-actions";
-import { relativeDay, type Client } from "@/lib/clients";
+import { PayLinkSheet } from "@/components/payments/PayLinkSheet";
+import { payLinkReasons, relativeDay, type Client } from "@/lib/clients";
 import { METHOD_LABEL, reminderText, waLink } from "@/lib/ledger";
 import { initials, Tag } from "./ClientList";
 
@@ -24,7 +25,20 @@ const STATUS: Record<Client["history"][number]["status"], [string, "ok" | "bad" 
   cancelled: ["Cancelled", "plain"],
 };
 
-export function ClientDetail({ client: c, matches, businessName, now }: { client: Client; matches: { key: string; name: string; phone: string; visits: number }[]; businessName: string; now: string }) {
+export function ClientDetail({
+  client: c,
+  matches,
+  businessName,
+  now,
+  payMaxKobo,
+}: {
+  client: Client;
+  matches: { key: string; name: string; phone: string; visits: number }[];
+  businessName: string;
+  now: string;
+  /** Pay links are open for this business, up to this much per payment. */
+  payMaxKobo?: number;
+}) {
   const router = useRouter();
   const at = new Date(now);
   const [notes, setNotes] = useState(c.note.notes ?? "");
@@ -85,6 +99,9 @@ export function ClientDetail({ client: c, matches, businessName, now }: { client
             <Send aria-hidden="true" /> Remind about {naira(c.owedKobo)}
           </a>
         )}
+        {payMaxKobo ? (
+          <PayLinkSheet businessName={businessName} maxKobo={payMaxKobo} customer={{ name: c.name, phone: c.phone }} reasons={payLinkReasons(c)} className="btn btn-secondary btn-lg col-span-2 rounded-pill" />
+        ) : null}
       </div>
 
       {matches.length > 0 && (

@@ -33,16 +33,17 @@ export async function getLedger(user: Pick<SessionUser, "id" | "role">): Promise
 
 const kobo = (naira: number) => Math.max(0, Math.min(10_000_000, Math.round(naira))) * 100;
 
-/** A sale: a walk-in, or a booked customer paying what's left. Paying less leaves the rest owed. */
+/** A sale: a walk-in, or a booked customer paying what's left. Paying less leaves the rest owed. Returns its id. */
 export async function recordSale(
   user: Pick<SessionUser, "id" | "role">,
   input: { name: string; item: string; totalNaira: number; paidNaira: number; method: PayMethod; bookingId?: string; phone?: string },
   now: Date,
-): Promise<boolean> {
+): Promise<string | null> {
   const key = ownerKey(user);
-  if (!key) return false;
+  if (!key) return null;
   const l = ledgerOf(key);
-  if (input.bookingId && l.sales.some((s) => s.bookingId === input.bookingId)) return true; // already paid
+  const already = input.bookingId ? l.sales.find((s) => s.bookingId === input.bookingId) : undefined;
+  if (already) return already.id; // already paid
   const total = kobo(input.totalNaira);
   const paid = Math.min(total, kobo(input.paidNaira));
   const sale: Sale = {
@@ -56,7 +57,7 @@ export async function recordSale(
     phone: input.phone,
   };
   l.sales.push(sale);
-  return true;
+  return sale.id;
 }
 
 /** What's still owed on a sale, paid now (all of it, or part). */

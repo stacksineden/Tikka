@@ -3,7 +3,12 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { getBookings } from "@/lib/bookings-data";
 import { todayKey, watInstant } from "@/lib/bookings";
+import { PayLinkActions } from "@/components/payments/PayLinkActions";
+import { PayLinkSheet } from "@/components/payments/PayLinkSheet";
+import { getBusiness } from "@/lib/data";
 import { getLedger } from "@/lib/ledger-data";
+import { DEMO_MAX_KOBO, demoPayLinks } from "@/lib/paylinks-demo";
+import { siteUrl } from "@/lib/supabase/env";
 import { moneyBetween, weekStart, type MoneyLine } from "@/lib/ledger";
 import type { SessionUser } from "@/lib/types";
 import { AddExpenseButton, HowWeCount } from "./MoneyActions";
@@ -14,13 +19,19 @@ import { SourceTag } from "./SourceTag";
 // from the new setup. This week, Monday to today.
 
 const naira = (kobo: number) => "₦" + Math.round(kobo / 100).toLocaleString("en-NG");
+const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Africa/Lagos" });
 
 export async function MoneyWeek({ user }: { user: SessionUser }) {
   await connection();
   const now = new Date();
   const from = weekStart(now);
   const to = new Date(from.getTime() + 7 * 86_400_000);
-  const [ledger, bookings] = await Promise.all([getLedger(user), getBookings(user, new Date(from.getTime() - 60 * 86_400_000), new Date(now.getTime() + 120 * 86_400_000))]);
+  const [ledger, bookings, links, b] = await Promise.all([
+    getLedger(user),
+    getBookings(user, new Date(from.getTime() - 60 * 86_400_000), new Date(now.getTime() + 120 * 86_400_000)),
+    demoPayLinks(user),
+    getBusiness(user),
+  ]);
   const deposits = bookings.filter((b) => b.depositPaidKobo).map((b) => ({ at: b.createdAt, kobo: b.depositPaidKobo!, name: b.firstName, item: b.service }));
   const m = moneyBetween(ledger, deposits, from, to);
   const today = todayKey(now);
@@ -52,6 +63,34 @@ export async function MoneyWeek({ user }: { user: SessionUser }) {
       )}
       <AddExpenseButton />
       <Section title="Where it came from" lines={m.came} />
+      <section className="grid gap-2.5" aria-label="Pay links">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-title">Pay links</h2>
+          <span className="text-caption text-ink-muted">Card, transfer or USSD</span>
+        </div>
+        <div className="divide-y divide-line rounded-card border border-line bg-surface-raised">
+          {links.length === 0 && <p className="text-body px-4 py-3.5 text-ink-muted">Send one for a balance, a custom job or paying ahead. The money goes to your bank the next working day.</p>}
+          {links.slice(0, 10).map((l) => (
+            <div key={l.id} className="grid gap-2 px-4 py-3">
+              <div className="flex items-start justify-between gap-3">
+                <span className="min-w-0">
+                  <b className="block">{l.note}</b>
+                  <span className="text-caption text-ink-muted">
+                    {l.customerName ? `${l.customerName} · ` : ""}
+                    {l.status === "paid" && l.paidAt ? `Paid ${day(l.paidAt)}` : `Sent ${day(l.createdAt)}`}
+                  </span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <b className="text-code block">{naira(l.amountKobo)}</b>
+                  <span className={`tag ${l.status === "paid" ? "tag--redeemed" : "bg-surface-sunken text-ink-muted"}`}>{l.status === "paid" ? "Paid" : l.status === "open" ? "Waiting" : "Cancelled"}</span>
+                </span>
+              </div>
+              {l.status === "open" && <PayLinkActions id={l.id} url={`${siteUrl()}/pay/${l.token}`} />}
+            </div>
+          ))}
+        </div>
+        <PayLinkSheet businessName={b?.name ?? "us"} maxKobo={DEMO_MAX_KOBO} className="btn btn-secondary btn-lg rounded-pill" />
+      </section>
       <Section title="What you spent" lines={m.spent} empty="Nothing added this week." />
       <section className="grid gap-2.5">
         <div className="flex items-baseline justify-between">

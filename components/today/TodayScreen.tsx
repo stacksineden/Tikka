@@ -24,7 +24,8 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { arrivedAction, paidAction, payBalanceAction, sampleDayAction } from "@/app/app/today-actions";
+import { arrivedAction, paidAction, payBalanceAction, payLinkTodayAction, sampleDayAction } from "@/app/app/today-actions";
+import { PayLinkReady, payLinkMessage } from "@/components/payments/PayLinkSheet";
 import { METHOD_LABEL, reminderText, waLink, type ExpenseKind, type PayMethod } from "@/lib/ledger";
 import { ExpenseSheet } from "./ExpenseSheet";
 import { Chip, NairaInput, Sheet } from "./Sheet";
@@ -41,7 +42,8 @@ export interface TodayAppt {
   dueKobo: number;
   depositKobo: number;
   status: "booked" | "arrived" | "no_show" | "cancelled" | "held";
-  paid: { kobo: number; method: PayMethod } | null;
+  /** Marked paid (or a pay link sent: kobo 0 until they pay); what's still owed on it. */
+  paid: { kobo: number; method: PayMethod; owedKobo: number } | null;
 }
 
 export interface TodayData {
@@ -302,7 +304,7 @@ export function TodayScreen({ d }: { d: TodayData }) {
       </div>
       </div>
 
-      {open?.kind === "paid" && <PaidSheet appt={open.appt} onClose={() => setOpen(null)} />}
+      {open?.kind === "paid" && <PaidSheet appt={open.appt} businessName={d.businessName} onClose={() => setOpen(null)} />}
       {open?.kind === "remind" && (
         <RemindSheet
           first={open.appt.first}
@@ -319,7 +321,7 @@ export function TodayScreen({ d }: { d: TodayData }) {
           onClose={() => setOpen(null)}
         />
       )}
-      {open?.kind === "payOwed" && d.owed[open.i] && <PayOwedSheet o={d.owed[open.i]} onClose={() => setOpen(null)} />}
+      {open?.kind === "payOwed" && d.owed[open.i] && <PayOwedSheet o={d.owed[open.i]} businessName={d.businessName} onClose={() => setOpen(null)} />}
       {open?.kind === "sale" && <SaleSheet services={d.services} customers={d.customers} onClose={() => setOpen(null)} />}
       {open?.kind === "expense" && <ExpenseSheet kind={open.expense} onClose={() => setOpen(null)} />}
     </div>
@@ -349,10 +351,17 @@ function Appt({ a, busy, onArrived, onPaid, onRemind }: { a: TodayAppt; busy: bo
                 <Car size={12} aria-hidden="true" /> Home visit · {a.homeArea}
               </Tag>
             )}
-            {done ? (
-              <Tag tone="ok">
-                <CircleCheck size={12} aria-hidden="true" /> Paid {naira(a.paid!.kobo)} · {METHOD_LABEL[a.paid!.method]}
+            {done && a.paid!.kobo === 0 ? (
+              <Tag tone="gold">
+                <Link2 size={12} aria-hidden="true" /> Pay link sent · {naira(a.paid!.owedKobo)}
               </Tag>
+            ) : done ? (
+              <>
+                <Tag tone="ok">
+                  <CircleCheck size={12} aria-hidden="true" /> Paid {naira(a.paid!.kobo)} · {METHOD_LABEL[a.paid!.method]}
+                </Tag>
+                {a.paid!.owedKobo > 0 && <Tag tone="bad">Owes {naira(a.paid!.owedKobo)}</Tag>}
+              </>
             ) : a.status === "no_show" ? (
               <Tag tone="bad">Didn&apos;t come</Tag>
             ) : (
@@ -397,17 +406,35 @@ function Appt({ a, busy, onArrived, onPaid, onRemind }: { a: TodayAppt; busy: bo
   );
 }
 
-function PaidSheet({ appt, onClose }: { appt: TodayAppt; onClose: () => void }) {
+function PaidSheet({ appt, businessName, onClose }: { appt: TodayAppt; businessName: string; onClose: () => void }) {
   const router = useRouter();
   const [amount, setAmount] = useState(Math.round(appt.dueKobo / 100));
   const [part, setPart] = useState(false);
   const [pending, start] = useTransition();
+  const [link, setLink] = useState<{ url: string; kobo: number } | null>(null);
+  const [error, setError] = useState("");
+  const note = appt.service;
   const pay = (method: PayMethod) =>
     start(async () => {
+      if (method === "pay_link") {
+        // Saved as owed until they pay the link; the link is for all of it, or the part they'll pay now.
+        const linkNaira = part ? amount : appt.dueKobo / 100;
+        const r = await payLinkTodayAction({ booking: { bookingId: appt.id, name: appt.first, item: appt.service, totalNaira: appt.dueKobo / 100, phone: appt.phone }, linkNaira, note });
+        if (!r.ok) return setError(r.error);
+        setLink({ url: r.url, kobo: linkNaira * 100 });
+        router.refresh();
+        return;
+      }
       await paidAction({ bookingId: appt.id, name: appt.first, item: appt.service, totalNaira: appt.dueKobo / 100, paidNaira: part ? amount : appt.dueKobo / 100, method, phone: appt.phone });
       router.refresh();
       onClose();
     });
+  if (link)
+    return (
+      <Sheet title="Your pay link is ready" onClose={onClose}>
+        <PayLinkReady url={link.url} message={payLinkMessage(appt.first, link.kobo, businessName, note, link.url)} amountKobo={link.kobo} note={note} first={appt.first} phone={appt.phone} />
+      </Sheet>
+    );
   return (
     <Sheet title={`${appt.first} paid ${part ? naira(amount * 100) : naira(appt.dueKobo)}`} onClose={onClose}>
       {part && (
@@ -422,14 +449,22 @@ function PaidSheet({ appt, onClose }: { appt: TodayAppt; onClose: () => void }) 
       <p className="text-body text-ink-muted">How did they pay?</p>
       <div className="grid gap-2.5">
         {PAY_CHOICES.map(([m, Icon]) => (
-          <button key={m} type="button" disabled={pending} onClick={() => pay(m)} className="flex min-h-15 items-center gap-3.5 rounded-card border-2 border-line bg-surface-raised px-4 text-left">
+          <button key={m} type="button" disabled={pending} onClick={() => pay(m)} className="flex min-h-15 items-center gap-3.5 rounded-card border-2 border-line bg-surface-raised px-4 py-3 text-left">
             <span className="grid size-11 place-items-center rounded-pill bg-surface-sunken text-ink-muted">
-              <Icon size={22} aria-hidden="true" />
+              {pending && m === "pay_link" ? <Loader2 size={22} className="animate-spin" aria-hidden="true" /> : <Icon size={22} aria-hidden="true" />}
             </span>
-            <b className="text-[17px]">{METHOD_LABEL[m]}</b>
+            <span>
+              <b className="block text-[17px]">{m === "pay_link" ? "Send a pay link" : METHOD_LABEL[m]}</b>
+              {m === "pay_link" && <span className="text-caption text-ink-muted">They pay on their phone. It shows as owed until they do.</span>}
+            </span>
           </button>
         ))}
       </div>
+      {error && (
+        <p role="alert" className="text-caption text-danger">
+          {error}
+        </p>
+      )}
       {!part && (
         <button type="button" className="text-label justify-self-start text-brand underline underline-offset-4" onClick={() => setPart(true)}>
           They paid only part of it
@@ -457,16 +492,32 @@ function RemindSheet({ first, phone, text, onClose }: { first: string; phone?: s
   );
 }
 
-function PayOwedSheet({ o, onClose }: { o: TodayData["owed"][number]; onClose: () => void }) {
+function PayOwedSheet({ o, businessName, onClose }: { o: TodayData["owed"][number]; businessName: string; onClose: () => void }) {
   const router = useRouter();
   const [amount, setAmount] = useState(Math.round(o.owedKobo / 100));
   const [pending, start] = useTransition();
+  const [link, setLink] = useState<{ url: string; kobo: number } | null>(null);
+  const [error, setError] = useState("");
+  const note = `Balance for ${o.item}`.slice(0, 80);
   const pay = (method: PayMethod) =>
     start(async () => {
+      if (method === "pay_link") {
+        const r = await payLinkTodayAction({ saleId: o.saleId, linkNaira: amount, note });
+        if (!r.ok) return setError(r.error);
+        setLink({ url: r.url, kobo: amount * 100 });
+        router.refresh();
+        return;
+      }
       await payBalanceAction(o.saleId, amount, method);
       router.refresh();
       onClose();
     });
+  if (link)
+    return (
+      <Sheet title="Your pay link is ready" onClose={onClose}>
+        <PayLinkReady url={link.url} message={payLinkMessage(o.name.split(" ")[0], link.kobo, businessName, note, link.url)} amountKobo={link.kobo} note={note} first={o.name.split(" ")[0]} phone={o.phone} />
+      </Sheet>
+    );
   return (
     <Sheet title={`${o.name} paid`} onClose={onClose}>
       <div>
@@ -479,10 +530,15 @@ function PayOwedSheet({ o, onClose }: { o: TodayData["owed"][number]; onClose: (
       <div className="flex flex-wrap gap-2">
         {PAY_CHOICES.map(([m]) => (
           <button key={m} type="button" className="btn btn-secondary rounded-pill" disabled={pending || !amount} onClick={() => pay(m)}>
-            {METHOD_LABEL[m]}
+            {m === "pay_link" ? "Send a pay link" : METHOD_LABEL[m]}
           </button>
         ))}
       </div>
+      {error && (
+        <p role="alert" className="text-caption text-danger">
+          {error}
+        </p>
+      )}
     </Sheet>
   );
 }

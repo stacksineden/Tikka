@@ -17,6 +17,10 @@ export interface ClientVisit {
   owedKobo: number;
   status: "came" | "booked" | "no_show" | "cancelled" | "claimed" | "used" | "paid";
   methods: PayMethod[];
+  /** The sale behind it, when there is one (so a pay link can settle its balance). */
+  saleId?: string;
+  /** The Tikka behind it (so a pay link can be connected to it). */
+  claimId?: string;
 }
 
 export interface ClientNote {
@@ -41,6 +45,7 @@ export interface Client {
 }
 
 export interface TikkaClaim {
+  id?: string;
   name: string;
   phone: string;
   reward: string;
@@ -90,7 +95,7 @@ export function buildClients(input: { bookings: Booking[]; sales: Sale[]; claims
     const past = new Date(b.startsAt).getTime() < now;
     const came = b.status === "arrived" || !!sale;
     const status: ClientVisit["status"] = b.status === "cancelled" ? "cancelled" : b.status === "no_show" ? "no_show" : came ? "came" : "booked";
-    c.history.push({ at: b.startsAt, kind: "booking", title: b.service, detail: b.detail, paidKobo: paid, owedKobo: owed, status, methods: sale ? [...new Set(sale.payments.map((p) => p.method))] : [] });
+    c.history.push({ at: b.startsAt, kind: "booking", title: b.service, detail: b.detail, paidKobo: paid, owedKobo: owed, status, methods: sale ? [...new Set(sale.payments.map((p) => p.method))] : [], saleId: sale?.id });
     c.spentKobo += paid;
     c.owedKobo += owed;
     if (status === "no_show") c.noShows++;
@@ -104,7 +109,7 @@ export function buildClients(input: { bookings: Booking[]; sales: Sale[]; claims
     add(c, "walk_in");
     const paid = paidOf(s);
     const owed = owedOf(s);
-    c.history.push({ at: s.at, kind: "sale", title: s.item, paidKobo: paid, owedKobo: owed, status: "paid", methods: [...new Set(s.payments.map((p) => p.method))] });
+    c.history.push({ at: s.at, kind: "sale", title: s.item, paidKobo: paid, owedKobo: owed, status: "paid", methods: [...new Set(s.payments.map((p) => p.method))], saleId: s.id });
     c.spentKobo += paid;
     c.owedKobo += owed;
     c.visits++;
@@ -113,7 +118,7 @@ export function buildClients(input: { bookings: Booking[]; sales: Sale[]; claims
   for (const t of input.claims) {
     const c = get(t.phone, t.name);
     add(c, "drop");
-    c.history.push({ at: t.claimedAt, kind: "tikka", title: `Tikka: ${t.reward}`, paidKobo: t.spentKobo ?? 0, owedKobo: 0, status: t.redeemedAt ? "used" : "claimed", methods: [] });
+    c.history.push({ at: t.claimedAt, kind: "tikka", title: `Tikka: ${t.reward}`, paidKobo: t.spentKobo ?? 0, owedKobo: 0, status: t.redeemedAt ? "used" : "claimed", methods: [], claimId: t.id });
     if (t.redeemedAt) {
       c.visits++;
       c.spentKobo += t.spentKobo ?? 0;
@@ -157,4 +162,26 @@ export function relativeDay(iso: string, now: Date): string {
   const n = Math.abs(diff);
   const unit = n < 14 ? `${n} days` : n < 60 ? `${Math.round(n / 7)} weeks` : `${Math.round(n / 30)} months`;
   return diff < 0 ? `${unit} ago` : `in ${unit}`;
+}
+
+/** What a pay link to this customer can be for (as Leads had for a Tikka, plus what they owe). */
+export type PayReason =
+  | { kind: "balance"; saleId: string; title: string; at: string; kobo: number }
+  | { kind: "tikka"; claimId?: string; reward: string; at: string }
+  | { kind: "other" };
+
+/** Balances first (newest first), then Tikkas they haven't used, then anything else. */
+export function payLinkReasons(c: Client): PayReason[] {
+  const out: PayReason[] = [];
+  for (const h of c.history) if (h.owedKobo > 0 && h.saleId) out.push({ kind: "balance", saleId: h.saleId, title: h.title, at: h.at, kobo: h.owedKobo });
+  for (const h of c.history) if (h.kind === "tikka" && h.status === "claimed") out.push({ kind: "tikka", claimId: h.claimId, reward: h.title.replace(/^Tikka: /, ""), at: h.at });
+  out.push({ kind: "other" });
+  return out;
+}
+
+/** What the pay link says it's for, filled in from the reason. */
+export function payReasonNote(r: PayReason): string {
+  if (r.kind === "balance") return `Balance for ${r.title}`.slice(0, 80);
+  if (r.kind === "tikka") return `${r.reward} (your Tikka)`.slice(0, 80);
+  return "";
 }

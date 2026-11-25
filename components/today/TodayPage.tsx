@@ -3,7 +3,7 @@ import { getBookings } from "@/lib/bookings-data";
 import { dayLabel, timeLabel, todayKey, watInstant, watParts } from "@/lib/bookings";
 import { getLedger } from "@/lib/ledger-data";
 import { getClients } from "@/lib/clients-data";
-import { owedList, paidOf } from "@/lib/ledger";
+import { owedList, owedOf, paidOf } from "@/lib/ledger";
 import { isDbId } from "@/lib/data";
 import type { Business, SessionUser } from "@/lib/types";
 import { TodayScreen, type TodayData } from "./TodayScreen";
@@ -46,7 +46,7 @@ export async function TodayPage({ user, business }: { user: SessionUser; busines
         dueKobo: due,
         depositKobo: deposit,
         status: b.status,
-        paid: sale ? { kobo: paidOf(sale), method: sale.payments[0]?.method ?? "cash" } : null,
+        paid: sale ? { kobo: paidOf(sale), method: sale.payments[0]?.method ?? "cash", owedKobo: owedOf(sale) } : null,
       };
     }),
     walkIns: ledger.sales

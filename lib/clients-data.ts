@@ -19,7 +19,7 @@ export async function getClients(user: Pick<SessionUser, "id" | "role" | "busine
     getLedger(user),
     getLeads(user).catch(() => []),
   ]);
-  const claims: TikkaClaim[] = leads.map((l) => ({ name: l.name, phone: l.phone, reward: l.reward, claimedAt: l.claimedAt, redeemedAt: l.redeemedAt, spentKobo: l.spent ? l.spent * 100 : undefined }));
+  const claims: TikkaClaim[] = leads.map((l) => ({ id: l.id, name: l.name, phone: l.phone, reward: l.reward, claimedAt: l.claimedAt, redeemedAt: l.redeemedAt, spentKobo: l.spent ? l.spent * 100 : undefined }));
   return buildClients({ bookings, sales: ledger.sales, claims, notes: isDbId(user.id) ? {} : (notes.get(user.id) ?? {}), now });
 }
 

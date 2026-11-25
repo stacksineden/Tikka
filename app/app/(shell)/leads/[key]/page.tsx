@@ -5,7 +5,8 @@ import { Suspense } from "react";
 import { ClientDetail } from "@/components/clients/ClientDetail";
 import { getClient } from "@/lib/clients-data";
 import { possibleMatches } from "@/lib/clients";
-import { getBusiness } from "@/lib/data";
+import { getBusiness, isDbId } from "@/lib/data";
+import { DEMO_MAX_KOBO } from "@/lib/paylinks-demo";
 import { getOwnerUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Customer" };
@@ -20,7 +21,8 @@ async function Customer({ params }: { params: PageProps<"/app/leads/[key]">["par
   const found = await getClient(user, decodeURIComponent(key));
   if (!found) notFound();
   const matches = possibleMatches(found.client, found.all).map((m) => ({ key: m.key, name: m.name, phone: m.phone!, visits: m.visits }));
-  return <ClientDetail client={found.client} matches={matches} businessName={b.name} now={new Date().toISOString()} />;
+  // Pay links: the demo store for businesses from the new setup (lib/paylinks-demo.ts).
+  return <ClientDetail client={found.client} matches={matches} businessName={b.name} now={new Date().toISOString()} payMaxKobo={isDbId(b.id) ? undefined : DEMO_MAX_KOBO} />;
 }
 
 export default function Page(props: PageProps<"/app/leads/[key]">) {

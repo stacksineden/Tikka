@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Booking } from "./bookings";
-import { buildClients, phoneKey, possibleMatches, relativeDay, sortClients } from "./clients";
+import { buildClients, payLinkReasons, payReasonNote, phoneKey, possibleMatches, relativeDay, sortClients } from "./clients";
 import type { Sale } from "./ledger";
 
 const now = new Date("2026-11-25T15:00:00Z");
@@ -56,5 +56,29 @@ describe("client book", () => {
     expect(phoneKey("12345")).toBeNull();
     expect(relativeDay("2026-11-11T10:00:00Z", now)).toBe("2 weeks ago");
     expect(relativeDay("2026-11-25T08:00:00Z", now)).toBe("today");
+  });
+
+  it("offers a pay link for what they owe, a Tikka they haven't used, or something else", () => {
+    const sales: Sale[] = [
+      { id: "s1", at: "2026-11-20T10:00:00Z", name: "Ada", item: "Knotless braids", totalKobo: 1_850_000, payments: [{ at: "2026-11-20T10:00:00Z", kobo: 1_000_000, method: "cash" }], bookingId: "b1" },
+      { id: "s2", at: "2026-11-22T10:00:00Z", name: "Ada", item: "Cornrows", totalKobo: 600_000, payments: [{ at: "2026-11-22T10:00:00Z", kobo: 600_000, method: "cash" }], phone: "08031110011" },
+    ];
+    const [ada] = buildClients({
+      bookings: [booking("b1", "+2348031110011", "Ada", "2026-11-20T09:00:00Z", "arrived")],
+      sales,
+      claims: [
+        { id: "c1", name: "Ada", phone: "08031110011", reward: "20% off braids", claimedAt: "2026-11-23T10:00:00Z" },
+        { id: "c2", name: "Ada", phone: "08031110011", reward: "Free wash", claimedAt: "2026-11-01T10:00:00Z", redeemedAt: "2026-11-05T10:00:00Z" },
+      ],
+      notes: {},
+      now,
+    });
+    const reasons = payLinkReasons(ada);
+    expect(reasons).toEqual([
+      { kind: "balance", saleId: "s1", title: "Knotless braids", at: "2026-11-20T09:00:00Z", kobo: 850_000 },
+      { kind: "tikka", claimId: "c1", reward: "20% off braids", at: "2026-11-23T10:00:00Z" },
+      { kind: "other" },
+    ]);
+    expect(reasons.map(payReasonNote)).toEqual(["Balance for Knotless braids", "20% off braids (your Tikka)", ""]);
   });
 });
