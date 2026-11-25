@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { sendDemoPayAlert } from "@/lib/money-alert-data";
 import { getBusiness, isDbId, memberBusinessId } from "@/lib/data";
 import { dbCancelPayLink, dbCounterExtras, dbCreatePayLink } from "@/lib/paylinks-db";
 import { paystackMode } from "@/lib/paystack";
@@ -72,8 +74,16 @@ export async function counterExtrasAction(code: string): Promise<{ paidKobo: num
 export async function payDemoLinkAction(token: string): Promise<{ kind: string }> {
   const t = String(token ?? "");
   if (!isDemoToken(t)) return { kind: "not_found" };
-  const kind = await payDemoLink(t, new Date());
+  const r = await payDemoLink(t, new Date());
+  if (r.kind === "paid") {
+    const l = r.link;
+    // The owner's "₦X paid" alert, after the customer's page has answered.
+    after(async () => {
+      const b = await getBusiness({ id: l.owner, role: "owner" });
+      await sendDemoPayAlert(l.owner, { businessName: b?.name ?? "Tikka", firstName: l.customerName ?? "", amountKobo: l.amountKobo, note: l.note, linkId: l.id });
+    });
+  }
   revalidatePath(`/pay/${t}`);
   revalidatePath("/app", "layout");
-  return { kind };
+  return { kind: r.kind };
 }

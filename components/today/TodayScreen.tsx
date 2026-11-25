@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { arrivedAction, paidAction, payBalanceAction, payLinkTodayAction, sampleDayAction } from "@/app/app/today-actions";
 import { PayLinkReady, payLinkMessage } from "@/components/payments/PayLinkSheet";
+import { StayFresh } from "@/components/payments/StayFresh";
 import { METHOD_LABEL, reminderText, waLink, type ExpenseKind, type PayMethod } from "@/lib/ledger";
 import { ExpenseSheet } from "./ExpenseSheet";
 import { Chip, NairaInput, Sheet } from "./Sheet";
@@ -43,7 +44,7 @@ export interface TodayAppt {
   depositKobo: number;
   status: "booked" | "arrived" | "no_show" | "cancelled" | "held";
   /** Marked paid (or a pay link sent: kobo 0 until they pay); what's still owed on it. */
-  paid: { kobo: number; method: PayMethod; owedKobo: number } | null;
+  paid: { kobo: number; method: PayMethod; owedKobo: number; linkKobo?: number } | null;
 }
 
 export interface TodayData {
@@ -53,9 +54,10 @@ export interface TodayData {
   dateLabel: string;
   hour: number;
   appts: TodayAppt[];
-  walkIns: { id: string; time: string; name: string; item: string; paidKobo: number; method: PayMethod; owedKobo: number }[];
+  walkIns: { id: string; time: string; name: string; item: string; paidKobo: number; method: PayMethod; owedKobo: number; linkKobo?: number }[];
   tomorrow: { count: number; first?: string };
-  owed: { saleId: string; name: string; item: string; owedKobo: number; phone?: string; since: string }[];
+  /** linkKobo: a pay link for this much is out and not paid yet. */
+  owed: { saleId: string; name: string; item: string; owedKobo: number; phone?: string; since: string; linkKobo?: number }[];
   services: { label: string; naira: number }[];
   /** Customers with a number, most recent first, for "Who was it?" on New sale. */
   customers: { name: string; phone: string }[];
@@ -108,8 +110,12 @@ export function TodayScreen({ d }: { d: TodayData }) {
   const doneCount = doneAppts.length + d.walkIns.length;
   const SHOW = 5;
 
+  // A pay link out: keep checking so "Pay link sent" turns to Paid without a reload.
+  const linkOut = d.owed.some((o) => o.linkKobo);
+
   return (
     <div className="mx-auto grid max-w-6xl gap-5 px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+      {linkOut && <StayFresh waiting />}
       <div className="flex items-center justify-between gap-3">
         <div>
           <span className="text-caption text-ink-muted">{d.dateLabel}</span>
@@ -204,10 +210,18 @@ export function TodayScreen({ d }: { d: TodayData }) {
                 <b className="text-[17px]">{w.name}</b>
                 <span className="text-caption text-ink-muted">{w.item} · walk-in</span>
                 <div className="flex flex-wrap gap-1.5">
-                  <Tag tone="ok">
-                    Paid {naira(w.paidKobo)} · {METHOD_LABEL[w.method]}
-                  </Tag>
-                  {w.owedKobo > 0 && <Tag tone="bad">Owes {naira(w.owedKobo)}</Tag>}
+                  {w.paidKobo > 0 && (
+                    <Tag tone="ok">
+                      Paid {naira(w.paidKobo)} · {METHOD_LABEL[w.method]}
+                    </Tag>
+                  )}
+                  {w.linkKobo ? (
+                    <Tag tone="gold">
+                      <Link2 size={12} aria-hidden="true" /> Pay link sent · {naira(w.linkKobo)}
+                    </Tag>
+                  ) : (
+                    w.owedKobo > 0 && <Tag tone="bad">Owes {naira(w.owedKobo)}</Tag>
+                  )}
                 </div>
               </div>
             </div>
@@ -243,6 +257,11 @@ export function TodayScreen({ d }: { d: TodayData }) {
                 <span className="text-caption block text-ink-muted">
                   {o.item} · since {o.since}
                 </span>
+                {o.linkKobo ? (
+                  <span className="text-caption mt-1 inline-flex items-center gap-1 font-semibold text-gold-text">
+                    <Link2 size={12} aria-hidden="true" /> Pay link sent · {naira(o.linkKobo)}
+                  </span>
+                ) : null}
               </span>
               <span className="flex items-center gap-2">
                 <b className="text-code">{naira(o.owedKobo)}</b>
@@ -322,7 +341,7 @@ export function TodayScreen({ d }: { d: TodayData }) {
         />
       )}
       {open?.kind === "payOwed" && d.owed[open.i] && <PayOwedSheet o={d.owed[open.i]} businessName={d.businessName} onClose={() => setOpen(null)} />}
-      {open?.kind === "sale" && <SaleSheet services={d.services} customers={d.customers} onClose={() => setOpen(null)} />}
+      {open?.kind === "sale" && <SaleSheet services={d.services} customers={d.customers} businessName={d.businessName} onClose={() => setOpen(null)} />}
       {open?.kind === "expense" && <ExpenseSheet kind={open.expense} onClose={() => setOpen(null)} />}
     </div>
   );
@@ -351,16 +370,20 @@ function Appt({ a, busy, onArrived, onPaid, onRemind }: { a: TodayAppt; busy: bo
                 <Car size={12} aria-hidden="true" /> Home visit · {a.homeArea}
               </Tag>
             )}
-            {done && a.paid!.kobo === 0 ? (
-              <Tag tone="gold">
-                <Link2 size={12} aria-hidden="true" /> Pay link sent · {naira(a.paid!.owedKobo)}
-              </Tag>
-            ) : done ? (
+            {done ? (
               <>
-                <Tag tone="ok">
-                  <CircleCheck size={12} aria-hidden="true" /> Paid {naira(a.paid!.kobo)} · {METHOD_LABEL[a.paid!.method]}
-                </Tag>
-                {a.paid!.owedKobo > 0 && <Tag tone="bad">Owes {naira(a.paid!.owedKobo)}</Tag>}
+                {a.paid!.kobo > 0 && (
+                  <Tag tone="ok">
+                    <CircleCheck size={12} aria-hidden="true" /> Paid {naira(a.paid!.kobo)} · {METHOD_LABEL[a.paid!.method]}
+                  </Tag>
+                )}
+                {a.paid!.linkKobo ? (
+                  <Tag tone="gold">
+                    <Link2 size={12} aria-hidden="true" /> Pay link sent · {naira(a.paid!.linkKobo)}
+                  </Tag>
+                ) : a.paid!.owedKobo > 0 ? (
+                  <Tag tone="bad">Owes {naira(a.paid!.owedKobo)}</Tag>
+                ) : null}
               </>
             ) : a.status === "no_show" ? (
               <Tag tone="bad">Didn&apos;t come</Tag>
@@ -543,7 +566,7 @@ function PayOwedSheet({ o, businessName, onClose }: { o: TodayData["owed"][numbe
   );
 }
 
-function SaleSheet({ services, customers, onClose }: { services: TodayData["services"]; customers: TodayData["customers"]; onClose: () => void }) {
+function SaleSheet({ services, customers, businessName, onClose }: { services: TodayData["services"]; customers: TodayData["customers"]; businessName: string; onClose: () => void }) {
   const router = useRouter();
   const [svc, setSvc] = useState<{ label: string; naira: number } | null>(null);
   const [name, setName] = useState("");
@@ -553,7 +576,17 @@ function SaleSheet({ services, customers, onClose }: { services: TodayData["serv
   const [paid, setPaid] = useState(0);
   const [method, setMethod] = useState<PayMethod>("cash");
   const [pending, start] = useTransition();
+  const [link, setLink] = useState<{ url: string; kobo: number } | null>(null);
+  const [error, setError] = useState("");
 
+  if (link && svc) {
+    const first = name.trim().split(/\s+/)[0] ?? "";
+    return (
+      <Sheet title="Your pay link is ready" onClose={onClose}>
+        <PayLinkReady url={link.url} message={payLinkMessage(first, link.kobo, businessName, svc.label, link.url)} amountKobo={link.kobo} note={svc.label} first={first} phone={phone || undefined} />
+      </Sheet>
+    );
+  }
   if (!svc)
     return (
       <Sheet title="New sale" onClose={onClose}>
@@ -628,33 +661,50 @@ function SaleSheet({ services, customers, onClose }: { services: TodayData["serv
       </Sheet>
     );
   return (
-    <Sheet title="How much did they pay?" onClose={onClose}>
+    <Sheet title={method === "pay_link" ? "Send them a pay link" : "How much did they pay?"} onClose={onClose}>
       <p className="text-body text-ink-muted">
         {name || "Walk-in"} · {svc.label}
       </p>
-      <NairaInput id="s-paid" value={paid} onChange={setPaid} label="Amount paid" />
+      <NairaInput id="s-paid" value={paid} onChange={setPaid} label={method === "pay_link" ? "Pay link for" : "Amount paid"} />
       <div className="flex flex-wrap gap-2">
-        {(["cash", "transfer", "card"] as PayMethod[]).map((m) => (
+        {(["cash", "transfer", "card", "pay_link"] as PayMethod[]).map((m) => (
           <Chip key={m} on={method === m} onClick={() => setMethod(m)}>
             {METHOD_LABEL[m]}
           </Chip>
         ))}
       </div>
-      {paid < svc.naira && <p className="text-caption text-ink-muted">₦{(svc.naira - paid).toLocaleString("en-NG")} will show under Still owed.</p>}
+      {method === "pay_link" ? (
+        <p className="text-caption text-ink-muted">They pay on their phone. It shows under Still owed until they do{paid < svc.naira ? `, and ₦${(svc.naira - paid).toLocaleString("en-NG")} stays owed after` : ""}.</p>
+      ) : (
+        paid < svc.naira && <p className="text-caption text-ink-muted">₦{(svc.naira - paid).toLocaleString("en-NG")} will show under Still owed.</p>
+      )}
       <button
         type="button"
         className="btn btn-lg w-full rounded-pill"
-        disabled={pending}
+        disabled={pending || (method === "pay_link" && !paid)}
         onClick={() =>
           start(async () => {
+            if (method === "pay_link") {
+              const r = await payLinkTodayAction({ booking: { name: name || "Walk-in", item: svc.label, totalNaira: svc.naira, phone: phone || undefined }, linkNaira: paid, note: svc.label });
+              if (!r.ok) return setError(r.error);
+              setLink({ url: r.url, kobo: paid * 100 });
+              router.refresh();
+              return;
+            }
             await paidAction({ name: name || "Walk-in", item: svc.label, totalNaira: svc.naira, paidNaira: paid, method, phone: phone || undefined });
             router.refresh();
             onClose();
           })
         }
       >
-        {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <CircleCheck aria-hidden="true" />} Save sale
+        {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : method === "pay_link" ? <Link2 aria-hidden="true" /> : <CircleCheck aria-hidden="true" />}{" "}
+        {method === "pay_link" ? `Make a ₦${paid.toLocaleString("en-NG")} pay link` : "Save sale"}
       </button>
+      {error && (
+        <p role="alert" className="text-caption text-danger">
+          {error}
+        </p>
+      )}
     </Sheet>
   );
 }

@@ -1,17 +1,17 @@
-import { Bell, CircleAlert, Moon } from "lucide-react";
+import { Bell, ChevronRight, CircleAlert, Moon } from "lucide-react";
 import Link from "next/link";
 import { connection } from "next/server";
 import { getBookings } from "@/lib/bookings-data";
 import { todayKey, watInstant } from "@/lib/bookings";
-import { PayLinkActions } from "@/components/payments/PayLinkActions";
+import { StayFresh } from "@/components/payments/StayFresh";
 import { PayLinkSheet } from "@/components/payments/PayLinkSheet";
 import { getBusiness } from "@/lib/data";
 import { getLedger } from "@/lib/ledger-data";
 import { DEMO_MAX_KOBO, demoPayLinks } from "@/lib/paylinks-demo";
-import { siteUrl } from "@/lib/supabase/env";
 import { moneyBetween, weekStart, type MoneyLine } from "@/lib/ledger";
 import type { SessionUser } from "@/lib/types";
 import { AddExpenseButton, HowWeCount } from "./MoneyActions";
+import { PayLinkList, waitingFirst } from "./PayLinkList";
 import { MoneyAlerts } from "./MoneyAlerts";
 import { SourceTag } from "./SourceTag";
 
@@ -19,7 +19,6 @@ import { SourceTag } from "./SourceTag";
 // from the new setup. This week, Monday to today.
 
 const naira = (kobo: number) => "₦" + Math.round(kobo / 100).toLocaleString("en-NG");
-const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Africa/Lagos" });
 
 export async function MoneyWeek({ user }: { user: SessionUser }) {
   await connection();
@@ -34,6 +33,7 @@ export async function MoneyWeek({ user }: { user: SessionUser }) {
   ]);
   const deposits = bookings.filter((b) => b.depositPaidKobo).map((b) => ({ at: b.createdAt, kobo: b.depositPaidKobo!, name: b.firstName, item: b.service }));
   const m = moneyBetween(ledger, deposits, from, to);
+  const waiting = links.filter((l) => l.status === "open");
   const today = todayKey(now);
   const paidIds = new Set(ledger.sales.map((s) => s.bookingId).filter(Boolean));
   const unpaid = bookings.filter((b) => b.status !== "cancelled" && b.status !== "no_show" && new Date(b.startsAt) >= new Date(watInstant(today, 0)) && new Date(b.startsAt) < now && !paidIds.has(b.id)).length;
@@ -50,6 +50,26 @@ export async function MoneyWeek({ user }: { user: SessionUser }) {
         <Stat label="You kept" kobo={m.keptKobo} kept />
       </div>
       <HowWeCount />
+      <StayFresh waiting={waiting.length > 0} />
+      <section className="grid gap-2.5" aria-labelledby="m-links">
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 id="m-links" className="text-title">
+            Pay links
+          </h2>
+          {links.length > 0 && (
+            <Link href="/app/money/links" className="text-label inline-flex min-h-11 items-center gap-1 text-brand">
+              See all {links.length} <ChevronRight size={16} aria-hidden="true" />
+            </Link>
+          )}
+        </div>
+        {waiting.length > 0 && (
+          <p className="text-caption -mt-1.5 text-ink-muted">
+            {waiting.length} waiting · {naira(waiting.reduce((n, l) => n + l.amountKobo, 0))}. They turn to Paid as soon as the customer pays.
+          </p>
+        )}
+        <PayLinkList links={waitingFirst(links).slice(0, 5)} empty="Send one for a balance, a custom job or paying ahead. You'll see it here as Waiting, then Paid." />
+        <PayLinkSheet businessName={b?.name ?? "us"} maxKobo={DEMO_MAX_KOBO} className="btn btn-secondary btn-lg rounded-pill" />
+      </section>
       {unpaid > 0 && (
         <Link href="/app" className="flex items-start gap-3 rounded-md bg-gold-soft px-4 py-3.5">
           <CircleAlert size={22} className="shrink-0 text-gold-text" aria-hidden="true" />
@@ -63,34 +83,6 @@ export async function MoneyWeek({ user }: { user: SessionUser }) {
       )}
       <AddExpenseButton />
       <Section title="Where it came from" lines={m.came} />
-      <section className="grid gap-2.5" aria-label="Pay links">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-title">Pay links</h2>
-          <span className="text-caption text-ink-muted">Card, transfer or USSD</span>
-        </div>
-        <div className="divide-y divide-line rounded-card border border-line bg-surface-raised">
-          {links.length === 0 && <p className="text-body px-4 py-3.5 text-ink-muted">Send one for a balance, a custom job or paying ahead. The money goes to your bank the next working day.</p>}
-          {links.slice(0, 10).map((l) => (
-            <div key={l.id} className="grid gap-2 px-4 py-3">
-              <div className="flex items-start justify-between gap-3">
-                <span className="min-w-0">
-                  <b className="block">{l.note}</b>
-                  <span className="text-caption text-ink-muted">
-                    {l.customerName ? `${l.customerName} · ` : ""}
-                    {l.status === "paid" && l.paidAt ? `Paid ${day(l.paidAt)}` : `Sent ${day(l.createdAt)}`}
-                  </span>
-                </span>
-                <span className="shrink-0 text-right">
-                  <b className="text-code block">{naira(l.amountKobo)}</b>
-                  <span className={`tag ${l.status === "paid" ? "tag--redeemed" : "bg-surface-sunken text-ink-muted"}`}>{l.status === "paid" ? "Paid" : l.status === "open" ? "Waiting" : "Cancelled"}</span>
-                </span>
-              </div>
-              {l.status === "open" && <PayLinkActions id={l.id} url={`${siteUrl()}/pay/${l.token}`} />}
-            </div>
-          ))}
-        </div>
-        <PayLinkSheet businessName={b?.name ?? "us"} maxKobo={DEMO_MAX_KOBO} className="btn btn-secondary btn-lg rounded-pill" />
-      </section>
       <Section title="What you spent" lines={m.spent} empty="Nothing added this week." />
       <section className="grid gap-2.5">
         <div className="flex items-baseline justify-between">

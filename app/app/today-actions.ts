@@ -39,7 +39,8 @@ export async function paidAction(input: { bookingId?: string; name: string; item
  */
 export async function payLinkTodayAction(input: {
   saleId?: string;
-  booking?: { bookingId: string; name: string; item: string; totalNaira: number; phone?: string };
+  /** A booked customer (with bookingId) or a New sale: saved as owed until the link is paid. */
+  booking?: { bookingId?: string; name: string; item: string; totalNaira: number; paidNaira?: number; method?: PayMethod; phone?: string };
   linkNaira: number;
   note: string;
 }): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
@@ -52,8 +53,9 @@ export async function payLinkTodayAction(input: {
   const now = new Date();
   if (input.booking) {
     const bk = input.booking;
-    await markBooking(user, String(bk.bookingId), "arrived");
-    saleId = await recordSale(user, { bookingId: String(bk.bookingId), name: bk.name, item: bk.item, totalNaira: bk.totalNaira, paidNaira: 0, method: "pay_link", phone: bk.phone }, now);
+    if (bk.bookingId) await markBooking(user, String(bk.bookingId), "arrived");
+    const method = bk.method && METHODS.includes(bk.method) && bk.method !== "pay_link" ? bk.method : "cash";
+    saleId = await recordSale(user, { bookingId: bk.bookingId ? String(bk.bookingId) : undefined, name: bk.name || "Walk-in", item: bk.item, totalNaira: bk.totalNaira, paidNaira: Math.max(0, Number(bk.paidNaira) || 0), method, phone: bk.phone }, now);
     name = bk.name;
     phone = bk.phone;
   } else if (saleId) {

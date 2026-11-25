@@ -11,6 +11,7 @@ import { getBusiness, isDbId } from "./data";
 import { getLedger } from "./ledger-data";
 import { moneyBetween, weekStart } from "./ledger";
 import { eveningAlertText, weeklyAlertText } from "./money-alert";
+import { payAlertText } from "./lead-alert";
 import { pushConfigured } from "./push";
 import type { SessionUser } from "./types";
 
@@ -65,4 +66,30 @@ export async function sendMoneyAlerts(kind: "evening" | "weekly", now = new Date
     }
   }
   return sent;
+}
+
+/**
+ * A pay link was paid: "₦26,500 paid · Ada Hair Studio" to the phones the owner turned alerts on for
+ * (the same phones as the money alerts, demo only). Never throws: a payment never depends on its alert.
+ */
+export async function sendDemoPayAlert(ownerId: string, a: { businessName: string; firstName: string; amountKobo: number; note: string; linkId: string }): Promise<number> {
+  try {
+    const subs = phones.get(ownerId) ?? [];
+    if (!subs.length || !pushConfigured()) return 0;
+    webpush.setVapidDetails(process.env.VAPID_SUBJECT!, process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!, process.env.VAPID_PRIVATE_KEY!);
+    const payload = JSON.stringify({ ...payAlertText(a), url: "/app/money/links", tag: `paid-${a.linkId}` });
+    let sent = 0;
+    for (const s of subs) {
+      try {
+        await webpush.sendNotification(s, payload, { TTL: 24 * 3600 });
+        sent++;
+      } catch (e) {
+        const status = (e as { statusCode?: number }).statusCode;
+        if (status === 404 || status === 410) phones.set(ownerId, (phones.get(ownerId) ?? []).filter((x) => x.endpoint !== s.endpoint));
+      }
+    }
+    return sent;
+  } catch {
+    return 0;
+  }
 }

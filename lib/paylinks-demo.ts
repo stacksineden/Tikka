@@ -94,11 +94,11 @@ export async function demoPayPage(token: string): Promise<{ status: DemoPayLink[
 }
 
 /** DEMO: the customer "pays". Once only; it lands in the owner's ledger as a pay link payment. */
-export async function payDemoLink(token: string, now: Date): Promise<"paid" | "already" | "cancelled" | "not_found"> {
+export async function payDemoLink(token: string, now: Date): Promise<{ kind: "paid"; link: DemoPayLink } | { kind: "already" | "cancelled" | "not_found" }> {
   const l = store.get(token);
-  if (!l) return "not_found";
-  if (l.status === "paid") return "already";
-  if (l.status === "cancelled") return "cancelled";
+  if (!l) return { kind: "not_found" };
+  if (l.status === "paid") return { kind: "already" };
+  if (l.status === "cancelled") return { kind: "cancelled" };
   l.status = "paid";
   l.paidAt = now.toISOString();
   const owner = { id: l.owner, role: "owner" as const };
@@ -111,5 +111,5 @@ export async function payDemoLink(token: string, now: Date): Promise<"paid" | "a
   }
   // Anything not settling a balance (a Tikka's price, a custom job, more than was owed) is its own sale.
   if (rest > 0) await recordSale(owner, { name: l.customerName ?? "Customer", item: l.note, totalNaira: rest / 100, paidNaira: rest / 100, method: "pay_link", phone: l.phone }, now);
-  return "paid";
+  return { kind: "paid", link: { ...l } };
 }

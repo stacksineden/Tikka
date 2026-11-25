@@ -5,6 +5,7 @@ import { getLedger } from "@/lib/ledger-data";
 import { getClients } from "@/lib/clients-data";
 import { owedList, owedOf, paidOf } from "@/lib/ledger";
 import { isDbId } from "@/lib/data";
+import { demoPayLinks } from "@/lib/paylinks-demo";
 import type { Business, SessionUser } from "@/lib/types";
 import { TodayScreen, type TodayData } from "./TodayScreen";
 
@@ -16,7 +17,9 @@ export async function TodayPage({ user, business }: { user: SessionUser; busines
   const today = todayKey(now);
   const start = new Date(watInstant(today, 0));
   const dayAfter = new Date(start.getTime() + 2 * 86_400_000);
-  const [bookings, ledger, clients] = await Promise.all([getBookings(user, start, dayAfter), getLedger(user), getClients(user)]);
+  const [bookings, ledger, clients, links] = await Promise.all([getBookings(user, start, dayAfter), getLedger(user), getClients(user), demoPayLinks(user)]);
+  // Sales with a pay link sent and not paid yet ("Pay link sent" instead of "Owes").
+  const linkWaiting = new Map(links.filter((l) => l.status === "open" && l.for.kind === "balance").map((l) => [(l.for as { saleId: string }).saleId, l.amountKobo]));
   const tomorrowStart = new Date(start.getTime() + 86_400_000);
   const paidFor = new Map(ledger.sales.filter((s) => s.bookingId).map((s) => [s.bookingId!, s]));
 
@@ -46,14 +49,14 @@ export async function TodayPage({ user, business }: { user: SessionUser; busines
         dueKobo: due,
         depositKobo: deposit,
         status: b.status,
-        paid: sale ? { kobo: paidOf(sale), method: sale.payments[0]?.method ?? "cash", owedKobo: owedOf(sale) } : null,
+        paid: sale ? { kobo: paidOf(sale), method: sale.payments[0]?.method ?? "cash", owedKobo: owedOf(sale), linkKobo: linkWaiting.get(sale.id) } : null,
       };
     }),
     walkIns: ledger.sales
       .filter((s) => !s.bookingId && isToday(s.at))
-      .map((s) => ({ id: s.id, time: timeLabel(s.at), name: s.name, item: s.item, paidKobo: paidOf(s), method: s.payments[0]?.method ?? "cash", owedKobo: s.totalKobo - paidOf(s) })),
+      .map((s) => ({ id: s.id, time: timeLabel(s.at), name: s.name, item: s.item, paidKobo: paidOf(s), method: s.payments[0]?.method ?? "cash", owedKobo: s.totalKobo - paidOf(s), linkKobo: linkWaiting.get(s.id) })),
     tomorrow: { count: tomorrows.length, first: tomorrows[0] ? `${timeLabel(tomorrows[0].startsAt)}, ${tomorrows[0].firstName} · ${tomorrows[0].service}` : undefined },
-    owed: owedList(ledger).map(({ sale, owedKobo }) => ({ saleId: sale.id, name: sale.name, item: sale.item, owedKobo, phone: sale.phone, since: dayLabel(sale.at) })),
+    owed: owedList(ledger).map(({ sale, owedKobo }) => ({ saleId: sale.id, name: sale.name, item: sale.item, owedKobo, phone: sale.phone, since: dayLabel(sale.at), linkKobo: linkWaiting.get(sale.id) })),
     services: business.services.flatMap((s) => (s.options?.length ? s.options.map((o) => ({ label: `${s.name}, ${o.label.toLowerCase()}`, naira: o.price })) : [{ label: s.name, naira: s.price ?? 0 }])),
     takenTodayKobo:
       ledger.sales.reduce((n, s) => n + s.payments.filter((p) => isToday(p.at)).reduce((m, p) => m + p.kobo, 0), 0) +
