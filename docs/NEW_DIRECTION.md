@@ -42,6 +42,8 @@ The rule behind it (the founder's): a real problem, a solution already proven el
 
 ## 5. What to build, in order
 
+**Replaced by section 12 (agreed 25 Nov 2026).** Kept here for the history.
+
 1. **Today screen** (who's coming, deposits paid, balances to collect) and the **daily/weekly money report in the app and as a web push** (the WhatsApp version is built and waits on Meta; Splice's customers rate this their favourite feature).
 2. **Record every sale**, including walk-ins, cash and transfers; balances owed.
 3. **Marketplace, Airbnb-style:** search by service, area and date; result cards with cover, rating, "from ₦", next free time; tap through to the page, pick a time, pay the deposit; top businesses and "Offers near you" (drops) as sections; a page per service and area for Google; a quality bar (photos, prices and bookings on). No fees to businesses until it sends real customers. Today `/drops` lists drops only.
@@ -101,3 +103,102 @@ Every Friday: pages live; businesses with deposits on; money through Tikka this 
 - **Landing page** (`components/landing/Sections.tsx`): lead with the website and deposits; show the real result once she agrees; fewer Tikka-only words above the fold.
 - **Owner feedback after each drop** (designed, on hold): a 3-question card when a drop ends, a fuller one when its Tikkas run out, voice notes, an admin Feedback page.
 - **Verified badge criteria** (proposed): spoken to the owner; the business clearly exists (3+ month old social account with their own work, a visible address, or CAC); an honest page; no open complaints. Remove it on unhonoured Tikkas or stolen photos.
+
+## 12. The feature plan (agreed 25 Nov 2026)
+
+Decided in the planning conversation of 25 Nov 2026. Replaces section 5. Planning only: nothing here is being built yet, and drop fixes are paused until the direction work is finished.
+
+### Decisions behind it
+
+- **Who it's for now:** businesses run by one person or a lean team, from solo artists to businesses with a big customer base and few staff. Anything that needs more than one person running the business (staff calendars, front desk, branches) is version 2.
+- **We build all of it, then measure.** Every feature records how often it's used from day one. We pitch with what matters (a free website, deposits, running your day) and show the rest as extras; usage tells us which features keep businesses on Tikka.
+- **A drop is only a drop.** Paying for a drop no longer opens collections, a bigger portfolio or anything else. Collections belong to the website, so every business gets a full website. What costs us money is storage (mostly videos), so any limit is on uploads, not on collections. Proposed: collections free for everyone, photos generous, videos limited; more space from Plus or unlocked by taking payments. Businesses that already have collections keep them; founding members keep what they have.
+
+### The main features
+
+✓ = we have it. **New** = to build.
+
+**1. Website** (the business's own page)
+- ✓ Page with services, prices, photos, reviews, FAQs, WhatsApp button
+- ✓ Portfolio, collections, photography gallery
+- ✓ Posters and business cards that link to the page
+- **New** Ready-made setup for each trade: a new hair stylist's page comes already filled with typical hair services, prices and a deposit; she changes what's different
+
+**2. Bookings** (customers book a time)
+- ✓ Customers pick a free time; the owner moves, cancels and adds bookings
+- **New** Service options: one service with choices that change the price and time ("Knotless braids: short ₦25,000 / long ₦35,000")
+- **New** Add-ons: extras the customer ticks when booking ("Makeup + add gele ₦5,000")
+- **New** Home service: the artist goes to the customer, with a travel fee
+- **New** Event-day bookings: weddings and shoots, a date with a call time and venue
+- **New** Questions at booking ("Any allergies?", "How many bridesmaids?")
+- **New** Booking rules on the page: lateness, cancelling, no-shows
+- **New** Customers move or cancel their own booking
+- **New** Repeat bookings ("every 2 weeks")
+- **New** Waitlist for full days
+- **New** Gap time between bookings (clean-up or travel)
+- **New** Calendar view
+
+**3. Payments** (customers pay the business)
+- ✓ Deposits when booking
+- ✓ Pay links
+- ✓ Money straight to the owner's bank
+- **New** Gift Tikka: someone buys a gift for a friend to use at the business (the customer may read "A gift from {business}"; wording to decide)
+- **New** Packages: pay once for several visits
+- **New** Receipts
+
+**4. Daily records** (running the day at the shop)
+- ✓ Counter screen and helpers (they never see phone numbers)
+- **New** Today screen: who's coming, who paid, who still owes
+- **New** Record every sale: walk-ins, cash, transfers, balances owed
+- **New** Works on bad network
+
+**5. Money** (how the business is doing)
+- ✓ Money screen for payments through Tikka
+- **New** Daily and weekly money report, on the phone
+- **New** Expenses and profit: "You made ₦X, spent ₦Y, kept ₦Z" (owners have said not knowing this is hurting their business)
+- **New** Insights: best services, busiest days, top customers
+
+**6. Customers** (knowing and keeping them)
+- ✓ Customer list, follow-ups, reviews from real visitors
+- **New** Client book: every visit, what they spent, notes, birthdays
+- **New** One-tap reminders from the owner's WhatsApp
+- **New** Loyalty ("every 5th visit free"; drops bring people back once, loyalty rewards regulars all the time)
+- **New** Flag customers who don't show up or don't pay
+- **New** Reply to reviews
+- **New** Moving in: bring customers over from a notebook or phone contacts
+
+**7. Drops** (bringing in new customers)
+- ✓ Built. No changes; drops stay as they are.
+
+**8. Marketplace** (customers finding businesses)
+- ✓ Lists drops today
+- **New** Search by service, area and date, see businesses and book
+
+### Build order
+
+0. Design the owner experience first, on paper and in prototypes: the bookings overhaul and the new home and tabs (Today · Calendar · Customers · Money · More), for owners who aren't tech-savvy.
+1. **Website and Bookings:** setup for each trade, service options, add-ons, home service, gap time, event-day bookings, questions, booking rules, customers moving or cancelling.
+2. **Daily records:** Today screen, record sales and balances, reminders, calendar view, receipts, bad network.
+3. **Money:** money report with insights, expenses and profit.
+4. **Customers:** client book with flags, moving in, repeat bookings, loyalty, reply to reviews.
+5. **Payments extras:** Gift Tikka, packages, waitlist.
+6. **Marketplace** for bookings, last: it's only as good as the pages in it. Drops stay in it as "Offers near you".
+
+### Version 2 (more than one person running the business)
+
+Staff calendars and customers choosing a stylist, front desk role, branches, commission, stock, memberships, payroll.
+
+### Later
+
+- Orders and aso ebi group orders
+- AI (only after the daily tools)
+- Automatic reminders, campaigns, running the day from WhatsApp (need Meta)
+- Plus bundle and message credits
+- Voice input and Nigerian languages
+- A Book button inside Instagram (Meta's partner program)
+- Marketplace fees (once it sends real customers)
+- Google Calendar sync, customer accounts, tips, discount codes (drops do this), card terminals
+
+### Where this leaves us against competitors
+
+With all of the above built, Tikka matches Botglam and Splice on running the day and beats them on the website, new customers (drops), price (free + 1%) and payouts straight to the owner's bank. Splice and Fresha keep salons with several stylists until version 2. The practice investor Q&A of 25 Nov found the product and direction strong; weak points were traction, money per business, how we get businesses, retention, the length of the feature list and who owns sales. Fixes: the 8-week scoreboard, usage data per feature, someone owning sales, the competitor demos and owner interviews, real revenue per business from the pilot.

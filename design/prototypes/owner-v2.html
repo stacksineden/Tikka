@@ -1,0 +1,927 @@
+<meta charset="utf-8">
+<title>Tikka Owner Prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Space+Mono:wght@400;700&display=swap&subset=latin-ext">
+<style>
+/* Layout: one phone-width column (full width on a phone, a framed 400px column on a computer); sticky top bar, scrolling body, sticky action bar. Tokens from design/tokens.css. */
+:root {
+  --surface: #FAF7F2; --surface-raised: #FFFFFF; --surface-sunken: #F1ECE4;
+  --line: #E4DDD2; --line-strong: #8C8399; --ink: #17112F; --ink-muted: #5E5873;
+  --brand: #3E2BB0; --brand-soft: #ECE8FC; --on-brand: #FFFFFF;
+  --gold: #F4B63F; --on-gold: #17112F; --gold-text: #8A5A00; --gold-soft: #FDF0D2;
+  --success: #0E7A5A; --success-soft: #DDF4EA; --danger: #B42318; --danger-soft: #FDE7E4;
+  --backdrop: rgba(23,17,47,0.45);
+  --shadow-raised: 0 1px 2px rgba(23,17,47,0.06), 0 4px 12px rgba(23,17,47,0.06);
+  --font-sans: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Space Mono", ui-monospace, Menlo, monospace;
+  --r-sm: 6px; --r-md: 12px; --r-card: 20px; --r-pill: 999px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --surface: #120E26; --surface-raised: #1C1738; --surface-sunken: #0C091C;
+  --line: #2E2852; --line-strong: #7A7299; --ink: #F4F1FF; --ink-muted: #ADA6CC;
+  --brand: #A797FF; --brand-soft: #2A2360; --on-brand: #120E26;
+  --gold: #F4B63F; --on-gold: #17112F; --gold-text: #F4B63F; --gold-soft: #3B2B0C;
+  --success: #47C7B8; --success-soft: #0F3633; --danger: #FF8A7A; --danger-soft: #4A1712;
+  --backdrop: rgba(0,0,0,0.6);
+  --shadow-raised: 0 1px 2px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3);
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --surface: #120E26; --surface-raised: #1C1738; --surface-sunken: #0C091C;
+  --line: #2E2852; --line-strong: #7A7299; --ink: #F4F1FF; --ink-muted: #ADA6CC;
+  --brand: #A797FF; --brand-soft: #2A2360; --on-brand: #120E26;
+  --gold: #F4B63F; --on-gold: #17112F; --gold-text: #F4B63F; --gold-soft: #3B2B0C;
+  --success: #47C7B8; --success-soft: #0F3633; --danger: #FF8A7A; --danger-soft: #4A1712;
+  --backdrop: rgba(0,0,0,0.6);
+  --shadow-raised: 0 1px 2px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--surface-sunken); color: var(--ink); font-family: var(--font-sans); font-size: 15px; line-height: 22px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.phone { max-width: 420px; margin: 0 auto; min-height: 100vh; background: var(--surface); display: flex; flex-direction: column; position: relative; }
+@media (min-width: 640px) { body { padding-block: 24px; } .phone { min-height: calc(100vh - 48px); border-radius: 28px; border: 1px solid var(--line); overflow: hidden; } }
+.pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); padding-block: 10px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.iconbtn { min-width: 44px; height: 44px; border-radius: var(--r-pill); border: 0; background: transparent; display: grid; place-items: center; }
+.iconbtn:active { background: var(--surface-sunken); }
+.progress { flex: 1; height: 6px; border-radius: var(--r-pill); background: var(--surface-sunken); overflow: hidden; }
+.progress > i { display: block; height: 100%; background: var(--brand); border-radius: inherit; transition: width 300ms ease; }
+.linkbtn { border: 0; background: transparent; color: var(--brand); font-weight: 600; font-size: 13px; min-height: 44px; padding: 0 8px; display: inline-flex; align-items: center; gap: 6px; }
+
+main { flex: 1; padding-block: 20px 24px; display: grid; gap: 20px; align-content: start; }
+h1 { font-size: 28px; line-height: 32px; font-weight: 700; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+h2 { font-size: 20px; line-height: 26px; font-weight: 700; margin: 0; }
+.lead { color: var(--ink-muted); margin: 6px 0 0; font-size: 17px; line-height: 25px; }
+.muted { color: var(--ink-muted); }
+.small { font-size: 13px; line-height: 18px; }
+.label { font-size: 13px; line-height: 18px; font-weight: 600; display: block; margin-bottom: 6px; }
+
+.actionbar { position: sticky; bottom: 0; background: var(--surface); border-top: 1px solid var(--line); padding-block: 12px calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 5; }
+.btn { width: 100%; min-height: 52px; border-radius: var(--r-pill); border: 0; font-weight: 700; font-size: 17px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 20px; }
+.btn-primary { background: var(--brand); color: var(--on-brand); }
+.btn-primary:disabled { opacity: 0.4; }
+.btn-ghost { background: var(--surface-raised); border: 1px solid var(--line); color: var(--ink); }
+.btn-sm { min-height: 44px; font-size: 15px; width: auto; }
+
+.field { display: grid; gap: 0; }
+.input, select.input, textarea.input { width: 100%; min-height: 52px; border-radius: var(--r-md); border: 1px solid var(--line-strong); background: var(--surface-raised); padding: 12px 14px; font-size: 17px; }
+textarea.input { min-height: 80px; resize: vertical; line-height: 24px; }
+.input:focus { outline: 2px solid var(--brand); outline-offset: 0; border-color: var(--brand); }
+.prefix { display: flex; align-items: center; border: 1px solid var(--line-strong); border-radius: var(--r-md); background: var(--surface-raised); min-height: 52px; padding-left: 14px; }
+.prefix span { color: var(--ink-muted); font-size: 17px; }
+.prefix input { border: 0; outline: 0; background: transparent; flex: 1; min-width: 0; min-height: 50px; padding: 0 14px 0 4px; font-size: 17px; }
+.prefix:focus-within { outline: 2px solid var(--brand); border-color: var(--brand); }
+
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.tile { border: 2px solid var(--line); background: var(--surface-raised); border-radius: var(--r-card); min-height: 104px; display: grid; place-items: center; align-content: center; gap: 8px; padding: 10px 4px; text-align: center; font-weight: 600; font-size: 14px; line-height: 18px; position: relative; }
+.tile .ic { width: 44px; height: 44px; border-radius: var(--r-pill); background: var(--brand-soft); color: var(--brand); display: grid; place-items: center; }
+.tile[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-soft); }
+.tile[aria-pressed="true"] .ic { background: var(--brand); color: var(--on-brand); }
+.tile .tick { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: var(--r-pill); background: var(--brand); color: var(--on-brand); display: none; place-items: center; }
+.tile[aria-pressed="true"] .tick { display: grid; }
+
+.choices { display: grid; gap: 10px; }
+.choice { display: flex; align-items: center; gap: 14px; text-align: left; border: 2px solid var(--line); background: var(--surface-raised); border-radius: var(--r-card); padding: 14px 16px; min-height: 72px; width: 100%; }
+.choice .ic { width: 44px; height: 44px; flex-shrink: 0; border-radius: var(--r-pill); background: var(--surface-sunken); display: grid; place-items: center; color: var(--ink-muted); }
+.choice b { display: block; font-size: 17px; }
+.choice[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-soft); }
+.choice[aria-pressed="true"] .ic { background: var(--brand); color: var(--on-brand); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { min-height: 44px; padding: 0 16px; border-radius: var(--r-pill); border: 1px solid var(--line-strong); background: var(--surface-raised); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.chip[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+.chip .sub { font-weight: 400; font-size: 12px; opacity: 0.8; }
+
+.card { background: var(--surface-raised); border: 1px solid var(--line); border-radius: var(--r-card); }
+.svc { padding: 14px 16px; display: grid; gap: 10px; }
+.svc.off { opacity: 0.55; }
+.svc-head { display: flex; align-items: center; gap: 12px; }
+.check { width: 28px; height: 28px; flex-shrink: 0; border-radius: 8px; border: 2px solid var(--line-strong); background: var(--surface-raised); display: grid; place-items: center; color: transparent; padding: 0; }
+.check[aria-checked="true"] { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+.svc-name { flex: 1; min-width: 0; font-weight: 600; font-size: 16px; }
+.svc-name small { display: block; font-weight: 400; color: var(--ink-muted); font-size: 13px; }
+.price { width: 120px; flex-shrink: 0; }
+.price .prefix { min-height: 44px; padding-left: 10px; }
+.price .prefix input { min-height: 42px; font-size: 16px; padding-right: 8px; }
+.opts { display: grid; gap: 8px; padding-left: 40px; }
+.opt { display: flex; align-items: center; gap: 10px; }
+.opt span { flex: 1; min-width: 0; font-size: 14px; }
+.opt span small { color: var(--ink-muted); }
+.tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: var(--r-pill); background: var(--gold-soft); color: var(--gold-text); }
+.tag.ok { background: var(--success-soft); color: var(--success); }
+.tag.due { background: var(--surface-sunken); color: var(--ink); }
+.tag.bad { background: var(--danger-soft); color: var(--danger); }
+.tag.info { background: var(--brand-soft); color: var(--brand); }
+
+.photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.ph { aspect-ratio: 1; max-width: 100%; border-radius: var(--r-md); background: var(--surface-sunken); overflow: hidden; position: relative; display: grid; place-items: center; color: var(--ink-muted); }
+.ph img { width: 100%; height: 100%; object-fit: cover; }
+.ph.s1 { background: linear-gradient(135deg, var(--brand-soft), var(--gold-soft)); }
+.ph.s2 { background: linear-gradient(160deg, var(--gold-soft), var(--surface-sunken)); }
+.ph.s3 { background: linear-gradient(200deg, var(--brand-soft), var(--surface-sunken)); }
+.ph .x { position: absolute; top: 4px; right: 4px; width: 32px; height: 32px; border-radius: var(--r-pill); border: 0; background: var(--surface-raised); display: grid; place-items: center; }
+.addph { border: 2px dashed var(--line-strong); background: transparent; font-weight: 600; font-size: 13px; gap: 4px; align-content: center; cursor: pointer; }
+.addph input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+.days { display: grid; gap: 8px; }
+.day { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 16px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface-raised); width: 100%; text-align: left; }
+.day b { width: 96px; }
+.day span { flex: 1; color: var(--ink-muted); }
+.day.on span { color: var(--ink); }
+.switch { width: 46px; height: 28px; border-radius: var(--r-pill); background: var(--line-strong); position: relative; flex-shrink: 0; transition: background 160ms; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--surface-raised); transition: transform 160ms; }
+.on .switch, .switch.on { background: var(--brand); }
+.on .switch::after, .switch.on::after { transform: translateX(18px); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.stepper { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 16px; }
+.stepper button { width: 56px; height: 56px; border-radius: var(--r-pill); border: 1px solid var(--line-strong); background: var(--surface-raised); font-size: 24px; display: grid; place-items: center; }
+.stepper .n { font-size: 44px; font-weight: 800; min-width: 60px; text-align: center; }
+.chairs { display: flex; justify-content: center; gap: 6px; color: var(--brand); flex-wrap: wrap; }
+
+.hero-ok { text-align: center; display: grid; gap: 12px; justify-items: center; padding-top: 8px; }
+.bigtick { width: 72px; height: 72px; border-radius: var(--r-pill); background: var(--success-soft); color: var(--success); display: grid; place-items: center; }
+.linkbox { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 14px; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface-raised); width: 100%; }
+.linkbox .mono { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+
+.note { display: flex; gap: 12px; padding: 14px 16px; border-radius: var(--r-md); background: var(--brand-soft); color: var(--ink); }
+.note.gold { background: var(--gold-soft); }
+.note.warn { background: var(--danger-soft); }
+.note svg { flex-shrink: 0; color: var(--brand); }
+.note.gold svg { color: var(--gold-text); }
+
+.rule { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; }
+.rule textarea { flex: 1; min-width: 0; border: 0; background: transparent; resize: none; font-size: 15px; line-height: 22px; padding: 0; min-height: 44px; field-sizing: content; }
+.rule textarea:focus { outline: 0; }
+.rule:focus-within { outline: 2px solid var(--brand); border-radius: var(--r-card); }
+.list > * + * { border-top: 1px solid var(--line); }
+
+.checklist { display: grid; gap: 2px; }
+.checklist li { display: flex; align-items: center; gap: 12px; min-height: 48px; list-style: none; }
+.checklist .dot { width: 28px; height: 28px; border-radius: var(--r-pill); background: var(--success); color: var(--surface-raised); display: grid; place-items: center; }
+.checklist ul { padding: 0; margin: 0; }
+
+/* Sheet */
+.sheet-wrap { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center; background: var(--backdrop); }
+.sheet { width: 100%; max-width: 420px; max-height: 90vh; overflow: auto; background: var(--surface); border-radius: 24px 24px 0 0; padding-block: 8px calc(20px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 16px; animation: up 240ms cubic-bezier(0.22,1,0.36,1); }
+.grab { width: 40px; height: 4px; border-radius: 4px; background: var(--line-strong); margin: 4px auto 0; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+@keyframes up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sheet { animation: none; } .progress > i { transition: none; } }
+
+/* Page preview */
+.pp { border-radius: var(--r-card); overflow: hidden; border: 1px solid var(--line); background: var(--surface-raised); }
+.pp-cover { height: 120px; background: linear-gradient(135deg, var(--brand-soft), var(--gold-soft)); position: relative; }
+.pp-logo { position: absolute; left: 16px; bottom: -28px; width: 64px; height: 64px; border-radius: var(--r-pill); background: var(--brand); color: var(--on-brand); display: grid; place-items: center; font-weight: 800; font-size: 22px; border: 3px solid var(--surface-raised); }
+.pp-body { padding: 36px 16px 16px; display: grid; gap: 12px; }
+.pp-svc { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+.pp-svc b { font-size: 15px; }
+.pp-book { min-height: 36px; padding: 0 14px; border-radius: var(--r-pill); background: var(--brand); color: var(--on-brand); border: 0; font-weight: 700; font-size: 13px; }
+
+/* Today */
+.hello { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.summary { background: var(--brand); color: var(--on-brand); border-radius: var(--r-card); padding: 18px; display: grid; gap: 14px; }
+.summary .big { font-size: 32px; line-height: 36px; font-weight: 800; letter-spacing: -0.02em; }
+.summary .row { display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; }
+.summary .row b { display: block; font-size: 18px; }
+.quick { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+.quick .btn { font-size: 16px; }
+.btn-gold { background: var(--gold); color: var(--on-gold); }
+.appt { padding: 14px 16px; display: grid; gap: 10px; }
+.appt-top { display: flex; gap: 12px; align-items: flex-start; }
+.time { font-family: var(--font-mono); font-weight: 700; font-size: 15px; width: 52px; flex-shrink: 0; padding-top: 1px; }
+.appt-main { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.appt-main b { font-size: 17px; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.act { min-height: 44px; padding: 0 14px; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface); font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
+.act.main { background: var(--brand); color: var(--on-brand); border-color: var(--brand); }
+.appt.done { opacity: 0.7; }
+.sect-title { display: flex; justify-content: space-between; align-items: baseline; }
+
+.tabbar { position: sticky; bottom: 0; z-index: 6; background: var(--surface-raised); border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(5, 1fr); padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.tab { border: 0; background: transparent; min-height: 60px; display: grid; place-items: center; align-content: center; gap: 2px; font-size: 12px; font-weight: 600; color: var(--ink-muted); }
+.tab[aria-current="page"] { color: var(--brand); }
+
+.money-hero { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.mstat { padding: 12px; border-radius: var(--r-md); background: var(--surface-raised); border: 1px solid var(--line); }
+.mstat b { display: block; font-size: 17px; font-family: var(--font-mono); }
+.mstat.kept { background: var(--success-soft); border-color: transparent; }
+.mstat.kept b { color: var(--success); }
+.line-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; min-height: 52px; }
+.more-item { display: flex; align-items: center; gap: 14px; padding: 0 16px; min-height: 56px; width: 100%; border: 0; background: transparent; text-align: left; font-size: 16px; font-weight: 600; }
+.more-item .muted { font-weight: 400; font-size: 13px; display: block; }
+
+.toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 12px 18px; border-radius: var(--r-pill); font-weight: 600; z-index: 40; max-width: calc(100% - 32px); text-align: center; }
+.proto { font-size: 12px; text-align: center; color: var(--ink-muted); padding: 6px 0 0; }
+
+/* Start */
+.start { display: grid; gap: 16px; }
+.start .choice { min-height: 96px; }
+.waprev { background: var(--surface-sunken); border-radius: var(--r-md); padding: 14px; white-space: pre-wrap; font-size: 15px; }
+</style>
+
+<div class="phone" id="app"></div>
+<div id="layer"></div>
+
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script>
+/* ---------- Data ---------- */
+const TRADES = [
+  { id: "hair", name: "Hair", icon: "scissors", noun: "hair" },
+  { id: "makeup", name: "Makeup", icon: "sparkles", noun: "makeup" },
+  { id: "nails", name: "Nails", icon: "hand", noun: "nails" },
+  { id: "lashes", name: "Lashes & brows", icon: "eye", noun: "lashes" },
+  { id: "barber", name: "Barber", icon: "user-round", noun: "cut" },
+  { id: "spa", name: "Spa", icon: "flower-2", noun: "treatment" },
+  { id: "gele", name: "Gele", icon: "crown", noun: "gele" },
+  { id: "photo", name: "Photography", icon: "camera", noun: "shoot" },
+  { id: "video", name: "Videography", icon: "video", noun: "shoot" },
+];
+// Lagos guide prices in naira; other cities scale from these.
+const SERVICES = {
+  hair: [
+    { name: "Knotless braids", opts: [["Short", 25000, 240], ["Medium", 30000, 300], ["Long", 35000, 360]] },
+    { name: "Cornrows", price: 8000, mins: 120 },
+    { name: "Wig install", price: 15000, mins: 90 },
+    { name: "Silk press", price: 12000, mins: 120 },
+    { name: "Wash and style", price: 6000, mins: 60 },
+  ],
+  makeup: [
+    { name: "Soft glam", price: 25000, mins: 90 },
+    { name: "Full glam", price: 35000, mins: 120 },
+    { name: "Bridal makeup", event: true, opts: [["Bride", 150000, 180], ["Each bridesmaid", 25000, 60]] },
+  ],
+  nails: [
+    { name: "Gel polish", price: 8000, mins: 60 },
+    { name: "Acrylic full set", opts: [["Short", 15000, 90], ["Medium", 18000, 105], ["Long", 22000, 120]] },
+    { name: "Pedicure", price: 10000, mins: 60 },
+  ],
+  lashes: [
+    { name: "Lash extensions", opts: [["Classic", 15000, 90], ["Hybrid", 20000, 105], ["Volume", 25000, 120]] },
+    { name: "Lash fill", price: 10000, mins: 60 },
+    { name: "Brow lamination", price: 12000, mins: 45 },
+  ],
+  barber: [
+    { name: "Haircut", price: 5000, mins: 45 },
+    { name: "Haircut and beard", price: 7000, mins: 60 },
+    { name: "Kids' cut", price: 3000, mins: 30 },
+  ],
+  spa: [
+    { name: "Swedish massage", opts: [["60 minutes", 25000, 60], ["90 minutes", 35000, 90]] },
+    { name: "Facial", price: 20000, mins: 60 },
+    { name: "Body scrub", price: 18000, mins: 60 },
+  ],
+  gele: [
+    { name: "Gele tying", price: 10000, mins: 30 },
+    { name: "Bridal gele", event: true, price: 25000, mins: 60 },
+    { name: "Ready-to-wear gele", price: 15000, mins: 30 },
+  ],
+  photo: [
+    { name: "Studio portrait", opts: [["30 minutes", 30000, 30], ["1 hour", 50000, 60]] },
+    { name: "Birthday shoot", price: 80000, mins: 120 },
+    { name: "Wedding", event: true, opts: [["Half day", 400000, 300], ["Full day", 700000, 600]] },
+  ],
+  video: [
+    { name: "Event coverage", event: true, opts: [["Half day", 300000, 300], ["Full day", 500000, 600]] },
+    { name: "Highlight video", price: 150000, mins: 240 },
+  ],
+};
+const EXTRAS = {
+  hair: [["Add wash", 2000], ["Take down old braids", 3000], ["Add beads", 1500]],
+  makeup: [["Gele", 10000], ["Lashes", 3000], ["Touch-up artist stays all day", 50000]],
+  nails: [["Nail art", 3000], ["Toe nails painting", 3000]],
+  lashes: [["Lash removal", 3000]],
+  barber: [["Hot towel", 1000], ["Hair dye", 4000]],
+  spa: [["Aromatherapy oils", 5000]],
+  gele: [["Pins and accessories", 2000]],
+  photo: [["10 more edited photos", 10000], ["Photo book", 60000]],
+  video: [["Drone shots", 80000], ["Same-day edit", 100000]],
+};
+const PLACES = {
+  "Lagos": { cities: { "Lagos": ["Lekki", "Yaba", "Ikeja", "Surulere", "Ajah"] }, scale: 1 },
+  "FCT": { cities: { "Abuja": ["Wuse", "Gwarinpa", "Garki", "Maitama"] }, scale: 1 },
+  "Rivers": { cities: { "Port Harcourt": ["GRA", "Rumuola", "Trans-Amadi"] }, scale: 0.9 },
+  "Oyo": { cities: { "Ibadan": ["Bodija", "Apete", "Ring Road", "Challenge"] }, scale: 0.75 },
+};
+const TRAVEL = { 1: 5000, 0.9: 4000, 0.75: 3000 };
+const BANKS = ["Access Bank", "First Bank", "GTBank", "Kuda", "Moniepoint", "Opay", "Palmpay", "UBA", "Zenith Bank"];
+const ID_TYPES = ["NIN slip", "Driver's licence", "Voter's card", "International passport"];
+
+const naira = (n) => "₦" + Math.round(n).toLocaleString("en-NG");
+const r500 = (n) => Math.max(500, Math.round(n / 500) * 500);
+const hours = (m) => m < 60 ? `${m} min` : (m % 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m / 60} hour${m === 60 ? "" : "s"}`);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const icon = (n, s = 20) => `<i data-lucide="${n}" style="width:${s}px;height:${s}px" aria-hidden="true"></i>`;
+
+/* ---------- State ---------- */
+const S = {
+  step: 0,
+  trades: [], name: "", ig: "", st: "Oyo", city: "Ibadan", area: "Bodija",
+  where: "", travelFee: 3000, reach: "city", seededFor: "",
+  services: [], extras: [], photos: [],
+  days: { Mon: true, Tue: true, Wed: true, Thu: true, Fri: true, Sat: true, Sun: false },
+  open: "09:00", close: "18:00", atOnce: 1,
+  idType: "NIN slip", idName: "", idPhoto: false, registered: "no",
+  bank: "", acct: "", acctOk: false,
+  depositMode: "30", depositFixed: 5000, towardsBill: true,
+  rules: [], rulesFor: "",
+};
+const scale = () => PLACES[S.st].scale;
+
+function seedServices() {
+  const key = S.trades.join(",") + "|" + S.st;
+  if (S.seededFor === key) return;
+  S.seededFor = key;
+  const k = scale();
+  S.services = [];
+  S.extras = [];
+  S.trades.forEach((t) => {
+    SERVICES[t].forEach((s, i) => S.services.push({
+      trade: t, name: s.name, event: !!s.event, on: i < 3, open: false,
+      price: s.price ? r500(s.price * k) : null, mins: s.mins || null,
+      opts: s.opts ? s.opts.map(([label, p, m]) => ({ label, price: r500(p * k), mins: m })) : null,
+    }));
+    EXTRAS[t].forEach(([name, p]) => S.extras.push({ name, price: r500(p * k), on: false }));
+  });
+  S.travelFee = TRAVEL[k] || 3000;
+}
+function seedRules() {
+  const key = S.trades.join(",");
+  if (S.rulesFor === key) return;
+  S.rulesFor = key;
+  const goes = S.where === "go" || S.where === "both";
+  S.rules = [
+    "Please come on time. If you're more than 30 minutes late, we may not be able to see you and the deposit stays with us.",
+    "To move your booking, tell us at least 24 hours before.",
+    "If you cancel or don't come, the deposit is not refunded.",
+  ];
+  if (goes) S.rules.push("For home visits, please be ready at the time you booked. Waiting more than 30 minutes costs ₦2,000.");
+  if (S.services.some((s) => s.event && s.on)) S.rules.push("Wedding and event days need a 50% deposit to hold the date.");
+}
+const firstPrice = (s) => s.opts ? Math.min(...s.opts.map((o) => o.price)) : s.price;
+function depositOn(price, event) {
+  if (event) return Math.max(1000, Math.ceil(price * 0.5 / 500) * 500);
+  if (S.depositMode === "fixed") return Math.min(price, S.depositFixed);
+  return Math.max(1000, Math.ceil(price * Number(S.depositMode) / 100 / 500) * 500);
+}
+const tradeNoun = () => (TRADES.find((t) => t.id === S.trades[0]) || TRADES[0]).noun;
+const slug = () => (S.name || "your-business").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+const bizName = () => S.name.trim() || "Ada's Hair Studio";
+const placeLabel = () => `${S.area}, ${S.city}`;
+
+/* ---------- Setup steps ---------- */
+const STEPS = [
+  { id: "signup", next: null },
+  { id: "trade", ok: () => S.trades.length > 0 },
+  { id: "name", ok: () => S.name.trim().length > 1 },
+  { id: "where", ok: () => !!S.area },
+  { id: "work", ok: () => !!S.where },
+  { id: "services", ok: () => S.services.some((s) => s.on), enter: seedServices },
+  { id: "photos", ok: () => S.photos.length >= 3 },
+  { id: "hours", ok: () => Object.values(S.days).some(Boolean) },
+  { id: "live", next: "Take deposits" },
+  { id: "id", ok: () => S.idName.trim().length > 2 && S.idPhoto, next: "Send my ID" },
+  { id: "bank", ok: () => S.acctOk },
+  { id: "deposit", next: "Use this deposit" },
+  { id: "rules", enter: seedRules, next: "Save my rules" },
+  { id: "done", next: "Go to Today" },
+];
+
+function setupView() {
+  const st = STEPS[S.step];
+  if (st.enter) st.enter();
+  const pct = Math.round((S.step / (STEPS.length - 1)) * 100);
+  const canPreview = S.step >= 5 && st.id !== "live" && st.id !== "done";
+  const top = st.id === "signup" ? "" : `
+    <div class="topbar pad">
+      <button class="iconbtn" data-act="back" aria-label="Back">${icon("arrow-left", 22)}</button>
+      <div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Setup progress"><i style="width:${pct}%"></i></div>
+      ${canPreview ? `<button class="linkbtn" data-act="preview">${icon("eye", 16)}See page</button>` : `<span style="width:44px"></span>`}
+    </div>`;
+  const body = VIEWS[st.id]();
+  const ok = st.ok ? st.ok() : true;
+  const bar = st.id === "signup" ? "" : `
+    <div class="actionbar pad">
+      <button class="btn btn-primary" data-act="next" ${ok ? "" : "disabled"}>${st.next || "Next"} ${icon("arrow-right", 20)}</button>
+    </div>`;
+  return top + `<main class="pad">${body}</main>` + bar;
+}
+
+const VIEWS = {
+  signup: () => `
+    <div style="display:grid;gap:28px;padding-top:24px">
+      <div style="display:flex;align-items:center;gap:10px"><span class="pp-logo" style="position:static;width:44px;height:44px;font-size:18px;border:0">T</span><b style="font-size:20px">Tikka</b></div>
+      <div>
+        <h1 style="font-size:36px;line-height:40px">Your free website. Customers book and pay a deposit.</h1>
+        <p class="lead">The money goes straight to your bank. Set it up in about 10 minutes.</p>
+      </div>
+      <div style="display:grid;gap:10px">
+        <button class="btn btn-primary" data-act="next">${icon("mail", 20)} Continue with Google</button>
+        <button class="btn btn-ghost" data-act="next">Continue with email</button>
+      </div>
+      <p class="proto">Prototype. Nothing you type is saved or sent anywhere.</p>
+    </div>`,
+
+  trade: () => `
+    <div><h1>What do you do?</h1><p class="lead">Pick all that apply. We'll fill in your page for you.</p></div>
+    <div class="tiles">
+      ${TRADES.map((t) => `<button class="tile" data-act="trade" data-id="${t.id}" aria-pressed="${S.trades.includes(t.id)}">
+        <span class="tick">${icon("check", 14)}</span><span class="ic">${icon(t.icon, 22)}</span>${t.name}</button>`).join("")}
+    </div>`,
+
+  name: () => `
+    <div><h1>What's your business called?</h1><p class="lead">This goes at the top of your page.</p></div>
+    <div class="field"><label class="label" for="f-name">Business name</label>
+      <input class="input" id="f-name" data-bind="name" value="${esc(S.name)}" placeholder="e.g. Ada's Hair Studio" autocomplete="organization"></div>
+    <div class="field"><label class="label" for="f-ig">Instagram (if you have one)</label>
+      <div class="prefix"><span>@</span><input id="f-ig" data-bind="ig" value="${esc(S.ig)}" placeholder="adashairstudio" autocapitalize="off"></div></div>`,
+
+  where: () => {
+    const cities = Object.keys(PLACES[S.st].cities);
+    const areas = PLACES[S.st].cities[S.city] || [];
+    return `
+    <div><h1>Where are you?</h1><p class="lead">Customers see this on your page.</p></div>
+    <div class="field"><label class="label" for="f-st">State</label>
+      <select class="input" id="f-st" data-bind="st">${Object.keys(PLACES).map((s) => `<option ${s === S.st ? "selected" : ""}>${s}</option>`).join("")}</select></div>
+    <div class="field"><label class="label" for="f-city">City</label>
+      <select class="input" id="f-city" data-bind="city">${cities.map((c) => `<option ${c === S.city ? "selected" : ""}>${c}</option>`).join("")}</select></div>
+    <div class="field"><span class="label">Area</span>
+      <div class="chips">${areas.map((a) => `<button class="chip" data-act="area" data-v="${a}" aria-pressed="${a === S.area}">${a}</button>`).join("")}</div></div>`;
+  },
+
+  work: () => {
+    const goes = S.where === "go" || S.where === "both";
+    const opt = (v, ic, t, d) => `<button class="choice" data-act="where" data-v="${v}" aria-pressed="${S.where === v}"><span class="ic">${icon(ic, 22)}</span><span><b>${t}</b><span class="muted small">${d}</span></span></button>`;
+    return `
+    <div><h1>Where do you work?</h1></div>
+    <div class="choices">
+      ${opt("come", "store", "Customers come to me", "At my shop, salon or studio")}
+      ${opt("go", "car", "I go to customers", "Their home, hotel or event")}
+      ${opt("both", "repeat", "Both", "Customers choose when they book")}
+    </div>
+    ${goes ? `
+    <div class="card" style="padding:16px;display:grid;gap:16px">
+      <div class="field"><span class="label">How far will you go?</span>
+        <div class="chips">
+          ${[["area", `Around ${S.area}`], ["city", `Anywhere in ${S.city}`], ["state", `Anywhere in ${S.st}`]].map(([v, l]) => `<button class="chip" data-act="reach" data-v="${v}" aria-pressed="${S.reach === v}">${l}</button>`).join("")}
+        </div></div>
+      <div class="field"><label class="label" for="f-tf">Travel fee</label>
+        <div class="prefix"><span>₦</span><input id="f-tf" inputmode="numeric" data-bind="travelFee" data-num value="${S.travelFee}"></div>
+        <p class="small muted" style="margin:6px 0 0">Typical in ${S.city}. Customers see it before they pay. A fee for each area is under More options later.</p></div>
+    </div>` : ""}`;
+  },
+
+  services: () => `
+    <div><h1>Your services</h1><p class="lead">Typical prices in ${S.city}. Tick what you do and change any price.</p></div>
+    <div style="display:grid;gap:10px">
+      ${S.services.map((s, i) => `
+      <div class="card svc ${s.on ? "" : "off"}">
+        <div class="svc-head">
+          <button class="check" role="checkbox" aria-checked="${s.on}" data-act="svc" data-i="${i}" aria-label="I do ${esc(s.name)}">${icon("check", 16)}</button>
+          <div class="svc-name">${esc(s.name)} ${s.event ? `<span class="tag">Event day</span>` : ""}
+            <small>${s.opts ? `${s.opts.length} choices · from ${naira(firstPrice(s))}` : hours(s.mins)}</small></div>
+          ${s.opts ? `<button class="linkbtn" data-act="svcopen" data-i="${i}" aria-expanded="${s.open}">${s.open ? "Hide" : "Prices"}</button>` :
+            `<div class="price"><div class="prefix"><span>₦</span><input inputmode="numeric" aria-label="Price for ${esc(s.name)}" data-svc="${i}" value="${s.price}"></div></div>`}
+        </div>
+        ${s.opts && s.open ? `<div class="opts">${s.opts.map((o, j) => `
+          <div class="opt"><span>${esc(o.label)} <small>· ${hours(o.mins)}</small></span>
+            <div class="price"><div class="prefix"><span>₦</span><input inputmode="numeric" aria-label="Price for ${esc(s.name)}, ${esc(o.label)}" data-svc="${i}" data-opt="${j}" value="${o.price}"></div></div></div>`).join("")}
+          <button class="linkbtn" data-act="toast" data-msg="In the real app you can add your own choices." style="justify-self:start;padding:0">${icon("plus", 16)} Add a choice</button></div>` : ""}
+      </div>`).join("")}
+      <button class="btn btn-ghost btn-sm" data-act="toast" data-msg="In the real app you type the name, price and time.">${icon("plus", 18)} Add another service</button>
+    </div>
+    <div><h2>Extras customers can add</h2><p class="muted small" style="margin:4px 0 10px">They tick these when they book. Leave empty if you don't want any.</p>
+      <div class="card list">${S.extras.map((x, i) => `
+        <div class="svc-head" style="padding:12px 16px">
+          <button class="check" role="checkbox" aria-checked="${x.on}" data-act="extra" data-i="${i}" aria-label="Offer ${esc(x.name)}">${icon("check", 16)}</button>
+          <div class="svc-name" style="font-size:15px">${esc(x.name)}</div>
+          <div class="price"><div class="prefix"><span>+₦</span><input inputmode="numeric" aria-label="Price for ${esc(x.name)}" data-extra="${i}" value="${x.price}"></div></div>
+        </div>`).join("")}</div></div>`,
+
+  photos: () => `
+    <div><h1>Add your work</h1><p class="lead">At least 3 photos. Your best work first: this is what makes people book.</p></div>
+    <div class="photos">
+      ${S.photos.map((p, i) => `<div class="ph ${p.sample ? "s" + ((i % 3) + 1) : ""}">${p.url ? `<img src="${p.url}" alt="Your photo ${i + 1}">` : icon("image", 26)}
+        <button class="x" data-act="rmphoto" data-i="${i}" aria-label="Remove photo ${i + 1}">${icon("x", 16)}</button></div>`).join("")}
+      <label class="ph addph">${icon("plus", 24)}Add photos<input type="file" accept="image/*" multiple id="f-photos"></label>
+    </div>
+    <p class="small muted" style="margin:0">${S.photos.length < 3 ? `${3 - S.photos.length} more to go.` : `${S.photos.length} photos. You can add more later.`}
+      <button class="linkbtn" data-act="samplephotos" style="min-height:32px">Use sample photos</button></p>`,
+
+  hours: () => `
+    <div><h1>When do you work?</h1><p class="lead">Customers can only book inside these times.</p></div>
+    <div class="row2">
+      <div class="field"><label class="label" for="f-open">Open</label><input class="input" type="time" id="f-open" data-bind="open" value="${S.open}"></div>
+      <div class="field"><label class="label" for="f-close">Close</label><input class="input" type="time" id="f-close" data-bind="close" value="${S.close}"></div>
+    </div>
+    <div class="days">${Object.keys(S.days).map((d) => `
+      <button class="day ${S.days[d] ? "on" : ""}" data-act="day" data-v="${d}" aria-pressed="${S.days[d]}"><b>${d}</b><span>${S.days[d] ? `${S.open} – ${S.close}` : "Closed"}</span><span class="switch"></span></button>`).join("")}</div>
+    <div class="card" style="padding:16px;display:grid;gap:8px;text-align:center">
+      <h2>How many customers can you do at the same time?</h2>
+      <div class="chairs" aria-hidden="true">${Array.from({ length: S.atOnce }, () => icon("armchair", 28)).join("")}</div>
+      <div class="stepper"><button data-act="less" aria-label="Fewer">−</button><span class="n" aria-live="polite">${S.atOnce}</span><button data-act="more" aria-label="More">+</button></div>
+      <p class="small muted" style="margin:0">${S.atOnce === 1 ? "Just you, one customer at a time." : `${S.atOnce} customers can book the same time.`}</p>
+    </div>`,
+
+  live: () => `
+    <div class="hero-ok"><span class="bigtick">${icon("check", 36)}</span>
+      <h1>Your page is live!</h1><p class="lead" style="margin:0">Customers can see your work and book a time.</p></div>
+    <div class="linkbox"><span class="mono">usetikka.com/${slug()}</span><button class="btn btn-primary btn-sm" data-act="copy" style="min-height:40px">Copy</button></div>
+    <div class="row2">
+      <button class="btn btn-ghost btn-sm" data-act="toast" data-msg="Opens WhatsApp with your link ready to send.">${icon("message-circle", 18)} Share on WhatsApp</button>
+      <button class="btn btn-ghost btn-sm" data-act="toast" data-msg="Copied. Paste it in your Instagram bio.">${icon("instagram", 18)} For Instagram bio</button>
+    </div>
+    ${pagePreview()}
+    <div class="note gold">${icon("shield-check", 22)}<div><b>One more step: stop no-shows.</b><br>Customers pay a small deposit when they book. If they don't come, you keep it.</div></div>`,
+
+  id: () => `
+    <div><h1>Take deposits</h1><p class="lead">Money goes straight to your bank. Tikka never holds it. First, your ID, so we know it's really you.</p></div>
+    <div class="field"><label class="label" for="f-idt">Type of ID</label>
+      <select class="input" id="f-idt" data-bind="idType">${ID_TYPES.map((t) => `<option ${t === S.idType ? "selected" : ""}>${t}</option>`).join("")}</select></div>
+    <div class="field"><label class="label" for="f-idn">Your name, as it is on the ID</label>
+      <input class="input" id="f-idn" data-bind="idName" value="${esc(S.idName)}" placeholder="e.g. Adaeze Okoro" autocomplete="name"></div>
+    <div class="field"><span class="label">Photo of the ID</span>
+      <button class="choice" data-act="idphoto" aria-pressed="${S.idPhoto}"><span class="ic">${icon(S.idPhoto ? "check" : "camera", 22)}</span><span><b>${S.idPhoto ? "Photo added" : "Take a photo"}</b><span class="muted small">${S.idPhoto ? "Tap to change it" : "All four corners, clear and bright"}</span></span></button></div>
+    <div class="field"><span class="label">Is your business registered with CAC?</span>
+      <div class="chips"><button class="chip" data-act="reg" data-v="no" aria-pressed="${S.registered === "no"}">Not yet</button><button class="chip" data-act="reg" data-v="yes" aria-pressed="${S.registered === "yes"}">Yes</button></div>
+      <p class="small muted" style="margin:6px 0 0">Not registered is fine. You can still take deposits.</p></div>
+    <p class="proto">Prototype. Please don't type real ID details.</p>`,
+
+  bank: () => `
+    <div><h1>Where should we send your money?</h1><p class="lead">Deposits land here, usually the next working day.</p></div>
+    <div class="field"><label class="label" for="f-bank">Bank</label>
+      <select class="input" id="f-bank" data-bind="bank"><option value="">Choose your bank</option>${BANKS.map((b) => `<option ${b === S.bank ? "selected" : ""}>${b}</option>`).join("")}</select></div>
+    <div class="field"><label class="label" for="f-acct">Account number</label>
+      <input class="input mono" id="f-acct" inputmode="numeric" maxlength="10" data-bind="acct" value="${esc(S.acct)}" placeholder="10 digits"></div>
+    <div id="acct-name">${acctNameBlock()}</div>
+    <p class="proto">Prototype. Any 10 digits work. Please don't type a real account number.</p>`,
+
+  deposit: () => {
+    const sample = S.services.find((s) => s.on && !s.event) || S.services.find((s) => s.on);
+    const p = sample ? (sample.opts ? sample.opts[sample.opts.length - 1].price : sample.price) : 20000;
+    const d = depositOn(p, false);
+    return `
+    <div><h1>How much deposit?</h1><p class="lead">Most ${tradeNoun()} businesses ask for 30%. You can change it any time.</p></div>
+    <div class="chips">
+      ${[["20", "20%"], ["30", "30%"], ["50", "50%"], ["fixed", "Fixed amount"]].map(([v, l]) => `<button class="chip" data-act="dmode" data-v="${v}" aria-pressed="${S.depositMode === v}">${l}${v === "30" ? ` <span class="sub">suggested</span>` : ""}</button>`).join("")}
+    </div>
+    ${S.depositMode === "fixed" ? `<div class="field"><label class="label" for="f-df">Deposit for every booking</label><div class="prefix"><span>₦</span><input id="f-df" inputmode="numeric" data-bind="depositFixed" data-num value="${S.depositFixed}"></div></div>` : ""}
+    <div class="card" style="padding:16px;display:grid;gap:6px">
+      <span class="small muted">What your customer sees</span>
+      <b style="font-size:17px">${esc(sample ? sample.name : "A booking")}${sample && sample.opts ? `, ${esc(sample.opts[sample.opts.length - 1].label.toLowerCase())}` : ""} · ${naira(p)}</b>
+      <div style="display:flex;justify-content:space-between"><span>Deposit now</span><b class="mono">${naira(d)}</b></div>
+      <div style="display:flex;justify-content:space-between"><span>Pay at the appointment</span><b class="mono">${naira(S.towardsBill ? p - d : p)}</b></div>
+    </div>
+    <button class="day ${S.towardsBill ? "on" : ""}" data-act="towards" aria-pressed="${S.towardsBill}" style="min-height:64px"><span style="color:var(--ink)"><b style="width:auto;display:block">The deposit counts towards the bill</b><span class="small muted">${S.towardsBill ? "They pay the rest on the day." : "They pay the full price on the day."}</span></span><span class="switch"></span></button>
+    ${S.services.some((s) => s.on && s.event) ? `<div class="note">${icon("calendar-heart", 22)}<div>Event days (weddings, shoots) take 50% to hold the date. Change it under More options.</div></div>` : ""}`;
+  },
+
+  rules: () => `
+    <div><h1>Your booking rules</h1><p class="lead">Customers see these before they pay. We wrote the usual ones. Tap any line to change it.</p></div>
+    <div class="card list">${S.rules.map((r, i) => `
+      <div class="rule">${icon("circle-check", 20)}<textarea aria-label="Rule ${i + 1}" data-rule="${i}" rows="2">${esc(r)}</textarea>
+        <button class="iconbtn" data-act="rmrule" data-i="${i}" aria-label="Remove rule ${i + 1}" style="margin:-10px -10px 0 0">${icon("trash-2", 18)}</button></div>`).join("")}</div>
+    <button class="btn btn-ghost btn-sm" data-act="addrule">${icon("plus", 18)} Add a rule</button>`,
+
+  done: () => {
+    const items = ["Your page is live", `${S.services.filter((s) => s.on).length} services with prices`, `${S.photos.length} photos of your work`, "Your working hours", "ID sent: we check it the same day", `Deposits: ${S.depositMode === "fixed" ? naira(S.depositFixed) : S.depositMode + "%"} to ${S.bank || "your bank"}`, "Your booking rules"];
+    return `
+    <div class="hero-ok"><span class="bigtick">${icon("party-popper", 34)}</span><h1>You're all set, ${esc((S.idName || "Ada").split(" ")[0])}!</h1>
+      <p class="lead" style="margin:0">Customers can book you and pay a deposit.</p></div>
+    <div class="card" style="padding:8px 16px"><div class="checklist"><ul>${items.map((t) => `<li><span class="dot">${icon("check", 16)}</span>${esc(t)}</li>`).join("")}</ul></div></div>
+    <div class="note">${icon("clock", 22)}<div>Until we've checked your ID, customers can still book. Deposits switch on once it's checked.</div></div>`;
+  },
+};
+
+function acctNameBlock() {
+  if (S.acct.length < 10 || !S.bank) return "";
+  if (S.acctOk) return `<div class="note" style="background:var(--success-soft)">${icon("circle-check", 22)}<div><b>${esc((S.idName || "Adaeze Okoro").toUpperCase())}</b><br>Confirmed. Deposits go to this account.</div></div>`;
+  return `<div class="card" style="padding:16px;display:grid;gap:12px">
+    <div><span class="small muted">Name from your bank</span><br><b style="font-size:18px">${esc((S.idName || "Adaeze Okoro").toUpperCase())}</b></div>
+    <div class="row2"><button class="btn btn-primary btn-sm" data-act="acctyes">Yes, that's me</button><button class="btn btn-ghost btn-sm" data-act="acctno">No</button></div></div>`;
+}
+
+function pagePreview() {
+  const on = S.services.filter((s) => s.on);
+  const shots = S.photos.slice(0, 3);
+  while (shots.length < 3) shots.push({ sample: true, empty: true });
+  return `<div class="pp">
+    <div class="pp-cover"><span class="pp-logo">${esc(bizName()[0].toUpperCase())}</span></div>
+    <div class="pp-body">
+      <div><b style="font-size:20px">${esc(bizName())}</b><br><span class="small muted">${esc(placeLabel())}${S.where === "go" ? " · Home service" : S.where === "both" ? " · Shop and home service" : ""}</span></div>
+      <div class="photos">${shots.map((p, i) => `<div class="ph ${p.url ? "" : "s" + ((i % 3) + 1)}">${p.url ? `<img src="${p.url}" alt="">` : icon("image", 20)}</div>`).join("")}</div>
+      <div>${(on.length ? on : [{ name: "Your services show here", price: 0 }]).slice(0, 4).map((s) => `
+        <div class="pp-svc"><span><b>${esc(s.name)}</b><br><span class="small muted">${s.price || s.opts ? (s.opts ? "from " : "") + naira(firstPrice(s)) : ""}</span></span>${s.price || s.opts ? `<button class="pp-book" tabindex="-1">Book</button>` : ""}</div>`).join("")}</div>
+      <span class="small muted" style="text-align:center">Made with Tikka</span>
+    </div></div>`;
+}
+
+/* ---------- Today ---------- */
+const T = {
+  tab: "today",
+  appts: [
+    { id: 1, time: "10:00", name: "Ada Nwosu", svc: "Knotless braids, long", price: 26500, dep: 8000, state: "booked" },
+    { id: 2, time: "12:30", name: "Funmi Adeyemi", svc: "Wig install", price: 11500, dep: 3500, state: "booked", home: "Apete", travel: 3000 },
+    { id: 3, time: "15:00", name: "Kemi Lawal", svc: "Silk press", price: 9000, dep: 0, state: "booked", note: "Added by you" },
+    { id: 4, time: "17:00", name: "Tolu Bello", svc: "Cornrows + add wash", price: 7500, dep: 2500, state: "booked" },
+  ],
+  sales: [],
+  owed: [{ name: "Bisi Ogun", amt: 10000, when: "Sat" }, { name: "Chioma Eze", amt: 5000, when: "Mon" }],
+  expenses: [{ what: "Products", amt: 32000 }, { what: "Transport", amt: 8000 }, { what: "Data", amt: 3000 }, { what: "Rent (share)", amt: 9000 }],
+  weekIn: 184000,
+};
+const due = (a) => a.price + (a.travel || 0) - a.dep;
+function todayView() {
+  const tabs = [["today", "sun", "Today"], ["calendar", "calendar-days", "Calendar"], ["customers", "users", "Customers"], ["money", "wallet", "Money"], ["more", "menu", "More"]];
+  const body = { today: todayTab, calendar: calendarTab, customers: customersTab, money: moneyTab, more: moreTab }[T.tab]();
+  return `<main class="pad">${body}</main>
+    <nav class="tabbar" aria-label="Main">${tabs.map(([id, ic, l]) => `<button class="tab" data-act="tab" data-v="${id}" ${T.tab === id ? 'aria-current="page"' : ""}>${icon(ic, 22)}${l}</button>`).join("")}</nav>`;
+}
+function todayTab() {
+  const live = T.appts;
+  const toCollect = live.filter((a) => a.state !== "paid").reduce((n, a) => n + due(a), 0);
+  const deps = live.reduce((n, a) => n + a.dep, 0);
+  const takenToday = live.filter((a) => a.state === "paid").reduce((n, a) => n + due(a), 0) + T.sales.reduce((n, s) => n + s.paid, 0);
+  const owedTotal = T.owed.reduce((n, o) => n + o.amt, 0);
+  return `
+    <div class="hello"><div><span class="small muted">Wednesday 25 November</span><h1>Good morning, ${esc((S.idName || "Ada").split(" ")[0])}</h1></div>
+      <button class="iconbtn" data-act="toast" data-msg="Your page: usetikka.com/${slug() || "adas-hair-studio"}" aria-label="Your page">${icon("globe", 22)}</button></div>
+    <section class="summary" aria-label="Today in numbers">
+      <div><span class="small" style="opacity:.85">${live.length} customers today</span><div class="big mono">${naira(toCollect)}</div><span class="small" style="opacity:.85">still to collect today</span></div>
+      <div class="row"><span><b class="mono">${naira(deps)}</b>deposits already paid</span><span><b class="mono">${naira(takenToday)}</b>taken today</span></div>
+    </section>
+    <div class="quick">
+      <button class="btn btn-gold" data-act="newsale">${icon("plus", 20)} New sale</button>
+      <button class="btn btn-ghost" data-act="code">${icon("scan-line", 20)} Check a code</button>
+    </div>
+    <section style="display:grid;gap:10px" aria-labelledby="h-day">
+      <div class="sect-title"><h2 id="h-day">Your day</h2><span class="small muted">${live.filter((a) => a.state === "paid").length} of ${live.length} done</span></div>
+      ${live.map(apptCard).join("")}
+      ${T.sales.map((s) => `<div class="card appt done"><div class="appt-top"><span class="time">${s.time}</span><div class="appt-main"><b>${esc(s.name)}</b><span class="muted small">${esc(s.svc)} · walk-in</span>
+        <div class="tags"><span class="tag ok">${icon("check", 12)} Paid ${naira(s.paid)} · ${s.method}</span>${s.owes ? `<span class="tag bad">Owes ${naira(s.owes)}</span>` : ""}</div></div></div></div>`).join("")}
+    </section>
+    <section class="card" style="padding:4px 0" aria-label="Coming up">
+      <button class="line-item more-item" data-act="tab" data-v="calendar"><span>${icon("calendar-days", 20)}</span><span style="flex:1">Tomorrow: 3 customers<span class="muted">First one at 9:30, Ngozi · Wig install</span></span>${icon("chevron-right", 18)}</button>
+    </section>
+    <section style="display:grid;gap:10px" aria-labelledby="h-owed">
+      <div class="sect-title"><h2 id="h-owed">Still owed to you</h2><b class="mono">${naira(owedTotal)}</b></div>
+      <div class="card list">${T.owed.map((o, i) => `<div class="line-item"><span><b>${esc(o.name)}</b><br><span class="small muted">Since ${o.when}</span></span>
+        <span style="display:flex;align-items:center;gap:8px"><b class="mono">${naira(o.amt)}</b><button class="act" data-act="remindowed" data-i="${i}">${icon("send", 16)} Remind</button></span></div>`).join("") || `<div class="line-item muted">Nobody owes you money.</div>`}</div>
+    </section>`;
+}
+function apptCard(a) {
+  const d = due(a);
+  let tags = "";
+  if (a.home) tags += `<span class="tag info">${icon("car", 12)} Home visit · ${a.home}</span>`;
+  if (a.state === "paid") tags += `<span class="tag ok">${icon("check", 12)} Paid in full</span>`;
+  else {
+    tags += a.dep ? `<span class="tag ok">Deposit paid ${naira(a.dep)}</span>` : `<span class="tag">No deposit</span>`;
+    tags += `<span class="tag due">Collect ${naira(d)}</span>`;
+  }
+  if (a.state === "here") tags += `<span class="tag info">Here now</span>`;
+  const acts = a.state === "paid" ? "" : `
+    <div class="acts">
+      ${a.state === "booked" ? `<button class="act main" data-act="arrived" data-id="${a.id}">${icon("user-check", 16)} Arrived</button>` : `<button class="act main" data-act="paid" data-id="${a.id}">${icon("banknote", 16)} Paid ${naira(d)}</button>`}
+      ${a.state === "booked" ? `<button class="act" data-act="remind" data-id="${a.id}">${icon("send", 16)} Remind</button>` : ""}
+      ${a.home ? `<button class="act" data-act="toast" data-msg="Opens directions to ${a.home} in your maps app.">${icon("map-pin", 16)} Directions</button>` : ""}
+      <button class="act" data-act="apptmore" data-id="${a.id}" aria-label="More for ${esc(a.name)}">${icon("ellipsis", 16)}</button>
+    </div>`;
+  return `<div class="card appt ${a.state === "paid" ? "done" : ""}"><div class="appt-top"><span class="time">${a.time}</span><div class="appt-main"><b>${esc(a.name)}</b><span class="muted small">${esc(a.svc)}${a.note ? " · " + a.note : ""}</span><div class="tags">${tags}</div></div></div>${acts}</div>`;
+}
+function calendarTab() {
+  const week = [["Thu 26", 3], ["Fri 27", 5], ["Sat 28", 6], ["Sun 29", 0], ["Mon 30", 2], ["Tue 1", 1]];
+  return `<div><h1>Calendar</h1><p class="lead">The week ahead. The full calendar comes in the next prototype.</p></div>
+    <div class="card list">${week.map(([d, n]) => `<div class="line-item"><b>${d}</b><span class="muted">${n ? `${n} customer${n > 1 ? "s" : ""}` : "Closed"}</span></div>`).join("")}</div>
+    <button class="btn btn-ghost" data-act="toast" data-msg="Add a booking, or block a time off.">${icon("plus", 20)} Add a booking</button>`;
+}
+function customersTab() {
+  const people = [["Ada Nwosu", "5 visits · ₦118,000"], ["Funmi Adeyemi", "2 visits · ₦26,000"], ["Bisi Ogun", "Owes ₦10,000"], ["Kemi Lawal", "First visit today"], ["Tolu Bello", "3 visits · ₦21,500"]];
+  return `<div><h1>Customers</h1><p class="lead">Everyone who booked, bought or came in. Their visits and notes come in the next prototype.</p></div>
+    <input class="input" placeholder="Search by name" aria-label="Search customers">
+    <div class="card list">${people.map(([n, d]) => `<div class="line-item"><span><b>${n}</b><br><span class="small muted">${d}</span></span>${icon("chevron-right", 18)}</div>`).join("")}</div>`;
+}
+function moneyTab() {
+  const out = T.expenses.reduce((n, e) => n + e.amt, 0);
+  const inn = T.weekIn + T.sales.reduce((n, s) => n + s.paid, 0);
+  return `<div><h1>Money</h1><p class="lead">This week, Monday to today.</p></div>
+    <div class="money-hero">
+      <div class="mstat"><span class="small muted">Money in</span><b>${naira(inn)}</b></div>
+      <div class="mstat"><span class="small muted">Spent</span><b>${naira(out)}</b></div>
+      <div class="mstat kept"><span class="small">You kept</span><b>${naira(inn - out)}</b></div>
+    </div>
+    <button class="btn btn-ghost" data-act="expense">${icon("minus", 20)} Add something you spent</button>
+    <section style="display:grid;gap:10px"><h2>Where it came from</h2>
+      <div class="card list">
+        <div class="line-item"><span>Deposits through Tikka</span><b class="mono">${naira(64000)}</b></div>
+        <div class="line-item"><span>Cash</span><b class="mono">${naira(52000 + T.sales.filter((s) => s.method === "Cash").reduce((n, s) => n + s.paid, 0))}</b></div>
+        <div class="line-item"><span>Transfers</span><b class="mono">${naira(68000 + T.sales.filter((s) => s.method !== "Cash").reduce((n, s) => n + s.paid, 0))}</b></div>
+      </div></section>
+    <section style="display:grid;gap:10px"><h2>What you spent</h2>
+      <div class="card list">${T.expenses.map((e) => `<div class="line-item"><span>${esc(e.what)}</span><b class="mono">${naira(e.amt)}</b></div>`).join("")}</div></section>
+    <section style="display:grid;gap:10px"><h2>This week at a glance</h2>
+      <div class="card list">
+        <div class="line-item"><span>Best service</span><b>Knotless braids</b></div>
+        <div class="line-item"><span>Busiest day</span><b>Saturday</b></div>
+        <div class="line-item"><span>Top customer</span><b>Ada Nwosu</b></div>
+      </div></section>
+    <div class="note">${icon("bell", 22)}<div>Every Sunday evening you get this on your phone: what came in, what you spent and what you kept.</div></div>`;
+}
+function moreTab() {
+  const items = [["globe", "Your page", "Photos, services, prices"], ["calendar-cog", "Booking settings", "Hours, deposits, rules"], ["gift", "Drops", "Bring in new customers"], ["star", "Reviews", "What customers say"], ["qr-code", "Posters & cards", "Free QR posters and business cards"], ["users-round", "Helpers", "People who work with you"], ["landmark", "Get paid", "Your bank and ID"], ["settings", "Settings", "Account and alerts"]];
+  return `<div><h1>More</h1></div>
+    <div class="card list">${items.map(([ic, t, d]) => `<button class="more-item" data-act="toast" data-msg="${t} opens here."><span>${icon(ic, 22)}</span><span style="flex:1">${t}<span class="muted">${d}</span></span>${icon("chevron-right", 18)}</button>`).join("")}</div>`;
+}
+
+/* ---------- Sheets ---------- */
+let sale = null;
+function sheet(html) {
+  document.getElementById("layer").innerHTML = `<div class="sheet-wrap" data-act="closesheet"><div class="sheet pad" role="dialog" aria-modal="true" data-stop><div class="grab"></div>${html}</div></div>`;
+  paint();
+}
+const closeSheet = () => { document.getElementById("layer").innerHTML = ""; sale = null; };
+const sheetHead = (t) => `<div class="sheet-head"><h2>${t}</h2><button class="iconbtn" data-act="closesheet" aria-label="Close">${icon("x", 22)}</button></div>`;
+
+function remindSheet(a, owed) {
+  const first = a.name.split(" ")[0];
+  const msg = owed
+    ? `Hi ${first}, hope you're well. Just a reminder about the ${naira(a.amt)} balance from your last visit to ${bizName()}. You can pay by transfer or with this link: usetikka.com/pay/…\nThank you!`
+    : `Hi ${first}, see you today at ${a.time} for your ${a.svc.toLowerCase()} at ${bizName()}${a.home ? " (I'll come to you in " + a.home + ")" : ""}. Please come on time. ${naira(due(a))} to pay on the day.\nSee you soon!`;
+  sheet(`${sheetHead(`Remind ${esc(first)}`)}<p class="muted" style="margin:0">This opens your own WhatsApp with the message ready. You can change it before sending.</p>
+    <div class="waprev">${esc(msg)}</div><button class="btn btn-primary" data-act="sendremind">${icon("send", 20)} Open WhatsApp</button>`);
+}
+function paidSheet(a) {
+  sheet(`${sheetHead(`${esc(a.name.split(" ")[0])} paid ${naira(due(a))}`)}<p class="muted" style="margin:0">How did they pay?</p>
+    <div class="choices">${[["Cash", "banknote"], ["Transfer", "smartphone"], ["Pay link", "link"]].map(([m, ic]) => `<button class="choice" data-act="paidhow" data-id="${a.id}" data-v="${m}"><span class="ic">${icon(ic, 22)}</span><b>${m}</b></button>`).join("")}</div>
+    <button class="linkbtn" data-act="toast" data-msg="You type what they paid, and the rest shows under Still owed.">They paid only part of it</button>`);
+}
+function saleSheet() {
+  const svcs = (S.services.filter((s) => s.on).length ? S.services.filter((s) => s.on) : [
+    { name: "Knotless braids", opts: [{ label: "Medium", price: 22500 }, { label: "Long", price: 26500 }] }, { name: "Cornrows", price: 6000 }, { name: "Wig install", price: 11500 }, { name: "Silk press", price: 9000 }, { name: "Wash and style", price: 4500 }]);
+  if (!sale) sale = { step: 0, svc: null, price: 0, name: "", paid: 0, method: "Cash" };
+  if (sale.step === 0) {
+    const rows = [];
+    svcs.forEach((s) => s.opts ? s.opts.forEach((o) => rows.push([`${s.name}, ${o.label.toLowerCase()}`, o.price])) : rows.push([s.name, s.price]));
+    sale.rows = rows;
+    sheet(`${sheetHead("New sale")}<p class="muted" style="margin:0">What did they do?</p>
+      <div class="card list">${rows.map(([n, p], i) => `<button class="more-item" data-act="salesvc" data-i="${i}"><span style="flex:1">${esc(n)}</span><b class="mono">${naira(p)}</b></button>`).join("")}</div>`);
+  } else if (sale.step === 1) {
+    sheet(`${sheetHead("Who was it?")}<p class="muted" style="margin:0">${esc(sale.svc)} · ${naira(sale.price)}</p>
+      <div class="field"><label class="label" for="f-sn">Name</label><input class="input" id="f-sn" value="${esc(sale.name)}" placeholder="e.g. Ngozi" autocomplete="off"></div>
+      <div class="chips">${["Ada Nwosu", "Bisi Ogun", "Tolu Bello"].map((n) => `<button class="chip" data-act="salename" data-v="${n}">${n}</button>`).join("")}</div>
+      <p class="small muted" style="margin:0">Their number is optional. Add it if you want to remind them next time.</p>
+      <button class="btn btn-primary" data-act="salenext">Next</button>`);
+  } else {
+    sheet(`${sheetHead("How much did they pay?")}<p class="muted" style="margin:0">${esc(sale.name || "Walk-in")} · ${esc(sale.svc)}</p>
+      <div class="prefix"><span>₦</span><input id="f-sp" inputmode="numeric" value="${sale.paid}" aria-label="Amount paid"></div>
+      <div class="chips">${["Cash", "Transfer", "Card"].map((m) => `<button class="chip" data-act="salemethod" data-v="${m}" aria-pressed="${sale.method === m}">${m}</button>`).join("")}</div>
+      <p class="small muted" style="margin:0">If they paid less than ${naira(sale.price)}, the rest shows under Still owed.</p>
+      <button class="btn btn-primary" data-act="savesale">${icon("check", 20)} Save sale</button>`);
+  }
+}
+function expenseSheet() {
+  sheet(`${sheetHead("Something you spent")}
+    <div class="field"><span class="label">What was it?</span><div class="chips" id="exp-kinds">${["Products", "Rent", "Transport", "Helper", "Data", "Light / fuel", "Other"].map((k, i) => `<button class="chip" data-act="expkind" data-v="${k}" aria-pressed="${i === 0}">${k}</button>`).join("")}</div></div>
+    <div class="field"><label class="label" for="f-ea">How much?</label><div class="prefix"><span>₦</span><input id="f-ea" inputmode="numeric" placeholder="0"></div></div>
+    <button class="btn btn-primary" data-act="saveexp">${icon("check", 20)} Save</button>`);
+}
+
+/* ---------- Start ---------- */
+function startView() {
+  return `<main class="pad start" style="padding-top:32px">
+    <div><span class="tag info">Prototype · 25 Nov 2026</span><h1 style="margin-top:12px">Tikka for owners: the new setup and Today</h1>
+      <p class="lead">Tap through as if you were a business owner. Nothing is saved or sent.</p></div>
+    <button class="choice" data-act="go" data-v="setup"><span class="ic">${icon("sparkles", 22)}</span><span><b>1. Set up a new business</b><span class="muted small">From sign-up to taking deposits</span></span></button>
+    <button class="choice" data-act="go" data-v="today"><span class="ic">${icon("sun", 22)}</span><span><b>2. A day at the shop</b><span class="muted small">Today, a walk-in sale, reminders and Money</span></span></button>
+    <p class="small muted">On a computer it shows at phone size. On a phone, it fills the screen.</p>
+  </main>`;
+}
+
+/* ---------- Render + events ---------- */
+const app = document.getElementById("app");
+function route() { return (location.hash || "").replace("#", ""); }
+function render(keepScroll) {
+  const y = window.scrollY;
+  const r = route();
+  app.innerHTML = r === "setup" ? setupView() : r === "today" ? todayView() : startView();
+  paint();
+  window.scrollTo(0, keepScroll ? y : 0);
+}
+function paint() { if (window.lucide) lucide.createIcons(); }
+let toastTimer;
+function toast(msg) {
+  document.querySelectorAll(".toast").forEach((t) => t.remove());
+  const t = document.createElement("div");
+  t.className = "toast"; t.setAttribute("role", "status"); t.textContent = msg;
+  document.body.appendChild(t);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.remove(), 2600);
+}
+function nowTime() { const d = new Date(); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; }
+
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  if (el.dataset.act === "closesheet" && e.target.closest("[data-stop]") && !e.target.closest(".iconbtn")) return;
+  const a = el.dataset.act, v = el.dataset.v, i = Number(el.dataset.i), id = Number(el.dataset.id);
+  const keep = () => render(true);
+  switch (a) {
+    case "go": location.hash = v; break;
+    case "next":
+      if (S.step === STEPS.length - 1) { location.hash = "today"; T.tab = "today"; break; }
+      S.step++; render(); break;
+    case "back": if (S.step === 0) { location.hash = ""; } else { S.step--; render(); } break;
+    case "preview": sheet(`${sheetHead("Your page so far")}${pagePreview()}`); break;
+    case "trade": S.trades = S.trades.includes(el.dataset.id) ? S.trades.filter((t) => t !== el.dataset.id) : [...S.trades, el.dataset.id]; keep(); break;
+    case "area": S.area = v; keep(); break;
+    case "where": S.where = v; keep(); break;
+    case "reach": S.reach = v; keep(); break;
+    case "svc": S.services[i].on = !S.services[i].on; keep(); break;
+    case "svcopen": S.services[i].open = !S.services[i].open; keep(); break;
+    case "extra": S.extras[i].on = !S.extras[i].on; keep(); break;
+    case "samplephotos": while (S.photos.length < 6) S.photos.push({ sample: true }); keep(); break;
+    case "rmphoto": S.photos.splice(i, 1); keep(); break;
+    case "day": S.days[v] = !S.days[v]; keep(); break;
+    case "less": S.atOnce = Math.max(1, S.atOnce - 1); keep(); break;
+    case "more": S.atOnce = Math.min(8, S.atOnce + 1); keep(); break;
+    case "copy": { const t = "usetikka.com/" + slug(); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast("Link copied"), () => toast(t)); break; }
+    case "idphoto": S.idPhoto = true; keep(); break;
+    case "reg": S.registered = v; keep(); break;
+    case "acctyes": S.acctOk = true; keep(); break;
+    case "acctno": S.acct = ""; S.acctOk = false; keep(); toast("Check the bank and number, then try again."); break;
+    case "dmode": S.depositMode = v; keep(); break;
+    case "towards": S.towardsBill = !S.towardsBill; keep(); break;
+    case "rmrule": S.rules.splice(i, 1); keep(); break;
+    case "addrule": S.rules.push(""); keep(); setTimeout(() => { const ts = document.querySelectorAll("[data-rule]"); ts[ts.length - 1]?.focus(); }, 0); break;
+    case "toast": toast(el.dataset.msg); break;
+    case "tab": T.tab = v; closeSheet(); render(); break;
+    case "arrived": T.appts.find((x) => x.id === id).state = "here"; keep(); break;
+    case "paid": paidSheet(T.appts.find((x) => x.id === id)); break;
+    case "paidhow": T.appts.find((x) => x.id === id).state = "paid"; closeSheet(); keep(); toast(`Saved: paid by ${v.toLowerCase()}`); break;
+    case "remind": remindSheet(T.appts.find((x) => x.id === id)); break;
+    case "remindowed": remindSheet(T.owed[i], true); break;
+    case "sendremind": closeSheet(); toast("Your WhatsApp opens with the message."); break;
+    case "apptmore": sheet(`${sheetHead("Booking")}<div class="card list">${[["message-circle", "Message on WhatsApp"], ["calendar-clock", "Move to another time"], ["user-x", "Didn't come"], ["x-circle", "Cancel booking"]].map(([ic, t]) => `<button class="more-item" data-act="toast" data-msg="${t}: in the real app.">${icon(ic, 20)}<span style="flex:1">${t}</span></button>`).join("")}</div>`); break;
+    case "code": sheet(`${sheetHead("Check a code")}<p class="muted" style="margin:0">For a gift, a drop card or a booking. Type the code the customer shows you.</p><input class="input mono" placeholder="e.g. GB-48K2Q" aria-label="Code"><button class="btn btn-primary" data-act="toast" data-msg="The real app shows who it is and what they get.">Check</button>`); break;
+    case "newsale": sale = null; saleSheet(); break;
+    case "salesvc": sale.svc = sale.rows[i][0]; sale.price = sale.rows[i][1]; sale.paid = sale.price; sale.step = 1; saleSheet(); break;
+    case "salename": sale.name = v; sale.step = 2; saleSheet(); break;
+    case "salenext": sale.name = document.getElementById("f-sn").value.trim(); sale.step = 2; saleSheet(); break;
+    case "salemethod": sale.paid = Number(document.getElementById("f-sp").value.replace(/\D/g, "")) || 0; sale.method = v; saleSheet(); break;
+    case "savesale": {
+      const paid = Number(document.getElementById("f-sp").value.replace(/\D/g, "")) || 0;
+      const owes = Math.max(0, sale.price - paid);
+      T.sales.push({ time: nowTime(), name: sale.name || "Walk-in", svc: sale.svc, paid, method: sale.method, owes });
+      if (owes) T.owed.unshift({ name: sale.name || "Walk-in", amt: owes, when: "today" });
+      closeSheet(); T.tab = "today"; keep(); toast("Sale saved"); break;
+    }
+    case "expense": expenseSheet(); break;
+    case "expkind": document.querySelectorAll("#exp-kinds .chip").forEach((c) => c.setAttribute("aria-pressed", c === el)); break;
+    case "saveexp": {
+      const amt = Number(document.getElementById("f-ea").value.replace(/\D/g, "")) || 0;
+      const kind = document.querySelector('#exp-kinds [aria-pressed="true"]')?.dataset.v || "Other";
+      if (!amt) { toast("Type how much you spent."); break; }
+      T.expenses.push({ what: kind, amt }); closeSheet(); keep(); toast("Saved"); break;
+    }
+    case "closesheet": closeSheet(); break;
+  }
+});
+
+document.addEventListener("input", (e) => {
+  const el = e.target;
+  if (el.dataset.bind) {
+    const k = el.dataset.bind;
+    S[k] = el.dataset.num !== undefined ? Number(el.value.replace(/\D/g, "")) || 0 : el.value;
+    if (k === "acct") { S.acct = el.value.replace(/\D/g, "").slice(0, 10); el.value = S.acct; S.acctOk = false; document.getElementById("acct-name").innerHTML = acctNameBlock(); paint(); }
+    const btn = document.querySelector('[data-act="next"]');
+    if (btn && STEPS[S.step].ok) btn.disabled = !STEPS[S.step].ok();
+  }
+  if (el.dataset.svc !== undefined) {
+    const s = S.services[Number(el.dataset.svc)], n = Number(el.value.replace(/\D/g, "")) || 0;
+    if (el.dataset.opt !== undefined) s.opts[Number(el.dataset.opt)].price = n; else s.price = n;
+  }
+  if (el.dataset.extra !== undefined) S.extras[Number(el.dataset.extra)].price = Number(el.value.replace(/\D/g, "")) || 0;
+  if (el.dataset.rule !== undefined) S.rules[Number(el.dataset.rule)] = el.value;
+});
+document.addEventListener("change", (e) => {
+  const el = e.target;
+  if (el.id === "f-st") { S.st = el.value; S.city = Object.keys(PLACES[S.st].cities)[0]; S.area = PLACES[S.st].cities[S.city][0]; render(true); }
+  else if (el.id === "f-city") { S.area = PLACES[S.st].cities[S.city][0]; render(true); }
+  else if (el.id === "f-bank") { document.getElementById("acct-name").innerHTML = acctNameBlock(); paint(); }
+  else if (["f-open", "f-close", "f-df", "f-idt"].includes(el.id)) render(true);
+  else if (el.id === "f-photos") {
+    [...el.files].forEach((f) => S.photos.push({ url: URL.createObjectURL(f) }));
+    render(true);
+  }
+});
+window.addEventListener("hashchange", () => { closeSheet(); render(); });
+render();
+</script>
