@@ -29,6 +29,7 @@ import {
   Trash2,
   UserRound,
   Video,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -341,6 +342,18 @@ export function StartFlow() {
                         placeholder={ph}
                         autoCapitalize="off"
                       />
+                      <button
+                        type="button"
+                        aria-label={`Remove ${label}`}
+                        className="grid size-11 shrink-0 place-items-center text-ink-muted"
+                        onClick={() => {
+                          const next = { ...socials };
+                          delete next[k];
+                          setSocials(next);
+                        }}
+                      >
+                        <X size={18} aria-hidden="true" />
+                      </button>
                     </div>
                   ) : null,
                 )}

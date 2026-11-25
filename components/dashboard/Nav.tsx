@@ -33,7 +33,7 @@ export const NAV: Item[] = [
   { href: "/app", label: "Home", Icon: House },
   { href: "/app/drops", label: "Drops", Icon: Layers },
   { href: "/app/bookings", label: "Bookings", Icon: CalendarDays },
-  { href: "/app/leads", label: "Leads", Icon: Users },
+  { href: "/app/leads", label: "Customers", Icon: Users },
   { href: "/app/money", label: "Money", Icon: Banknote },
   { href: "/app/reviews", label: "Reviews", Icon: MessageSquareText },
   { href: "/app/page", label: "Your page", Icon: Globe },

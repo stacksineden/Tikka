@@ -28,7 +28,7 @@ import { getOwnerUser } from "@/lib/session";
 import { siteUrl } from "@/lib/supabase/env";
 import type { Source, Tier } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Leads" };
+export const metadata: Metadata = { title: "Customers" };
 
 const TIER_OPTIONS: [Tier, string][] = [
   ["legendary", "Legendary"],
@@ -106,8 +106,8 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
       {live && <LiveRefresh />}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-heading">Leads</h1>
-          <p className="text-body mt-1 text-ink-muted">Everyone who claimed or booked. They&apos;re yours to follow up.</p>
+          <h1 className="text-heading">Customers</h1>
+          <p className="text-body mt-1 text-ink-muted">Everyone who booked with you or claimed a Tikka. They&apos;re yours to follow up.</p>
         </div>
         <a href={exportHref} className="btn btn-secondary" download>
           <Download />

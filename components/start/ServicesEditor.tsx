@@ -52,6 +52,19 @@ export function ServicesEditor({ services, onChange, city }: { services: PresetS
                 </div>
                 <div className={`text-caption ${problem ? "text-danger" : "text-ink-muted"}`}>{problem ?? priceSummary(s.item)}</div>
               </div>
+              {!open && (
+                <button
+                  type="button"
+                  aria-label={`Remove ${s.item.name || "this service"}`}
+                  className="grid size-11 shrink-0 place-items-center text-ink-muted"
+                  onClick={() => {
+                    onChange(services.filter((_, j) => j !== i));
+                    setEditing(null);
+                  }}
+                >
+                  <Trash2 size={18} aria-hidden="true" />
+                </button>
+              )}
               <button type="button" className="text-label inline-flex min-h-11 items-center gap-1 px-2 text-brand" aria-expanded={open} onClick={() => setEditing(open ? null : i)}>
                 {open ? (
                   <>
@@ -153,6 +166,17 @@ export function ServicesEditor({ services, onChange, city }: { services: PresetS
                     <span className="text-caption text-ink-muted">Weddings and shoots: customers pick a date and start time.</span>
                   </span>
                 </label>
+
+                <button
+                  type="button"
+                  className="text-label inline-flex min-h-11 items-center gap-1.5 justify-self-start text-danger"
+                  onClick={() => {
+                    onChange(services.filter((_, j) => j !== i));
+                    setEditing(null);
+                  }}
+                >
+                  <Trash2 size={16} aria-hidden="true" /> Remove this service
+                </button>
               </div>
             )}
           </div>
