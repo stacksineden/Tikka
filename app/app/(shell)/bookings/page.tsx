@@ -16,6 +16,24 @@ import { DepositSettings } from "@/components/bookings/DepositSettings";
 import { paystackMode } from "@/lib/paystack";
 import { dbPayoutState, payReady } from "@/lib/payouts-db";
 import { dbBookingSetup } from "@/lib/bookings-db";
+import { MonthCalendar, type MonthDay } from "@/components/today/MonthCalendar";
+import { getBookingRules } from "@/lib/bookings-data";
+import { freeDays, openRange, todayKey, watParts, type Booking } from "@/lib/bookings";
+import type { Business } from "@/lib/types";
+
+/** Each day for the next two months: free times, full or closed, and how many are booked. */
+async function monthDays(ownerKey: string, b: Business, list: Booking[], now: Date): Promise<MonthDay[]> {
+  const rules = await getBookingRules(ownerKey, b);
+  if (!rules) return [];
+  const shortest = Math.min(...b.services.map((s) => s.options?.length ? Math.min(...s.options.map((o) => o.minutes)) : (s.minutes ?? 60)));
+  const counts = new Map<string, number>();
+  for (const x of list) if (x.status !== "cancelled") counts.set(watParts(x.startsAt).day, (counts.get(watParts(x.startsAt).day) ?? 0) + 1);
+  return freeDays({ ...rules, aheadDays: Math.min(rules.aheadDays, 62) }, shortest, now).map((d) => ({
+    key: d.key,
+    state: !openRange(rules.hours, d.weekday) ? "closed" : d.slots.length ? "free" : "full",
+    bookings: counts.get(d.key) ?? 0,
+  }));
+}
 
 export const metadata: Metadata = { title: "Bookings" };
 
@@ -59,6 +77,8 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
   const now = new Date();
   const list = await getBookings(user, new Date(now.getTime() - 30 * 86_400_000), new Date(now.getTime() + (setup.aheadDays + 1) * 86_400_000));
   const lengths = serviceLengths(isDbId(b.id) ? b.id : user.id, b);
+  // NEW DIRECTION: "See my calendar" for businesses from the new setup (demo only for now).
+  const month = b.trades?.length ? await monthDays(user.id, b, list, now) : null;
 
   return (
     <>
@@ -66,7 +86,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
       <StayFresh waiting={false} slow={20_000} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-heading">Bookings</h1>
+          <h1 className="text-heading">{b.trades?.length ? "Calendar" : "Bookings"}</h1>
           <p className="text-body mt-1 text-ink-muted">
             {setup.enabled ? "Customers book free times on your page." : "Bookings are off: Book on your page sends a WhatsApp message instead."}
           </p>
@@ -76,6 +96,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
           <span className="hidden sm:inline">Settings</span>
         </Link>
       </div>
+      {month && <MonthCalendar days={month} todayKey={todayKey(now)} />}
       {setup.enabled && (
         <div className="grid gap-1">
           <p className="text-label">Your booking link: put it in your Instagram and WhatsApp bio</p>

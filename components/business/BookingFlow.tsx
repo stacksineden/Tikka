@@ -230,7 +230,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
             {step === "option" && (
               <div className="grid gap-2.5">
                 {svc.options!.map((o, i) => (
-                  <Opt key={o.label} on={option === i} onClick={() => setOption(i)} title={o.label} sub={`About ${hours(o.minutes)}`} price={naira(o.price)} />
+                  <Opt key={o.label} on={option === i} onClick={() => setOption(i)} title={o.label} sub={`About ${hours(o.minutes)}`} price={`${svc.priceKind === "from" ? "From " : ""}${naira(o.price)}`} />
                 ))}
               </div>
             )}
@@ -444,9 +444,10 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
                     <Line key={l.label} label={l.label} value={naira(l.naira)} mono />
                   ))}
                   <div className="mt-1 border-t border-line">
-                    <Line label="Total" value={naira(price.totalNaira)} mono strong />
+                    <Line label={svc.priceKind === "from" ? "Total from" : "Total"} value={naira(price.totalNaira)} mono strong />
                   </div>
                 </div>
+                {svc.priceKind === "from" && <p className="text-caption -mt-2 text-ink-muted">This is the starting price. {b.name} confirms the final price with you; the deposit is on the starting price.</p>}
                 {price.depositNaira > 0 ? (
                   <div className="grid gap-1.5 rounded-card bg-ink p-4 text-surface">
                     <span className="text-caption opacity-80">Deposit to pay now ({price.depositLabel})</span>

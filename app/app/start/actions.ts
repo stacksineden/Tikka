@@ -12,13 +12,19 @@ import { isTrade, tradeCategory, type TradeId } from "@/lib/presets";
 import { demoAllowed, getOwnerUser, setDemoSession } from "@/lib/session";
 import { initialsFrom, normalizeNgPhone, prefixAlternatives, suggestPrefix } from "@/lib/setup";
 import { slugAlternatives, suggestSlug } from "@/lib/slug";
+import { parseSocial } from "@/lib/social";
 import type { Business, OpeningHours, ServiceExtra, ServiceItem, TravelReach, WorkPlace } from "@/lib/types";
 
 export interface StartPage {
   trades: string[];
   name: string;
   whatsapp: string;
-  instagram: string;
+  /** Instagram, TikTok and Facebook: a username or a link, any of them. */
+  socials: Partial<Record<"instagram" | "tiktok" | "facebook", string>>;
+  /** The card's look (for drops): one of the swatches, and a logo if they have one. */
+  brandColor: string;
+  logoUrl?: string;
+  tagline: string;
   state: string;
   city: string;
   area: string;
@@ -74,7 +80,8 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
         id: `svc_${i + 1}`,
         name: s.name.trim().slice(0, 40),
         price,
-        priceKind: options && options.length > 1 ? "from" : "fixed",
+        // The owner picks: a fixed price, or a starting price for prices that move.
+        priceKind: s.priceKind === "from" ? "from" : "fixed",
         minutes,
         duration: s.duration,
         options: options && options.length ? options : undefined,
@@ -84,6 +91,9 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
       };
     });
   if (!services.length) return { ok: false, error: "Tick at least one service." };
+  // Deposits are worked out from the price, so every service needs one.
+  const unpriced = services.find((s) => !(s.price && s.price > 0) || s.options?.some((o) => !(o.price > 0)));
+  if (unpriced) return { ok: false, error: `Add a price for ${unpriced.name}.` };
 
   const current = await getBusiness(user);
   const taken = await takenSlugs(user);
@@ -92,11 +102,16 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
   const prefixes = await takenPrefixes(user);
   let codePrefix = current?.codePrefix ?? suggestPrefix(name);
   if (!current && prefixes.has(codePrefix)) codePrefix = prefixAlternatives(name, prefixes, 1)[0] ?? "TK";
-  const brandColor = current?.brandColor ?? SWATCHES[0].hex;
+  const brandColor = SWATCHES.some((c) => c.hex === input.brandColor) ? input.brandColor : (current?.brandColor ?? SWATCHES[0].hex);
+  // DEMO: logos come from the in-memory media route only.
+  const logoUrl = input.logoUrl?.startsWith("/api/demo/media/") ? input.logoUrl : current?.logoUrl;
 
   const actions: Business["actions"] = [{ kind: "whatsapp", value: phone }];
-  const ig = input.instagram.trim().replace(/^@/, "");
-  if (ig) actions.push({ kind: "instagram", value: ig });
+  for (const kind of ["instagram", "tiktok", "facebook"] as const) {
+    const raw = input.socials?.[kind]?.trim();
+    const value = raw ? parseSocial(kind, raw) : null;
+    if (value) actions.push({ kind, value });
+  }
   actions.push({ kind: "services", value: "services" });
 
   const next: Business = {
@@ -118,6 +133,8 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
     area: input.area.trim(),
     brandColor,
     onBrandColor: checkBrandColor(brandColor).on,
+    logoUrl,
+    tagline: input.tagline.trim().slice(0, 60) || undefined,
     codePrefix,
     actions,
     services,

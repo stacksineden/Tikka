@@ -60,6 +60,10 @@ export interface TodayData {
 }
 
 const naira = (kobo: number) => "₦" + Math.round(kobo / 100).toLocaleString("en-NG");
+/** The small actions on a row (Arrived, Remind, Paid): 44px tall, side by side. */
+const ACT_BASE = "inline-flex min-h-11 items-center gap-1.5 rounded-pill border px-3.5 text-sm font-semibold disabled:opacity-50";
+const ACT = `${ACT_BASE} border-line bg-surface text-ink`;
+const ACT_MAIN = `${ACT_BASE} border-brand bg-brand text-on-brand`;
 const PAY_CHOICES: [PayMethod, typeof Banknote][] = [
   ["cash", Banknote],
   ["transfer", Smartphone],
@@ -91,9 +95,17 @@ export function TodayScreen({ d }: { d: TodayData }) {
   const deposits = live.reduce((n, a) => n + a.depositKobo, 0);
   const owedTotal = d.owed.reduce((n, o) => n + o.owedKobo, 0);
   const greeting = d.hour < 12 ? "Good morning" : d.hour < 17 ? "Good afternoon" : "Good evening";
+  // Long days stay short: the next 5 to see, then the rest on a tap; the done ones folded away.
+  const [allTodo, setAllTodo] = useState(false);
+  const [showDone, setShowDone] = useState(false);
+  const [allOwed, setAllOwed] = useState(false);
+  const todo = live.filter((a) => !a.paid && a.status !== "no_show");
+  const doneAppts = live.filter((a) => a.paid || a.status === "no_show");
+  const doneCount = doneAppts.length + d.walkIns.length;
+  const SHOW = 5;
 
   return (
-    <div className="mx-auto grid max-w-2xl gap-5 px-4 py-5 sm:px-6 lg:py-8">
+    <div className="mx-auto grid max-w-6xl gap-5 px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
       <div className="flex items-center justify-between gap-3">
         <div>
           <span className="text-caption text-ink-muted">{d.dateLabel}</span>
@@ -107,6 +119,8 @@ export function TodayScreen({ d }: { d: TodayData }) {
         </Link>
       </div>
 
+      <div className="grid items-start gap-5 lg:grid-cols-[1.35fr_1fr]">
+      <div className="grid gap-5 lg:col-start-2 lg:row-start-1">
       <section aria-label="Today in numbers" className="grid gap-3.5 rounded-card bg-brand p-4.5 text-on-brand">
         <div>
           <span className="text-caption opacity-85">
@@ -133,16 +147,23 @@ export function TodayScreen({ d }: { d: TodayData }) {
           <ScanLine aria-hidden="true" /> Check a code
         </Link>
       </div>
+      </div>
 
-      <section className="grid gap-2.5" aria-labelledby="t-day">
-        <div className="flex items-baseline justify-between">
+      <section className="grid gap-2.5 lg:col-start-1 lg:row-span-2 lg:row-start-1" aria-labelledby="t-day">
+        <div className="flex items-center justify-between gap-2">
           <h2 id="t-day" className="text-title">
             Your day
           </h2>
-          <span className="text-caption text-ink-muted">
-            {live.length - unpaid.length} of {live.length} done
-          </span>
+          <Link href="/app/bookings#month" className="text-label inline-flex min-h-11 items-center gap-1 text-brand">
+            <CalendarDays size={16} aria-hidden="true" /> See my calendar
+          </Link>
         </div>
+        {live.length > 0 && (
+          <p className="text-caption -mt-2 text-ink-muted">
+            {todo.length ? `${todo.length} still to come or pay` : "All done for today"}
+            {doneCount ? ` · ${doneCount} done` : ""}
+          </p>
+        )}
         {live.length === 0 && d.walkIns.length === 0 && (
           <div className="grid gap-3 rounded-card border border-dashed border-line-strong bg-surface-raised p-4">
             <p className="text-body">No bookings today yet. When customers book on your page, they show up here.</p>
@@ -153,13 +174,28 @@ export function TodayScreen({ d }: { d: TodayData }) {
             )}
           </div>
         )}
-        {live.map((a) => (
+        {(allTodo ? todo : todo.slice(0, SHOW)).map((a) => (
           <Appt key={a.id} a={a} busy={pending} onArrived={() => run(() => arrivedAction(a.id))} onPaid={() => setOpen({ kind: "paid", appt: a })} onRemind={() => setOpen({ kind: "remind", appt: a })} />
         ))}
-        {d.walkIns.map((w) => (
+        {todo.length > SHOW && (
+          <button type="button" className="btn btn-secondary rounded-pill" onClick={() => setAllTodo(!allTodo)}>
+            {allTodo ? "Show fewer" : `Show ${todo.length - SHOW} more`}
+          </button>
+        )}
+        {doneCount > 0 && (
+          <button type="button" aria-expanded={showDone} onClick={() => setShowDone(!showDone)} className="flex min-h-12 items-center justify-between rounded-md bg-surface-sunken px-4 text-left">
+            <span className="text-body font-semibold">
+              <CircleCheck size={16} className="mr-1.5 inline text-success" aria-hidden="true" />
+              {doneCount} done today
+            </span>
+            <ChevronRight size={18} className={`text-ink-muted transition-transform ${showDone ? "rotate-90" : ""}`} aria-hidden="true" />
+          </button>
+        )}
+        {showDone && doneAppts.map((a) => <Appt key={a.id} a={a} busy={pending} onArrived={() => undefined} onPaid={() => undefined} onRemind={() => undefined} />)}
+        {showDone && d.walkIns.map((w) => (
           <div key={w.id} className="grid gap-1 rounded-card border border-line bg-surface-raised px-4 py-3.5 opacity-80">
             <div className="flex gap-3">
-              <span className="text-code w-13 shrink-0">{w.time}</span>
+              <span className="text-code w-17 shrink-0">{w.time}</span>
               <div className="grid min-w-0 gap-1">
                 <b className="text-[17px]">{w.name}</b>
                 <span className="text-caption text-ink-muted">{w.item} · walk-in</span>
@@ -175,6 +211,7 @@ export function TodayScreen({ d }: { d: TodayData }) {
         ))}
       </section>
 
+      <div className="grid gap-5 lg:col-start-2">
       <Link href="/app/bookings" className="flex min-h-14 items-center gap-3 rounded-card border border-line bg-surface-raised px-4 active:bg-surface-sunken">
         <CalendarDays size={20} className="text-ink-muted" aria-hidden="true" />
         <span className="min-w-0 flex-1">
@@ -195,7 +232,7 @@ export function TodayScreen({ d }: { d: TodayData }) {
         </div>
         <div className="divide-y divide-line rounded-card border border-line bg-surface-raised">
           {d.owed.length === 0 && <p className="text-body px-4 py-3.5 text-ink-muted">Nobody owes you money.</p>}
-          {d.owed.map((o, i) => (
+          {(allOwed ? d.owed : d.owed.slice(0, 3)).map((o, i) => (
             <div key={o.saleId} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
               <span className="min-w-0">
                 <b>{o.name}</b>
@@ -205,15 +242,20 @@ export function TodayScreen({ d }: { d: TodayData }) {
               </span>
               <span className="flex items-center gap-2">
                 <b className="text-code">{naira(o.owedKobo)}</b>
-                <button type="button" className="act-btn" onClick={() => setOpen({ kind: "remindOwed", i })}>
+                <button type="button" className={ACT} onClick={() => setOpen({ kind: "remindOwed", i })}>
                   <Send size={16} aria-hidden="true" /> Remind
                 </button>
-                <button type="button" className="act-btn" onClick={() => setOpen({ kind: "payOwed", i })}>
+                <button type="button" className={ACT} onClick={() => setOpen({ kind: "payOwed", i })}>
                   Paid
                 </button>
               </span>
             </div>
           ))}
+          {d.owed.length > 3 && (
+            <button type="button" className="text-label min-h-12 w-full px-4 text-left text-brand" onClick={() => setAllOwed(!allOwed)}>
+              {allOwed ? "Show fewer" : `See all ${d.owed.length}`}
+            </button>
+          )}
         </div>
       </section>
 
@@ -255,6 +297,8 @@ export function TodayScreen({ d }: { d: TodayData }) {
           </div>
         </div>
       </section>
+      </div>
+      </div>
 
       {open?.kind === "paid" && <PaidSheet appt={open.appt} onClose={() => setOpen(null)} />}
       {open?.kind === "remind" && (
@@ -290,7 +334,7 @@ function Appt({ a, busy, onArrived, onPaid, onRemind }: { a: TodayAppt; busy: bo
   return (
     <div className={`grid gap-2.5 rounded-card border border-line bg-surface-raised px-4 py-3.5 ${done || a.status === "no_show" ? "opacity-70" : ""}`}>
       <div className="flex gap-3">
-        <span className="text-code w-13 shrink-0 pt-0.5">{a.time}</span>
+        <span className="text-code w-17 shrink-0 pt-0.5">{a.time}</span>
         <div className="grid min-w-0 flex-1 gap-1">
           <b className="text-[17px]">{a.first}</b>
           <span className="text-caption text-ink-muted">
@@ -322,26 +366,26 @@ function Appt({ a, busy, onArrived, onPaid, onRemind }: { a: TodayAppt; busy: bo
       {!done && a.status !== "no_show" && (
         <div className="flex flex-wrap gap-2">
           {a.status === "booked" ? (
-            <button type="button" className="act-btn act-btn--main" disabled={busy} onClick={onArrived}>
+            <button type="button" className={ACT_MAIN} disabled={busy} onClick={onArrived}>
               <UserCheck size={16} aria-hidden="true" /> Arrived
             </button>
           ) : (
-            <button type="button" className="act-btn act-btn--main" onClick={onPaid}>
+            <button type="button" className={ACT_MAIN} onClick={onPaid}>
               <Banknote size={16} aria-hidden="true" /> Paid {naira(a.dueKobo)}
             </button>
           )}
           {a.status === "booked" && (
-            <button type="button" className="act-btn" onClick={onRemind}>
+            <button type="button" className={ACT} onClick={onRemind}>
               <Send size={16} aria-hidden="true" /> Remind
             </button>
           )}
           {a.homeArea && (
-            <a className="act-btn" href={`https://www.google.com/maps/search/${encodeURIComponent(a.homeArea)}`} target="_blank" rel="noreferrer">
+            <a className={ACT} href={`https://www.google.com/maps/search/${encodeURIComponent(a.homeArea)}`} target="_blank" rel="noreferrer">
               <MapPin size={16} aria-hidden="true" /> Directions
             </a>
           )}
           {a.status === "booked" && (
-            <button type="button" className="act-btn" onClick={onPaid}>
+            <button type="button" className={ACT} onClick={onPaid}>
               Paid
             </button>
           )}

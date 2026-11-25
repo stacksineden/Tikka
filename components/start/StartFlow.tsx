@@ -35,11 +35,14 @@ import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { addPhoto } from "@/app/app/actions";
 import { saveStartMoney, saveStartPage, type StartPage } from "@/app/app/start/actions";
-import { preparePortfolio } from "@/lib/media-client";
+import { prepareLogo, preparePortfolio } from "@/lib/media-client";
+import { CardPreview } from "@/components/setup/CardPreview";
+import { draftToFace } from "@/components/setup/SetupFlow";
+import { checkBrandColor, SWATCHES } from "@/lib/color";
+import { ServicesEditor, serviceProblem } from "./ServicesEditor";
 import { citiesFor, STATE_NAMES } from "@/lib/nigeria";
 import {
   depositOn,
-  durationLabel,
   EVENT_DEPOSIT_PERCENT,
   presetRules,
   presetServices,
@@ -47,21 +50,28 @@ import {
   START_HOURS,
   SUGGESTED_DEPOSIT_PERCENT,
   TRADES,
+  tradeCategory,
   travelFeeFor,
   type PresetExtra,
   type PresetService,
   type TradeId,
 } from "@/lib/presets";
-import { normalizeNgPhone } from "@/lib/setup";
+import { initialsFrom, normalizeNgPhone, suggestPrefix } from "@/lib/setup";
 import type { OpeningHours, PortfolioPhoto, TravelReach, WorkPlace } from "@/lib/types";
 
 const TRADE_ICONS: Record<TradeId, LucideIcon> = { hair: Scissors, makeup: Sparkles, nails: Hand, lashes: Eye, barber: UserRound, spa: Flower2, gele: Crown, photo: Camera, video: Video };
 const BANKS = ["Access Bank", "First Bank", "GTBank", "Kuda", "Moniepoint", "Opay", "Palmpay", "UBA", "Zenith Bank"];
 const ID_TYPES = ["NIN slip", "Driver's licence", "Voter's card", "International passport"];
 const MIN_PHOTOS = 3;
+type SocialKey = "instagram" | "tiktok" | "facebook";
+const SOCIALS: [SocialKey, string, string][] = [
+  ["instagram", "Instagram", "@adashairstudio"],
+  ["tiktok", "TikTok", "@adashair"],
+  ["facebook", "Facebook", "Page name or link"],
+];
 
-type Step = "trade" | "name" | "where" | "work" | "services" | "photos" | "hours" | "live" | "id" | "bank" | "deposit" | "rules" | "done";
-const STEPS: Step[] = ["trade", "name", "where", "work", "services", "photos", "hours", "live", "id", "bank", "deposit", "rules", "done"];
+type Step = "trade" | "name" | "look" | "where" | "work" | "services" | "photos" | "hours" | "live" | "id" | "bank" | "deposit" | "rules" | "done";
+const STEPS: Step[] = ["trade", "name", "look", "where", "work", "services", "photos", "hours", "live", "id", "bank", "deposit", "rules", "done"];
 
 const naira = (n: number) => "₦" + Math.round(n).toLocaleString("en-NG");
 const digits = (s: string) => Number(s.replace(/\D/g, "")) || 0;
@@ -75,7 +85,10 @@ export function StartFlow() {
   const [trades, setTrades] = useState<TradeId[]>([]);
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
-  const [instagram, setInstagram] = useState("");
+  const [socials, setSocials] = useState<Partial<Record<SocialKey, string>>>({ instagram: "" });
+  const [brandColor, setBrandColor] = useState<string>(SWATCHES[0].hex);
+  const [logoUrl, setLogoUrl] = useState<string>();
+  const [tagline, setTagline] = useState("");
   const [state, setState] = useState("Oyo");
   const [city, setCity] = useState("Ibadan");
   const [area, setArea] = useState("");
@@ -85,7 +98,6 @@ export function StartFlow() {
   const [services, setServices] = useState<PresetService[]>([]);
   const [extras, setExtras] = useState<PresetExtra[]>([]);
   const [seededFor, setSeededFor] = useState("");
-  const [openSvc, setOpenSvc] = useState<number | null>(null);
   const [photos, setPhotos] = useState<PortfolioPhoto[]>([]);
   const [uploading, setUploading] = useState(0);
   const [hours, setHours] = useState<OpeningHours>(START_HOURS);
@@ -126,7 +138,10 @@ export function StartFlow() {
     trades,
     name,
     whatsapp,
-    instagram,
+    socials: Object.fromEntries(Object.entries(socials).filter(([, v]) => v && v.trim())),
+    brandColor,
+    logoUrl,
+    tagline,
     state,
     city,
     area,
@@ -182,7 +197,8 @@ export function StartFlow() {
     name: name.trim().length > 1 && !!normalizeNgPhone(whatsapp),
     where: !!state && !!city.trim() && !!area.trim(),
     work: !!workPlace,
-    services: services.some((s) => s.on),
+    services: services.some((s) => s.on) && services.every((s) => !s.on || !serviceProblem(s.item)),
+    look: true,
     photos: photos.length >= MIN_PHOTOS && !uploading,
     hours: Object.values(hours).some((d) => d.open),
     live: true,
@@ -193,6 +209,30 @@ export function StartFlow() {
     done: true,
   };
   const label: Partial<Record<Step, string>> = { live: "Take deposits", id: "Send my ID", deposit: "Use this deposit", rules: "Save my rules", hours: "Put my page live" };
+
+  async function addLogo(file: File | undefined) {
+    if (!file) return;
+    setProblem(undefined);
+    try {
+      setLogoUrl(await demoUpload(await prepareLogo(file)));
+    } catch (e) {
+      setProblem((e as Error).message);
+    }
+  }
+
+  const face = draftToFace({
+    name,
+    category: tradeCategory(trades),
+    state,
+    city,
+    area,
+    brandColor,
+    logoUrl,
+    background: { type: "color" },
+    actions: [],
+    codePrefix: suggestPrefix(name),
+    tagline,
+  });
 
   async function addPhotos(files: FileList | null) {
     if (!files?.length) return;
@@ -258,7 +298,7 @@ export function StartFlow() {
                     key={t.id}
                     type="button"
                     aria-pressed={on}
-                    onClick={() => setTrades(on ? trades.filter((x) => x !== t.id) : [...trades, t.id])}
+                    onClick={() => setTrades((cur) => (cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]))}
                     className={`relative grid min-h-26 content-center justify-items-center gap-2 rounded-card border-2 p-2 text-center text-sm leading-tight font-semibold ${on ? "border-brand bg-brand-soft" : "border-line bg-surface-raised"}`}
                   >
                     {on && (
@@ -286,11 +326,76 @@ export function StartFlow() {
             <Field id="s-wa" label="Your WhatsApp number" hint="Customers message you here from your page.">
               <input id="s-wa" className="input h-13 text-[17px]" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} inputMode="tel" placeholder="0803 000 0000" autoComplete="tel-national" />
             </Field>
-            <Field id="s-ig" label="Instagram (if you have one)">
-              <div className="flex h-13 items-center rounded-md border border-line-strong bg-surface-raised pl-4 focus-within:outline-2 focus-within:outline-brand">
-                <span className="text-ink-muted">@</span>
-                <input id="s-ig" className="h-full min-w-0 flex-1 bg-transparent px-1 text-[17px] outline-none" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="adashairstudio" autoCapitalize="off" />
+            <div>
+              <span className="text-label mb-1.5 block">Where customers find you (if you use them)</span>
+              <div className="grid gap-2">
+                {SOCIALS.map(([k, label, ph]) =>
+                  socials[k] !== undefined ? (
+                    <div key={k} className="flex h-13 items-center rounded-md border border-line-strong bg-surface-raised pl-4 focus-within:outline-2 focus-within:outline-brand">
+                      <span className="text-caption w-20 shrink-0 text-ink-muted">{label}</span>
+                      <input
+                        aria-label={`${label} username or link`}
+                        className="h-full min-w-0 flex-1 bg-transparent px-1 text-[17px] outline-none"
+                        value={socials[k]}
+                        onChange={(e) => setSocials({ ...socials, [k]: e.target.value })}
+                        placeholder={ph}
+                        autoCapitalize="off"
+                      />
+                    </div>
+                  ) : null,
+                )}
               </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {SOCIALS.filter(([k]) => socials[k] === undefined).map(([k, label]) => (
+                  <Chip key={k} on={false} onClick={() => setSocials({ ...socials, [k]: "" })}>
+                    + {label}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {step === "look" && (
+          <>
+            <Title title="Your logo and colour" lead="They go on your page and on the cards customers get when you run drops." />
+            <CardPreview face={face} prefix={suggestPrefix(name)} compact />
+            <div>
+              <span className="text-label mb-1.5 block">Logo (if you have one)</span>
+              <div className="flex items-center gap-3">
+                <span className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-pill text-xl font-extrabold" style={{ background: brandColor, color: checkBrandColor(brandColor).on }}>
+                  {logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- demo media from memory
+                    <img src={logoUrl} alt="Your logo" className="size-full object-cover" />
+                  ) : (
+                    initialsFrom(name) || "AB"
+                  )}
+                </span>
+                <label className="btn btn-secondary relative cursor-pointer rounded-pill">
+                  <ImagePlus aria-hidden="true" /> {logoUrl ? "Change logo" : "Add your logo"}
+                  <input type="file" accept="image/*" className="absolute inset-0 cursor-pointer opacity-0" onChange={(e) => addLogo(e.target.files?.[0])} />
+                </label>
+              </div>
+              <p className="text-caption mt-1.5 text-ink-muted">No logo? Your initials show instead. You can add one later.</p>
+            </div>
+            <div>
+              <span className="text-label mb-1.5 block">Your colour</span>
+              <div className="flex flex-wrap gap-2.5">
+                {SWATCHES.map((c) => (
+                  <button
+                    key={c.hex}
+                    type="button"
+                    aria-label={c.name}
+                    aria-pressed={brandColor === c.hex}
+                    onClick={() => setBrandColor(c.hex)}
+                    className={`size-11 rounded-pill border-2 ${brandColor === c.hex ? "border-ink ring-2 ring-surface ring-inset" : "border-transparent"}`}
+                    style={{ background: c.hex }}
+                  />
+                ))}
+              </div>
+            </div>
+            <Field id="s-tag" label="A short line about you (optional)" hint="Shown under your name, like “Bridal makeup that lasts all night”.">
+              <input id="s-tag" className="input h-13 text-[17px]" value={tagline} onChange={(e) => setTagline(e.target.value)} maxLength={60} placeholder="e.g. Neat braids, done on time" />
             </Field>
           </>
         )}
@@ -357,58 +462,8 @@ export function StartFlow() {
 
         {step === "services" && (
           <>
-            <Title title="Your services" lead={`Typical prices in ${city}. Tick what you do and change any price.`} />
-            <div className="grid gap-2.5">
-              {services.map((s, i) => {
-                const set = (patch: Partial<PresetService["item"]>) => setServices(services.map((x, j) => (j === i ? { ...x, item: { ...x.item, ...patch } } : x)));
-                const options = s.item.options;
-                return (
-                  <div key={`${s.trade}-${s.item.name}`} className={`grid gap-2.5 rounded-card border border-line bg-surface-raised px-4 py-3.5 ${s.on ? "" : "opacity-60"}`}>
-                    <div className="flex items-center gap-3">
-                      <Tick on={s.on} label={`I do ${s.item.name}`} onClick={() => setServices(services.map((x, j) => (j === i ? { ...x, on: !x.on } : x)))} />
-                      <div className="min-w-0 flex-1">
-                        <div className="font-semibold">
-                          {s.item.name} {s.item.eventDay && <span className="text-caption ml-1 rounded-pill bg-gold-soft px-2 py-0.5 text-gold-text">Event day</span>}
-                        </div>
-                        <div className="text-caption text-ink-muted">{options ? `${options.length} choices · from ${naira(Math.min(...options.map((o) => o.price)))}` : s.item.minutes ? durationLabel(s.item.minutes) : ""}</div>
-                      </div>
-                      {options ? (
-                        <button type="button" className="text-label min-h-11 px-2 text-brand" aria-expanded={openSvc === i} onClick={() => setOpenSvc(openSvc === i ? null : i)}>
-                          {openSvc === i ? "Hide" : "Prices"}
-                        </button>
-                      ) : (
-                        <div className="w-30 shrink-0">
-                          <Naira id={`s-svc-${i}`} small value={s.item.price ?? 0} onChange={(v) => set({ price: v })} label={`Price for ${s.item.name}`} />
-                        </div>
-                      )}
-                    </div>
-                    {options && openSvc === i && (
-                      <div className="grid gap-2 pl-10">
-                        {options.map((o, j) => (
-                          <div key={o.label} className="flex items-center gap-2.5">
-                            <span className="min-w-0 flex-1 text-sm">
-                              {o.label} <span className="text-ink-muted">· {durationLabel(o.minutes)}</span>
-                            </span>
-                            <div className="w-30 shrink-0">
-                              <Naira
-                                id={`s-svc-${i}-${j}`}
-                                small
-                                value={o.price}
-                                onChange={(v) => {
-                                  const next = options.map((x, k) => (k === j ? { ...x, price: v } : x));
-                                  set({ options: next, price: Math.min(...next.map((x) => x.price)) });
-                                }}
-                                label={`Price for ${s.item.name}, ${o.label}`}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <Title title="Your services" lead={`Typical prices in ${city}. Tick what you do, then tap Edit to change the price or how long it takes.`} />
+            <ServicesEditor services={services} onChange={setServices} city={city} />
             <div>
               <h2 className="text-title">Extras customers can add</h2>
               <p className="text-caption mt-1 mb-2.5 text-ink-muted">They tick these when they book. Leave them off if you don&apos;t want any.</p>
