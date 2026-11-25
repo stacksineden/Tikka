@@ -55,6 +55,8 @@ export interface TodayData {
   tomorrow: { count: number; first?: string };
   owed: { saleId: string; name: string; item: string; owedKobo: number; phone?: string; since: string }[];
   services: { label: string; naira: number }[];
+  /** Customers with a number, most recent first, for "Who was it?" on New sale. */
+  customers: { name: string; phone: string }[];
   takenTodayKobo: number;
   demo: boolean;
 }
@@ -318,7 +320,7 @@ export function TodayScreen({ d }: { d: TodayData }) {
         />
       )}
       {open?.kind === "payOwed" && d.owed[open.i] && <PayOwedSheet o={d.owed[open.i]} onClose={() => setOpen(null)} />}
-      {open?.kind === "sale" && <SaleSheet services={d.services} onClose={() => setOpen(null)} />}
+      {open?.kind === "sale" && <SaleSheet services={d.services} customers={d.customers} onClose={() => setOpen(null)} />}
       {open?.kind === "expense" && <ExpenseSheet kind={open.expense} onClose={() => setOpen(null)} />}
     </div>
   );
@@ -485,10 +487,12 @@ function PayOwedSheet({ o, onClose }: { o: TodayData["owed"][number]; onClose: (
   );
 }
 
-function SaleSheet({ services, onClose }: { services: TodayData["services"]; onClose: () => void }) {
+function SaleSheet({ services, customers, onClose }: { services: TodayData["services"]; customers: TodayData["customers"]; onClose: () => void }) {
   const router = useRouter();
   const [svc, setSvc] = useState<{ label: string; naira: number } | null>(null);
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [picked, setPicked] = useState(false);
   const [askName, setAskName] = useState(true);
   const [paid, setPaid] = useState(0);
   const [method, setMethod] = useState<PayMethod>("cash");
@@ -522,7 +526,43 @@ function SaleSheet({ services, onClose }: { services: TodayData["services"]; onC
         <p className="text-body text-ink-muted">
           {svc.label} · ₦{svc.naira.toLocaleString("en-NG")}
         </p>
-        <input aria-label="Name" className="input h-13 text-[17px]" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Ngozi" autoComplete="off" />
+        <input
+          aria-label="Name"
+          className="input h-13 text-[17px]"
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            if (picked) setPhone("");
+            setPicked(false);
+          }}
+          placeholder="e.g. Ngozi"
+          autoComplete="off"
+        />
+        {(() => {
+          const t = name.trim().toLowerCase();
+          const list = customers.filter((c) => !t || c.name.toLowerCase().includes(t)).slice(0, 6);
+          return list.length ? (
+            <div>
+              <span className="text-caption mb-1.5 block text-ink-muted">{t ? "Is it one of your customers?" : "Your customers"}</span>
+              <div className="flex flex-wrap gap-2">
+                {list.map((c) => (
+                  <Chip
+                    key={c.phone}
+                    on={picked && phone === c.phone}
+                    onClick={() => {
+                      setName(c.name);
+                      setPhone(c.phone);
+                      setPicked(true);
+                    }}
+                  >
+                    {c.name}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+          ) : null;
+        })()}
+        {!picked && <input aria-label="WhatsApp number (optional)" className="input h-12" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="WhatsApp number (optional)" />}
         <button type="button" className="btn btn-lg w-full rounded-pill" onClick={() => setAskName(false)}>
           Next
         </button>
@@ -551,7 +591,7 @@ function SaleSheet({ services, onClose }: { services: TodayData["services"]; onC
         disabled={pending}
         onClick={() =>
           start(async () => {
-            await paidAction({ name: name || "Walk-in", item: svc.label, totalNaira: svc.naira, paidNaira: paid, method });
+            await paidAction({ name: name || "Walk-in", item: svc.label, totalNaira: svc.naira, paidNaira: paid, method, phone: phone || undefined });
             router.refresh();
             onClose();
           })

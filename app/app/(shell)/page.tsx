@@ -68,6 +68,8 @@ async function Home() {
   if (user.isNew) redirect("/app/welcome");
 
   const [business, drops] = await Promise.all([getBusiness(user), getDrops(user)]);
+  // NEW DIRECTION: a new-setup demo account that hasn't finished setup goes back to it.
+  if (!business && user.id.startsWith("user_demo_new_")) redirect("/app/start");
   // NEW DIRECTION, stage 2: businesses from the new setup (demo only for now) open on Today.
   if (business?.trades?.length && user.role === "owner") return <TodayPage user={user} business={business} />;
   const today = business && user.role === "owner" ? <TodayBookings user={user} /> : null;

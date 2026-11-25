@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { getBookings } from "@/lib/bookings-data";
 import { dayLabel, timeLabel, todayKey, watInstant, watParts } from "@/lib/bookings";
 import { getLedger } from "@/lib/ledger-data";
+import { getClients } from "@/lib/clients-data";
 import { owedList, paidOf } from "@/lib/ledger";
 import { isDbId } from "@/lib/data";
 import type { Business, SessionUser } from "@/lib/types";
@@ -15,7 +16,7 @@ export async function TodayPage({ user, business }: { user: SessionUser; busines
   const today = todayKey(now);
   const start = new Date(watInstant(today, 0));
   const dayAfter = new Date(start.getTime() + 2 * 86_400_000);
-  const [bookings, ledger] = await Promise.all([getBookings(user, start, dayAfter), getLedger(user)]);
+  const [bookings, ledger, clients] = await Promise.all([getBookings(user, start, dayAfter), getLedger(user), getClients(user)]);
   const tomorrowStart = new Date(start.getTime() + 86_400_000);
   const paidFor = new Map(ledger.sales.filter((s) => s.bookingId).map((s) => [s.bookingId!, s]));
 
@@ -58,6 +59,10 @@ export async function TodayPage({ user, business }: { user: SessionUser; busines
       ledger.sales.reduce((n, s) => n + s.payments.filter((p) => isToday(p.at)).reduce((m, p) => m + p.kobo, 0), 0) +
       todays.filter((b) => isToday(b.createdAt)).reduce((n, b) => n + (b.depositPaidKobo ?? 0), 0),
     demo: !isDbId(user.id),
+    customers: clients
+      .filter((c) => c.phone)
+      .sort((a, b) => (b.lastVisit ?? b.next?.at ?? "").localeCompare(a.lastVisit ?? a.next?.at ?? ""))
+      .map((c) => ({ name: c.name, phone: c.phone! })),
   };
   return <TodayScreen d={data} />;
 }

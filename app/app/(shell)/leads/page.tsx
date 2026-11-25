@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Check, Download, Search, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { AutoSubmit, FollowUpButton, LiveRefresh } from "@/components/leads/LeadBits";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
@@ -16,6 +17,8 @@ import { dbPayoutState, payReady } from "@/lib/payouts-db";
 import { ActionIcon } from "@/components/tikka/ActionIcon";
 import { whatsappLink } from "@/lib/booking";
 import { whenLabel, type BookingRules } from "@/lib/bookings";
+import { ClientList } from "@/components/clients/ClientList";
+import { getClients } from "@/lib/clients-data";
 import { getBookingLeads, getBookings, getBookingSetup, serviceLengths, type BookingLead } from "@/lib/bookings-data";
 import { isDbId } from "@/lib/data";
 import { getBusiness, getDrops, getFollowups, getLeads, getReviewAsks, leadsNow } from "@/lib/data";
@@ -63,6 +66,19 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
   if (!user) redirect("/app/redeem");
   const [b, all, drops, today, sp, planNow, asks] = await Promise.all([getBusiness(user), getLeads(user), getDrops(user), getFollowups(user), searchParams, leadsNow(user), getReviewAsks(user)]);
   if (!b) redirect("/app/setup");
+  // NEW DIRECTION: the client book for businesses from the new setup (demo only for now).
+  if (b.trades?.length) {
+    await connection();
+    return (
+      <>
+        <div>
+          <h1 className="text-heading">Customers</h1>
+          <p className="text-body mt-1 text-ink-muted">Everyone who booked, bought or claimed a Tikka, one row each. Tap someone to see every visit.</p>
+        </div>
+        <ClientList clients={await getClients(user)} now={new Date().toISOString()} />
+      </>
+    );
+  }
 
   const f = parseLeadFilters(sp);
   const rows = filterLeads(all, f);

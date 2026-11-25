@@ -104,3 +104,18 @@ export async function seedLedger(user: Pick<SessionUser, "id" | "role">, now: Da
   );
   l.regular.push({ id: id(), kind: "Helper", kobo: 500_000, every: "week", from: daysAgo(3, 2) });
 }
+
+/** NEW DIRECTION: a walk-in saved by name only is the same person as a customer with a number. */
+export async function matchWalkIn(user: Pick<SessionUser, "id" | "role">, name: string, phone: string): Promise<number> {
+  const key = ownerKey(user);
+  if (!key) return 0;
+  const want = name.trim().toLowerCase().replace(/\s+/g, " ");
+  let n = 0;
+  for (const s of ledgerOf(key).sales) {
+    if (!s.phone && !s.bookingId && s.name.trim().toLowerCase().replace(/\s+/g, " ") === want) {
+      s.phone = phone;
+      n++;
+    }
+  }
+  return n;
+}
