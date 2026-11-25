@@ -117,6 +117,7 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 24px; }
 .opt span { flex: 1; min-width: 0; font-size: 14px; }
 .opt span small { color: var(--ink-muted); }
 .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: var(--r-pill); background: var(--gold-soft); color: var(--gold-text); }
+.tag { justify-self: start; }
 .tag.ok { background: var(--success-soft); color: var(--success); }
 .tag.due { background: var(--surface-sunken); color: var(--ink); }
 .tag.bad { background: var(--danger-soft); color: var(--danger); }
@@ -637,9 +638,18 @@ const T = {
   ],
   sales: [],
   owed: [{ name: "Bisi Ogun", amt: 10000, when: "Sat" }, { name: "Chioma Eze", amt: 5000, when: "Mon" }],
-  expenses: [{ what: "Products", amt: 32000 }, { what: "Transport", amt: 8000 }, { what: "Data", amt: 3000 }, { what: "Rent (share)", amt: 9000 }],
-  weekIn: 184000,
+  expenses: [{ what: "Products", amt: 32000, src: "added" }, { what: "Transport", amt: 8000, src: "added" }, { what: "Data", amt: 3000, src: "added" }, { what: "Helper", amt: 5000, src: "regular", when: "every Saturday" }],
+  regular: [{ what: "Helper", amt: 5000, when: "every Saturday" }, { what: "Shop rent", amt: 150000, when: "every month, on the 1st" }],
+  base: { tikka: 64000, cash: 52000, transfer: 68000 },
 };
+const SRC = {
+  auto: ["ok", "zap", "Automatic"],
+  recorded: ["info", "hand", "You recorded"],
+  added: ["due", "pencil", "You added"],
+  regular: ["due", "repeat", "Regular"],
+};
+const srcTag = (k) => `<span class="tag ${SRC[k][0]}">${icon(SRC[k][1], 12)} ${SRC[k][2]}</span>`;
+const paidBy = (m) => T.appts.filter((a) => a.state === "paid" && a.method === m).reduce((n, a) => n + due(a), 0) + T.sales.filter((s) => s.method === m).reduce((n, s) => n + s.paid, 0);
 const due = (a) => a.price + (a.travel || 0) - a.dep;
 function todayView() {
   const tabs = [["today", "sun", "Today"], ["calendar", "calendar-days", "Calendar"], ["customers", "users", "Customers"], ["money", "wallet", "Money"], ["more", "menu", "More"]];
@@ -677,7 +687,20 @@ function todayTab() {
       <div class="sect-title"><h2 id="h-owed">Still owed to you</h2><b class="mono">${naira(owedTotal)}</b></div>
       <div class="card list">${T.owed.map((o, i) => `<div class="line-item"><span><b>${esc(o.name)}</b><br><span class="small muted">Since ${o.when}</span></span>
         <span style="display:flex;align-items:center;gap:8px"><b class="mono">${naira(o.amt)}</b><button class="act" data-act="remindowed" data-i="${i}">${icon("send", 16)} Remind</button></span></div>`).join("") || `<div class="line-item muted">Nobody owes you money.</div>`}</div>
-    </section>`;
+    </section>
+    ${eveningCheck()}`;
+}
+function eveningCheck() {
+  const unpaid = T.appts.filter((a) => a.state !== "paid");
+  return `<section class="card" style="padding:16px;display:grid;gap:14px" aria-labelledby="h-eve">
+    <div><div class="sect-title"><h2 id="h-eve">Before you close</h2><span class="tag due">${icon("moon", 12)} From 6pm</span></div>
+      <p class="small muted" style="margin:4px 0 0">Two quick checks so your money report is right.</p></div>
+    ${unpaid.length ? `<button class="choice" data-act="firstunpaid" style="min-height:60px"><span class="ic">${icon("circle-alert", 22)}</span><span style="flex:1"><b style="font-size:15px">${unpaid.length} ${unpaid.length === 1 ? "customer" : "customers"} not marked paid yet</b><span class="muted small">${unpaid.map((a) => a.name.split(" ")[0]).join(", ")}. Tap to mark them.</span></span></button>`
+      : `<div class="note" style="background:var(--success-soft)">${icon("circle-check", 22)}<div>Everyone today is marked paid.</div></div>`}
+    <div><b style="font-size:15px">Anything you spent today?</b>
+      <div class="chips" style="margin-top:8px">${["Products", "Transport", "Data", "Light / fuel", "Other"].map((k) => `<button class="chip" data-act="quickexp" data-v="${k}">${k}</button>`).join("")}</div>
+      <button class="linkbtn" data-act="toast" data-msg="Nothing to add today. Your report stays as it is." style="padding:0;margin-top:4px">Nothing today</button></div>
+  </section>`;
 }
 function apptCard(a) {
   const d = due(a);
@@ -712,29 +735,53 @@ function customersTab() {
 }
 function moneyTab() {
   const out = T.expenses.reduce((n, e) => n + e.amt, 0);
-  const inn = T.weekIn + T.sales.reduce((n, s) => n + s.paid, 0);
+  const tikka = T.base.tikka + paidBy("Pay link");
+  const cash = T.base.cash + paidBy("Cash");
+  const transfer = T.base.transfer + paidBy("Transfer") + paidBy("Card");
+  const inn = tikka + cash + transfer;
+  const unpaid = T.appts.filter((a) => a.state !== "paid").length;
+  const row = (label, sub, amt, src) => `<div class="line-item"><span style="display:grid;gap:4px"><span>${label}${sub ? `<br><span class="small muted">${sub}</span>` : ""}</span>${srcTag(src)}</span><b class="mono">${naira(amt)}</b></div>`;
   return `<div><h1>Money</h1><p class="lead">This week, Monday to today.</p></div>
     <div class="money-hero">
       <div class="mstat"><span class="small muted">Money in</span><b>${naira(inn)}</b></div>
       <div class="mstat"><span class="small muted">Spent</span><b>${naira(out)}</b></div>
       <div class="mstat kept"><span class="small">You kept</span><b>${naira(inn - out)}</b></div>
     </div>
+    <button class="linkbtn" data-act="howcount" style="justify-self:start;padding:0;margin-top:-10px">${icon("info", 16)} Where these numbers come from</button>
+    ${unpaid ? `<button class="note gold" data-act="firstunpaid" style="border:0;text-align:left;width:100%">${icon("circle-alert", 22)}<span><b>${unpaid} ${unpaid === 1 ? "customer" : "customers"} today not marked paid.</b> Their money isn't counted yet. Tap to mark them.</span></button>` : ""}
     <button class="btn btn-ghost" data-act="expense">${icon("minus", 20)} Add something you spent</button>
     <section style="display:grid;gap:10px"><h2>Where it came from</h2>
       <div class="card list">
-        <div class="line-item"><span>Deposits through Tikka</span><b class="mono">${naira(64000)}</b></div>
-        <div class="line-item"><span>Cash</span><b class="mono">${naira(52000 + T.sales.filter((s) => s.method === "Cash").reduce((n, s) => n + s.paid, 0))}</b></div>
-        <div class="line-item"><span>Transfers</span><b class="mono">${naira(68000 + T.sales.filter((s) => s.method !== "Cash").reduce((n, s) => n + s.paid, 0))}</b></div>
+        ${row("Deposits and pay links", "Paid online, straight to your bank", tikka, "auto")}
+        ${row("Cash", "When you tapped Paid or New sale", cash, "recorded")}
+        ${row("Transfers and card", "When you tapped Paid or New sale", transfer, "recorded")}
       </div></section>
     <section style="display:grid;gap:10px"><h2>What you spent</h2>
-      <div class="card list">${T.expenses.map((e) => `<div class="line-item"><span>${esc(e.what)}</span><b class="mono">${naira(e.amt)}</b></div>`).join("")}</div></section>
+      <div class="card list">${T.expenses.map((e) => row(esc(e.what), e.when ? `Counted ${e.when}` : "", e.amt, e.src)).join("")}</div></section>
+    <section style="display:grid;gap:10px"><div class="sect-title"><h2>Regular costs</h2><span class="small muted">Counted for you</span></div>
+      <div class="card list">${T.regular.map((r) => `<div class="line-item"><span><b>${esc(r.what)}</b><br><span class="small muted">${esc(r.when)}</span></span><b class="mono">${naira(r.amt)}</b></div>`).join("")}</div>
+      <button class="btn btn-ghost btn-sm" data-act="expense" data-v="regular">${icon("repeat", 18)} Add a regular cost</button></section>
     <section style="display:grid;gap:10px"><h2>This week at a glance</h2>
       <div class="card list">
         <div class="line-item"><span>Best service</span><b>Knotless braids</b></div>
         <div class="line-item"><span>Busiest day</span><b>Saturday</b></div>
         <div class="line-item"><span>Top customer</span><b>Ada Nwosu</b></div>
       </div></section>
-    <div class="note">${icon("bell", 22)}<div>Every Sunday evening you get this on your phone: what came in, what you spent and what you kept.</div></div>`;
+    <section style="display:grid;gap:10px"><h2>On your phone</h2>
+      <div class="card list">
+        <div class="line-item"><span style="display:flex;gap:12px;align-items:flex-start">${icon("moon", 20)}<span><b>Every evening, 8pm</b><br><span class="small muted">"Anything you spent today?" Tap a type and the amount, or Nothing today.</span></span></span></div>
+        <div class="line-item"><span style="display:flex;gap:12px;align-items:flex-start">${icon("bell", 20)}<span><b>Every Sunday evening</b><br><span class="small muted">"This week: ${naira(inn)} in, ${naira(out)} spent, you kept ${naira(inn - out)}."</span></span></span></div>
+      </div></section>`;
+}
+function howCountSheet() {
+  sheet(`${sheetHead("Where the numbers come from")}
+    <div class="card list">
+      <div class="line-item" style="align-items:flex-start"><span style="display:grid;gap:6px">${srcTag("auto")}<span>Deposits and pay links. Customers pay online, so Tikka knows straight away. You do nothing.</span></span></div>
+      <div class="line-item" style="align-items:flex-start"><span style="display:grid;gap:6px">${srcTag("recorded")}<span>Cash and transfers. Counted when you tap <b>Paid</b> on Today, or <b>New sale</b> for a walk-in.</span></span></div>
+      <div class="line-item" style="align-items:flex-start"><span style="display:grid;gap:6px">${srcTag("added")}<span>What you spent. Tikka can't see this, so you add it. The evening reminder makes it quick.</span></span></div>
+      <div class="line-item" style="align-items:flex-start"><span style="display:grid;gap:6px">${srcTag("regular")}<span>Costs like rent or your helper. Add them once and Tikka counts them every week or month.</span></span></div>
+    </div>
+    <p class="small muted" style="margin:0">A transfer straight to your bank that you never mark as paid won't show here. The "not marked paid" reminder helps you catch those.</p>`);
 }
 function moreTab() {
   const items = [["globe", "Your page", "Photos, services, prices"], ["calendar-cog", "Booking settings", "Hours, deposits, rules"], ["gift", "Drops", "Bring in new customers"], ["star", "Reviews", "What customers say"], ["qr-code", "Posters & cards", "Free QR posters and business cards"], ["users-round", "Helpers", "People who work with you"], ["landmark", "Get paid", "Your bank and ID"], ["settings", "Settings", "Account and alerts"]];
@@ -788,11 +835,16 @@ function saleSheet() {
       <button class="btn btn-primary" data-act="savesale">${icon("check", 20)} Save sale</button>`);
   }
 }
-function expenseSheet() {
-  sheet(`${sheetHead("Something you spent")}
-    <div class="field"><span class="label">What was it?</span><div class="chips" id="exp-kinds">${["Products", "Rent", "Transport", "Helper", "Data", "Light / fuel", "Other"].map((k, i) => `<button class="chip" data-act="expkind" data-v="${k}" aria-pressed="${i === 0}">${k}</button>`).join("")}</div></div>
+function expenseSheet(kind, regular) {
+  const kinds = ["Products", "Rent", "Transport", "Helper", "Data", "Light / fuel", "Other"];
+  const pick = kinds.includes(kind) ? kind : (regular ? "Rent" : "Products");
+  sheet(`${sheetHead(regular ? "A regular cost" : "Something you spent")}
+    <div class="field"><span class="label">What was it?</span><div class="chips" id="exp-kinds">${kinds.map((k) => `<button class="chip" data-act="expkind" data-v="${k}" aria-pressed="${k === pick}">${k}</button>`).join("")}</div></div>
     <div class="field"><label class="label" for="f-ea">How much?</label><div class="prefix"><span>₦</span><input id="f-ea" inputmode="numeric" placeholder="0"></div></div>
+    <div class="field"><span class="label">Does it happen regularly?</span><div class="chips" id="exp-every">${[["", "No, just once"], ["week", "Every week"], ["month", "Every month"]].map(([v, l]) => `<button class="chip" data-act="expevery" data-v="${v}" aria-pressed="${regular ? v === "month" : v === ""}">${l}</button>`).join("")}</div>
+      <p class="small muted" style="margin:6px 0 0">Regular costs are counted for you, so you only add them once.</p></div>
     <button class="btn btn-primary" data-act="saveexp">${icon("check", 20)} Save</button>`);
+  setTimeout(() => document.getElementById("f-ea")?.focus(), 250);
 }
 
 /* ---------- Start ---------- */
@@ -865,7 +917,7 @@ document.addEventListener("click", (e) => {
     case "tab": T.tab = v; closeSheet(); render(); break;
     case "arrived": T.appts.find((x) => x.id === id).state = "here"; keep(); break;
     case "paid": paidSheet(T.appts.find((x) => x.id === id)); break;
-    case "paidhow": T.appts.find((x) => x.id === id).state = "paid"; closeSheet(); keep(); toast(`Saved: paid by ${v.toLowerCase()}`); break;
+    case "paidhow": { const ap = T.appts.find((x) => x.id === id); ap.state = "paid"; ap.method = v; closeSheet(); keep(); toast(`Saved: paid by ${v.toLowerCase()}. Added to Money.`); break; }
     case "remind": remindSheet(T.appts.find((x) => x.id === id)); break;
     case "remindowed": remindSheet(T.owed[i], true); break;
     case "sendremind": closeSheet(); toast("Your WhatsApp opens with the message."); break;
@@ -883,13 +935,28 @@ document.addEventListener("click", (e) => {
       if (owes) T.owed.unshift({ name: sale.name || "Walk-in", amt: owes, when: "today" });
       closeSheet(); T.tab = "today"; keep(); toast("Sale saved"); break;
     }
-    case "expense": expenseSheet(); break;
+    case "expense": expenseSheet(null, v === "regular"); break;
+    case "quickexp": expenseSheet(v, false); break;
+    case "howcount": howCountSheet(); break;
+    case "firstunpaid": {
+      const a = T.appts.find((x) => x.state !== "paid");
+      if (a) { a.state = "here"; T.tab = "today"; render(); paidSheet(a); }
+      break;
+    }
     case "expkind": document.querySelectorAll("#exp-kinds .chip").forEach((c) => c.setAttribute("aria-pressed", c === el)); break;
+    case "expevery": document.querySelectorAll("#exp-every .chip").forEach((c) => c.setAttribute("aria-pressed", c === el)); break;
     case "saveexp": {
       const amt = Number(document.getElementById("f-ea").value.replace(/\D/g, "")) || 0;
       const kind = document.querySelector('#exp-kinds [aria-pressed="true"]')?.dataset.v || "Other";
+      const every = document.querySelector('#exp-every [aria-pressed="true"]')?.dataset.v || "";
       if (!amt) { toast("Type how much you spent."); break; }
-      T.expenses.push({ what: kind, amt }); closeSheet(); keep(); toast("Saved"); break;
+      if (every) {
+        const when = every === "week" ? "every week" : "every month";
+        T.regular.push({ what: kind, amt, when });
+        T.expenses.push({ what: kind, amt, src: "regular", when });
+        closeSheet(); keep(); toast(`Saved. Tikka counts it ${when}.`); break;
+      }
+      T.expenses.push({ what: kind, amt, src: "added" }); closeSheet(); keep(); toast("Saved"); break;
     }
     case "closesheet": closeSheet(); break;
   }
