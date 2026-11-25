@@ -148,6 +148,8 @@ export interface ServiceItem {
   eventDay?: boolean;
   /** NEW DIRECTION: the options are people, not choices ("Bride" once, plus "Each bridesmaid" × n). */
   perPerson?: boolean;
+  /** NEW DIRECTION: what the owner asks when someone books this ("Any allergies?"). Up to 3. */
+  questions?: string[];
 }
 
 export interface ServiceOption {

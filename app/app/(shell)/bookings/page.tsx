@@ -17,6 +17,8 @@ import { paystackMode } from "@/lib/paystack";
 import { dbPayoutState, payReady } from "@/lib/payouts-db";
 import { dbBookingSetup } from "@/lib/bookings-db";
 import { MonthCalendar, type MonthDay } from "@/components/today/MonthCalendar";
+import { BookingSettingsV2 } from "@/components/settings/BookingSettingsV2";
+import { START_HOURS } from "@/lib/presets";
 import { getBookingRules } from "@/lib/bookings-data";
 import { freeDays, openRange, todayKey, watParts, type Booking } from "@/lib/bookings";
 import type { Business } from "@/lib/types";
@@ -49,6 +51,38 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
 
   const services = b.services.filter((s) => s.id).map((s) => ({ id: s.id!, name: s.name }));
   const editing = sp.edit === "1";
+
+  // NEW DIRECTION: Booking settings in one place for businesses from the new setup (demo only for now).
+  if (editing && b.trades?.length) {
+    const dep = setup.deposit;
+    return (
+      <>
+        <Link href="/app/bookings" className="text-label inline-flex min-h-11 items-center justify-self-start text-ink-muted">
+          ← Calendar
+        </Link>
+        <div>
+          <h1 className="text-heading">Booking settings</h1>
+          <p className="text-body mt-1 text-ink-muted">Changes show on your page straight away. Bookings you already have stay as they are.</p>
+        </div>
+        <BookingSettingsV2
+          d={{
+            enabled: setup.enabled,
+            hours: b.hours ?? START_HOURS,
+            capacity: setup.capacity,
+            noticeMinutes: setup.noticeMinutes,
+            aheadDays: setup.aheadDays,
+            workPlace: b.workPlace ?? "shop",
+            travelFee: b.travelFee ?? 0,
+            travelReach: b.travelReach ?? "city",
+            place: { area: b.area, city: b.city, state: b.state },
+            deposit: dep ? { mode: dep.mode, percent: dep.percent, fixedKobo: dep.fixedKobo, counts: dep.counts } : { mode: "off", counts: true },
+            rules: b.bookingRules ?? [],
+            services: b.services.filter((x) => x.id).map((x) => ({ id: x.id!, name: x.name, questions: x.questions ?? [] })),
+          }}
+        />
+      </>
+    );
+  }
 
   if (!setup.setUp || editing) {
     return (

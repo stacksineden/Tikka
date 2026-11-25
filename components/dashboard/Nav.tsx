@@ -254,7 +254,7 @@ function MoreSheet({ open, onClose, account, path }: { open: boolean; onClose: (
 
   const rows: { href: string; label: string; Icon: LucideIcon; meta?: string }[] = account?.newDirection ? [
     { href: "/app/page", label: "Your page", Icon: Globe, meta: "Photos, services, prices" },
-    { href: "/app/bookings", label: "Booking settings", Icon: CalendarDays, meta: "Hours, deposits, rules" },
+    { href: "/app/bookings?edit=1", label: "Booking settings", Icon: CalendarDays, meta: "Hours, deposits, rules" },
     { href: "/app/redeem", label: "Check a code", Icon: ScanLine, meta: "Gifts, drop cards, bookings" },
     { href: "/app/drops", label: "Drops", Icon: Layers, meta: "Bring in new customers" },
     { href: "/app/reviews", label: "Reviews", Icon: MessageSquareText, meta: account?.rating ? `${account.rating} · ${account.reviewCount}` : undefined },

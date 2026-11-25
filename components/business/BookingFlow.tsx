@@ -63,6 +63,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
+  const [answers, setAnswers] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [waitlisted, setWaitlisted] = useState(false);
@@ -78,6 +79,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
     setMonthOffset(0);
     setError("");
     setWaitlisted(false);
+    setAnswers((s.questions ?? []).map(() => ""));
     setStep(stepsFor(s, b)[0]);
     ref.current?.showModal();
     void fetch(`/api/book?slug=${encodeURIComponent(b.slug)}`, { cache: "no-store" })
@@ -120,7 +122,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
     call: time !== null,
     people: true,
     extras: true,
-    details: name.trim().length > 1 && phone.replace(/\D/g, "").length >= 10,
+    details: name.trim().length > 1 && phone.replace(/\D/g, "").length >= 10 && (svc?.questions ?? []).every((_, i) => (answers[i] ?? "").trim().length > 0),
     review: true,
     pay: true,
   };
@@ -156,7 +158,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
           home: !!home,
           area,
           address,
-          answers: note,
+          answers: [...(svc.questions ?? []).map((q, i) => (answers[i]?.trim() ? `${q} ${answers[i].trim()}` : "")), note.trim()].filter(Boolean).join(" · "),
           name,
           phone,
         }),
@@ -423,6 +425,9 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
                 <p className="text-body text-ink-muted">{b.name} uses these to reach you about your booking.</p>
                 <Input id="bf-name" label="Your name" value={name} onChange={setName} placeholder="e.g. Chiamaka" autoComplete="name" />
                 <Input id="bf-phone" label="WhatsApp number" value={phone} onChange={setPhone} placeholder="0803 000 0000" inputMode="tel" autoComplete="tel-national" />
+                {(svc.questions ?? []).map((q, i) => (
+                  <Input key={q} id={`bf-q-${i}`} label={q} value={answers[i] ?? ""} onChange={(v) => setAnswers((a) => a.map((x, j) => (j === i ? v : x)))} />
+                ))}
                 <div>
                   <label htmlFor="bf-note" className="text-label mb-1.5 block">
                     {svc.eventDay ? "Skin type, allergies or wedding colours" : "Anything we should know?"} <span className="font-normal text-ink-muted">(optional)</span>

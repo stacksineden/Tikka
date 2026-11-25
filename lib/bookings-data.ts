@@ -279,7 +279,7 @@ export async function saveBookingSettings(
   if (!w) throw new Error("Set up your card first.");
   if (isDbId(w.key)) return dbSaveBookingSettings(w.key, s);
   const d = demoBook(w.key, w.business)!;
-  d.setup = { setUp: true, enabled: s.enabled, capacity: s.capacity, noticeMinutes: s.noticeMinutes, aheadDays: s.aheadDays };
+  d.setup = { ...d.setup, setUp: true, enabled: s.enabled, capacity: s.capacity, noticeMinutes: s.noticeMinutes, aheadDays: s.aheadDays };
   d.minutes = { ...d.minutes, ...s.minutes };
 }
 
