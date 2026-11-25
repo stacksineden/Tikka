@@ -59,3 +59,24 @@ export function NairaInput({ id, value, onChange, label }: { id: string; value: 
     </div>
   );
 }
+
+/** The lowest deposit percentage an owner can pick; the server clamps to the same. */
+export const MIN_DEPOSIT_PERCENT = 10;
+
+/** A percentage box (0 to 100) with a % after the number. */
+export function PercentInput({ id, value, onChange, label }: { id: string; value: number; onChange: (n: number) => void; label: string }) {
+  return (
+    <div className="flex h-13 w-32 items-center rounded-md border border-line-strong bg-surface-raised pr-4 focus-within:outline-2 focus-within:outline-brand">
+      <input
+        id={id}
+        aria-label={label}
+        inputMode="numeric"
+        className="h-full min-w-0 flex-1 bg-transparent pr-1 pl-4 text-right text-[17px] outline-none"
+        value={value ? String(value) : ""}
+        onChange={(e) => onChange(Math.min(100, Number(e.target.value.replace(/\D/g, "").slice(0, 3)) || 0))}
+        placeholder="30"
+      />
+      <span className="text-ink-muted">%</span>
+    </div>
+  );
+}

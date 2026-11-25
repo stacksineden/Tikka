@@ -35,6 +35,7 @@ import {
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { addPhoto } from "@/app/app/actions";
+import { MIN_DEPOSIT_PERCENT, PercentInput } from "@/components/today/Sheet";
 import { saveStartMoney, saveStartPage, type StartPage } from "@/app/app/start/actions";
 import { prepareLogo, preparePortfolio } from "@/lib/media-client";
 import { CardPreview } from "@/components/setup/CardPreview";
@@ -113,7 +114,8 @@ export function StartFlow() {
   const [bank, setBank] = useState("");
   const [account, setAccount] = useState("");
   const [accountOk, setAccountOk] = useState(false);
-  const [depositMode, setDepositMode] = useState<"20" | "30" | "50" | "fixed">(String(SUGGESTED_DEPOSIT_PERCENT) as "30");
+  const [depositMode, setDepositMode] = useState<"percent" | "fixed">("percent");
+  const [depositPercent, setDepositPercent] = useState(SUGGESTED_DEPOSIT_PERCENT);
   const [depositFixed, setDepositFixed] = useState(5000);
   const [counts, setCounts] = useState(true);
   const [rules, setRules] = useState<string[] | null>(null);
@@ -166,7 +168,7 @@ export function StartFlow() {
 
   function saveMoney() {
     start(async () => {
-      const deposit = depositMode === "fixed" ? { mode: "fixed" as const, amount: depositFixed, counts } : { mode: "percent" as const, percent: Number(depositMode), counts };
+      const deposit = depositMode === "fixed" ? { mode: "fixed" as const, amount: depositFixed, counts } : { mode: "percent" as const, percent: depositPercent, counts };
       const r = await saveStartMoney({ ownerName: idName, deposit, rules: rules ?? [] });
       if (!r.ok) return setProblem(r.error);
       go("done");
@@ -205,7 +207,7 @@ export function StartFlow() {
     live: true,
     id: idName.trim().length > 2 && idPhoto,
     bank: accountOk,
-    deposit: true,
+    deposit: depositMode === "fixed" ? depositFixed > 0 : depositPercent >= MIN_DEPOSIT_PERCENT,
     rules: true,
     done: true,
   };
@@ -262,7 +264,7 @@ export function StartFlow() {
   const pct = Math.round((index / (STEPS.length - 1)) * 100);
   const sampleSvc = useMemo(() => services.find((s) => s.on && !s.item.eventDay) ?? services.find((s) => s.on), [services]);
   const samplePrice = sampleSvc ? (sampleSvc.item.options ? sampleSvc.item.options[sampleSvc.item.options.length - 1].price : sampleSvc.item.price ?? 0) : 20000;
-  const sampleDeposit = depositOn(samplePrice, depositMode === "fixed" ? { mode: "fixed", amount: depositFixed } : { mode: "percent", percent: Number(depositMode) });
+  const sampleDeposit = depositOn(samplePrice, depositMode === "fixed" ? { mode: "fixed", amount: depositFixed } : { mode: "percent", percent: depositPercent });
   const firstName = (idName.trim() || name.trim()).split(" ")[0] || "there";
   const noun = TRADES.find((t) => t.id === trades[0])?.noun ?? "beauty";
 
@@ -698,14 +700,22 @@ export function StartFlow() {
           <>
             <Title title="How much deposit?" lead={`Most ${noun} businesses ask for ${SUGGESTED_DEPOSIT_PERCENT}%. You can change it any time.`} />
             <div className="flex flex-wrap gap-2">
-              {(["20", "30", "50", "fixed"] as const).map((m) => (
-                <Chip key={m} on={depositMode === m} onClick={() => setDepositMode(m)}>
-                  {m === "fixed" ? "Fixed amount" : `${m}%`}
-                  {m === String(SUGGESTED_DEPOSIT_PERCENT) && <span className="ml-1 text-xs font-normal opacity-80">suggested</span>}
+              {[20, 30, 40, 50].map((p) => (
+                <Chip key={p} on={depositMode === "percent" && depositPercent === p} onClick={() => { setDepositMode("percent"); setDepositPercent(p); }}>
+                  {p}%
+                  {p === SUGGESTED_DEPOSIT_PERCENT && <span className="ml-1 text-xs font-normal opacity-80">suggested</span>}
                 </Chip>
               ))}
+              <Chip on={depositMode === "fixed"} onClick={() => setDepositMode("fixed")}>
+                Fixed amount
+              </Chip>
             </div>
-            {depositMode === "fixed" && (
+            {depositMode === "percent" ? (
+              <Field id="s-dp" label="Or type your own">
+                <PercentInput id="s-dp" value={depositPercent} onChange={setDepositPercent} label="Deposit percentage" />
+                {depositPercent < MIN_DEPOSIT_PERCENT && <p className="text-caption mt-1.5 text-ink-muted">At least {MIN_DEPOSIT_PERCENT}%.</p>}
+              </Field>
+            ) : (
               <Field id="s-df" label="Deposit for every booking">
                 <Naira id="s-df" value={depositFixed} onChange={setDepositFixed} />
               </Field>
@@ -779,7 +789,7 @@ export function StartFlow() {
                 `${photos.length} photos of your work`,
                 "Your working hours",
                 "ID sent: we check it the same day",
-                `Deposits: ${depositMode === "fixed" ? naira(depositFixed) : `${depositMode}%`} to ${bank || "your bank"}`,
+                `Deposits: ${depositMode === "fixed" ? naira(depositFixed) : `${depositPercent}%`} to ${bank || "your bank"}`,
                 "Your booking rules",
               ].map((t) => (
                 <li key={t} className="flex min-h-12 items-center gap-3">

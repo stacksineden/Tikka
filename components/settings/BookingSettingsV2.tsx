@@ -7,7 +7,7 @@ import { CalendarClock, Car, ChevronRight, CircleCheck, Clock, Loader2, MessageC
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { saveBookingPatch, type BookingPatch } from "@/app/app/booking-settings-actions";
-import { Chip, NairaInput, Sheet } from "@/components/today/Sheet";
+import { Chip, MIN_DEPOSIT_PERCENT, NairaInput, PercentInput, Sheet } from "@/components/today/Sheet";
 import { reachLabel } from "@/lib/presets";
 import type { OpeningHours, TravelReach, WorkPlace } from "@/lib/types";
 
@@ -256,16 +256,17 @@ function PlaceSheet({ d, pending, onSave, onClose }: { d: BookingSettingsData; p
 }
 
 function DepositSheet({ d, pending, onSave, onClose }: { d: BookingSettingsData; pending: boolean; onSave: (p: { mode: "percent" | "fixed" | "off"; percent?: number; amount?: number; counts: boolean }) => void; onClose: () => void }) {
-  const [mode, setMode] = useState<"20" | "30" | "50" | "fixed" | "off">(d.deposit.mode === "off" ? "off" : d.deposit.mode === "fixed" ? "fixed" : (String(d.deposit.percent ?? 30) as "30"));
+  const [mode, setMode] = useState<"percent" | "fixed" | "off">(d.deposit.mode);
+  const [percent, setPercent] = useState(d.deposit.percent ?? 30);
   const [amount, setAmount] = useState((d.deposit.fixedKobo ?? 500_000) / 100);
   const [counts, setCounts] = useState(d.deposit.counts);
   return (
     <Sheet title="Deposit" onClose={onClose}>
       <p className="text-body text-ink-muted">Customers pay it when they book. If they don&apos;t come, you keep it. Wedding and event days always take 50%.</p>
       <div className="flex flex-wrap gap-2">
-        {(["20", "30", "50"] as const).map((m) => (
-          <Chip key={m} on={mode === m} onClick={() => setMode(m)}>
-            {m}%
+        {[20, 30, 40, 50].map((p) => (
+          <Chip key={p} on={mode === "percent" && percent === p} onClick={() => { setMode("percent"); setPercent(p); }}>
+            {p}%
           </Chip>
         ))}
         <Chip on={mode === "fixed"} onClick={() => setMode("fixed")}>
@@ -275,6 +276,13 @@ function DepositSheet({ d, pending, onSave, onClose }: { d: BookingSettingsData;
           No deposit
         </Chip>
       </div>
+      {mode === "percent" && (
+        <div>
+          <label htmlFor="bs-dep-pct" className="text-label mb-1.5 block">Or type your own</label>
+          <PercentInput id="bs-dep-pct" value={percent} onChange={setPercent} label="Deposit percentage" />
+          {percent < MIN_DEPOSIT_PERCENT && <p className="text-caption mt-1.5 text-ink-muted">At least {MIN_DEPOSIT_PERCENT}%.</p>}
+        </div>
+      )}
       {mode === "fixed" && <NairaInput id="bs-dep" value={amount} onChange={setAmount} label="Deposit for every booking" />}
       {mode === "off" && <p className="text-body rounded-md bg-gold-soft px-4 py-3">Without a deposit, people who book and don&apos;t come cost you the time.</p>}
       {mode !== "off" && (
@@ -288,7 +296,7 @@ function DepositSheet({ d, pending, onSave, onClose }: { d: BookingSettingsData;
       )}
       <SaveButton
         pending={pending}
-        onClick={() => onSave(mode === "off" ? { mode: "off", counts } : mode === "fixed" ? { mode: "fixed", amount, counts } : { mode: "percent", percent: Number(mode), counts })}
+        onClick={() => onSave(mode === "off" ? { mode: "off", counts } : mode === "fixed" ? { mode: "fixed", amount, counts } : { mode: "percent", percent: Math.max(MIN_DEPOSIT_PERCENT, percent), counts })}
       />
     </Sheet>
   );
