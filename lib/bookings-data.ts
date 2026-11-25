@@ -14,7 +14,9 @@ import {
   type BookingBlock,
   type BookingRules,
   type BookingSetup,
+  watInstant,
 } from "./bookings";
+import { depositOn } from "./presets";
 import {
   dbAddBooking,
   dbBlockTime,
@@ -268,6 +270,52 @@ export async function saveBookingSettings(
   const d = demoBook(w.key, w.business)!;
   d.setup = { setUp: true, enabled: s.enabled, capacity: s.capacity, noticeMinutes: s.noticeMinutes, aheadDays: s.aheadDays };
   d.minutes = { ...d.minutes, ...s.minutes };
+}
+
+/**
+ * NEW DIRECTION (demo only): a sample day so Today has something to show before real customers
+ * book: four customers today (one a home visit, one without a deposit) and three tomorrow.
+ */
+export async function seedDemoDay(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, now: Date): Promise<number> {
+  if (user.role !== "owner") return 0;
+  const w = await who(user);
+  if (!w || isDbId(w.key)) return 0;
+  const d = demoBook(w.key, w.business)!;
+  const services = w.business.services.filter((s) => s.id && !s.eventDay);
+  if (!services.length) return 0;
+  const today = watParts(now).day;
+  const tomorrow = watParts(new Date(now.getTime() + 86_400_000)).day;
+  const dep = d.setup.deposit;
+  // day, first name, minute of day (WAT), phone, home visit, deposit paid
+  const people: [string, string, number, string, boolean, boolean][] = [
+    [today, "Ada", 600, "+2348031110011", false, true],
+    [today, "Funmi", 750, "+2348031110012", true, true],
+    [today, "Kemi", 900, "+2348031110013", false, false],
+    [today, "Tolu", 1020, "+2348031110014", false, true],
+    [tomorrow, "Ngozi", 570, "+2348031110015", false, true],
+    [tomorrow, "Bimpe", 720, "+2348031110016", false, true],
+    [tomorrow, "Chioma", 900, "+2348031110017", false, true],
+  ];
+  let added = 0;
+  people.forEach(([day, first, min, phone, home, paid], i) => {
+    const s = services[i % services.length];
+    const opt = s.options?.[s.options.length - 1];
+    const minutes = opt?.minutes ?? s.minutes ?? DEFAULT_MINUTES;
+    const priceNaira = (opt?.price ?? s.price ?? 0) + (home ? w.business.travelFee ?? 0 : 0);
+    const depositNaira = paid && dep && dep.mode !== "off" ? depositOn(priceNaira, dep.mode === "fixed" ? { mode: "fixed", amount: (dep.fixedKobo ?? 0) / 100 } : { mode: "percent", percent: dep.percent ?? 30 }) : 0;
+    const start = new Date(watInstant(day, min));
+    const id = `bk_sample_${day}_${min}`;
+    if (d.bookings.some((x) => x.id === id)) return;
+    d.bookings.push({
+      id, service: s.name, serviceId: s.id, minutes, startsAt: start.toISOString(), endsAt: new Date(start.getTime() + minutes * 60_000).toISOString(),
+      firstName: first, phone, source: "page", status: "booked", code: demoCode(), viewToken: randomBytes(12).toString("hex"), moved: false,
+      createdAt: new Date(now.getTime() - (2 + i) * 86_400_000).toISOString(), futureOffers: true,
+      priceKobo: priceNaira * 100, priceKind: "fixed", depositPaidKobo: depositNaira ? depositNaira * 100 : undefined, depositCounts: dep?.counts ?? true,
+      homeArea: home ? (w.business.area || w.business.city) : undefined, detail: opt?.label,
+    });
+    added++;
+  });
+  return added;
 }
 
 /** NEW DIRECTION (demo only): the deposit picked at setup. Real accounts set deposits on Get paid. */

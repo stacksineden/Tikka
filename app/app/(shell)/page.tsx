@@ -6,6 +6,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { ComingIn } from "@/components/leads/ComingIn";
 import { TodayCard } from "@/components/bookings/TodayCard";
+import { TodayPage } from "@/components/today/TodayPage";
 import { getBookings, getBookingSetup } from "@/lib/bookings-data";
 import { todayKey, watInstant } from "@/lib/bookings";
 import { comingIn } from "@/lib/followups";
@@ -67,6 +68,8 @@ async function Home() {
   if (user.isNew) redirect("/app/welcome");
 
   const [business, drops] = await Promise.all([getBusiness(user), getDrops(user)]);
+  // NEW DIRECTION, stage 2: businesses from the new setup (demo only for now) open on Today.
+  if (business?.trades?.length && user.role === "owner") return <TodayPage user={user} business={business} />;
   const today = business && user.role === "owner" ? <TodayBookings user={user} /> : null;
   if (!business || drops.length === 0) return <GettingStarted name={user.name} business={business} today={today} />;
 

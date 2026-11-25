@@ -16,6 +16,7 @@ import {
   MessageSquareText,
   ScanLine,
   Settings,
+  Sun,
   Users,
   UsersRound,
   X,
@@ -42,6 +43,21 @@ export const NAV: Item[] = [
   { href: "/help", label: "Help", Icon: CircleHelp },
 ];
 
+/** NEW DIRECTION, stage 2: the new tabs for businesses from the new setup (demo only for now). */
+export const NAV_NEW: Item[] = [
+  { href: "/app", label: "Today", Icon: Sun },
+  { href: "/app/bookings", label: "Calendar", Icon: CalendarDays },
+  { href: "/app/leads", label: "Customers", Icon: Users },
+  { href: "/app/money", label: "Money", Icon: Wallet },
+  { href: "/app/page", label: "Your page", Icon: Globe },
+  { href: "/app/redeem", label: "Check a code", Icon: ScanLine },
+  { href: "/app/drops", label: "Drops", Icon: Layers },
+  { href: "/app/reviews", label: "Reviews", Icon: MessageSquareText },
+  { href: "/app/posters", label: "Posters & cards", Icon: QrCode },
+  { href: "/app/settings", label: "Settings", Icon: Settings },
+  { href: "/help", label: "Help", Icon: CircleHelp },
+];
+
 /** What the account areas show. Comes from the server; null while it streams in. */
 export interface AccountSummary {
   businessName: string | null;
@@ -57,6 +73,8 @@ export interface AccountSummary {
   staff?: boolean;
   /** DEMO: profiles.is_admin; shows the Admin link. */
   admin?: boolean;
+  /** NEW DIRECTION: set up with the new setup, so the new tabs show. */
+  newDirection?: boolean;
 }
 
 function isActive(path: string, href: string) {
@@ -88,14 +106,14 @@ export function BusinessAvatar({ account, size = 36 }: { account: AccountSummary
 
 /* ------------------------------------------------------------ desktop */
 
-export function SideNav({ staff = false, admin = false }: { staff?: boolean; admin?: boolean }) {
-  return <SideNavList path={usePathname()} staff={staff} admin={admin} />;
+export function SideNav({ staff = false, admin = false, newDirection = false }: { staff?: boolean; admin?: boolean; newDirection?: boolean }) {
+  return <SideNavList path={usePathname()} staff={staff} admin={admin} newDirection={newDirection} />;
 }
 
 /** The sidebar links for a given path. With path="" it's the plain version shown while the page loads.
  *  Staff only ever see Redeem (and Help). */
-export function SideNavList({ path, staff = false, admin = false }: { path: string; staff?: boolean; admin?: boolean }) {
-  const links = NAV.filter((n) => !staff || n.href === "/app/redeem" || n.href === "/help");
+export function SideNavList({ path, staff = false, admin = false, newDirection = false }: { path: string; staff?: boolean; admin?: boolean; newDirection?: boolean }) {
+  const links = (newDirection ? NAV_NEW : NAV).filter((n) => !staff || n.href === "/app/redeem" || n.href === "/help");
   return (
     <nav aria-label="Dashboard" className="grid gap-0.5">
       {(admin && !staff ? [...links, { href: "/admin", label: "Admin", Icon: ShieldCheck }] : links).map(({ href, label, Icon }) => {
@@ -142,6 +160,7 @@ export function MobileHeader({ account, staff = false }: { account: AccountSumma
   );
 }
 
+const MORE_PATHS_NEW = ["/app/drops", "/app/redeem", "/app/reviews", "/app/page", "/app/posters", "/app/settings"];
 const MORE_PATHS = ["/app/drops", "/app/money", "/app/reviews", "/app/page", "/app/posters", "/app/settings"];
 
 /** Bottom tab bar on phones. Redeem sits in the middle: it's what gets used at the counter. */
@@ -152,9 +171,13 @@ export function BottomNav({ account }: { account: AccountSummary | null }) {
 /** The phone tab bar for a given path. With path="" it's the plain version shown while the page loads. */
 export function BottomBar({ account, path }: { account: AccountSummary | null; path: string }) {
   const [open, setOpen] = useState(false);
-  const moreActive = MORE_PATHS.some((p) => path.startsWith(p));
+  const fresh = !!account?.newDirection;
+  const moreActive = (fresh ? MORE_PATHS_NEW : MORE_PATHS).some((p) => path.startsWith(p));
   // Bookings is checked every day; Drops (set up now and then) lives in More.
-  const tabs = ["/app", "/app/bookings", "/app/redeem", "/app/leads"].map((href) => NAV.find((n) => n.href === href)!);
+  // NEW DIRECTION: Today · Calendar · Customers · Money · More; checking a code is on Today.
+  const tabs = fresh
+    ? ["/app", "/app/bookings", "/app/leads", "/app/money"].map((href) => NAV_NEW.find((n) => n.href === href)!)
+    : ["/app", "/app/bookings", "/app/redeem", "/app/leads"].map((href) => NAV.find((n) => n.href === href)!);
 
   return (
     <>
@@ -229,7 +252,18 @@ function MoreSheet({ open, onClose, account, path }: { open: boolean; onClose: (
     lastPath.current = path;
   }, [path, onClose]);
 
-  const rows: { href: string; label: string; Icon: LucideIcon; meta?: string }[] = [
+  const rows: { href: string; label: string; Icon: LucideIcon; meta?: string }[] = account?.newDirection ? [
+    { href: "/app/page", label: "Your page", Icon: Globe, meta: "Photos, services, prices" },
+    { href: "/app/bookings", label: "Booking settings", Icon: CalendarDays, meta: "Hours, deposits, rules" },
+    { href: "/app/redeem", label: "Check a code", Icon: ScanLine, meta: "Gifts, drop cards, bookings" },
+    { href: "/app/drops", label: "Drops", Icon: Layers, meta: "Bring in new customers" },
+    { href: "/app/reviews", label: "Reviews", Icon: MessageSquareText, meta: account?.rating ? `${account.rating} · ${account.reviewCount}` : undefined },
+    { href: "/app/posters", label: "Posters & cards", Icon: QrCode, meta: "Free QR posters and business cards" },
+    { href: "/app/settings/team", label: "Helpers", Icon: UsersRound, meta: "People who work with you" },
+    { href: "/app/settings/get-paid", label: "Get paid", Icon: Banknote, meta: "Your bank and ID" },
+    { href: "/app/settings", label: "Settings", Icon: Settings, meta: "Account and alerts" },
+    { href: "/help", label: "Help", Icon: CircleHelp, meta: "Step-by-step guides" },
+  ] : [
     { href: "/app/drops", label: "Drops", Icon: Layers, meta: "Your drops and their results" },
     { href: "/app/money", label: "Money", Icon: Banknote, meta: "Pay links and what came in" },
     {

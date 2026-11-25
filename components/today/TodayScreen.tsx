@@ -1,0 +1,520 @@
+"use client";
+
+// NEW DIRECTION, stage 2 (docs/OWNER_JOURNEYS.md journeys 4 and 5): the owner's day on one screen.
+
+import {
+  Banknote,
+  CalendarDays,
+  Car,
+  ChevronRight,
+  CircleAlert,
+  CircleCheck,
+  Globe,
+  Link2,
+  Loader2,
+  MapPin,
+  Moon,
+  Plus,
+  ScanLine,
+  Send,
+  Smartphone,
+  Sparkles,
+  UserCheck,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { arrivedAction, paidAction, payBalanceAction, sampleDayAction } from "@/app/app/today-actions";
+import { METHOD_LABEL, reminderText, waLink, type ExpenseKind, type PayMethod } from "@/lib/ledger";
+import { ExpenseSheet } from "./ExpenseSheet";
+import { Chip, NairaInput, Sheet } from "./Sheet";
+
+export interface TodayAppt {
+  id: string;
+  time: string;
+  first: string;
+  phone?: string;
+  service: string;
+  detail?: string;
+  homeArea?: string;
+  /** What's left to collect at the appointment. */
+  dueKobo: number;
+  depositKobo: number;
+  status: "booked" | "arrived" | "no_show" | "cancelled" | "held";
+  paid: { kobo: number; method: PayMethod } | null;
+}
+
+export interface TodayData {
+  greetingName: string;
+  businessName: string;
+  slug: string;
+  dateLabel: string;
+  hour: number;
+  appts: TodayAppt[];
+  walkIns: { id: string; time: string; name: string; item: string; paidKobo: number; method: PayMethod; owedKobo: number }[];
+  tomorrow: { count: number; first?: string };
+  owed: { saleId: string; name: string; item: string; owedKobo: number; phone?: string; since: string }[];
+  services: { label: string; naira: number }[];
+  takenTodayKobo: number;
+  demo: boolean;
+}
+
+const naira = (kobo: number) => "₦" + Math.round(kobo / 100).toLocaleString("en-NG");
+const PAY_CHOICES: [PayMethod, typeof Banknote][] = [
+  ["cash", Banknote],
+  ["transfer", Smartphone],
+  ["pay_link", Link2],
+];
+
+type Open =
+  | { kind: "paid"; appt: TodayAppt }
+  | { kind: "remind"; appt: TodayAppt }
+  | { kind: "remindOwed"; i: number }
+  | { kind: "payOwed"; i: number }
+  | { kind: "sale" }
+  | { kind: "expense"; expense?: ExpenseKind }
+  | null;
+
+export function TodayScreen({ d }: { d: TodayData }) {
+  const router = useRouter();
+  const [open, setOpen] = useState<Open>(null);
+  const [pending, start] = useTransition();
+  const run = (fn: () => Promise<unknown>) =>
+    start(async () => {
+      await fn();
+      router.refresh();
+    });
+
+  const live = d.appts.filter((a) => a.status !== "cancelled");
+  const unpaid = live.filter((a) => !a.paid && a.status !== "no_show");
+  const toCollect = unpaid.reduce((n, a) => n + a.dueKobo, 0);
+  const deposits = live.reduce((n, a) => n + a.depositKobo, 0);
+  const owedTotal = d.owed.reduce((n, o) => n + o.owedKobo, 0);
+  const greeting = d.hour < 12 ? "Good morning" : d.hour < 17 ? "Good afternoon" : "Good evening";
+
+  return (
+    <div className="mx-auto grid max-w-2xl gap-5 px-4 py-5 sm:px-6 lg:py-8">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <span className="text-caption text-ink-muted">{d.dateLabel}</span>
+          <h1 className="text-heading">
+            {greeting}
+            {d.greetingName ? `, ${d.greetingName}` : ""}
+          </h1>
+        </div>
+        <Link href={`/${d.slug}`} target="_blank" className="grid size-11 place-items-center rounded-pill text-ink-muted active:bg-surface-sunken" aria-label="Open your page">
+          <Globe size={22} aria-hidden="true" />
+        </Link>
+      </div>
+
+      <section aria-label="Today in numbers" className="grid gap-3.5 rounded-card bg-brand p-4.5 text-on-brand">
+        <div>
+          <span className="text-caption opacity-85">
+            {live.length} {live.length === 1 ? "customer" : "customers"} today
+          </span>
+          <div className="text-code-lg tracking-normal">{naira(toCollect)}</div>
+          <span className="text-caption opacity-85">still to collect today</span>
+        </div>
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+          <span>
+            <b className="text-code block text-[17px]">{naira(deposits)}</b>deposits already paid
+          </span>
+          <span>
+            <b className="text-code block text-[17px]">{naira(d.takenTodayKobo)}</b>taken today
+          </span>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-[1.4fr_1fr] gap-2.5">
+        <button type="button" className="btn btn-lg rounded-pill bg-gold text-on-gold hover:bg-gold" onClick={() => setOpen({ kind: "sale" })}>
+          <Plus aria-hidden="true" /> New sale
+        </button>
+        <Link href="/app/redeem" className="btn btn-secondary btn-lg rounded-pill">
+          <ScanLine aria-hidden="true" /> Check a code
+        </Link>
+      </div>
+
+      <section className="grid gap-2.5" aria-labelledby="t-day">
+        <div className="flex items-baseline justify-between">
+          <h2 id="t-day" className="text-title">
+            Your day
+          </h2>
+          <span className="text-caption text-ink-muted">
+            {live.length - unpaid.length} of {live.length} done
+          </span>
+        </div>
+        {live.length === 0 && d.walkIns.length === 0 && (
+          <div className="grid gap-3 rounded-card border border-dashed border-line-strong bg-surface-raised p-4">
+            <p className="text-body">No bookings today yet. When customers book on your page, they show up here.</p>
+            {d.demo && (
+              <button type="button" className="btn btn-secondary justify-self-start rounded-pill" disabled={pending} onClick={() => run(() => sampleDayAction())}>
+                {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Sparkles aria-hidden="true" />} Add a sample day (demo)
+              </button>
+            )}
+          </div>
+        )}
+        {live.map((a) => (
+          <Appt key={a.id} a={a} busy={pending} onArrived={() => run(() => arrivedAction(a.id))} onPaid={() => setOpen({ kind: "paid", appt: a })} onRemind={() => setOpen({ kind: "remind", appt: a })} />
+        ))}
+        {d.walkIns.map((w) => (
+          <div key={w.id} className="grid gap-1 rounded-card border border-line bg-surface-raised px-4 py-3.5 opacity-80">
+            <div className="flex gap-3">
+              <span className="text-code w-13 shrink-0">{w.time}</span>
+              <div className="grid min-w-0 gap-1">
+                <b className="text-[17px]">{w.name}</b>
+                <span className="text-caption text-ink-muted">{w.item} · walk-in</span>
+                <div className="flex flex-wrap gap-1.5">
+                  <Tag tone="ok">
+                    Paid {naira(w.paidKobo)} · {METHOD_LABEL[w.method]}
+                  </Tag>
+                  {w.owedKobo > 0 && <Tag tone="bad">Owes {naira(w.owedKobo)}</Tag>}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <Link href="/app/bookings" className="flex min-h-14 items-center gap-3 rounded-card border border-line bg-surface-raised px-4 active:bg-surface-sunken">
+        <CalendarDays size={20} className="text-ink-muted" aria-hidden="true" />
+        <span className="min-w-0 flex-1">
+          <span className="text-body block font-semibold">
+            Tomorrow: {d.tomorrow.count} {d.tomorrow.count === 1 ? "customer" : "customers"}
+          </span>
+          {d.tomorrow.first && <span className="text-caption text-ink-muted">First one: {d.tomorrow.first}</span>}
+        </span>
+        <ChevronRight size={18} className="text-ink-muted" aria-hidden="true" />
+      </Link>
+
+      <section className="grid gap-2.5" aria-labelledby="t-owed">
+        <div className="flex items-baseline justify-between">
+          <h2 id="t-owed" className="text-title">
+            Still owed to you
+          </h2>
+          <b className="text-code">{naira(owedTotal)}</b>
+        </div>
+        <div className="divide-y divide-line rounded-card border border-line bg-surface-raised">
+          {d.owed.length === 0 && <p className="text-body px-4 py-3.5 text-ink-muted">Nobody owes you money.</p>}
+          {d.owed.map((o, i) => (
+            <div key={o.saleId} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+              <span className="min-w-0">
+                <b>{o.name}</b>
+                <span className="text-caption block text-ink-muted">
+                  {o.item} · since {o.since}
+                </span>
+              </span>
+              <span className="flex items-center gap-2">
+                <b className="text-code">{naira(o.owedKobo)}</b>
+                <button type="button" className="act-btn" onClick={() => setOpen({ kind: "remindOwed", i })}>
+                  <Send size={16} aria-hidden="true" /> Remind
+                </button>
+                <button type="button" className="act-btn" onClick={() => setOpen({ kind: "payOwed", i })}>
+                  Paid
+                </button>
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid gap-3.5 rounded-card border border-line bg-surface-raised p-4" aria-labelledby="t-close">
+        <div>
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="t-close" className="text-title">
+              Before you close
+            </h2>
+            <Tag tone="plain">
+              <Moon size={12} aria-hidden="true" /> {d.hour >= 18 ? "Now" : "From 6pm"}
+            </Tag>
+          </div>
+          <p className="text-caption mt-1 text-ink-muted">Two quick checks so your money report is right.</p>
+        </div>
+        {unpaid.length ? (
+          <button type="button" className="flex min-h-15 items-center gap-3 rounded-md border-2 border-line px-4 py-3 text-left" onClick={() => setOpen({ kind: "paid", appt: unpaid[0] })}>
+            <CircleAlert size={22} className="shrink-0 text-gold-text" aria-hidden="true" />
+            <span>
+              <b className="block text-[15px]">
+                {unpaid.length} {unpaid.length === 1 ? "customer" : "customers"} not marked paid yet
+              </b>
+              <span className="text-caption text-ink-muted">{unpaid.map((a) => a.first).join(", ")}. Tap to mark them.</span>
+            </span>
+          </button>
+        ) : (
+          <p className="text-body flex items-center gap-2 rounded-md bg-success-soft px-4 py-3">
+            <CircleCheck size={20} className="text-success" aria-hidden="true" /> Everyone today is marked paid.
+          </p>
+        )}
+        <div>
+          <b className="text-[15px]">Anything you spent today?</b>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {(["Products", "Transport", "Data", "Light / fuel", "Other"] as ExpenseKind[]).map((k) => (
+              <Chip key={k} on={false} onClick={() => setOpen({ kind: "expense", expense: k })}>
+                {k}
+              </Chip>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {open?.kind === "paid" && <PaidSheet appt={open.appt} onClose={() => setOpen(null)} />}
+      {open?.kind === "remind" && (
+        <RemindSheet
+          first={open.appt.first}
+          phone={open.appt.phone}
+          text={reminderText("visit", { first: open.appt.first, business: d.businessName, time: open.appt.time, item: open.appt.service, dueKobo: open.appt.dueKobo, home: open.appt.homeArea })}
+          onClose={() => setOpen(null)}
+        />
+      )}
+      {open?.kind === "remindOwed" && d.owed[open.i] && (
+        <RemindSheet
+          first={d.owed[open.i].name}
+          phone={d.owed[open.i].phone}
+          text={reminderText("balance", { first: d.owed[open.i].name, business: d.businessName, dueKobo: d.owed[open.i].owedKobo })}
+          onClose={() => setOpen(null)}
+        />
+      )}
+      {open?.kind === "payOwed" && d.owed[open.i] && <PayOwedSheet o={d.owed[open.i]} onClose={() => setOpen(null)} />}
+      {open?.kind === "sale" && <SaleSheet services={d.services} onClose={() => setOpen(null)} />}
+      {open?.kind === "expense" && <ExpenseSheet kind={open.expense} onClose={() => setOpen(null)} />}
+    </div>
+  );
+}
+
+function Tag({ tone, children }: { tone: "ok" | "bad" | "due" | "info" | "plain" | "gold"; children: React.ReactNode }) {
+  const cls = { ok: "bg-success-soft text-success", bad: "bg-danger-soft text-danger", due: "bg-surface-sunken text-ink", info: "bg-brand-soft text-brand", plain: "bg-surface-sunken text-ink-muted", gold: "bg-gold-soft text-gold-text" }[tone];
+  return <span className={`text-caption inline-flex items-center gap-1 rounded-pill px-2 py-0.5 font-semibold ${cls}`}>{children}</span>;
+}
+
+function Appt({ a, busy, onArrived, onPaid, onRemind }: { a: TodayAppt; busy: boolean; onArrived: () => void; onPaid: () => void; onRemind: () => void }) {
+  const done = !!a.paid;
+  return (
+    <div className={`grid gap-2.5 rounded-card border border-line bg-surface-raised px-4 py-3.5 ${done || a.status === "no_show" ? "opacity-70" : ""}`}>
+      <div className="flex gap-3">
+        <span className="text-code w-13 shrink-0 pt-0.5">{a.time}</span>
+        <div className="grid min-w-0 flex-1 gap-1">
+          <b className="text-[17px]">{a.first}</b>
+          <span className="text-caption text-ink-muted">
+            {a.service}
+            {a.detail ? `, ${a.detail.toLowerCase()}` : ""}
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {a.homeArea && (
+              <Tag tone="info">
+                <Car size={12} aria-hidden="true" /> Home visit · {a.homeArea}
+              </Tag>
+            )}
+            {done ? (
+              <Tag tone="ok">
+                <CircleCheck size={12} aria-hidden="true" /> Paid {naira(a.paid!.kobo)} · {METHOD_LABEL[a.paid!.method]}
+              </Tag>
+            ) : a.status === "no_show" ? (
+              <Tag tone="bad">Didn&apos;t come</Tag>
+            ) : (
+              <>
+                {a.depositKobo ? <Tag tone="ok">Deposit paid {naira(a.depositKobo)}</Tag> : <Tag tone="gold">No deposit</Tag>}
+                <Tag tone="due">Collect {naira(a.dueKobo)}</Tag>
+                {a.status === "arrived" && <Tag tone="info">Here now</Tag>}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+      {!done && a.status !== "no_show" && (
+        <div className="flex flex-wrap gap-2">
+          {a.status === "booked" ? (
+            <button type="button" className="act-btn act-btn--main" disabled={busy} onClick={onArrived}>
+              <UserCheck size={16} aria-hidden="true" /> Arrived
+            </button>
+          ) : (
+            <button type="button" className="act-btn act-btn--main" onClick={onPaid}>
+              <Banknote size={16} aria-hidden="true" /> Paid {naira(a.dueKobo)}
+            </button>
+          )}
+          {a.status === "booked" && (
+            <button type="button" className="act-btn" onClick={onRemind}>
+              <Send size={16} aria-hidden="true" /> Remind
+            </button>
+          )}
+          {a.homeArea && (
+            <a className="act-btn" href={`https://www.google.com/maps/search/${encodeURIComponent(a.homeArea)}`} target="_blank" rel="noreferrer">
+              <MapPin size={16} aria-hidden="true" /> Directions
+            </a>
+          )}
+          {a.status === "booked" && (
+            <button type="button" className="act-btn" onClick={onPaid}>
+              Paid
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PaidSheet({ appt, onClose }: { appt: TodayAppt; onClose: () => void }) {
+  const router = useRouter();
+  const [amount, setAmount] = useState(Math.round(appt.dueKobo / 100));
+  const [part, setPart] = useState(false);
+  const [pending, start] = useTransition();
+  const pay = (method: PayMethod) =>
+    start(async () => {
+      await paidAction({ bookingId: appt.id, name: appt.first, item: appt.service, totalNaira: appt.dueKobo / 100, paidNaira: part ? amount : appt.dueKobo / 100, method, phone: appt.phone });
+      router.refresh();
+      onClose();
+    });
+  return (
+    <Sheet title={`${appt.first} paid ${part ? naira(amount * 100) : naira(appt.dueKobo)}`} onClose={onClose}>
+      {part && (
+        <div>
+          <label htmlFor="p-amount" className="text-label mb-1.5 block">
+            How much did they pay?
+          </label>
+          <NairaInput id="p-amount" value={amount} onChange={setAmount} label="Amount paid" />
+          <p className="text-caption mt-1.5 text-ink-muted">The rest shows under Still owed.</p>
+        </div>
+      )}
+      <p className="text-body text-ink-muted">How did they pay?</p>
+      <div className="grid gap-2.5">
+        {PAY_CHOICES.map(([m, Icon]) => (
+          <button key={m} type="button" disabled={pending} onClick={() => pay(m)} className="flex min-h-15 items-center gap-3.5 rounded-card border-2 border-line bg-surface-raised px-4 text-left">
+            <span className="grid size-11 place-items-center rounded-pill bg-surface-sunken text-ink-muted">
+              <Icon size={22} aria-hidden="true" />
+            </span>
+            <b className="text-[17px]">{METHOD_LABEL[m]}</b>
+          </button>
+        ))}
+      </div>
+      {!part && (
+        <button type="button" className="text-label justify-self-start text-brand underline underline-offset-4" onClick={() => setPart(true)}>
+          They paid only part of it
+        </button>
+      )}
+    </Sheet>
+  );
+}
+
+function RemindSheet({ first, phone, text, onClose }: { first: string; phone?: string; text: string; onClose: () => void }) {
+  const [msg, setMsg] = useState(text);
+  const link = waLink(phone, msg);
+  return (
+    <Sheet title={`Remind ${first}`} onClose={onClose}>
+      <p className="text-body text-ink-muted">This opens your own WhatsApp with the message ready. Change anything before you send it.</p>
+      <textarea aria-label="Message" className="input h-auto min-h-32 py-3 leading-6" value={msg} onChange={(e) => setMsg(e.target.value)} />
+      {link ? (
+        <a href={link} target="_blank" rel="noreferrer" className="btn btn-lg w-full rounded-pill" onClick={onClose}>
+          <Send aria-hidden="true" /> Open WhatsApp
+        </a>
+      ) : (
+        <p className="text-body text-ink-muted">There&apos;s no number for {first}. Copy the message and send it yourself.</p>
+      )}
+    </Sheet>
+  );
+}
+
+function PayOwedSheet({ o, onClose }: { o: TodayData["owed"][number]; onClose: () => void }) {
+  const router = useRouter();
+  const [amount, setAmount] = useState(Math.round(o.owedKobo / 100));
+  const [pending, start] = useTransition();
+  const pay = (method: PayMethod) =>
+    start(async () => {
+      await payBalanceAction(o.saleId, amount, method);
+      router.refresh();
+      onClose();
+    });
+  return (
+    <Sheet title={`${o.name} paid`} onClose={onClose}>
+      <div>
+        <label htmlFor="o-amount" className="text-label mb-1.5 block">
+          How much?
+        </label>
+        <NairaInput id="o-amount" value={amount} onChange={setAmount} label="Amount paid" />
+        <p className="text-caption mt-1.5 text-ink-muted">They owe {naira(o.owedKobo)}. Less leaves the rest owed.</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {PAY_CHOICES.map(([m]) => (
+          <button key={m} type="button" className="btn btn-secondary rounded-pill" disabled={pending || !amount} onClick={() => pay(m)}>
+            {METHOD_LABEL[m]}
+          </button>
+        ))}
+      </div>
+    </Sheet>
+  );
+}
+
+function SaleSheet({ services, onClose }: { services: TodayData["services"]; onClose: () => void }) {
+  const router = useRouter();
+  const [svc, setSvc] = useState<{ label: string; naira: number } | null>(null);
+  const [name, setName] = useState("");
+  const [askName, setAskName] = useState(true);
+  const [paid, setPaid] = useState(0);
+  const [method, setMethod] = useState<PayMethod>("cash");
+  const [pending, start] = useTransition();
+
+  if (!svc)
+    return (
+      <Sheet title="New sale" onClose={onClose}>
+        <p className="text-body text-ink-muted">What did they do?</p>
+        <div className="divide-y divide-line rounded-card border border-line bg-surface-raised">
+          {services.map((s) => (
+            <button
+              key={s.label}
+              type="button"
+              className="flex min-h-14 w-full items-center justify-between gap-3 px-4 text-left active:bg-surface-sunken"
+              onClick={() => {
+                setSvc(s);
+                setPaid(s.naira);
+              }}
+            >
+              <span className="font-semibold">{s.label}</span>
+              <b className="text-code">₦{s.naira.toLocaleString("en-NG")}</b>
+            </button>
+          ))}
+        </div>
+      </Sheet>
+    );
+  if (askName)
+    return (
+      <Sheet title="Who was it?" onClose={onClose}>
+        <p className="text-body text-ink-muted">
+          {svc.label} · ₦{svc.naira.toLocaleString("en-NG")}
+        </p>
+        <input aria-label="Name" className="input h-13 text-[17px]" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Ngozi" autoComplete="off" />
+        <button type="button" className="btn btn-lg w-full rounded-pill" onClick={() => setAskName(false)}>
+          Next
+        </button>
+        <button type="button" className="text-label justify-self-start text-brand underline underline-offset-4" onClick={() => setAskName(false)}>
+          Skip: a walk-in
+        </button>
+      </Sheet>
+    );
+  return (
+    <Sheet title="How much did they pay?" onClose={onClose}>
+      <p className="text-body text-ink-muted">
+        {name || "Walk-in"} · {svc.label}
+      </p>
+      <NairaInput id="s-paid" value={paid} onChange={setPaid} label="Amount paid" />
+      <div className="flex flex-wrap gap-2">
+        {(["cash", "transfer", "card"] as PayMethod[]).map((m) => (
+          <Chip key={m} on={method === m} onClick={() => setMethod(m)}>
+            {METHOD_LABEL[m]}
+          </Chip>
+        ))}
+      </div>
+      {paid < svc.naira && <p className="text-caption text-ink-muted">₦{(svc.naira - paid).toLocaleString("en-NG")} will show under Still owed.</p>}
+      <button
+        type="button"
+        className="btn btn-lg w-full rounded-pill"
+        disabled={pending}
+        onClick={() =>
+          start(async () => {
+            await paidAction({ name: name || "Walk-in", item: svc.label, totalNaira: svc.naira, paidNaira: paid, method });
+            router.refresh();
+            onClose();
+          })
+        }
+      >
+        {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <CircleCheck aria-hidden="true" />} Save sale
+      </button>
+    </Sheet>
+  );
+}

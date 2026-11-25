@@ -25,6 +25,7 @@ async function getAccount(): Promise<AccountSummary | null> {
     dropsReady: dropsReady(vouchers, new Date()),
     admin: !!user.isAdmin,
     staff,
+    newDirection: !!b.trades?.length,
   };
 }
 
@@ -55,7 +56,8 @@ async function MobileChrome() {
 
 async function SideNavForRole() {
   const user = await getSessionUser();
-  return <SideNav staff={user?.role === "staff"} admin={!!user?.isAdmin} />;
+  const b = user ? await getBusiness(user) : null;
+  return <SideNav staff={user?.role === "staff"} admin={!!user?.isAdmin} newDirection={!!b?.trades?.length} />;
 }
 
 export default function ShellLayout({ children }: LayoutProps<"/app">) {
