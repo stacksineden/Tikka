@@ -8,6 +8,8 @@ import { Fragment, Suspense } from "react";
 import { BookingSheet } from "@/components/business/BookingSheet";
 import { DropBand } from "@/components/business/DropBand";
 import { PhotoPage } from "@/components/business/photo/PhotoPage";
+import { LuxePage, SoftPage } from "@/components/business/styles/BeautyStyles";
+import { FilmPage, PortfolioPage } from "@/components/business/styles/PhotoStyles";
 import { CalendarSheet } from "@/components/business/CalendarSheet";
 import { BookingFlow } from "@/components/business/BookingFlow";
 import { reachLabel } from "@/lib/presets";
@@ -214,8 +216,31 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
     </>
   );
 
-  // Photographers get the gallery (lib/page.ts pageStyle()): the same content and booking, another look.
-  if (pageStyle(b) === "photography") {
+  // The page's style (lib/page.ts pageStyle()): the same content and booking, another look.
+  const look = pageStyle(b);
+  const styleProps = {
+    fromCard,
+    b,
+    live,
+    next,
+    reviews,
+    sections,
+    book,
+    bookProps,
+    sheet,
+    serviceLinks: b.services.map((s) => external ?? bookingLink(b, s) ?? (calendar ? "#book" : null)),
+    deposits: deposits.services,
+  };
+  const Other = look === "luxe" ? LuxePage : look === "soft" ? SoftPage : look === "portfolio" ? PortfolioPage : look === "film" ? FilmPage : null;
+  if (Other) {
+    return (
+      <div className={bizSerif.variable}>
+        <Other {...styleProps} />
+        {sheets}
+      </div>
+    );
+  }
+  if (look === "photography") {
     return (
       <div className={bizSerif.variable}>
         <PhotoPage

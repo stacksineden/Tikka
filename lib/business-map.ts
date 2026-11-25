@@ -5,7 +5,7 @@
 
 import { fromStored, toStored } from "./media-path";
 import { initialsFrom } from "./setup";
-import type { Business, BusinessPage, CardBackground, PatternId, PhotoCamera, PortfolioCollection, PortfolioPhoto, ServiceItem, TeamMember, FaqItem } from "./types";
+import type { Business, BusinessPage, CardBackground, PageStyle, PatternId, PhotoCamera, PortfolioCollection, PortfolioPhoto, ServiceItem, TeamMember, FaqItem } from "./types";
 
 export interface BusinessRow {
   id: string;
@@ -56,7 +56,7 @@ export interface PageRow {
   text_title: string | null;
   text_body: string | null;
   /** Added by the photography_style migration; absent on rows read before it. */
-  style?: "beauty" | "photography" | null;
+  style?: PageStyle | null;
   /** Added by the gallery_tone migration. */
   gallery_tone?: "dark" | "light" | null;
 }

@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Beauty · Soft studio — business page style prototype</title>
+<!--
+  Business page style prototype: BEAUTY · SOFT STUDIO.
+  For nail techs, lash and brow artists, skin studios: light, airy and friendly, rounded like a
+  well-kept salon. The page is soft white tinted by the business's own colour (here Rose #C2185B);
+  the colour itself shows only on small labels, the Book buttons and italic words.
+  Same data as every style. Photos: img/soft-*.jpg if present, else tinted placeholders.
+  Mobile first (375px). Animates transform and opacity only; respects reduced motion.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&display=swap&subset=latin-ext" rel="stylesheet">
+<style>
+  :root {
+    --biz: #C2185B;
+    --bg: color-mix(in oklab, var(--biz) 5%, #FBF8F6); --card: #FFFFFF; --tint: color-mix(in oklab, var(--biz) 12%, #FFF);
+    --ink: #24181D; --muted: #6E5F65; --line: color-mix(in oklab, var(--biz) 14%, #EDE6E3);
+    --deep: color-mix(in oklab, var(--biz) 82%, #000);
+    --gold: #FFB020; --on-gold: #1A1206;
+    --serif: "Fraunces", Georgia, serif; --sans: "Bricolage Grotesque", system-ui, sans-serif;
+    --r: 24px; --ease: cubic-bezier(.2,.7,.1,1);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .wrap { width: min(1080px, 100% - 32px); margin-inline: auto; }
+  .serif { font-family: var(--serif); font-weight: 400; letter-spacing: -0.02em; font-variation-settings: "opsz" 120; }
+  .it { font-style: italic; color: var(--deep); }
+  .label { font-size: 12px; font-weight: 600; color: var(--deep); background: var(--tint); border-radius: 999px; padding: 4px 12px; display: inline-flex; align-items: center; gap: 6px; }
+  .photo { background: var(--img, none) center/cover, radial-gradient(55% 50% at 50% 40%, color-mix(in oklab, var(--biz) 30%, #fff) 0, transparent 75%), linear-gradient(150deg, color-mix(in oklab, var(--biz) 22%, #fff), color-mix(in oklab, var(--biz) 40%, #f3dfe5)); }
+
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; }
+  .chip { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+
+  /* hero: logo, name, a rounded photo with floating details */
+  .hero { text-align: center; padding: 12px 0 8px; }
+  .logo { width: 84px; height: 84px; margin: 6px auto 16px; border-radius: 50%; background: var(--card); border: 1px solid var(--line); display: grid; place-items: center; font-family: var(--serif); font-size: 30px; color: var(--deep); box-shadow: 0 10px 30px color-mix(in oklab, var(--biz) 14%, transparent); }
+  .hero h1 { font-size: clamp(44px, 12vw, 92px); line-height: .98; }
+  .hero .sub { color: var(--muted); max-width: 32ch; margin: 12px auto 0; }
+  .facts { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 18px 0 22px; }
+  .stage { position: relative; margin-top: 8px; }
+  .stage .photo { aspect-ratio: 4/5; border-radius: 32px; }
+  .float { position: absolute; background: var(--card); border-radius: 18px; padding: 10px 14px; box-shadow: 0 14px 40px rgba(60,20,35,.14); font-size: 13px; text-align: left; animation: bob 5s ease-in-out infinite; }
+  .float b { display: block; font-size: 15px; }
+  .f1 { left: -6px; bottom: 22%; } .f2 { right: -6px; top: 12%; animation-delay: -2.5s; }
+  @keyframes bob { 50% { transform: translateY(-6px); } }
+
+  .band { margin: 22px 0 0; border-radius: var(--r); background: var(--card); border: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 12px 12px 18px; }
+  .band small { display: block; color: var(--muted); font-size: 12px; }
+  .claim { min-height: 44px; padding: 0 18px; border-radius: 999px; background: var(--gold); color: var(--on-gold); font-weight: 700; font-size: 14px; white-space: nowrap; display: inline-flex; align-items: center; }
+
+  section { padding: 56px 0; }
+  .h2 { font-size: clamp(32px, 8vw, 54px); line-height: 1.05; margin: 10px 0 20px; }
+
+  /* services as cards */
+  .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 14px; scrollbar-width: none; }
+  .tab { min-height: 44px; padding: 0 18px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-size: 14px; font-weight: 600; white-space: nowrap; color: var(--muted); }
+  .tab[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .cards { display: grid; gap: 12px; }
+  .svc { display: grid; grid-template-columns: 76px 1fr; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; }
+  .svc .photo { border-radius: 16px; aspect-ratio: 1; }
+  .svc h3 { font-family: var(--serif); font-weight: 500; font-size: 20px; line-height: 1.2; letter-spacing: -0.01em; }
+  .svc p { color: var(--muted); font-size: 13px; line-height: 1.45; margin-top: 2px; }
+  .svc .row { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-top: 1px dashed var(--line); padding-top: 10px; }
+  .price b { font-size: 17px; } .price small { display: block; font-size: 12px; color: var(--muted); }
+  .book { min-height: 44px; padding: 0 20px; border-radius: 999px; background: var(--deep); color: #fff; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; }
+
+  /* gallery: rounded two-column grid, alternating heights */
+  .grid { columns: 2; column-gap: 10px; }
+  .grid .photo { break-inside: avoid; margin-bottom: 10px; border-radius: 20px; }
+  .grid .photo:nth-child(3n+1) { aspect-ratio: 3/4; } .grid .photo:nth-child(3n+2) { aspect-ratio: 1; } .grid .photo:nth-child(3n) { aspect-ratio: 4/5; }
+
+  /* reviews: soft cards scrolling sideways */
+  .reviews { display: grid; grid-auto-flow: column; grid-auto-columns: 84%; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; padding: 0 16px 8px; scrollbar-width: none; }
+  .rev { scroll-snap-align: start; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; }
+  .rev .stars { color: var(--deep); letter-spacing: 2px; font-size: 13px; }
+  .rev p { font-family: var(--serif); font-size: 19px; line-height: 1.4; margin: 10px 0 14px; }
+  .rev small { color: var(--muted); }
+
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 6px 18px; }
+  .panel li { list-style: none; display: flex; justify-content: space-between; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .panel li:last-child { border: 0; }
+  .panel li span { color: var(--muted); }
+  ul.panel { padding: 6px 18px; }
+  details { border-bottom: 1px solid var(--line); }
+  details:last-child { border: 0; }
+  summary { list-style: none; min-height: 52px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-weight: 600; cursor: pointer; }
+  summary::after { content: "+"; font-size: 22px; color: var(--deep); transition: transform .3s var(--ease); }
+  details[open] summary::after { transform: rotate(45deg); }
+  details p { color: var(--muted); padding-bottom: 14px; font-size: 15px; }
+
+  footer { text-align: center; padding: 40px 0 120px; color: var(--muted); font-size: 13px; }
+  footer .serif { font-size: 28px; color: var(--ink); }
+
+  .bar { position: fixed; inset: auto 12px 12px; z-index: 30; display: flex; gap: 8px; padding: 8px; border-radius: 999px; background: rgba(255,255,255,.9); backdrop-filter: blur(14px); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(60,20,35,.12); }
+  .bar .book { flex: 1; justify-content: center; min-height: 50px; font-size: 16px; }
+  .bar .chip { width: 50px; padding: 0; justify-content: center; }
+
+  .rise { opacity: 0; transform: translateY(14px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+  .rise.in { opacity: 1; transform: none; }
+
+  @media (min-width: 860px) {
+    .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; text-align: left; padding-top: 24px; }
+    .logo { margin-left: 0; } .hero .sub { margin-left: 0; } .facts { justify-content: flex-start; }
+    .cards { grid-template-columns: 1fr 1fr; }
+    .grid { columns: 4; }
+    .reviews { grid-auto-columns: calc((100% - 24px) / 3); padding: 0; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .bar { display: none; } footer { padding-bottom: 48px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .float { animation: none; } .rise { opacity: 1; transform: none; transition: none; } }
+</style>
+</head>
+<body>
+  <header class="top wrap" style="width:100%">
+    <span class="label">● Open today till 7pm</span>
+    <a class="chip" href="#services">Book</a>
+  </header>
+
+  <main class="wrap">
+    <section class="hero" style="padding-top:12px">
+      <div>
+        <div class="logo">ns</div>
+        <h1 class="serif">Nail <span class="it">Society</span></h1>
+        <p class="sub">Gel, acrylics and nail art in Wuse 2. Clean tools, careful hands, nails that last three weeks.</p>
+        <div class="facts"><span class="label">★ 4.8 · 112 reviews</span><span class="label">Wuse 2, Abuja</span><span class="label">Home visits</span></div>
+      </div>
+      <div class="stage">
+        <div class="photo" style="--img:url(img/soft-hero.jpg)" role="img" aria-label="Glossy almond nails in soft pink"></div>
+        <div class="float f1"><b>Gel extensions</b>from ₦18,000</div>
+        <div class="float f2"><b>Next free time</b>Today, 3:30pm</div>
+      </div>
+    </section>
+
+    <div class="band">
+      <p><b>December drop</b><small>Every Tikka holds something · 41 left</small></p>
+      <a class="claim" href="#">Claim yours</a>
+    </div>
+
+    <section id="services">
+      <span class="label">Services</span>
+      <h2 class="serif h2">Pick your <span class="it">set</span></h2>
+      <div class="tabs" role="group" aria-label="Kinds of service">
+        <button class="tab" aria-pressed="true">Nails</button><button class="tab" aria-pressed="false">Toes</button><button class="tab" aria-pressed="false">Lashes</button><button class="tab" aria-pressed="false">Brows</button>
+      </div>
+      <div class="cards">
+        <article class="svc rise"><div class="photo" style="--img:url(img/soft-s1.jpg)"></div><div><h3>Gel extensions</h3><p>Short, medium or long. Any shape, one colour. 90 minutes.</p></div>
+          <div class="row"><span class="price"><b>From ₦18,000</b><small>₦5,400 deposit to book</small></span><a class="book" href="#">Book</a></div></article>
+        <article class="svc rise"><div class="photo" style="--img:url(img/soft-s2.jpg)"></div><div><h3>Acrylic full set</h3><p>With tips and gel polish. Add nail art from ₦3,000.</p></div>
+          <div class="row"><span class="price"><b>From ₦22,000</b><small>₦6,600 deposit to book</small></span><a class="book" href="#">Book</a></div></article>
+        <article class="svc rise"><div class="photo" style="--img:url(img/soft-s3.jpg)"></div><div><h3>Gel polish</h3><p>On your own nails, with cuticle care. 45 minutes.</p></div>
+          <div class="row"><span class="price"><b>₦8,000</b><small>No deposit</small></span><a class="book" href="#">Book</a></div></article>
+        <article class="svc rise"><div class="photo" style="--img:url(img/soft-s4.jpg)"></div><div><h3>Classic lashes</h3><p>Light and natural, lasts 3 to 4 weeks. 2 hours.</p></div>
+          <div class="row"><span class="price"><b>₦15,000</b><small>₦4,500 deposit to book</small></span><a class="book" href="#">Book</a></div></article>
+      </div>
+    </section>
+
+    <section style="padding-top:8px">
+      <span class="label">Our work</span>
+      <h2 class="serif h2">Fresh from the <span class="it">table</span></h2>
+      <div class="grid">
+        <div class="photo" style="--img:url(img/soft-1.jpg)"></div><div class="photo" style="--img:url(img/soft-2.jpg)"></div><div class="photo" style="--img:url(img/soft-3.jpg)"></div>
+        <div class="photo" style="--img:url(img/soft-4.jpg)"></div><div class="photo" style="--img:url(img/soft-5.jpg)"></div><div class="photo" style="--img:url(img/soft-6.jpg)"></div>
+      </div>
+    </section>
+  </main>
+
+  <section style="padding-top:8px">
+    <div class="wrap"><span class="label">Reviews</span><h2 class="serif h2">From people who <span class="it">came in</span></h2></div>
+    <div class="reviews wrap" style="width:100%">
+      <article class="rev"><span class="stars">★★★★★</span><p>“Three weeks and not one chip. She's careful with the cuticles too.”</p><small>Hauwa · gel extensions</small></article>
+      <article class="rev"><span class="stars">★★★★★</span><p>“The nicest nail place in Wuse. Clean, calm and on time.”</p><small>Amaka · acrylic set</small></article>
+      <article class="rev"><span class="stars">★★★★☆</span><p>“Lashes look so natural. Booked again straight away.”</p><small>Zainab · classic lashes</small></article>
+    </div>
+  </section>
+
+  <main class="wrap">
+    <section class="two" style="padding-top:8px">
+      <div>
+        <span class="label">Visit</span>
+        <h2 class="serif h2">Hours</h2>
+        <ul class="panel"><li><span>Mon – Fri</span><b>10am – 7pm</b></li><li><span>Saturday</span><b>9am – 8pm</b></li><li><span>Sunday</span><b>Closed</b></li><li><span>Plot 12, Aminu Kano Cres.</span><b>Wuse 2</b></li></ul>
+      </div>
+      <div>
+        <span class="label">Good to know</span>
+        <h2 class="serif h2">Questions</h2>
+        <div class="panel">
+          <details><summary>Do I pay a deposit?</summary><p>For most sets, yes: 30% holds your time. You pay the rest after.</p></details>
+          <details><summary>Can I move my booking?</summary><p>Up to 24 hours before, from the link you get when you book.</p></details>
+          <details><summary>Do you come to me?</summary><p>Anywhere in Abuja for ₦5,000 extra.</p></details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer><p class="serif">Nail Society</p><p>Wuse 2, Abuja</p><p style="margin-top:24px;font-size:12px">Made with Tikka</p></footer>
+  <div class="bar"><a class="book" href="#services">Book a time</a><a class="chip" href="#" aria-label="WhatsApp">✆</a></div>
+
+<script>
+  const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && (e.target.classList.add("in"), io.unobserve(e.target))), { rootMargin: "0px 0px -8% 0px" });
+  document.querySelectorAll(".rise").forEach((el) => io.observe(el));
+  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-pressed", String(x === t)))));
+</script>
+</body>
+</html>

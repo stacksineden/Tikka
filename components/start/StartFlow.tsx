@@ -19,6 +19,7 @@ import {
   Hand,
   ImagePlus,
   Loader2,
+  Palette,
   PartyPopper,
   Plus,
   Repeat,
@@ -27,6 +28,7 @@ import {
   Sparkles,
   Store,
   Trash2,
+  Type,
   UserRound,
   Video,
   X,
@@ -40,7 +42,7 @@ import { saveStartMoney, saveStartPage, type StartPage } from "@/app/app/start/a
 import { prepareLogo, preparePortfolio } from "@/lib/media-client";
 import { CardPreview } from "@/components/setup/CardPreview";
 import { draftToFace } from "@/components/setup/SetupFlow";
-import { checkBrandColor, SWATCHES } from "@/lib/color";
+import { BRAND_SWATCHES, checkBrandColor, colorName, parseColor, SWATCHES } from "@/lib/color";
 import { ServicesEditor, serviceProblem } from "./ServicesEditor";
 import { citiesFor, STATE_NAMES } from "@/lib/nigeria";
 import {
@@ -90,6 +92,9 @@ export function StartFlow() {
   const [socials, setSocials] = useState<Partial<Record<SocialKey, string>>>({ instagram: "" });
   const [brandColor, setBrandColor] = useState<string>(SWATCHES[0].hex);
   const [logoUrl, setLogoUrl] = useState<string>();
+  // "Do you have a logo?" asked plainly: yes (then add it) or not yet (initials show).
+  const [hasLogo, setHasLogo] = useState<boolean | null>(null);
+  const [colorText, setColorText] = useState("");
   const [tagline, setTagline] = useState("");
   const [state, setState] = useState("Oyo");
   const [city, setCity] = useState("Ibadan");
@@ -201,7 +206,7 @@ export function StartFlow() {
     where: !!state && !!city.trim() && !!area.trim(),
     work: !!workPlace,
     services: services.some((s) => s.on) && services.every((s) => !s.on || !serviceProblem(s.item)),
-    look: true,
+    look: hasLogo === false || (hasLogo === true && !!logoUrl),
     photos: photos.length >= MIN_PHOTOS && !uploading,
     hours: Object.values(hours).some((d) => d.open),
     live: true,
@@ -373,41 +378,93 @@ export function StartFlow() {
 
         {step === "look" && (
           <>
-            <Title title="Your logo and colour" lead="They go on your page and on the cards customers get when you run drops." />
+            <Title title="Your logo and brand colour" lead="They go on your page, your buttons and the cards customers get when you run drops." />
             <CardPreview face={face} prefix={suggestPrefix(name)} compact />
-            <div>
-              <span className="text-label mb-1.5 block">Logo (if you have one)</span>
-              <div className="flex items-center gap-3">
-                <span className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-pill text-xl font-extrabold" style={{ background: brandColor, color: checkBrandColor(brandColor).on }}>
-                  {logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- demo media from memory
-                    <img src={logoUrl} alt="Your logo" className="size-full object-cover" />
-                  ) : (
-                    initialsFrom(name) || "AB"
-                  )}
-                </span>
-                <label className="btn btn-secondary relative cursor-pointer rounded-pill">
-                  <ImagePlus aria-hidden="true" /> {logoUrl ? "Change logo" : "Add your logo"}
-                  <input type="file" accept="image/*" className="absolute inset-0 cursor-pointer opacity-0" onChange={(e) => addLogo(e.target.files?.[0])} />
-                </label>
-              </div>
-              <p className="text-caption mt-1.5 text-ink-muted">No logo? Your initials show instead. You can add one later.</p>
+            <div className="grid gap-2.5">
+              <span className="text-label">Do you have a logo?</span>
+              <Choice on={hasLogo === true} onClick={() => setHasLogo(true)} icon={ImagePlus} title="Yes, I have a logo" body="Add it and it shows on your page and cards" />
+              <Choice on={hasLogo === false} onClick={() => setHasLogo(false)} icon={Type} title="Not yet" body={`Your initials show instead (${initialsFrom(name) || "AB"}). Add a logo any time.`} />
+              {hasLogo && (
+                <div className="flex items-center gap-3 rounded-card border border-line bg-surface-raised p-3">
+                  <span className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-pill text-xl font-extrabold" style={{ background: brandColor, color: checkBrandColor(brandColor).on }}>
+                    {logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- demo media from memory
+                      <img src={logoUrl} alt="Your logo" className="size-full object-cover" />
+                    ) : (
+                      initialsFrom(name) || "AB"
+                    )}
+                  </span>
+                  <label className="btn btn-secondary relative cursor-pointer rounded-pill">
+                    <ImagePlus aria-hidden="true" /> {logoUrl ? "Change logo" : "Add your logo"}
+                    <input type="file" accept="image/*" className="absolute inset-0 cursor-pointer opacity-0" onChange={(e) => addLogo(e.target.files?.[0])} />
+                  </label>
+                </div>
+              )}
             </div>
-            <div>
-              <span className="text-label mb-1.5 block">Your colour</span>
-              <div className="flex flex-wrap gap-2.5">
-                {SWATCHES.map((c) => (
+            <div className="grid gap-2.5">
+              <div>
+                <span className="text-label block">Your brand colour</span>
+                <span className="text-caption text-ink-muted">The colour people know your business by. Pick one, or type your own.</span>
+              </div>
+              <div className="flex flex-wrap gap-2.5" role="radiogroup" aria-label="Brand colours">
+                {BRAND_SWATCHES.map((c) => (
                   <button
                     key={c.hex}
                     type="button"
+                    role="radio"
                     aria-label={c.name}
-                    aria-pressed={brandColor === c.hex}
-                    onClick={() => setBrandColor(c.hex)}
-                    className={`size-11 rounded-pill border-2 ${brandColor === c.hex ? "border-ink ring-2 ring-surface ring-inset" : "border-transparent"}`}
-                    style={{ background: c.hex }}
-                  />
+                    aria-checked={brandColor === c.hex}
+                    onClick={() => (setBrandColor(c.hex), setColorText(""))}
+                    className={`grid size-11 place-items-center rounded-pill border ${brandColor === c.hex ? "ring-2 ring-ink ring-offset-2 ring-offset-surface" : ""} ${c.hex === "#FFFFFF" || c.hex === "#F3E9D2" ? "border-line-strong" : "border-transparent"}`}
+                    style={{ background: c.hex, color: checkBrandColor(c.hex).on }}
+                  >
+                    {brandColor === c.hex && <Check size={18} strokeWidth={3} aria-hidden="true" />}
+                  </button>
                 ))}
               </div>
+              <Field id="s-color" label="Or type your colour" hint="A name like wine, navy or baby pink, or a code like #9C3B5C.">
+                <div className="flex items-center gap-2">
+                  <span className="size-13 shrink-0 rounded-md border border-line-strong" style={{ background: brandColor }} aria-hidden="true" />
+                  <input
+                    id="s-color"
+                    className="input h-13 text-[17px]"
+                    value={colorText}
+                    onChange={(e) => {
+                      setColorText(e.target.value);
+                      const c = parseColor(e.target.value);
+                      if (c) setBrandColor(c);
+                    }}
+                    placeholder="e.g. wine or #9C3B5C"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </div>
+              </Field>
+              {colorText.trim() && !parseColor(colorText) ? (
+                <p className="text-caption text-ink-muted">We don&apos;t know that colour yet. Try a name like navy, or a code like #1F3A93.</p>
+              ) : (
+                <p className="text-caption text-ink-muted">
+                  {(() => {
+                    // The swatch's name, or the words they typed ("Rose gold"), then the code.
+                    const typed = colorText.trim() && !/^#?[0-9a-f]{3,6}$/i.test(colorText.trim()) ? colorText.trim().replace(/^./, (c) => c.toUpperCase()) : null;
+                    const label = colorName(brandColor) ?? typed;
+                    return (
+                      <>
+                        Picked: <b>{label ?? brandColor}</b>
+                        {label ? ` · ${brandColor}` : ""}
+                      </>
+                    );
+                  })()}
+                </p>
+              )}
+              {!checkBrandColor(brandColor).ok && (
+                <Note icon={Palette}>
+                  Words on this colour may be hard to read.{" "}
+                  <button type="button" className="font-semibold underline underline-offset-4" onClick={() => (setBrandColor(checkBrandColor(brandColor).suggestion ?? brandColor), setColorText(""))}>
+                    Use a slightly darker shade
+                  </button>
+                </Note>
+              )}
             </div>
             <Field id="s-tag" label="A short line about you (optional)" hint="Shown under your name, like “Bridal makeup that lasts all night”.">
               <input id="s-tag" className="input h-13 text-[17px]" value={tagline} onChange={(e) => setTagline(e.target.value)} maxLength={60} placeholder="e.g. Neat braids, done on time" />

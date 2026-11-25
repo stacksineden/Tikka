@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Photography · Minimal portfolio — business page style prototype</title>
+<!--
+  Business page style prototype: PHOTOGRAPHY · MINIMAL PORTFOLIO.
+  For editorial, commercial and portrait photographers: a gallery wall. Soft white (#f5f4f1, the
+  gallery's light tone) so photos aren't tinted; the business's colour (here Lagoon #1E6F8C) only on
+  numbers and small marks. An uneven grid, an index of collections, then packages and booking.
+  Same data as every style. Photos: img/min-*.jpg if present, else neutral placeholders.
+  Mobile first (375px). Animates transform and opacity only; respects reduced motion.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&family=Fraunces:ital,opsz,wght@0,9..144,200..400;1,9..144,200..400&family=Space+Mono&display=swap&subset=latin-ext" rel="stylesheet">
+<style>
+  :root {
+    --biz: #1E6F8C;
+    --bg: #F5F4F1; --ink: #151515; --muted: #6B6966; --line: #DEDBD5;
+    --gold: #FFB020; --on-gold: #1A1206;
+    --serif: "Fraunces", Georgia, serif; --sans: "Bricolage Grotesque", system-ui, sans-serif; --mono: "Space Mono", ui-monospace, monospace;
+    --ease: cubic-bezier(.2,.7,.1,1);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { width: min(1240px, 100% - 32px); margin-inline: auto; }
+  .serif { font-family: var(--serif); font-weight: 200; letter-spacing: -0.04em; font-variation-settings: "opsz" 144; }
+  .num { font-family: var(--mono); font-size: 11px; color: var(--biz); letter-spacing: .04em; }
+  .cap { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+  .photo { background: var(--img, none) center/cover, linear-gradient(160deg, #d8d4cc, #b9b3a8); }
+  .photo.d { background: var(--img, none) center/cover, linear-gradient(160deg, #8d877d, #4b4741); }
+
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .top nav { display: flex; gap: 4px; }
+  .top nav a { min-height: 44px; padding: 0 10px; display: inline-flex; align-items: center; font-size: 13px; }
+  .top nav a.book { border: 1px solid var(--ink); border-radius: 999px; padding: 0 16px; font-weight: 600; }
+
+  .hero { padding: 40px 0 28px; }
+  .hero h1 { font-size: clamp(64px, 21vw, 260px); line-height: .82; }
+  .hero h1 i { font-style: italic; }
+  .hero .line { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-top: 22px; border-top: 1px solid var(--ink); padding-top: 12px; }
+  .hero .line p { max-width: 28ch; font-size: 14px; color: var(--muted); }
+
+  .band { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-block: 1px solid var(--line); font-size: 13px; }
+  .claim { min-height: 44px; padding: 0 16px; border-radius: 999px; background: var(--gold); color: var(--on-gold); font-weight: 700; font-size: 13px; white-space: nowrap; display: inline-flex; align-items: center; }
+
+  /* the wall: an uneven 6-column grid */
+  .wall { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; padding: 28px 0; }
+  .wall figure { position: relative; }
+  .wall .photo { width: 100%; height: 100%; min-height: 120px; }
+  .wall figcaption { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: 12px; color: var(--muted); }
+  .a { grid-column: span 6; } .a .photo { aspect-ratio: 4/5; }
+  .b { grid-column: span 3; } .b .photo { aspect-ratio: 3/4; }
+  .c { grid-column: span 3; margin-top: 48px; } .c .photo { aspect-ratio: 3/4; }
+  .d { grid-column: 2 / span 5; } .d .photo { aspect-ratio: 3/2; }
+  .e { grid-column: span 4; } .e .photo { aspect-ratio: 4/5; }
+  .f { grid-column: span 2; align-self: end; } .f .photo { aspect-ratio: 2/3; }
+
+  section { padding: 56px 0; border-top: 1px solid var(--line); }
+  .sec-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+  .sec-head h2 { font-size: clamp(40px, 11vw, 96px); line-height: .9; }
+
+  /* index of collections */
+  .index a { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: baseline; padding: 16px 0; border-bottom: 1px solid var(--line); min-height: 56px; }
+  .index b { font-family: var(--serif); font-weight: 300; font-size: 26px; letter-spacing: -0.02em; }
+  .index span:last-child { font-size: 12px; color: var(--muted); }
+
+  /* packages */
+  .pk { display: grid; gap: 0; }
+  .pk article { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+  .pk h3 { font-family: var(--serif); font-weight: 300; font-size: 24px; letter-spacing: -0.02em; }
+  .pk .p { font-family: var(--mono); font-size: 14px; }
+  .pk p { grid-column: 1 / -1; color: var(--muted); font-size: 14px; }
+  .pk .go { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 12px; color: var(--muted); }
+  .pk .go a { min-height: 44px; display: inline-flex; align-items: center; font-weight: 600; color: var(--ink); font-size: 14px; gap: 6px; }
+
+  .about { display: grid; gap: 24px; }
+  .about .photo { aspect-ratio: 1; filter: grayscale(.2); }
+  .about p.big { font-family: var(--serif); font-weight: 300; font-size: clamp(24px, 6vw, 40px); line-height: 1.2; letter-spacing: -0.02em; }
+  .quote { font-family: var(--serif); font-style: italic; font-weight: 300; font-size: clamp(24px, 6vw, 40px); line-height: 1.25; max-width: 24ch; }
+
+  footer { padding: 40px 0 120px; border-top: 1px solid var(--ink); display: flex; justify-content: space-between; gap: 16px; font-size: 12px; color: var(--muted); }
+
+  .bar { position: fixed; inset: auto 12px 12px; z-index: 30; display: flex; gap: 8px; }
+  .bar a { min-height: 50px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; }
+  .bar .main { flex: 1; background: var(--ink); color: var(--bg); }
+  .bar .wa { width: 50px; background: var(--bg); border: 1px solid var(--ink); }
+
+  .fade { opacity: 0; transform: translateY(16px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+  .fade.in { opacity: 1; transform: none; }
+
+  @media (min-width: 860px) {
+    body { font-size: 16px; }
+    .wall { grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .a { grid-column: 1 / span 7; } .b { grid-column: 9 / span 4; margin-top: 120px; } .c { grid-column: 2 / span 4; margin-top: 0; }
+    .d { grid-column: 7 / span 6; margin-top: 80px; } .e { grid-column: 1 / span 5; } .f { grid-column: 8 / span 3; }
+    .about { grid-template-columns: 5fr 7fr; gap: 64px; align-items: end; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; }
+    .bar { display: none; } footer { padding-bottom: 40px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .fade { opacity: 1; transform: none; transition: none; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a href="#" class="cap" style="color:var(--ink);letter-spacing:.24em">Imole Studio</a>
+      <nav><a href="#index">Work</a><a class="book" href="#packages">Book</a></nav>
+    </header>
+
+    <div class="hero">
+      <h1 class="serif">Imole<br><i>studio</i></h1>
+      <div class="line">
+        <p>Portraits, editorial and brand photography from a daylight studio in Ibadan.</p>
+        <span class="num">EST. 2019</span>
+      </div>
+    </div>
+
+    <div class="band"><span><b>Drop · Portrait week</b> &nbsp;<span style="color:var(--muted)">18 left</span></span><a class="claim" href="#">Claim yours</a></div>
+
+    <div class="wall">
+      <figure class="a fade"><div class="photo d" style="--img:url(img/min-1.jpg)"></div><figcaption><span>Adunni, for Vogue Nigeria</span><span class="num">01</span></figcaption></figure>
+      <figure class="b fade"><div class="photo" style="--img:url(img/min-2.jpg)"></div><figcaption><span>Studio portrait</span><span class="num">02</span></figcaption></figure>
+      <figure class="c fade"><div class="photo d" style="--img:url(img/min-3.jpg)"></div><figcaption><span>Brand: Koko</span><span class="num">03</span></figcaption></figure>
+      <figure class="d fade"><div class="photo" style="--img:url(img/min-4.jpg)"></div><figcaption><span>Family, Bodija</span><span class="num">04</span></figcaption></figure>
+      <figure class="e fade"><div class="photo d" style="--img:url(img/min-5.jpg)"></div><figcaption><span>Graduation</span><span class="num">05</span></figcaption></figure>
+      <figure class="f fade"><div class="photo" style="--img:url(img/min-6.jpg)"></div><figcaption><span>Detail</span><span class="num">06</span></figcaption></figure>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section id="index">
+      <div class="sec-head"><h2 class="serif">Index</h2><span class="cap">5 collections</span></div>
+      <div class="index">
+        <a href="#"><span class="num">01</span><b>Portraits</b><span>48 photos</span></a>
+        <a href="#"><span class="num">02</span><b>Editorial</b><span>31 photos</span></a>
+        <a href="#"><span class="num">03</span><b>Brands &amp; products</b><span>26 photos</span></a>
+        <a href="#"><span class="num">04</span><b>Families</b><span>19 photos</span></a>
+        <a href="#"><span class="num">05</span><b>Graduations</b><span>22 photos</span></a>
+      </div>
+    </section>
+
+    <section id="packages" class="split">
+      <div><div class="sec-head"><h2 class="serif">Book</h2></div><p style="color:var(--muted);max-width:32ch">Pick a package and a free time. A deposit holds your session; the rest is paid on the day.</p></div>
+      <div class="pk">
+        <article><h3>Studio portrait</h3><span class="p">₦45,000</span><p>1 hour, 2 outfits, 10 edited photos.</p><div class="go"><span>₦13,500 deposit</span><a href="#">Book →</a></div></article>
+        <article><h3>Brand session</h3><span class="p">₦150,000</span><p>Half a day, products and people, 30 edited photos.</p><div class="go"><span>₦45,000 deposit</span><a href="#">Book →</a></div></article>
+        <article><h3>Family</h3><span class="p">₦60,000</span><p>Studio or your home in Ibadan, up to 6 people.</p><div class="go"><span>₦18,000 deposit</span><a href="#">Book →</a></div></article>
+      </div>
+    </section>
+
+    <section class="about">
+      <div class="photo d" style="--img:url(img/min-about.jpg)" role="img" aria-label="The photographer in the studio"></div>
+      <div>
+        <p class="cap" style="margin-bottom:14px">About</p>
+        <p class="big">I'm Femi. I photograph people the way they'd like to be remembered: clearly, in good light, without fuss.</p>
+      </div>
+    </section>
+
+    <section>
+      <p class="cap" style="margin-bottom:14px">Kind words</p>
+      <p class="quote">“He made my dad laugh in every frame. We framed nine of them.”</p>
+      <p style="margin-top:14px;font-size:13px;color:var(--muted)">Bola · family session ★★★★★</p>
+    </section>
+
+    <footer><span>Imole Studio · Bodija, Ibadan</span><span>Made with Tikka</span></footer>
+  </div>
+
+  <div class="bar"><a class="main" href="#packages">Book a session</a><a class="wa" href="#" aria-label="WhatsApp">✆</a></div>
+<script>
+  const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && (e.target.classList.add("in"), io.unobserve(e.target))), { rootMargin: "0px 0px -8% 0px" });
+  document.querySelectorAll(".fade").forEach((el) => io.observe(el));
+</script>
+</body>
+</html>

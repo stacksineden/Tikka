@@ -70,8 +70,8 @@ export default function PostersPage() {
     <div className="mx-auto grid max-w-5xl gap-5 px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-8">
       <div className="grid gap-4">
         <div>
-          <h1 className="text-heading">Posters &amp; cards</h1>
-          <p className="text-body mt-1 text-ink-muted">Print once, keep up for good. People scan it and see whatever you&apos;re running.</p>
+          <h1 className="text-heading">Cards &amp; posters</h1>
+          <p className="text-body mt-1 text-ink-muted">Posters are for your drops. Put one up at the counter, the mirror or the door: when a drop is live, a scan opens it; between drops it opens your page. Print once, keep it up for good.</p>
         </div>
         <PostersTabs current="posters" />
       </div>

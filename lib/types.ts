@@ -107,8 +107,12 @@ export interface PhotoCamera {
   iso?: string;
 }
 
-/** The business page's look: "beauty" (the editorial page) or "photography" (the gallery). Only the look changes. */
-export type PageStyle = "beauty" | "photography";
+/**
+ * The business page's look. Only the look changes; the content, booking, deposits, reviews and
+ * drops are the same. "beauty" is the editorial page and "photography" the gallery; "luxe" and
+ * "soft" are for beauty businesses, "portfolio" and "film" for photographers (design/page-styles/).
+ */
+export type PageStyle = "beauty" | "photography" | "luxe" | "soft" | "portfolio" | "film";
 
 export interface PortfolioCollection {
   id: string;

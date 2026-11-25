@@ -28,9 +28,13 @@ async function Redeem() {
   return (
     <>
       <RedeemScreen businessName={b.name} prefix={b.codePrefix} isOwner={user.role === "owner"} />
-      <Suspense>
-        <TodayAtCounter user={user} businessName={b.name} />
-      </Suspense>
+      {/* Staff can't open Today or Calendar, so they mark who came in here. The owner of a business
+          from the new setup does that on Today, so they don't get the list twice. */}
+      {!(user.role === "owner" && b.trades?.length) && (
+        <Suspense>
+          <TodayAtCounter user={user} businessName={b.name} />
+        </Suspense>
+      )}
     </>
   );
 }
@@ -44,7 +48,8 @@ async function TodayAtCounter({ user, businessName }: { user: NonNullable<Awaite
   const list = await getBookings(user, new Date(watInstant(day, 0)), new Date(watInstant(day, 24 * 60)));
   if (!list.some((x) => x.status !== "cancelled")) return null;
   return (
-    <div className="mx-auto max-w-md px-4 pb-10">
+    <div className="mx-auto grid max-w-md gap-2 px-4 pb-10">
+      {user.role === "staff" && <p className="text-caption text-ink-muted">Today&apos;s bookings: tap Arrived when someone comes in, or No-show if they don&apos;t.</p>}
       <BookingsBoard
         bookings={list.filter((x) => x.status !== "cancelled").map((x) => ({ ...x, phone: undefined }))}
         blocks={[]}

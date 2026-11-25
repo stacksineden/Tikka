@@ -6,7 +6,7 @@
 import { revalidatePath } from "next/cache";
 import { getBusiness, isDbId, saveBusiness, takenPrefixes, takenSlugs } from "@/lib/data";
 import { saveBookingSettings, saveDemoDeposit } from "@/lib/bookings-data";
-import { checkBrandColor, SWATCHES } from "@/lib/color";
+import { checkBrandColor, parseColor, SWATCHES } from "@/lib/color";
 import { STATE_NAMES } from "@/lib/nigeria";
 import { isTrade, tradeCategory, type TradeId } from "@/lib/presets";
 import { demoAllowed, getOwnerUser, setDemoSession } from "@/lib/session";
@@ -102,7 +102,8 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
   const prefixes = await takenPrefixes(user);
   let codePrefix = current?.codePrefix ?? suggestPrefix(name);
   if (!current && prefixes.has(codePrefix)) codePrefix = prefixAlternatives(name, prefixes, 1)[0] ?? "TK";
-  const brandColor = SWATCHES.some((c) => c.hex === input.brandColor) ? input.brandColor : (current?.brandColor ?? SWATCHES[0].hex);
+  // Any colour the owner picked or typed (a swatch, a hex code or a colour word, made a hex in the browser).
+  const brandColor = parseColor(String(input.brandColor ?? "")) ?? current?.brandColor ?? SWATCHES[0].hex;
   // DEMO: logos come from the in-memory media route only.
   const logoUrl = input.logoUrl?.startsWith("/api/demo/media/") ? input.logoUrl : current?.logoUrl;
 

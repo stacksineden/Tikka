@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkBrandColor, contrast, ON_INK, ON_WHITE, SWATCHES } from "./color";
+import { BRAND_SWATCHES, checkBrandColor, contrast, ON_INK, ON_WHITE, parseColor, SWATCHES } from "./color";
 import { formatNgPhone, formatTime, initialsFrom, nameMax, normalizeNgPhone, prefixAlternatives, suggestPrefix, validateCard, type CardDraft } from "./setup";
 
 describe("brand colour check", () => {
@@ -115,4 +115,23 @@ it("formats opening times", () => {
   expect(formatTime("09:00")).toBe("9am");
   expect(formatTime("19:30")).toBe("7:30pm");
   expect(formatTime("12:00")).toBe("12pm");
+});
+
+describe("brand colours at setup", () => {
+  it("offers colours that all read with white or dark text, none WhatsApp green", () => {
+    for (const s of BRAND_SWATCHES) expect(checkBrandColor(s.hex).ok, s.name).toBe(true);
+    expect(BRAND_SWATCHES.map((s) => s.hex as string)).not.toContain("#25D366");
+  });
+
+  it("takes a hex code or a colour word", () => {
+    expect(parseColor("#9c3b5c")).toBe("#9C3B5C");
+    expect(parseColor("9C3B5C")).toBe("#9C3B5C");
+    expect(parseColor("#abc")).toBe("#AABBCC");
+    expect(parseColor("Black")).toBe("#111111");
+    expect(parseColor("wine")).toBe("#6D1A36");
+    expect(parseColor("Baby pink")).toBe("#F8BBD0");
+    expect(parseColor("rose gold")).toBe("#B76E79");
+    expect(parseColor("sparkly")).toBeNull();
+    expect(parseColor("")).toBeNull();
+  });
 });

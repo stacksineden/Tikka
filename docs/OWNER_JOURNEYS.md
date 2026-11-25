@@ -9,7 +9,7 @@ Step by step, what owners and customers see and do in the new direction (docs/NE
 1. **Deposit amount:** setup suggests one for the trade (e.g. 30%), and the owner can change it. This replaces today's rule that nothing is picked for her.
 2. **Booking rules:** filled in for her trade by default; she can change any line.
 3. **Home service travel fee:** one fixed amount by default, already filled in, with a fee per area as an option. *(Read from "yes to all"; confirm.)*
-4. **Tabs:** Today · Calendar · Customers · Money · More. Checking a code (drops, Gift Tikka) is a button on Today; Drops, Your page, Posters & cards, Team and Settings move into More.
+4. **Tabs:** Today · Calendar · Customers · Money · More. Checking a code (drops, Gift Tikka) is a button on Today; Drops, Your page, Cards & posters, Team and Settings move into More.
 5. **Starting prices:** the filled-in prices differ by city (Lagos is pricier than Ibadan), not one national guide. *(Read from "yes to all"; confirm.)*
 
 ---

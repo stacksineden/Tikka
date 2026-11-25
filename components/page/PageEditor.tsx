@@ -6,7 +6,7 @@ import { useRef, useState, useTransition } from "react";
 import { savePageAction, saveServicesAction } from "@/app/app/actions";
 import { PortfolioEditor } from "@/components/setup/PortfolioEditor";
 import { prepareAbout, prepareCropped, prepareHero, prepareService, uploadPhoto, type MediaKind, type Prepared } from "@/lib/media-client";
-import { focalPosition, heroHeadline, heroLine, PAGE_LIMITS, priceText } from "@/lib/page";
+import { focalPosition, heroHeadline, heroLine, PAGE_LIMITS, PAGE_STYLES, priceText } from "@/lib/page";
 import type { PortfolioPlan } from "@/lib/portfolio";
 import type { Business, BusinessPage, FaqItem, PageStyle, ServeMode, ServiceItem, TeamMember } from "@/lib/types";
 
@@ -319,82 +319,89 @@ function ModeCard({ b }: { b: Business }) {
 
 /* ---------------------------------------------------------------- style */
 
-const STYLES: { id: "auto" | PageStyle; label: string; note: string }[] = [
-  { id: "auto", label: "Match my category", note: "Photographers get the gallery, everyone else the classic page." },
-  { id: "beauty", label: "Classic", note: "Services and booking first, with your photos below." },
-  { id: "photography", label: "Gallery", note: "Your photos first: full-screen collections on a dark page." },
-];
-
-/** The page's look, tucked under More options: almost everyone keeps what their category gives them. */
+/**
+ * The page's look: every style, the ones made for their category first. Only the look changes.
+ * The gallery's dark or light background applies to the Gallery style.
+ */
 function StyleCard({ b }: { b: Business }) {
   const s = useSave();
   const [choice, setChoice] = useState<"auto" | PageStyle>(b.page?.style ?? "auto");
   const [tone, setTone] = useState<"dark" | "light">(b.page?.galleryTone ?? "dark");
-  const gallery = choice === "photography" || (choice === "auto" && b.category === "Photography");
-  const now = `${gallery ? "Gallery" : "Classic"}${gallery ? `, ${tone}` : ""}`;
+  const mine = b.category === "Photography" ? "photography" : "beauty";
+  const current = choice === "auto" ? (mine === "photography" ? "photography" : "beauty") : choice;
+  const groups: [string, typeof PAGE_STYLES][] = [
+    [mine === "photography" ? "Made for photographers" : "Made for beauty businesses", PAGE_STYLES.filter((x) => x.for === mine)],
+    [mine === "photography" ? "Also available" : "Made for photographers", PAGE_STYLES.filter((x) => x.for !== mine)],
+  ];
+  const pick = (id: PageStyle) => {
+    setChoice(id);
+    s.run(() => savePageAction({ styleChoice: id }));
+  };
   return (
-    <details className="group rounded-card border border-line bg-surface-raised">
-      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 [&::-webkit-details-marker]:hidden">
-        <span className="min-w-0">
-          <span className="text-body block font-semibold">More options</span>
-          <span className="text-caption block truncate text-ink-muted">Page style: {now}</span>
-        </span>
-        <ChevronDown size={20} className="shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
-      </summary>
-      <div className="grid gap-2 px-4 pb-4" role="radiogroup" aria-label="Page style">
-        {STYLES.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            role="radio"
-            aria-checked={choice === m.id}
-            onClick={() => {
-              setChoice(m.id);
-              s.run(() => savePageAction({ styleChoice: m.id }));
-            }}
-            className={`min-h-11 rounded-md border p-3 text-left ${choice === m.id ? "border-brand bg-brand-soft" : "border-line"}`}
-          >
-            <span className="text-body block font-semibold">{m.label}</span>
-            <span className="text-caption block text-ink-muted">{m.note}</span>
-          </button>
-        ))}
-        {gallery && (
-          <div className="mt-3 grid gap-2">
-            <p className="text-label">Gallery background</p>
-            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Gallery background">
-              {(
-                [
-                  ["dark", "Dark", "Studio black"],
-                  ["light", "Light", "Soft white"],
-                ] as const
-              ).map(([id, label, note]) => (
-                <button
-                  key={id}
-                  type="button"
-                  role="radio"
-                  aria-checked={tone === id}
-                  onClick={() => {
-                    setTone(id);
-                    s.run(() => savePageAction({ galleryTone: id }));
-                  }}
-                  className={`min-h-11 rounded-md border p-3 text-left ${tone === id ? "border-brand bg-brand-soft" : "border-line"}`}
-                >
-                  <span className="text-body block font-semibold">{label}</span>
-                  <span className="text-caption block text-ink-muted">{note}</span>
-                </button>
-              ))}
-            </div>
+    <Card title="Page style" status={PAGE_STYLES.find((x) => x.id === current)?.name ?? ""}>
+      <p className="text-caption text-ink-muted">Your services, photos and booking stay the same; only the look changes.</p>
+      {groups.map(([title, list]) => (
+        <div key={title} className="grid gap-2">
+          <p className="text-label">{title}</p>
+          <div className="grid gap-2" role="radiogroup" aria-label={title}>
+            {list.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                role="radio"
+                aria-checked={current === m.id}
+                onClick={() => pick(m.id)}
+                className={`flex min-h-14 items-center gap-3 rounded-md border p-3 text-left ${current === m.id ? "border-brand bg-brand-soft" : "border-line"}`}
+              >
+                <span className="min-w-0">
+                  <span className="text-body block font-semibold">{m.name}</span>
+                  <span className="text-caption block text-ink-muted">{m.line}</span>
+                </span>
+              </button>
+            ))}
           </div>
-        )}
-        {s.saved && (
-          <span className="text-label flex items-center gap-1 text-success">
-            <Check size={16} aria-hidden="true" /> Saved
-          </span>
-        )}
-      </div>
-    </details>
+        </div>
+      ))}
+      <a href={`/${b.slug}`} target="_blank" rel="noopener noreferrer" className="text-label justify-self-start text-brand underline underline-offset-4">
+        See your page in this style
+      </a>
+      {current === "photography" && (
+        <div className="grid gap-2">
+          <p className="text-label">Gallery background</p>
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Gallery background">
+            {(
+              [
+                ["dark", "Dark", "Studio black"],
+                ["light", "Light", "Soft white"],
+              ] as const
+            ).map(([id, label, note]) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={tone === id}
+                onClick={() => {
+                  setTone(id);
+                  s.run(() => savePageAction({ galleryTone: id }));
+                }}
+                className={`min-h-11 rounded-md border p-3 text-left ${tone === id ? "border-brand bg-brand-soft" : "border-line"}`}
+              >
+                <span className="text-body block font-semibold">{label}</span>
+                <span className="text-caption block text-ink-muted">{note}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {s.saved && (
+        <span className="text-label flex items-center gap-1 text-success">
+          <Check size={16} aria-hidden="true" /> Saved
+        </span>
+      )}
+    </Card>
   );
 }
+
 
 /* ---------------------------------------------------------------- about */
 
@@ -709,6 +716,7 @@ export function PageEditor({ business: b, plan }: { business: Business; plan: Po
   return (
     <div className="grid gap-3">
       <HeroCard b={b} />
+      <StyleCard b={b} />
       <ModeCard b={b} />
       <AboutCard b={b} />
       <ServicesCard b={b} />
@@ -735,7 +743,6 @@ export function PageEditor({ business: b, plan }: { business: Business; plan: Po
           </Link>
         )}
       </Card>
-      <StyleCard b={b} />
       <p className="text-caption px-1 text-ink-muted">Sections you leave empty don&apos;t show on your page. Reviews come from people who redeemed a Tikka.</p>
     </div>
   );

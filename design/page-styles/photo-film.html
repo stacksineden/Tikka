@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Photography · Film — business page style prototype</title>
+<!--
+  Business page style prototype: PHOTOGRAPHY · FILM.
+  For wedding and event photographers and videographers: the page plays like a film. Neutral black
+  (#0c0c0c, the gallery's dark tone), full-screen photos told in chapters, a caption on each like a
+  subtitle, then packages rolling like credits. The business's colour (here Gold-ish Cocoa #7A4A12
+  lifted for dark) only on chapter numbers. Same data as every style.
+  Photos: img/film-*.jpg if present, else neutral placeholders.
+  Mobile first (375px). Animates transform and opacity only; respects reduced motion.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..700&family=Fraunces:ital,opsz,wght@0,9..144,200..400;1,9..144,200..400&family=Space+Mono&display=swap&subset=latin-ext" rel="stylesheet">
+<style>
+  :root {
+    --biz: #7A4A12; --mark: color-mix(in oklab, var(--biz) 45%, #f0e6da);
+    --bg: #0C0C0C; --paper: #EDEAE4; --muted: rgba(237,234,228,.6); --line: rgba(237,234,228,.14);
+    --gold: #FFB020; --on-gold: #1A1206;
+    --serif: "Fraunces", Georgia, serif; --sans: "Bricolage Grotesque", system-ui, sans-serif; --mono: "Space Mono", ui-monospace, monospace;
+    --ease: cubic-bezier(.2,.7,.1,1);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--paper); font-family: var(--sans); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { width: min(1100px, 100% - 40px); margin-inline: auto; }
+  .serif { font-family: var(--serif); font-weight: 200; letter-spacing: -0.03em; font-variation-settings: "opsz" 144; }
+  .mono { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+  .photo { background: var(--img, none) center/cover, radial-gradient(70% 60% at 50% 40%, #4a4641 0, transparent 70%), linear-gradient(180deg, #2a2724, #0c0c0c); }
+
+  .top { position: fixed; inset: 0 0 auto; z-index: 20; display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; mix-blend-mode: difference; color: #fff; }
+  .top a { min-height: 44px; display: inline-flex; align-items: center; }
+  .rec { display: inline-flex; align-items: center; gap: 8px; }
+  .rec i { width: 8px; height: 8px; border-radius: 50%; background: #e34; animation: blink 1.6s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* opening title: letterboxed */
+  .open { height: 100svh; display: grid; place-items: center; position: relative; overflow: hidden; }
+  .open .photo { position: absolute; inset: 12% 0; animation: drift 14s ease-in-out infinite alternate; }
+  .open::before, .open::after { content: ""; position: absolute; left: 0; right: 0; height: 12%; background: var(--bg); z-index: 1; }
+  .open::before { top: 0; } .open::after { bottom: 0; }
+  .open .t { position: relative; z-index: 2; text-align: center; padding: 0 20px; }
+  .open h1 { font-size: clamp(56px, 17vw, 200px); line-height: .85; }
+  .open h1 i { font-style: italic; }
+  .open p { margin-top: 16px; color: var(--muted); }
+  .open .scroll { position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%); z-index: 2; color: var(--muted); }
+  @keyframes drift { from { transform: scale(1.04) translateX(-1%); } to { transform: scale(1.1) translateX(1%); } }
+
+  .band { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; border-block: 1px solid var(--line); font-size: 13px; }
+  .claim { min-height: 44px; padding: 0 16px; border-radius: 999px; background: var(--gold); color: var(--on-gold); font-weight: 700; font-size: 13px; white-space: nowrap; display: inline-flex; align-items: center; }
+
+  /* chapters: each a full screen with a sticky title */
+  .chapter { position: relative; }
+  .chapter .title { position: sticky; top: 0; z-index: 2; height: 0; }
+  .chapter .title div { padding: 70px 20px 0; }
+  .chapter .title .n { color: var(--mark); }
+  .chapter .title h2 { font-size: clamp(40px, 11vw, 110px); line-height: .9; margin-top: 8px; text-shadow: 0 2px 30px rgba(0,0,0,.45); }
+  .chapter .title h2 i { font-style: italic; }
+  .frame { height: 100svh; position: relative; overflow: hidden; }
+  .frame .photo { position: absolute; inset: 0; transform: scale(1.06); transition: transform 1.6s var(--ease); }
+  .frame.in .photo { transform: scale(1); }
+  .frame::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(12,12,12,.5) 0, transparent 30%, transparent 62%, rgba(12,12,12,.85) 100%); }
+  .sub { position: absolute; z-index: 1; left: 0; right: 0; bottom: 9%; text-align: center; padding: 0 28px; font-family: var(--serif); font-style: italic; font-weight: 300; font-size: 20px; line-height: 1.35; opacity: 0; transform: translateY(10px); transition: opacity 1s var(--ease) .3s, transform 1s var(--ease) .3s; }
+  .frame.in .sub { opacity: 1; transform: none; }
+  .sub small { display: block; margin-top: 6px; font-family: var(--mono); font-style: normal; font-size: 10px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+
+  section { padding: 80px 0; }
+  /* packages roll like credits */
+  .credits { text-align: center; }
+  .credits h2 { font-size: clamp(44px, 12vw, 110px); line-height: .9; margin-bottom: 40px; }
+  .credit { padding: 26px 0; border-top: 1px solid var(--line); }
+  .credit .mono { color: var(--mark); }
+  .credit h3 { font-family: var(--serif); font-weight: 300; font-size: 30px; letter-spacing: -0.02em; margin: 6px 0; }
+  .credit p { color: var(--muted); max-width: 34ch; margin: 0 auto; }
+  .credit .row { margin-top: 14px; display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .credit .price { font-family: var(--mono); font-size: 15px; }
+  .credit a { min-height: 44px; padding: 0 20px; border: 1px solid var(--paper); border-radius: 999px; display: inline-flex; align-items: center; font-weight: 600; font-size: 14px; }
+
+  .review { text-align: center; }
+  .review p { font-family: var(--serif); font-weight: 200; font-style: italic; font-size: clamp(26px, 7vw, 54px); line-height: 1.15; max-width: 20ch; margin: 0 auto; }
+  .review small { display: block; margin-top: 18px; color: var(--muted); }
+
+  .end { text-align: center; padding: 70px 20px 130px; border-top: 1px solid var(--line); }
+  .end .serif { font-size: clamp(40px, 12vw, 96px); line-height: .9; }
+  .end .serif i { font-style: italic; }
+  .end p { color: var(--muted); margin: 14px 0 24px; }
+  .btn { min-height: 52px; padding: 0 26px; border-radius: 999px; background: var(--paper); color: var(--bg); display: inline-flex; align-items: center; font-weight: 600; }
+  .made { margin-top: 40px; font-size: 12px; color: var(--muted); }
+
+  .bar { position: fixed; inset: auto 12px 12px; z-index: 30; display: flex; gap: 8px; }
+  .bar a { min-height: 50px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; }
+  .bar .main { flex: 1; background: var(--paper); color: var(--bg); }
+  .bar .wa { width: 50px; border: 1px solid var(--line); background: rgba(12,12,12,.8); }
+
+  @media (min-width: 860px) {
+    .chapter .title div { padding: 100px 48px 0; }
+    .sub { font-size: 26px; }
+    .credits .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 32px; }
+    .bar { display: none; } .end { padding-bottom: 70px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .open .photo, .rec i { animation: none; }
+    .frame .photo { transform: none; transition: none; }
+    .sub { opacity: 1; transform: none; transition: none; }
+  }
+</style>
+</head>
+<body>
+  <header class="top"><a href="#" class="mono">Lens &amp; Lace</a><a href="#book" class="mono rec"><i></i>Book</a></header>
+
+  <div class="open">
+    <div class="photo" style="--img:url(img/film-open.jpg)" role="img" aria-label="A couple dancing under string lights"></div>
+    <div class="t">
+      <p class="mono" style="color:var(--mark)">Weddings · Port Harcourt &amp; everywhere</p>
+      <h1 class="serif" style="margin-top:14px">Lens<br><i>&amp; Lace</i></h1>
+      <p>Wedding films and photographs, told the way the day felt.</p>
+    </div>
+    <span class="scroll mono">Scroll ↓</span>
+  </div>
+
+  <div class="band"><span><b>Drop · Wedding season</b> <span style="color:var(--muted)">· 12 left</span></span><a class="claim" href="#">Claim yours</a></div>
+
+  <div class="chapter">
+    <div class="title"><div><span class="mono n">Chapter I</span><h2 class="serif">Getting <i>ready</i></h2></div></div>
+    <div class="frame"><div class="photo" style="--img:url(img/film-1.jpg)"></div><p class="sub">“Her mother tied the gele twice. The second time, she cried.”<small>Ada &amp; Kelechi · GRA, Port Harcourt</small></p></div>
+    <div class="frame"><div class="photo" style="--img:url(img/film-2.jpg)"></div><p class="sub">The groomsmen, ten minutes late, in perfect agbada.<small>Same day · 11:40am</small></p></div>
+  </div>
+  <div class="chapter">
+    <div class="title"><div><span class="mono n">Chapter II</span><h2 class="serif">The <i>vows</i></h2></div></div>
+    <div class="frame"><div class="photo" style="--img:url(img/film-3.jpg)"></div><p class="sub">Five hundred guests went quiet for one word.<small>St. Paul's · 2:15pm</small></p></div>
+  </div>
+  <div class="chapter">
+    <div class="title"><div><span class="mono n">Chapter III</span><h2 class="serif">The <i>party</i></h2></div></div>
+    <div class="frame"><div class="photo" style="--img:url(img/film-4.jpg)"></div><p class="sub">Money spraying started before the first song ended.<small>Reception · 7:30pm</small></p></div>
+  </div>
+
+  <section class="credits" id="book">
+    <div class="wrap">
+      <h2 class="serif">Book your <i style="font-style:italic">day</i></h2>
+      <div class="grid">
+        <div class="credit"><span class="mono">Photography</span><h3>The story</h3><p>Getting ready to the last dance, one photographer, 400+ edited photos.</p><div class="row"><span class="price">₦650,000</span><a href="#">Hold your date</a></div></div>
+        <div class="credit"><span class="mono">Photo + film</span><h3>The feature</h3><p>Two photographers, a 5-minute film and a 40-page album.</p><div class="row"><span class="price">₦1,400,000</span><a href="#">Hold your date</a></div></div>
+        <div class="credit"><span class="mono">Before the day</span><h3>Pre-wedding</h3><p>A 3-hour shoot anywhere in Port Harcourt, 60 edited photos.</p><div class="row"><span class="price">₦180,000</span><a href="#">Book</a></div></div>
+      </div>
+      <p class="mono" style="color:var(--muted);margin-top:26px">50% holds your date · travel anywhere in Nigeria</p>
+    </div>
+  </section>
+
+  <section class="review"><div class="wrap"><p>“We watched our film six times the night it arrived.”</p><small>Ada &amp; Kelechi · ★★★★★</small></div></section>
+
+  <div class="end">
+    <p class="serif">See you<br><i>on the day</i></p>
+    <p>Port Harcourt · we travel for weddings</p>
+    <a class="btn" href="#book">Check my date</a>
+    <p class="made">Made with Tikka</p>
+  </div>
+
+  <div class="bar"><a class="main" href="#book">Check my date</a><a class="wa" href="#" aria-label="WhatsApp">✆</a></div>
+<script>
+  const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && e.target.classList.add("in")), { threshold: 0.35 });
+  document.querySelectorAll(".frame").forEach((el) => io.observe(el));
+</script>
+</body>
+</html>

@@ -39,6 +39,18 @@ const CATEGORY_LINE: Record<string, string> = {
 };
 
 /** The page's look: the owner's pick under "More options", else from the category (Photography → the gallery). */
+/** Every page style, in the order owners see them, with who it suits. */
+export const PAGE_STYLES: { id: PageStyle; name: string; line: string; for: "beauty" | "photography" }[] = [
+  { id: "beauty", name: "Editorial", line: "A big photo, your name in large type, light and modern.", for: "beauty" },
+  { id: "luxe", name: "Luxe", line: "Dark and rich, like a hotel spa. For bridal, lashes and spas.", for: "beauty" },
+  { id: "soft", name: "Soft studio", line: "Light, airy and rounded. For nails, lashes and brows.", for: "beauty" },
+  { id: "photography", name: "Gallery", line: "Your photos lead, in their own colours, with a full-screen viewer.", for: "photography" },
+  { id: "portfolio", name: "Minimal portfolio", line: "A white gallery wall with an index of your work.", for: "photography" },
+  { id: "film", name: "Film", line: "Full-screen photos told in chapters. For weddings and events.", for: "photography" },
+];
+
+export const isPageStyle = (v: unknown): v is PageStyle => PAGE_STYLES.some((s) => s.id === v);
+
 export function pageStyle(b: Pick<Business, "page" | "category">): PageStyle {
   return b.page?.style ?? (b.category === "Photography" ? "photography" : "beauty");
 }

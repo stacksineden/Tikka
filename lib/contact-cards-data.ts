@@ -62,7 +62,7 @@ function demoAdd(ownerId: string, person?: { name?: string; role?: string }): De
 const live = (list: DemoCard[] | undefined) => (list ?? []).filter((c) => !c.removedAt);
 
 /**
- * Posters & cards › Business cards. Owners only. The business's own card is made the first time
+ * Cards & posters › Business cards. Owners only. The business's own card is made the first time
  * they open the tab, so most owners just tap Print.
  */
 export async function getContactCards(user: User): Promise<ContactCard[]> {

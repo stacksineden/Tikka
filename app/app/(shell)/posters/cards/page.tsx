@@ -18,7 +18,7 @@ import { getOwnerUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Business cards" };
 
-// Posters & cards › Business cards (docs/BUSINESS_CARDS.md). Free for every business. The first
+// Cards & posters › Business cards (docs/BUSINESS_CARDS.md). Free for every business. The first
 // card is made from their page the first time they come here.
 
 async function Cards() {
@@ -82,7 +82,7 @@ export default function BusinessCardsPage() {
     <div className="mx-auto grid max-w-5xl gap-5 px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-8">
       <div className="grid gap-4">
         <div>
-          <h1 className="text-heading">Posters &amp; cards</h1>
+          <h1 className="text-heading">Cards &amp; posters</h1>
           <p className="text-body mt-1 text-ink-muted">Business cards in your own colours, free. Hand them out; the QR opens your page so people can book.</p>
         </div>
         <PostersTabs current="cards" />
