@@ -63,6 +63,14 @@ export interface Business {
   isDemo?: boolean;
   /** The guarantee is once per business. */
   guaranteeUsed: boolean;
+  /** NEW DIRECTION (demo only for now): the trades picked at setup ("hair", "makeup"…), lib/presets.ts. */
+  trades?: string[];
+  /** NEW DIRECTION (demo only for now): where the owner works, and home service's fee and reach. */
+  workPlace?: WorkPlace;
+  travelFee?: number;
+  travelReach?: TravelReach;
+  /** NEW DIRECTION (demo only for now): the booking rules customers see before they pay. */
+  bookingRules?: string[];
 }
 
 export interface PortfolioPhoto {
@@ -132,7 +140,29 @@ export interface ServiceItem {
   focal?: { x: number; y: number };
   /** Optional group shown as a tab ("Hair", "Nails") when there's more than one. */
   group?: string;
+  /** NEW DIRECTION (demo only for now): choices that change the price and time ("Short / Medium / Long"). */
+  options?: ServiceOption[];
+  /** NEW DIRECTION (demo only for now): extras the customer can tick when booking ("Add wash"). */
+  extras?: ServiceExtra[];
+  /** NEW DIRECTION (demo only for now): booked as a whole day with a call time (weddings, shoots). */
+  eventDay?: boolean;
 }
+
+export interface ServiceOption {
+  label: string;
+  price: number;
+  minutes: number;
+}
+
+export interface ServiceExtra {
+  name: string;
+  price: number;
+}
+
+/** NEW DIRECTION: where the owner works. "shop": customers come; "home": the owner goes to them; "both". */
+export type WorkPlace = "shop" | "home" | "both";
+/** How far the owner travels for home service. */
+export type TravelReach = "area" | "city" | "state";
 
 export interface TeamMember {
   id: string;

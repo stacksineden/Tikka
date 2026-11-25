@@ -270,6 +270,15 @@ export async function saveBookingSettings(
   d.minutes = { ...d.minutes, ...s.minutes };
 }
 
+/** NEW DIRECTION (demo only): the deposit picked at setup. Real accounts set deposits on Get paid. */
+export async function saveDemoDeposit(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, deposit: BookingSetup["deposit"]): Promise<void> {
+  if (user.role !== "owner") throw new Error("Only the owner sets deposits.");
+  const w = await who(user);
+  if (!w || isDbId(w.key)) throw new Error("Demo businesses only.");
+  const d = demoBook(w.key, w.business)!;
+  d.setup = { ...d.setup, deposit };
+}
+
 async function demoFor(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, ownerOnly: boolean) {
   if (ownerOnly && user.role !== "owner") return { err: { kind: "no_access" } as Act };
   const w = await who(user);
