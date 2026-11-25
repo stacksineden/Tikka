@@ -18,9 +18,10 @@ import { dbPayoutState, payReady } from "@/lib/payouts-db";
 import { dbBookingSetup } from "@/lib/bookings-db";
 import { MonthCalendar, type MonthDay } from "@/components/today/MonthCalendar";
 import { BookingSettingsV2 } from "@/components/settings/BookingSettingsV2";
+import { WaitlistList } from "@/components/today/WaitlistList";
 import { START_HOURS } from "@/lib/presets";
-import { getBookingRules } from "@/lib/bookings-data";
-import { freeDays, openRange, todayKey, watParts, type Booking } from "@/lib/bookings";
+import { getBookingRules, getWaitlist } from "@/lib/bookings-data";
+import { dayLabel, freeDays, openRange, todayKey, watParts, type Booking } from "@/lib/bookings";
 import type { Business } from "@/lib/types";
 
 /** Each day for the next two months: free times, full or closed, and how many are booked. */
@@ -32,7 +33,8 @@ async function monthDays(ownerKey: string, b: Business, list: Booking[], now: Da
   for (const x of list) if (x.status !== "cancelled") counts.set(watParts(x.startsAt).day, (counts.get(watParts(x.startsAt).day) ?? 0) + 1);
   return freeDays({ ...rules, aheadDays: Math.min(rules.aheadDays, 62) }, shortest, now).map((d) => ({
     key: d.key,
-    state: !openRange(rules.hours, d.weekday) ? "closed" : d.slots.length ? "free" : "full",
+    // Today with nothing left because it's late reads closed, not full.
+    state: !openRange(rules.hours, d.weekday) || (d.key === todayKey(now) && !d.slots.length && !counts.get(d.key)) ? "closed" : d.slots.length ? "free" : "full",
     bookings: counts.get(d.key) ?? 0,
   }));
 }
@@ -131,6 +133,13 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
         </Link>
       </div>
       {month && <MonthCalendar days={month} todayKey={todayKey(now)} />}
+      {month && (
+        <WaitlistList
+          rows={(await getWaitlist(user)).map((w) => ({ id: w.id, day: w.day, dayLabel: dayLabel(`${w.day}T12:00:00+01:00`), service: w.service, name: w.name, phone: w.phone, freeNow: month.find((m) => m.key === w.day)?.state === "free" }))}
+          business={b.name}
+          link={`usetikka.com/${b.slug}`}
+        />
+      )}
       {setup.enabled && (
         <div className="grid gap-1">
           <p className="text-label">Your booking link: put it in your Instagram and WhatsApp bio</p>

@@ -5,7 +5,7 @@
 // real accounts are refused, so nothing here touches Supabase.
 
 import { revalidatePath } from "next/cache";
-import { getBookingSetup, saveBookingSettings, saveDemoDeposit } from "@/lib/bookings-data";
+import { getBookingSetup, removeWaitlist, saveBookingSettings, saveDemoDeposit } from "@/lib/bookings-data";
 import { getBusiness, isDbId, saveBusiness } from "@/lib/data";
 import { getOwnerUser } from "@/lib/session";
 import type { OpeningHours, TravelReach, WorkPlace } from "@/lib/types";
@@ -76,4 +76,12 @@ export async function saveBookingPatch(p: BookingPatch): Promise<{ ok: true } | 
   revalidatePath("/app", "layout");
   revalidatePath(`/${b.slug}`);
   return { ok: true };
+}
+
+/** NEW DIRECTION: take someone off the waitlist (told, or booked). */
+export async function removeWaitlistAction(id: string) {
+  const user = await getOwnerUser();
+  if (!user) return;
+  await removeWaitlist(user, id);
+  revalidatePath("/app/bookings");
 }

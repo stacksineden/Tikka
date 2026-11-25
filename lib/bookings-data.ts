@@ -328,6 +328,48 @@ export async function bookTimeV2(
   return { kind: "booked", token: b.viewToken!, code: b.code, id: b.id };
 }
 
+/* ------------------------------------------------------------ NEW DIRECTION: waitlist (demo) */
+
+export interface WaitlistEntry {
+  id: string;
+  /** The WAT day they wanted, "2026-11-28". */
+  day: string;
+  serviceId?: string;
+  service: string;
+  name: string;
+  /** Owners only (rule 4). */
+  phone: string;
+  createdAt: string;
+}
+const waitlists: Map<string, WaitlistEntry[]> = ((globalThis as { __tikkaWaitlists?: Map<string, WaitlistEntry[]> }).__tikkaWaitlists ??= new Map());
+
+/** A customer asks to hear if a full day opens up. One entry per number per day. */
+export async function joinWaitlist(slug: string, input: { serviceId: string; day: string; name: string; phone: string }): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const found = await getBusinessBySlug(slug);
+  if (!found || isDbId(found.ownerId) || !found.business.trades?.length) return { ok: false, reason: "not_found" };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.day) || input.day < watParts(new Date()).day) return { ok: false, reason: "closed" };
+  const svc = found.business.services.find((s) => s.id === input.serviceId);
+  const list = waitlists.get(found.ownerId) ?? [];
+  if (!list.some((w) => w.day === input.day && w.phone === input.phone)) {
+    if (list.length >= 500) return { ok: false, reason: "slow_down" };
+    list.push({ id: randomBytes(6).toString("hex"), day: input.day, serviceId: svc?.id, service: svc?.name ?? "A booking", name: input.name, phone: input.phone, createdAt: new Date().toISOString() });
+  }
+  waitlists.set(found.ownerId, list);
+  return { ok: true };
+}
+
+/** The owner's waitlist from today on, soonest day first. */
+export async function getWaitlist(user: Pick<SessionUser, "id" | "role">): Promise<WaitlistEntry[]> {
+  if (user.role !== "owner" || isDbId(user.id)) return [];
+  const today = watParts(new Date()).day;
+  return (waitlists.get(user.id) ?? []).filter((w) => w.day >= today).sort((a, b) => a.day.localeCompare(b.day) || a.createdAt.localeCompare(b.createdAt));
+}
+
+export async function removeWaitlist(user: Pick<SessionUser, "id" | "role">, id: string): Promise<void> {
+  if (user.role !== "owner" || isDbId(user.id)) return;
+  waitlists.set(user.id, (waitlists.get(user.id) ?? []).filter((w) => w.id !== id));
+}
+
 /** NEW DIRECTION (demo only): the deposit rule the new booking sheet prices with. */
 export function demoDepositRule(ownerKey: string, business: Business): BookingSetup["deposit"] | undefined {
   if (isDbId(ownerKey)) return undefined;

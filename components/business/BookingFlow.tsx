@@ -9,7 +9,7 @@ import { ArrowLeft, CalendarX, Check, ChevronLeft, ChevronRight, Info, Loader2, 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { slotLabel } from "@/lib/booking";
-import { freeDays, openRange, PROBLEM_TEXT, watInstant, type BookingRules } from "@/lib/bookings";
+import { freeDays, openRange, PROBLEM_TEXT, watInstant, watParts, type BookingRules } from "@/lib/bookings";
 import { MAX_PEOPLE, priceBooking, type DepositRule } from "@/lib/booking-price";
 import type { ServiceItem, WorkPlace } from "@/lib/types";
 
@@ -186,6 +186,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
   }
 
   const day = days.find((d) => d.key === dayKey);
+  const todayKey = watParts(new Date()).day;
   const open = (key: string, weekday: number) => !!openRange(rules?.hours ?? null, weekday) && key;
   const today = new Date();
   const monthBase = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + monthOffset, 1));
@@ -294,7 +295,8 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
                   <>
                     <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1.5" role="group" aria-label="Days">
                       {days.slice(0, 21).map((d) => {
-                        const isOpen = !!open(d.key, d.weekday);
+                        // Today with nothing left (it's late) reads Closed, not Full: no waitlist for a day that's over.
+                        const isOpen = !!open(d.key, d.weekday) && !(d.key === todayKey && d.slots.length === 0);
                         const full = isOpen && d.slots.length === 0;
                         return (
                           <button
@@ -316,7 +318,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
                         );
                       })}
                     </div>
-                    {day && day.slots.length === 0 && <Waitlist name={b.name} done={waitlisted} onJoin={() => setWaitlisted(true)} />}
+                    {day && day.slots.length === 0 && <Waitlist name={b.name} slug={b.slug} serviceId={svc.id!} day={dayKey!} done={waitlisted} onJoin={() => setWaitlisted(true)} />}
                     {day && day.slots.length > 0 && (
                       <>
                         <div className="grid grid-cols-3 gap-2">
@@ -382,7 +384,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
                     })}
                   </div>
                 </div>
-                {dayKey && taken(dayKey) && <Waitlist name={b.name} done={waitlisted} onJoin={() => setWaitlisted(true)} />}
+                {dayKey && taken(dayKey) && <Waitlist name={b.name} slug={b.slug} serviceId={svc.id!} day={dayKey!} done={waitlisted} onJoin={() => setWaitlisted(true)} />}
               </>
             )}
 
@@ -591,21 +593,50 @@ function Line({ label, value, mono, strong }: { label: string; value: string; mo
   );
 }
 
-function Waitlist({ name, done, onJoin }: { name: string; done: boolean; onJoin: () => void }) {
+function Waitlist({ name, slug, serviceId, day, done, onJoin }: { name: string; slug: string; serviceId: string; day: string; done: boolean; onJoin: () => void }) {
+  const [form, setForm] = useState(false);
+  const [first, setFirst] = useState("");
+  const [phone, setPhone] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function join() {
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/book-v2/waitlist", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, serviceId, day, name: first, phone }) });
+      const r = (await res.json()) as { ok: boolean; reason?: string };
+      if (r.ok) onJoin();
+      else setError(PROBLEM_TEXT[r.reason ?? ""] ?? "That didn't work. Try again.");
+    } catch {
+      setError("Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <div className="flex gap-3 rounded-md bg-gold-soft px-4 py-3.5">
       <CalendarX size={20} className="mt-0.5 shrink-0 text-gold-text" aria-hidden="true" />
-      <div className="grid gap-2.5">
+      <div className="grid min-w-0 flex-1 gap-2.5">
         {done ? (
           <span className="text-body">
-            <b>You&apos;re on the waitlist.</b> {name} will message you on WhatsApp if a place opens. (Demo: not saved yet.)
+            <b>You&apos;re on the waitlist.</b> {name} will message you on WhatsApp if a place opens on {longDay(day)}.
           </span>
+        ) : form ? (
+          <>
+            <span className="text-body">Leave your name and WhatsApp number. {name} messages you if a place opens.</span>
+            <input aria-label="Your first name" className="input" value={first} onChange={(e) => setFirst(e.target.value)} placeholder="Your first name" autoComplete="given-name" />
+            <input aria-label="Your WhatsApp number" className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0803 000 0000" inputMode="tel" autoComplete="tel-national" />
+            {error && <span role="alert" className="text-body text-danger">{error}</span>}
+            <button type="button" disabled={busy || first.trim().length < 2 || phone.replace(/\D/g, "").length < 10} className="btn justify-self-start rounded-pill bg-ink text-surface hover:bg-ink" onClick={join}>
+              {busy && <Loader2 className="animate-spin" aria-hidden="true" />} Add me to the waitlist
+            </button>
+          </>
         ) : (
           <>
             <span className="text-body">
               <b>This day is fully booked.</b> Join the waitlist and {name} will message you if a place opens, or pick another day.
             </span>
-            <button type="button" className="btn justify-self-start rounded-pill bg-ink text-surface hover:bg-ink" onClick={onJoin}>
+            <button type="button" className="btn justify-self-start rounded-pill bg-ink text-surface hover:bg-ink" onClick={() => setForm(true)}>
               Join the waitlist
             </button>
           </>
