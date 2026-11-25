@@ -73,7 +73,7 @@ If things go wrong:
 
 1. On Today, **+ New sale**.
 2. **"What did they do?"** Pick from her services, with option and extras.
-3. **"Who?"** Type a name or pick a regular. A number is optional.
+3. **"Who?"** Pick a regular, or type a name and their WhatsApp number. The number is required (decided 25 Nov 2026): every customer must be reachable for receipts, reminders and offers.
 4. **"How much did they pay?"** The full price is filled in; she changes it if they paid part. Cash, transfer or card.
 5. **Done.** It shows on Today and in Money; a part payment shows under "still owes".
 

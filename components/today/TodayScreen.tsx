@@ -28,6 +28,7 @@ import { arrivedAction, paidAction, payBalanceAction, payLinkTodayAction, sample
 import { PayLinkReady, payLinkMessage } from "@/components/payments/PayLinkSheet";
 import { ReceiptButton } from "@/components/payments/ReceiptButton";
 import { StayFresh } from "@/components/payments/StayFresh";
+import { phoneKey } from "@/lib/clients";
 import { METHOD_LABEL, reminderText, waLink, type ExpenseKind, type PayMethod } from "@/lib/ledger";
 import { ExpenseSheet } from "./ExpenseSheet";
 import { Chip, NairaInput, Sheet } from "./Sheet";
@@ -662,19 +663,23 @@ function SaleSheet({ services, customers, businessName, onClose }: { services: T
             </div>
           ) : null;
         })()}
-        {!picked && <input aria-label="WhatsApp number (optional)" className="input h-12" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="WhatsApp number (optional)" />}
-        <button type="button" className="btn btn-lg w-full rounded-pill" onClick={() => setAskName(false)}>
+        {!picked && (
+          <div>
+            <input aria-label="Their WhatsApp number" className="input h-12" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="Their WhatsApp number" autoComplete="off" />
+            <p className="text-caption mt-1.5 text-ink-muted">
+              {phone.trim() && !phoneKey(phone) ? "Type a Nigerian number, like 0803 123 4567." : "Like 0803 123 4567. For receipts, reminders and your next offer."}
+            </p>
+          </div>
+        )}
+        <button type="button" className="btn btn-lg w-full rounded-pill" disabled={name.trim().length < 2 || !phoneKey(phone)} onClick={() => setAskName(false)}>
           Next
-        </button>
-        <button type="button" className="text-label justify-self-start text-brand underline underline-offset-4" onClick={() => setAskName(false)}>
-          Skip: a walk-in
         </button>
       </Sheet>
     );
   return (
     <Sheet title={method === "pay_link" ? "Send them a pay link" : "How much did they pay?"} onClose={onClose}>
       <p className="text-body text-ink-muted">
-        {name || "Walk-in"} · {svc.label}
+        {name} · {svc.label}
       </p>
       <NairaInput id="s-paid" value={paid} onChange={setPaid} label={method === "pay_link" ? "Pay link for" : "Amount paid"} />
       <div className="flex flex-wrap gap-2">
@@ -696,13 +701,14 @@ function SaleSheet({ services, customers, businessName, onClose }: { services: T
         onClick={() =>
           start(async () => {
             if (method === "pay_link") {
-              const r = await payLinkTodayAction({ booking: { name: name || "Walk-in", item: svc.label, totalNaira: svc.naira, phone: phone || undefined }, linkNaira: paid, note: svc.label });
+              const r = await payLinkTodayAction({ booking: { name: name.trim(), item: svc.label, totalNaira: svc.naira, phone }, linkNaira: paid, note: svc.label });
               if (!r.ok) return setError(r.error);
               setLink({ url: r.url, kobo: paid * 100 });
               router.refresh();
               return;
             }
-            await paidAction({ name: name || "Walk-in", item: svc.label, totalNaira: svc.naira, paidNaira: paid, method, phone: phone || undefined });
+            const r = await paidAction({ name: name.trim(), item: svc.label, totalNaira: svc.naira, paidNaira: paid, method, phone });
+            if (!r.ok) return setError("Add their name and WhatsApp number first.");
             router.refresh();
             onClose();
           })

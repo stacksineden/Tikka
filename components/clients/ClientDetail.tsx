@@ -10,7 +10,7 @@ import { useState, useTransition } from "react";
 import { matchWalkInAction, saveClientNoteAction } from "@/app/app/client-actions";
 import { PayLinkSheet } from "@/components/payments/PayLinkSheet";
 import { ReceiptButton } from "@/components/payments/ReceiptButton";
-import { payLinkReasons, relativeDay, type Client } from "@/lib/clients";
+import { payLinkReasons, phoneKey, relativeDay, type Client } from "@/lib/clients";
 import { METHOD_LABEL, reminderText, waLink } from "@/lib/ledger";
 import { initials, Tag } from "./ClientList";
 
@@ -104,6 +104,8 @@ export function ClientDetail({
           <PayLinkSheet businessName={businessName} maxKobo={payMaxKobo} customer={{ name: c.name, phone: c.phone }} reasons={payLinkReasons(c)} className="btn btn-secondary btn-lg col-span-2 rounded-pill" />
         ) : null}
       </div>
+
+      {!c.phone && <AddNumber c={c} />}
 
       {matches.length > 0 && (
         <section className="grid gap-2.5 rounded-card border border-line bg-gold-soft p-4">
@@ -211,5 +213,41 @@ function Stat({ label, value, small }: { label: string; value: string; small?: b
       <span className="text-caption text-ink-muted">{label}</span>
       <b className={`block ${small ? "text-[15px]" : "text-code text-[16px]"}`}>{value}</b>
     </div>
+  );
+}
+
+/** A customer saved before numbers were required: add their WhatsApp number and their visits join it. */
+function AddNumber({ c }: { c: Client }) {
+  const router = useRouter();
+  const [phone, setPhone] = useState("");
+  const [error, setError] = useState("");
+  const [pending, start] = useTransition();
+  const ok = !!phoneKey(phone);
+  return (
+    <section className="grid gap-2.5 rounded-card border border-line bg-gold-soft p-4">
+      <h2 className="text-title">Add their WhatsApp number</h2>
+      <p className="text-body">{c.name} was saved without one, so you can&apos;t message them or send a receipt. Ask next time they come, or add it now.</p>
+      <input aria-label={`${c.name}'s WhatsApp number`} className="input h-12" inputMode="tel" value={phone} onChange={(e) => (setPhone(e.target.value), setError(""))} placeholder="e.g. 0803 123 4567" autoComplete="off" />
+      {phone.trim() && !ok && <p className="text-caption text-ink-muted">Type a Nigerian number, like 0803 123 4567.</p>}
+      <button
+        type="button"
+        className="btn rounded-pill justify-self-start"
+        disabled={pending || !ok}
+        onClick={() =>
+          start(async () => {
+            const r = await matchWalkInAction(c.key, c.name, phone);
+            if (!r.ok) return setError("That didn't work. Try again.");
+            router.replace(`/app/leads/${encodeURIComponent(r.key)}`);
+          })
+        }
+      >
+        {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Check aria-hidden="true" />} Save number
+      </button>
+      {error && (
+        <p role="alert" className="text-caption text-danger">
+          {error}
+        </p>
+      )}
+    </section>
   );
 }

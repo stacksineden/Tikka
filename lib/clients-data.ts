@@ -40,3 +40,12 @@ export async function saveClientNote(user: Pick<SessionUser, "id" | "role">, key
   notes.set(user.id, mine);
   return true;
 }
+
+/** A walk-in got their number: their notes and birthday move to the customer with that number (unless that one has notes already). */
+export async function moveClientNote(user: Pick<SessionUser, "id" | "role">, from: string, to: string): Promise<void> {
+  if (user.role !== "owner" || isDbId(user.id) || from === to) return;
+  const mine = notes.get(user.id);
+  if (!mine?.[from]) return;
+  if (!mine[to]?.notes && !mine[to]?.birthday) mine[to] = mine[from];
+  delete mine[from];
+}

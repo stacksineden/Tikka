@@ -89,14 +89,15 @@ export async function seedLedger(user: Pick<SessionUser, "id" | "role">, now: Da
   if (l.sales.length || l.expenses.length) return;
   const daysAgo = (n: number, h = 1) => new Date(now.getTime() - n * 86_400_000 - h * 3_600_000).toISOString();
   const item = (i: number) => items[i % items.length] ?? "Sale";
-  const sale = (n: number, name: string, i: number, total: number, paid: number, method: PayMethod): Sale => ({
-    id: id(), at: daysAgo(n), name, item: item(i), totalKobo: total * 100, payments: paid ? [{ at: daysAgo(n), kobo: paid * 100, method }] : [],
+  // Every customer has a WhatsApp number (pretend ones for the demo).
+  const sale = (n: number, name: string, phone: string, i: number, total: number, paid: number, method: PayMethod): Sale => ({
+    id: id(), at: daysAgo(n), name, phone, item: item(i), totalKobo: total * 100, payments: paid ? [{ at: daysAgo(n), kobo: paid * 100, method }] : [],
   });
   l.sales.push(
-    sale(2, "Bisi", 1, 18000, 8000, "cash"),
-    sale(1, "Chioma", 0, 15000, 10000, "transfer"),
-    sale(1, "Yemi", 2, 12000, 12000, "cash"),
-    sale(0, "Adaora", 0, 20000, 20000, "transfer"),
+    sale(2, "Bisi", "+2348031110021", 1, 18000, 8000, "cash"),
+    sale(1, "Chioma", "+2348031110017", 0, 15000, 10000, "transfer"),
+    sale(1, "Yemi", "+2348031110023", 2, 12000, 12000, "cash"),
+    sale(0, "Adaora", "+2348031110024", 0, 20000, 20000, "transfer"),
   );
   l.expenses.push(
     { id: id(), at: daysAgo(2, 2), kind: "Products", kobo: 3_200_000 },
