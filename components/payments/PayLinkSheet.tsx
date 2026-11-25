@@ -11,7 +11,7 @@ import { useState, useTransition } from "react";
 import { createPayLinkAction } from "@/app/app/paylink-actions";
 import { Sheet } from "@/components/today/Sheet";
 import { ActionIcon } from "@/components/tikka/ActionIcon";
-import { payReasonNote, type PayReason } from "@/lib/clients";
+import { payReasonNote, phoneKey, type PayReason } from "@/lib/clients";
 import { waLink } from "@/lib/ledger";
 
 const naira = (kobo: number) => "₦" + Math.round(kobo / 100).toLocaleString("en-NG");
@@ -19,6 +19,7 @@ const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "n
 
 const PROBLEM: Record<string, string> = {
   too_small: "The smallest pay link is ₦100.",
+  bad_phone: "Type their WhatsApp number, like 0803 123 4567.",
   bad_note: "Say what it's for, e.g. \"Braids balance\".",
   no_account: "Add your bank account in Settings → Get paid first.",
   account_again: "Add your bank account again in Settings → Get paid.",
@@ -49,6 +50,8 @@ export function PayLinkSheet({
   const [amount, setAmount] = useState(0);
   const [note, setNote] = useState("");
   const [name, setName] = useState("");
+  // Every customer has a WhatsApp number: a link from Money asks for it, a customer's page brings it.
+  const [phone, setPhone] = useState("");
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
@@ -67,6 +70,7 @@ export function PayLinkSheet({
     setUrl(null);
     setError("");
     setName("");
+    setPhone("");
     if (choose) setReason(null);
     else pick(reasons[0] ?? { kind: "other" });
   }
@@ -79,7 +83,7 @@ export function PayLinkSheet({
         naira: amount,
         note,
         name: customer?.name ?? name,
-        phone: customer?.phone,
+        phone: customer?.phone ?? phone,
         saleId: reason.kind === "balance" ? reason.saleId : undefined,
         claimId: reason.kind === "tikka" ? reason.claimId : undefined,
       });
@@ -103,7 +107,7 @@ export function PayLinkSheet({
       {open && (
         <Sheet title={title} onClose={() => setOpen(false)}>
           {url ? (
-            <PayLinkReady url={url} message={message} amountKobo={amount * 100} note={note} first={first} phone={customer?.phone} />
+            <PayLinkReady url={url} message={message} amountKobo={amount * 100} note={note} first={first} phone={customer?.phone ?? (phoneKey(phone) ?? undefined)} />
           ) : !reason ? (
             <div className="grid gap-2">
               <p className="text-body text-ink-muted">What&apos;s it for?</p>
@@ -155,12 +159,19 @@ export function PayLinkSheet({
                 <input className="input" value={note} onChange={(e) => setNote(e.target.value.slice(0, 80))} placeholder="e.g. Braids balance" required />
               </label>
               {!customer && (
-                <label className="grid gap-1">
-                  <span className="text-label">Their first name (optional)</span>
-                  <input className="input" value={name} onChange={(e) => setName(e.target.value.slice(0, 30))} />
-                </label>
+                <>
+                  <label className="grid gap-1">
+                    <span className="text-label">Their name</span>
+                    <input className="input" value={name} onChange={(e) => setName(e.target.value.slice(0, 30))} autoComplete="off" required />
+                  </label>
+                  <label className="grid gap-1">
+                    <span className="text-label">Their WhatsApp number</span>
+                    <input className="input font-mono" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="0803 123 4567" autoComplete="off" required />
+                    {phone.trim() && !phoneKey(phone) && <span className="text-caption text-ink-muted">Type a Nigerian number, like 0803 123 4567.</span>}
+                  </label>
+                </>
               )}
-              <button type="submit" className="btn btn-lg rounded-pill" disabled={pending || !amount || note.trim().length < 2}>
+              <button type="submit" className="btn btn-lg rounded-pill" disabled={pending || !amount || note.trim().length < 2 || (!customer && (name.trim().length < 2 || !phoneKey(phone)))}>
                 {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
                 {pending ? "Making the link…" : amount ? `Make a ${naira(amount * 100)} pay link` : "Make the link"}
               </button>

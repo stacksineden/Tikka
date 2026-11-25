@@ -185,3 +185,36 @@ export function payReasonNote(r: PayReason): string {
   if (r.kind === "tikka") return `${r.reward} (your Tikka)`.slice(0, 80);
   return "";
 }
+
+/** "+2348031110017" → "0803 111 0017", how owners write numbers. */
+export function formatPhone(e164: string | undefined): string {
+  const k = phoneKey(e164);
+  if (!k) return e164 ?? "";
+  const d = "0" + k.slice(4);
+  return `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7)}`;
+}
+
+/** "…0017": the last 4 digits, to tell two customers with the same name apart. */
+export const phoneTail = (e164: string | undefined) => (e164 ? `…${e164.replace(/\D/g, "").slice(-4)}` : "");
+
+/** First names that more than one customer has ("chioma"), lower-cased. */
+export function repeatedNames(list: { name: string }[]): Set<string> {
+  const seen = new Map<string, number>();
+  for (const c of list) {
+    const f = c.name.trim().split(/\s+/)[0]?.toLowerCase() ?? "";
+    if (f) seen.set(f, (seen.get(f) ?? 0) + 1);
+  }
+  return new Set([...seen].filter(([, n]) => n > 1).map(([f]) => f));
+}
+
+/** Search by name, or by number however it's typed: "0803 111", "803111", "+234 803 111". */
+export function matchesSearch(c: { name: string; phone?: string }, q: string): boolean {
+  const t = q.trim().toLowerCase();
+  if (!t) return true;
+  if (c.name.toLowerCase().includes(t)) return true;
+  let d = t.replace(/\D/g, "");
+  if (d.length < 3 || !c.phone) return false;
+  if (d.startsWith("234")) d = d.slice(3);
+  if (d.startsWith("0")) d = d.slice(1);
+  return c.phone.replace(/\D/g, "").slice(3).includes(d);
+}

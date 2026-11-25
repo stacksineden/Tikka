@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Booking } from "./bookings";
-import { buildClients, payLinkReasons, payReasonNote, phoneKey, possibleMatches, relativeDay, sortClients } from "./clients";
+import { buildClients, formatPhone, matchesSearch, payLinkReasons, payReasonNote, phoneKey, phoneTail, possibleMatches, relativeDay, repeatedNames, sortClients } from "./clients";
 import type { Sale } from "./ledger";
 
 const now = new Date("2026-11-25T15:00:00Z");
@@ -80,5 +80,24 @@ describe("client book", () => {
       { kind: "other" },
     ]);
     expect(reasons.map(payReasonNote)).toEqual(["Balance for Knotless braids", "20% off braids (your Tikka)", ""]);
+  });
+
+  it("tells customers with the same name apart by their number, and finds them however it's typed", () => {
+    const sales: Sale[] = [
+      { id: "a", at: "2026-11-20T10:00:00Z", name: "Chioma", item: "Cornrows", totalKobo: 600_000, payments: [{ at: "2026-11-20T10:00:00Z", kobo: 600_000, method: "cash" }], phone: "0803 111 0017" },
+      { id: "b", at: "2026-11-21T10:00:00Z", name: "Chioma", item: "Cornrows", totalKobo: 600_000, payments: [{ at: "2026-11-21T10:00:00Z", kobo: 600_000, method: "cash" }], phone: "0809 999 0099" },
+      { id: "c", at: "2026-11-22T10:00:00Z", name: "Chioma Okafor", item: "Silk press", totalKobo: 900_000, payments: [{ at: "2026-11-22T10:00:00Z", kobo: 900_000, method: "cash" }], phone: "+234 803 111 0017" },
+    ];
+    const list = buildClients({ bookings: [], sales, claims: [], notes: {}, now });
+    expect(list).toHaveLength(2);
+    const first = list.find((c) => c.phone === "+2348031110017")!;
+    expect([first.name, first.visits, first.spentKobo]).toEqual(["Chioma Okafor", 2, 1_500_000]);
+    expect(list.find((c) => c.phone === "+2348099990099")!.visits).toBe(1);
+    expect(formatPhone("+2348031110017")).toBe("0803 111 0017");
+    expect(phoneTail("+2348031110017")).toBe("…0017");
+    expect([...repeatedNames(list)]).toEqual(["chioma"]);
+    for (const q of ["0803 111", "803111", "+234 803 111", "chioma ok"]) expect(matchesSearch(first, q)).toBe(true);
+    expect(matchesSearch(first, "0809")).toBe(false);
+    expect(matchesSearch(first, "")).toBe(true);
   });
 });

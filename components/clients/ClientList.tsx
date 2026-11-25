@@ -6,7 +6,7 @@
 import { ChevronRight, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { relativeDay, sortClients, type Client, type ClientSort } from "@/lib/clients";
+import { formatPhone, matchesSearch, relativeDay, sortClients, type Client, type ClientSort } from "@/lib/clients";
 
 const naira = (kobo: number) => "₦" + Math.round(kobo / 100).toLocaleString("en-NG");
 const SORTS: [ClientSort, string][] = [
@@ -30,7 +30,7 @@ export function ClientList({ clients, now }: { clients: Client[]; now: string })
   const at = useMemo(() => new Date(now), [now]);
   const shown = useMemo(() => {
     const t = q.trim().toLowerCase();
-    const base = clients.filter((c) => (from === "all" || c.sources.includes(from)) && (!t || c.name.toLowerCase().includes(t) || (c.phone ?? "").includes(t.replace(/\D/g, "") || "~")));
+    const base = clients.filter((c) => (from === "all" || c.sources.includes(from)) && (!t || matchesSearch(c, t)));
     return sortClients(base, sort);
   }, [clients, q, sort, from]);
   const owed = clients.reduce((n, c) => n + c.owedKobo, 0);
@@ -75,6 +75,8 @@ export function ClientList({ clients, now }: { clients: Client[]; now: string })
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{c.name}</span>
+                  {/* The number is who they are: two customers can share a name, never a number. */}
+                  {c.phone && <span className="text-caption block font-mono text-ink-muted">{formatPhone(c.phone)}</span>}
                   <span className="text-caption block text-ink-muted">
                     {c.visits} {c.visits === 1 ? "visit" : "visits"} · {naira(c.spentKobo)}
                     {c.next ? ` · next ${relativeDay(c.next.at, at)}` : c.lastVisit ? ` · last came ${relativeDay(c.lastVisit, at)}` : ""}

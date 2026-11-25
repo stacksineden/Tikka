@@ -22,6 +22,8 @@ export async function createPayLinkAction(input: { naira: number; note: string; 
   // NEW DIRECTION (demo businesses): the in-memory pay links, paid by pretending on the pay page.
   if (user && b && !isDbId(b.id)) {
     const phone = phoneKey(input.phone) ?? undefined;
+    // Every customer has a WhatsApp number (a balance's sale already has one).
+    if (!phone && !input.saleId) return { kind: "bad_phone" };
     const r = await createDemoPayLink(
       user,
       b.slug,

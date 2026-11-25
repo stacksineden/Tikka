@@ -10,7 +10,7 @@ import { useState, useTransition } from "react";
 import { matchWalkInAction, saveClientNoteAction } from "@/app/app/client-actions";
 import { PayLinkSheet } from "@/components/payments/PayLinkSheet";
 import { ReceiptButton } from "@/components/payments/ReceiptButton";
-import { payLinkReasons, phoneKey, relativeDay, type Client } from "@/lib/clients";
+import { formatPhone, payLinkReasons, phoneKey, relativeDay, type Client } from "@/lib/clients";
 import { METHOD_LABEL, reminderText, waLink } from "@/lib/ledger";
 import { initials, Tag } from "./ClientList";
 
@@ -100,7 +100,7 @@ export function ClientDetail({
             <Send aria-hidden="true" /> Remind about {naira(c.owedKobo)}
           </a>
         )}
-        {payMaxKobo ? (
+        {payMaxKobo && c.phone ? (
           <PayLinkSheet businessName={businessName} maxKobo={payMaxKobo} customer={{ name: c.name, phone: c.phone }} reasons={payLinkReasons(c)} className="btn btn-secondary btn-lg col-span-2 rounded-pill" />
         ) : null}
       </div>
@@ -202,10 +202,6 @@ export function ClientDetail({
   );
 }
 
-function formatPhone(e164: string) {
-  const d = e164.replace(/^\+234/, "0");
-  return d.length === 11 ? `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7)}` : e164;
-}
 
 function Stat({ label, value, small }: { label: string; value: string; small?: boolean }) {
   return (

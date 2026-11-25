@@ -28,7 +28,7 @@ import { arrivedAction, paidAction, payBalanceAction, payLinkTodayAction, sample
 import { PayLinkReady, payLinkMessage } from "@/components/payments/PayLinkSheet";
 import { ReceiptButton } from "@/components/payments/ReceiptButton";
 import { StayFresh } from "@/components/payments/StayFresh";
-import { phoneKey } from "@/lib/clients";
+import { matchesSearch, phoneKey, phoneTail, repeatedNames } from "@/lib/clients";
 import { METHOD_LABEL, reminderText, waLink, type ExpenseKind, type PayMethod } from "@/lib/ledger";
 import { ExpenseSheet } from "./ExpenseSheet";
 import { Chip, NairaInput, Sheet } from "./Sheet";
@@ -641,7 +641,8 @@ function SaleSheet({ services, customers, businessName, onClose }: { services: T
         />
         {(() => {
           const t = name.trim().toLowerCase();
-          const list = customers.filter((c) => !t || c.name.toLowerCase().includes(t)).slice(0, 6);
+          const list = customers.filter((c) => matchesSearch(c, t)).slice(0, 6);
+          const twice = repeatedNames(customers);
           return list.length ? (
             <div>
               <span className="text-caption mb-1.5 block text-ink-muted">{t ? "Is it one of your customers?" : "Your customers"}</span>
@@ -657,6 +658,7 @@ function SaleSheet({ services, customers, businessName, onClose }: { services: T
                     }}
                   >
                     {c.name}
+                    {twice.has(c.name.trim().split(/\s+/)[0].toLowerCase()) && <span className="ml-1 font-mono text-xs font-normal opacity-80">{phoneTail(c.phone)}</span>}
                   </Chip>
                 ))}
               </div>

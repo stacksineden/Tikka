@@ -13,6 +13,7 @@ import {
 } from "@/app/app/bookings-actions";
 import { ActionIcon } from "@/components/tikka/ActionIcon";
 import { naira } from "@/lib/format";
+import { normalizeNgPhone } from "@/lib/setup";
 import { slotLabel, whatsappLink } from "@/lib/booking";
 import {
   byDay,
@@ -435,11 +436,11 @@ function AddForm({ services, rules, pending, error, onSubmit }: { services: Boar
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={30} required />
       </label>
       <label className="grid gap-1">
-        <span className="text-label">WhatsApp number (optional)</span>
-        <input className="input font-mono" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="0803 123 4567" />
-        <span className="text-caption text-ink-muted">With a number, they join your leads.</span>
+        <span className="text-label">Their WhatsApp number</span>
+        <input className="input font-mono" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="0803 123 4567" required />
+        <span className="text-caption text-ink-muted">{phone.trim() && !normalizeNgPhone(phone) ? "Type a Nigerian number, like 0803 123 4567." : "So you can remind them and send their pass."}</span>
       </label>
-      <button type="submit" className="btn min-h-12" disabled={pending || !at || !name.trim()}>
+      <button type="submit" className="btn min-h-12" disabled={pending || !at || !name.trim() || !normalizeNgPhone(phone)}>
         {pending ? "Saving…" : at ? `Book ${whenLabel(at)}` : "Pick a time"}
       </button>
       <p role="alert" className="text-caption min-h-5 text-danger">
