@@ -67,7 +67,7 @@ export async function MoneyWeek({ user }: { user: SessionUser }) {
             {waiting.length} waiting · {naira(waiting.reduce((n, l) => n + l.amountKobo, 0))}. They turn to Paid as soon as the customer pays.
           </p>
         )}
-        <PayLinkList links={waitingFirst(links).slice(0, 5)} empty="Send one for a balance, a custom job or paying ahead. You'll see it here as Waiting, then Paid." />
+        <PayLinkList businessName={b?.name ?? ""} links={waitingFirst(links).slice(0, 5)} empty="Send one for a balance, a custom job or paying ahead. You'll see it here as Waiting, then Paid." />
         <PayLinkSheet businessName={b?.name ?? "us"} maxKobo={DEMO_MAX_KOBO} className="btn btn-secondary btn-lg rounded-pill" />
       </section>
       {unpaid > 0 && (

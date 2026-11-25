@@ -6,6 +6,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getBookingSetup, removeWaitlist, saveBookingSettings, saveDemoDeposit } from "@/lib/bookings-data";
+import { MAX_GAP } from "@/lib/bookings";
 import { getBusiness, isDbId, saveBusiness } from "@/lib/data";
 import { getOwnerUser } from "@/lib/session";
 import type { OpeningHours, TravelReach, WorkPlace } from "@/lib/types";
@@ -18,7 +19,8 @@ export type BookingPatch =
   | { kind: "place"; workPlace: WorkPlace; travelFee: number; travelReach: TravelReach }
   | { kind: "deposit"; mode: "percent" | "fixed" | "off"; percent?: number; amount?: number; counts: boolean }
   | { kind: "rules"; rules: string[] }
-  | { kind: "questions"; serviceId: string; questions: string[] };
+  | { kind: "questions"; serviceId: string; questions: string[] }
+  | { kind: "gap"; gapMinutes: number; homeGapMinutes: number; services: { id: string; gapMinutes: number | null }[] };
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -67,6 +69,21 @@ export async function saveBookingPatch(p: BookingPatch): Promise<{ ok: true } | 
     case "rules":
       await saveBusiness(user, { ...b, bookingRules: p.rules.map((r) => r.trim().slice(0, 240)).filter(Boolean).slice(0, 10) });
       break;
+    case "gap": {
+      const clamp = (n: number) => Math.max(0, Math.min(MAX_GAP, Math.round(Number(n) || 0)));
+      const own = new Map(p.services.map((x) => [x.id, x.gapMinutes]));
+      await saveBusiness(user, {
+        ...b,
+        gapMinutes: clamp(p.gapMinutes) || undefined,
+        homeGapMinutes: b.workPlace && b.workPlace !== "shop" ? clamp(p.homeGapMinutes) || undefined : undefined,
+        services: b.services.map((s) => {
+          if (!s.id || !own.has(s.id)) return s;
+          const g = own.get(s.id);
+          return { ...s, gapMinutes: g == null ? undefined : clamp(g) };
+        }),
+      });
+      break;
+    }
     case "questions": {
       const questions = p.questions.map((q) => q.trim().slice(0, 80)).filter(Boolean).slice(0, 3);
       await saveBusiness(user, { ...b, services: b.services.map((s) => (s.id === p.serviceId ? { ...s, questions: questions.length ? questions : undefined } : s)) });

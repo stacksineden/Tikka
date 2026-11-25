@@ -152,7 +152,7 @@ export function isFull(start: number, end: number, busy: Span[], blocked: Span[]
  * notice from now, within the reach, and not full. `until` (a day key) stops earlier, e.g. a
  * Tikka's use-by date.
  */
-export function freeDays(rules: BookingRules, minutes: number, now: Date, until?: string): BookingDay[] {
+export function freeDays(rules: BookingRules, minutes: number, now: Date, until?: string, after = 0): BookingDay[] {
   const busy = spans(rules.busy);
   const blocked = spans(rules.blocked);
   const earliest = now.getTime() + rules.noticeMinutes * MIN;
@@ -165,11 +165,33 @@ export function freeDays(rules: BookingRules, minutes: number, now: Date, until?
       for (let t = Math.ceil(range[0] / GRID) * GRID; t + minutes <= range[1]; t += GRID) {
         const at = watInstant(d.key, t);
         if (at < earliest || at > latest) continue;
-        if (!isFull(at, at + minutes * MIN, busy, blocked, rules.capacity)) slots.push(t);
+        // The booking must end by closing; its gap after may run past it, but not into another booking.
+        if (!isFull(at, at + (minutes + after) * MIN, busy, blocked, rules.capacity)) slots.push(t);
       }
     }
     return { ...d, slots };
   });
+}
+
+/** Gap time (NEW DIRECTION): the choices for minutes kept free after a booking. */
+export const GAP_CHOICES = [0, 10, 15, 30, 45, 60] as const;
+export const MAX_GAP = 180;
+
+/**
+ * Minutes kept free after a booking: the service's own gap, else the business's, plus the extra
+ * for a home visit (travel). Used only to work out free times; the booking itself keeps its length.
+ */
+export function gapAfter(biz: { gapMinutes?: number; homeGapMinutes?: number }, service?: { gapMinutes?: number } | null, home = false): number {
+  const base = service?.gapMinutes ?? biz.gapMinutes ?? 0;
+  return Math.max(0, Math.min(MAX_GAP, Math.round(base + (home ? (biz.homeGapMinutes ?? 0) : 0))));
+}
+
+/** "30 min", "1 hr", "1 hr 15 min": for gap lines. */
+export function gapLabel(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h} hr${m ? ` ${m} min` : ""}`;
 }
 
 /** The first day from `fromKey` on that has a free time. */

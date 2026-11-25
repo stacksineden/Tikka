@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { arrivedAction, paidAction, payBalanceAction, payLinkTodayAction, sampleDayAction } from "@/app/app/today-actions";
 import { PayLinkReady, payLinkMessage } from "@/components/payments/PayLinkSheet";
+import { ReceiptButton } from "@/components/payments/ReceiptButton";
 import { StayFresh } from "@/components/payments/StayFresh";
 import { METHOD_LABEL, reminderText, waLink, type ExpenseKind, type PayMethod } from "@/lib/ledger";
 import { ExpenseSheet } from "./ExpenseSheet";
@@ -44,7 +45,7 @@ export interface TodayAppt {
   depositKobo: number;
   status: "booked" | "arrived" | "no_show" | "cancelled" | "held";
   /** Marked paid (or a pay link sent: kobo 0 until they pay); what's still owed on it. */
-  paid: { kobo: number; method: PayMethod; owedKobo: number; linkKobo?: number } | null;
+  paid: { kobo: number; method: PayMethod; owedKobo: number; linkKobo?: number; saleId: string } | null;
 }
 
 export interface TodayData {
@@ -54,7 +55,7 @@ export interface TodayData {
   dateLabel: string;
   hour: number;
   appts: TodayAppt[];
-  walkIns: { id: string; time: string; name: string; item: string; paidKobo: number; method: PayMethod; owedKobo: number; linkKobo?: number }[];
+  walkIns: { id: string; time: string; name: string; item: string; paidKobo: number; method: PayMethod; owedKobo: number; linkKobo?: number; phone?: string }[];
   tomorrow: { count: number; first?: string };
   /** linkKobo: a pay link for this much is out and not paid yet. */
   owed: { saleId: string; name: string; item: string; owedKobo: number; phone?: string; since: string; linkKobo?: number }[];
@@ -129,7 +130,7 @@ export function TodayScreen({ d }: { d: TodayData }) {
         </Link>
       </div>
 
-      <div className="grid items-start gap-5 lg:grid-cols-[1.35fr_1fr]">
+      <div className="grid items-start gap-5 lg:grid-cols-[1.35fr_1fr] lg:grid-rows-[auto_1fr]">
       <div className="grid gap-5 lg:col-start-2 lg:row-start-1">
       <section aria-label="Today in numbers" className="grid gap-3.5 rounded-card bg-brand p-4.5 text-on-brand">
         <div>
@@ -185,7 +186,7 @@ export function TodayScreen({ d }: { d: TodayData }) {
           </div>
         )}
         {(allTodo ? todo : todo.slice(0, SHOW)).map((a) => (
-          <Appt key={a.id} a={a} busy={pending} onArrived={() => run(() => arrivedAction(a.id))} onPaid={() => setOpen({ kind: "paid", appt: a })} onRemind={() => setOpen({ kind: "remind", appt: a })} />
+          <Appt key={a.id} a={a} busy={pending} businessName={d.businessName} onArrived={() => run(() => arrivedAction(a.id))} onPaid={() => setOpen({ kind: "paid", appt: a })} onRemind={() => setOpen({ kind: "remind", appt: a })} />
         ))}
         {todo.length > SHOW && (
           <button type="button" className="btn btn-secondary rounded-pill" onClick={() => setAllTodo(!allTodo)}>
@@ -201,9 +202,9 @@ export function TodayScreen({ d }: { d: TodayData }) {
             <ChevronRight size={18} className={`text-ink-muted transition-transform ${showDone ? "rotate-90" : ""}`} aria-hidden="true" />
           </button>
         )}
-        {showDone && doneAppts.map((a) => <Appt key={a.id} a={a} busy={pending} onArrived={() => undefined} onPaid={() => undefined} onRemind={() => undefined} />)}
+        {showDone && doneAppts.map((a) => <Appt key={a.id} a={a} busy={pending} businessName={d.businessName} onArrived={() => undefined} onPaid={() => undefined} onRemind={() => undefined} />)}
         {showDone && d.walkIns.map((w) => (
-          <div key={w.id} className="grid gap-1 rounded-card border border-line bg-surface-raised px-4 py-3.5 opacity-80">
+          <div key={w.id} className="grid gap-1 rounded-card border border-line bg-surface-raised px-4 py-3.5">
             <div className="flex gap-3">
               <span className="text-code w-17 shrink-0">{w.time}</span>
               <div className="grid min-w-0 gap-1">
@@ -223,6 +224,11 @@ export function TodayScreen({ d }: { d: TodayData }) {
                     w.owedKobo > 0 && <Tag tone="bad">Owes {naira(w.owedKobo)}</Tag>
                   )}
                 </div>
+                {w.paidKobo > 0 && (
+                  <div className="mt-1.5">
+                    <ReceiptButton saleId={w.id} name={w.name} phone={w.phone} item={w.item} businessName={d.businessName} />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -352,11 +358,11 @@ function Tag({ tone, children }: { tone: "ok" | "bad" | "due" | "info" | "plain"
   return <span className={`text-caption inline-flex items-center gap-1 rounded-pill px-2 py-0.5 font-semibold ${cls}`}>{children}</span>;
 }
 
-function Appt({ a, busy, onArrived, onPaid, onRemind }: { a: TodayAppt; busy: boolean; onArrived: () => void; onPaid: () => void; onRemind: () => void }) {
+function Appt({ a, busy, businessName, onArrived, onPaid, onRemind }: { a: TodayAppt; busy: boolean; businessName: string; onArrived: () => void; onPaid: () => void; onRemind: () => void }) {
   const done = !!a.paid;
   return (
-    <div className={`grid gap-2.5 rounded-card border border-line bg-surface-raised px-4 py-3.5 ${done || a.status === "no_show" ? "opacity-70" : ""}`}>
-      <div className="flex gap-3">
+    <div className="grid gap-2.5 rounded-card border border-line bg-surface-raised px-4 py-3.5">
+      <div className={`flex gap-3 ${done || a.status === "no_show" ? "opacity-70" : ""}`}>
         <span className="text-code w-17 shrink-0 pt-0.5">{a.time}</span>
         <div className="grid min-w-0 flex-1 gap-1">
           <b className="text-[17px]">{a.first}</b>
@@ -397,6 +403,11 @@ function Appt({ a, busy, onArrived, onPaid, onRemind }: { a: TodayAppt; busy: bo
           </div>
         </div>
       </div>
+      {done && (a.paid!.kobo > 0 || a.depositKobo > 0) && (
+        <div className="flex flex-wrap gap-2 pl-20">
+          <ReceiptButton saleId={a.paid!.saleId} name={a.first} phone={a.phone} item={a.service} businessName={businessName} />
+        </div>
+      )}
       {!done && a.status !== "no_show" && (
         <div className="flex flex-wrap gap-2">
           {a.status === "booked" ? (

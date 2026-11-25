@@ -1,5 +1,6 @@
 import { CircleCheck, Clock3 } from "lucide-react";
 import { PayLinkActions } from "@/components/payments/PayLinkActions";
+import { ReceiptButton } from "@/components/payments/ReceiptButton";
 import type { DemoPayLink } from "@/lib/paylinks-demo";
 import { siteUrl } from "@/lib/supabase/env";
 
@@ -9,7 +10,7 @@ import { siteUrl } from "@/lib/supabase/env";
 const naira = (kobo: number) => "₦" + Math.round(kobo / 100).toLocaleString("en-NG");
 const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Africa/Lagos" });
 
-export function PayLinkList({ links, empty }: { links: DemoPayLink[]; empty?: string }) {
+export function PayLinkList({ links, empty, businessName }: { links: DemoPayLink[]; empty?: string; businessName: string }) {
   return (
     <ul className="divide-y divide-line rounded-card border border-line bg-surface-raised">
       {links.length === 0 && <li className="text-body px-4 py-3.5 text-ink-muted">{empty ?? "No pay links yet."}</li>}
@@ -39,6 +40,11 @@ export function PayLinkList({ links, empty }: { links: DemoPayLink[]; empty?: st
             </span>
           </div>
           {l.status === "open" && <PayLinkActions id={l.id} url={`${siteUrl()}/pay/${l.token}`} />}
+          {l.status === "paid" && l.saleId && (
+            <div>
+              <ReceiptButton saleId={l.saleId} name={l.customerName ?? ""} phone={l.phone} item={l.note} businessName={businessName} />
+            </div>
+          )}
         </li>
       ))}
     </ul>

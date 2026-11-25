@@ -12,7 +12,7 @@ import { Sheet } from "@/components/today/Sheet";
 
 const naira = (kobo: number) => "₦" + Math.round(kobo / 100).toLocaleString("en-NG");
 
-export function PassChange({ token, slug, minutes, eventDay, startsAt, depositKobo, rules }: { token: string; slug: string; minutes: number; eventDay: boolean; startsAt: string; depositKobo: number; rules: string[] }) {
+export function PassChange({ token, slug, minutes, gap = 0, eventDay, startsAt, depositKobo, rules }: { token: string; slug: string; minutes: number; gap?: number; eventDay: boolean; startsAt: string; depositKobo: number; rules: string[] }) {
   const router = useRouter();
   const [open, setOpen] = useState<"menu" | "move" | "cancel" | null>(null);
   const [free, setFree] = useState<BookingRules | null>(null);
@@ -26,7 +26,7 @@ export function PassChange({ token, slug, minutes, eventDay, startsAt, depositKo
   const [canMove] = useState(() => new Date(startsAt).getTime() - Date.now() >= notice);
   const [minDate] = useState(() => new Date(Date.now() + notice).toISOString().slice(0, 10));
   const moveRule = rules.find((r) => /move/i.test(r)) ?? "To move your booking, tell us at least 24 hours before.";
-  const days = useMemo(() => (free ? freeDays(free, minutes, new Date()).filter((d) => d.slots.length) : []), [free, minutes]);
+  const days = useMemo(() => (free ? freeDays(free, minutes, new Date(), undefined, gap).filter((d) => d.slots.length) : []), [free, minutes, gap]);
 
   async function send(body: object) {
     setBusy(true);

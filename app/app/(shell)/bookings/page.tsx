@@ -8,7 +8,7 @@ import { BookingSetup } from "@/components/bookings/BookingSetup";
 import { BookingsBoard } from "@/components/bookings/BookingsBoard";
 import { StayFresh } from "@/components/payments/StayFresh";
 import { CopyLink } from "@/components/dashboard/CopyLink";
-import { getBookings, getBookingSetup, serviceLengths } from "@/lib/bookings-data";
+import { bookingGaps, getBookings, getBookingSetup, serviceLengths } from "@/lib/bookings-data";
 import { getBusiness, isDbId } from "@/lib/data";
 import { SITE } from "@/lib/qr";
 import { getOwnerUser } from "@/lib/session";
@@ -79,7 +79,9 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
             place: { area: b.area, city: b.city, state: b.state },
             deposit: dep ? { mode: dep.mode, percent: dep.percent, fixedKobo: dep.fixedKobo, counts: dep.counts } : { mode: "off", counts: true },
             rules: b.bookingRules ?? [],
-            services: b.services.filter((x) => x.id).map((x) => ({ id: x.id!, name: x.name, questions: x.questions ?? [] })),
+            services: b.services.filter((x) => x.id).map((x) => ({ id: x.id!, name: x.name, questions: x.questions ?? [], gapMinutes: x.gapMinutes })),
+            gapMinutes: b.gapMinutes ?? 0,
+            homeGapMinutes: b.homeGapMinutes ?? 0,
           }}
         />
       </>
@@ -152,6 +154,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
         services={services.map((s) => ({ ...s, minutes: lengths[s.id] ?? 60 }))}
         base={{ capacity: setup.capacity, noticeMinutes: setup.noticeMinutes, aheadDays: setup.aheadDays, hours: b.hours ?? null }}
         businessName={b.name}
+        gaps={b.trades?.length ? bookingGaps(b, list) : undefined}
       />
     </>
   );

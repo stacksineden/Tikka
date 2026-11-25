@@ -179,7 +179,7 @@ async function Pass({ params, searchParams }: { params: PageProps<"/bk/[token]">
         </p>
       )}
       {change && pass.status === "booked" && (
-        <PassChange token={token} slug={change.slug} minutes={change.minutes} eventDay={change.eventDay} startsAt={change.startsAt} depositKobo={pass.depositPaidKobo ?? 0} rules={b.bookingRules ?? []} />
+        <PassChange token={token} slug={change.slug} minutes={change.minutes} gap={change.gap} eventDay={change.eventDay} startsAt={change.startsAt} depositKobo={pass.depositPaidKobo ?? 0} rules={b.bookingRules ?? []} />
       )}
 
       {number && (

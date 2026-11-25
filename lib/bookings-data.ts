@@ -14,6 +14,7 @@ import {
   type BookingBlock,
   type BookingRules,
   type BookingSetup,
+  gapAfter,
   watInstant,
 } from "./bookings";
 import { depositOn } from "./presets";
@@ -119,20 +120,36 @@ function demoBook(ownerId: string, b: Business | null): DemoBook | null {
   return d;
 }
 
-function demoRules(d: DemoBook, hours: Business["hours"]): BookingRules {
+/** NEW DIRECTION: a booking's gap after it (clean-up, travel), from its service and whether it's a home visit. */
+function bookingGap(b: Business, x: Pick<Booking, "serviceId" | "homeArea">): number {
+  return gapAfter(b, b.services.find((s) => s.id === x.serviceId), !!x.homeArea);
+}
+
+/** Each booking's gap after it, by booking id (only the ones with a gap). */
+export function bookingGaps(b: Business, list: Booking[]): Record<string, number> {
+  return Object.fromEntries(list.map((x) => [x.id, bookingGap(b, x)]).filter(([, g]) => (g as number) > 0));
+}
+
+function busyWithGap(b: Business, x: Booking): [number, number] {
+  return [new Date(x.startsAt).getTime(), new Date(x.endsAt).getTime() + bookingGap(b, x) * 60_000];
+}
+
+function demoRules(d: DemoBook, business: Business): BookingRules {
   const live = d.bookings.filter((x) => x.status !== "cancelled");
   return {
     capacity: d.setup.capacity,
     noticeMinutes: d.setup.noticeMinutes,
     aheadDays: d.setup.aheadDays,
-    hours: hours ?? null,
-    busy: live.map((x) => [x.startsAt, x.endsAt]),
+    hours: business.hours ?? null,
+    // Each booking holds its time plus the gap after it, so nobody is booked into the clean-up.
+    busy: live.map((x) => busyWithGap(business, x).map((t) => new Date(t).toISOString()) as [string, string]),
     blocked: d.blocks.map((k) => [k.startsAt, k.endsAt]),
   };
 }
 
 /** The same checks as private.booking_problem(). */
-function demoProblem(d: DemoBook, hours: Business["hours"], start: Date, minutes: number, ignore: string | null, force: boolean): string | null {
+function demoProblem(d: DemoBook, business: Business, start: Date, minutes: number, ignore: string | null, force: boolean, place?: { serviceId?: string; home?: boolean }): string | null {
+  const hours = business.hours;
   if (!d.setup.enabled) return "off";
   if (force) return null;
   const now = Date.now();
@@ -142,9 +159,10 @@ function demoProblem(d: DemoBook, hours: Business["hours"], start: Date, minutes
   const weekday = new Date(`${day}T12:00:00Z`).getUTCDay();
   const range = openRange(hours, weekday);
   if (!range || start.getUTCSeconds() !== 0 || minute % GRID !== 0 || minute < range[0] || minute + minutes > range[1]) return "closed";
-  const busy = d.bookings.filter((x) => x.status !== "cancelled" && x.id !== ignore).map((x) => [new Date(x.startsAt).getTime(), new Date(x.endsAt).getTime()] as [number, number]);
+  const busy = d.bookings.filter((x) => x.status !== "cancelled" && x.id !== ignore).map((x) => busyWithGap(business, x));
   const blocked = d.blocks.map((k) => [new Date(k.startsAt).getTime(), new Date(k.endsAt).getTime()] as [number, number]);
-  return isFull(start.getTime(), start.getTime() + minutes * 60_000, busy, blocked, d.setup.capacity) ? "taken" : null;
+  const after = place ? bookingGap(business, { serviceId: place.serviceId, homeArea: place.home ? "home" : undefined }) : 0;
+  return isFull(start.getTime(), start.getTime() + (minutes + after) * 60_000, busy, blocked, d.setup.capacity) ? "taken" : null;
 }
 
 function strip(b: DemoBooking, owner: boolean): Booking {
@@ -160,7 +178,7 @@ export async function getBookingRules(ownerKey: string, business: Business): Pro
   await connection();
   if (isDbId(ownerKey)) return dbBookingRules(business.id, new Date(), 186);
   const d = demoBook(ownerKey, business);
-  return d?.setup.enabled ? demoRules(d, business.hours) : null;
+  return d?.setup.enabled ? demoRules(d, business) : null;
 }
 
 /** Each service's length for the calendar (the demo keeps its own; real ones are on the service). */
@@ -197,7 +215,7 @@ export async function bookTime(
   if (!d || !svc) return { kind: "not_found" };
   const minutes = d.minutes[svc.id!] ?? DEFAULT_MINUTES;
   const start = new Date(input.startsAt);
-  const problem = demoProblem(d, business.hours, start, minutes, null, false);
+  const problem = demoProblem(d, business, start, minutes, null, false, { serviceId: svc.id });
   if (problem) return { kind: problem };
   if (d.bookings.filter((x) => x.phone === input.phone && x.status === "booked" && new Date(x.startsAt).getTime() > Date.now()).length >= MAX_UPCOMING) return { kind: "too_many" };
   const b: DemoBooking = {
@@ -311,7 +329,7 @@ export async function bookTimeV2(
     if (d.bookings.some((x) => x.status !== "cancelled" && new Date(x.startsAt).getTime() < dayEnd && new Date(x.endsAt).getTime() > dayStart)) return { kind: "taken" };
     end = new Date(dayEnd);
   } else {
-    const problem = demoProblem(d, business.hours, start, price.minutes, null, false);
+    const problem = demoProblem(d, business, start, price.minutes, null, false, { serviceId: svc.id, home });
     if (problem) return { kind: problem };
     end = new Date(start.getTime() + price.minutes * 60_000);
   }
@@ -399,7 +417,7 @@ export async function changeFromPass(token: string, change: { kind: "cancel" } |
       b.startsAt = start.toISOString();
       b.endsAt = new Date(dayStart + 86_400_000).toISOString();
     } else {
-      const problem = demoProblem(d, owner.hours, start, b.minutes, b.id, false);
+      const problem = demoProblem(d, owner, start, b.minutes, b.id, false, { serviceId: b.serviceId, home: !!b.homeArea });
       if (problem) return { ok: false, reason: problem };
       b.startsAt = start.toISOString();
       b.endsAt = new Date(start.getTime() + b.minutes * 60_000).toISOString();
@@ -411,14 +429,14 @@ export async function changeFromPass(token: string, change: { kind: "cancel" } |
 }
 
 /** NEW DIRECTION (demo only): the pass's booking, for moving it (its business and service). */
-export async function passBooking(token: string): Promise<{ slug: string; serviceId?: string; minutes: number; eventDay: boolean; startsAt: string } | null> {
+export async function passBooking(token: string): Promise<{ slug: string; serviceId?: string; minutes: number; gap: number; eventDay: boolean; startsAt: string } | null> {
   for (const [ownerKey, d] of demo) {
     const b = d.bookings.find((x) => x.viewToken === token);
     if (!b) continue;
     const owner = await getBusiness({ id: ownerKey });
     if (!owner?.trades?.length) return null;
     const svc = owner.services.find((s) => s.id === b.serviceId);
-    return { slug: owner.slug, serviceId: b.serviceId, minutes: b.minutes, eventDay: !!svc?.eventDay, startsAt: b.startsAt };
+    return { slug: owner.slug, serviceId: b.serviceId, minutes: b.minutes, gap: bookingGap(owner, b), eventDay: !!svc?.eventDay, startsAt: b.startsAt };
   }
   return null;
 }
@@ -497,7 +515,7 @@ export async function addBooking(
   if (!svc) return { kind: "not_found" };
   const minutes = d.minutes[svc.id!] ?? DEFAULT_MINUTES;
   const start = new Date(b.startsAt);
-  const problem = demoProblem(d, w.business.hours, start, minutes, null, b.force);
+  const problem = demoProblem(d, w.business, start, minutes, null, b.force, { serviceId: svc.id });
   if (problem) return { kind: problem };
   d.bookings.push({
     id: `bk_${randomBytes(6).toString("hex")}`, service: svc.name, serviceId: svc.id, minutes, startsAt: start.toISOString(),
@@ -517,7 +535,7 @@ export async function moveBooking(user: Pick<SessionUser, "id" | "role" | "busin
   if (!b) return { kind: "not_found" };
   if (b.status !== "booked") return { kind: "not_booked" };
   const start = new Date(startsAt);
-  const problem = demoProblem(d, w.business.hours, start, b.minutes, b.id, force);
+  const problem = demoProblem(d, w.business, start, b.minutes, b.id, force, { serviceId: b.serviceId, home: !!b.homeArea });
   if (problem) return { kind: problem };
   b.startsAt = start.toISOString();
   b.endsAt = new Date(start.getTime() + b.minutes * 60_000).toISOString();
@@ -691,7 +709,7 @@ export async function bookForTikka(slug: string, token: string, serviceId: strin
   const start = new Date(startsAt);
   if (start.getTime() >= new Date(t.expiresAt).getTime()) return { kind: "after_use_by" };
   const minutes = d.minutes[svc.id!] ?? DEFAULT_MINUTES;
-  const problem = demoProblem(d, business.hours, start, minutes, null, false);
+  const problem = demoProblem(d, business, start, minutes, null, false, { serviceId: svc.id });
   if (problem) return { kind: problem };
   const b: DemoBooking = {
     id: `bk_${randomBytes(6).toString("hex")}`, service: svc.name, serviceId: svc.id, minutes, startsAt: start.toISOString(),

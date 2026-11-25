@@ -83,6 +83,11 @@ async function Pay({ params, searchParams }: { params: PageProps<"/pay/[token]">
                 Paid{link.paidAt ? ` on ${shortDate(link.paidAt)}` : ""}. Thank you{link.customerName ? `, ${link.customerName}` : ""}!
               </p>
               <p className="text-body text-ink-muted">{isDemoToken(token) ? "" : "Paystack has emailed your receipt. "}Show this page at {b.name} if they ask.</p>
+              {"receiptToken" in link && link.receiptToken && (
+                <Link href={`/r/${link.receiptToken}`} className="biz-btn min-h-12 w-full border border-line-strong">
+                  See your receipt
+                </Link>
+              )}
             </>
           ) : link.status === "cancelled" ? (
             <p className="text-body">{b.name} cancelled this pay link. Message them if you still need to pay.</p>

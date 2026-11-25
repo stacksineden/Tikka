@@ -20,6 +20,7 @@ import {
   canMark,
   dayLabel,
   hiMessage,
+  gapLabel,
   lengthLabel,
   movedMessage,
   needsMarking,
@@ -57,7 +58,10 @@ export function BookingsBoard({
   businessName,
   staff = false,
   todayOnly = false,
+  gaps = {},
 }: {
+  /** NEW DIRECTION: each booking's gap after it (clean-up, travel), by booking id. */
+  gaps?: Record<string, number>;
   bookings: Booking[];
   blocks: BookingBlock[];
   services: BoardService[];
@@ -75,7 +79,9 @@ export function BookingsBoard({
 
   const rulesFor = (ignore?: string): BookingRules => ({
     ...base,
-    busy: bookings.filter((b) => b.status !== "cancelled" && b.id !== ignore).map((b) => [b.startsAt, b.endsAt]),
+    busy: bookings
+      .filter((b) => b.status !== "cancelled" && b.id !== ignore)
+      .map((b) => [b.startsAt, gaps[b.id] ? new Date(new Date(b.endsAt).getTime() + gaps[b.id] * 60_000).toISOString() : b.endsAt]),
     blocked: blocks.map((k) => [k.startsAt, k.endsAt]),
   });
 
@@ -115,6 +121,11 @@ export function BookingsBoard({
                 <Clock size={12} aria-hidden="true" />
                 {lengthLabel(b.minutes)}
               </span>
+              {gaps[b.id] && !cancelled ? (
+                <span title="Kept free after this booking, so nobody books into it">
+                  then {gapLabel(gaps[b.id])} free{b.homeArea ? " to travel" : ""}
+                </span>
+              ) : null}
               <span>{SOURCE[b.source]}</span>
               {b.moved && <span>Moved</span>}
               {b.status === "arrived" && <span className="tag tag--redeemed">Came in</span>}

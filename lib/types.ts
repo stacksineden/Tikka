@@ -71,6 +71,9 @@ export interface Business {
   travelReach?: TravelReach;
   /** NEW DIRECTION (demo only for now): the booking rules customers see before they pay. */
   bookingRules?: string[];
+  /** NEW DIRECTION (demo only for now): minutes kept free after every booking (clean-up), and extra after a home visit (travel). */
+  gapMinutes?: number;
+  homeGapMinutes?: number;
 }
 
 export interface PortfolioPhoto {
@@ -150,6 +153,8 @@ export interface ServiceItem {
   perPerson?: boolean;
   /** NEW DIRECTION: what the owner asks when someone books this ("Any allergies?"). Up to 3. */
   questions?: string[];
+  /** NEW DIRECTION: this service's own time after it, instead of the business's (bridal makeup 30, a wash 0). */
+  gapMinutes?: number;
 }
 
 export interface ServiceOption {

@@ -195,6 +195,8 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
             address: b.address || place(b.area, b.city),
             rules: b.bookingRules ?? [],
             deposit: demoDepositRule(found.ownerId, b),
+            gapMinutes: b.gapMinutes,
+            homeGapMinutes: b.homeGapMinutes,
           }}
           services={bookable}
         />

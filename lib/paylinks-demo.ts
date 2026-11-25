@@ -10,6 +10,7 @@ import { randomBytes } from "node:crypto";
 import { isDbId } from "./data";
 import { getLedger, payBalance, recordSale } from "./ledger-data";
 import { owedOf } from "./ledger";
+import { receiptFor } from "./receipts-data";
 import type { SessionUser } from "./types";
 
 export const DEMO_TOKEN_PREFIX = "demo-";
@@ -32,6 +33,9 @@ export interface DemoPayLink {
   status: "open" | "paid" | "cancelled";
   createdAt: string;
   paidAt?: string;
+  /** The sale this payment landed on, and its receipt (made when it's paid). */
+  saleId?: string;
+  receiptToken?: string;
 }
 
 const store: Map<string, DemoPayLink> = ((globalThis as { __tikkaDemoPayLinks?: Map<string, DemoPayLink> }).__tikkaDemoPayLinks ??= new Map());
@@ -88,9 +92,9 @@ export async function cancelDemoPayLink(user: Pick<SessionUser, "id" | "role">, 
 }
 
 /** What the customer's pay page shows (never the owner's details). */
-export async function demoPayPage(token: string): Promise<{ status: DemoPayLink["status"]; amountKobo: number; note: string; customerName?: string; paidAt?: string; businessSlug: string } | null> {
+export async function demoPayPage(token: string): Promise<{ status: DemoPayLink["status"]; amountKobo: number; note: string; customerName?: string; paidAt?: string; businessSlug: string; receiptToken?: string } | null> {
   const l = store.get(token);
-  return l ? { status: l.status, amountKobo: l.amountKobo, note: l.note, customerName: l.customerName, paidAt: l.paidAt, businessSlug: l.businessSlug } : null;
+  return l ? { status: l.status, amountKobo: l.amountKobo, note: l.note, customerName: l.customerName, paidAt: l.paidAt, businessSlug: l.businessSlug, receiptToken: l.receiptToken } : null;
 }
 
 /** DEMO: the customer "pays". Once only; it lands in the owner's ledger as a pay link payment. */
@@ -103,13 +107,25 @@ export async function payDemoLink(token: string, now: Date): Promise<{ kind: "pa
   l.paidAt = now.toISOString();
   const owner = { id: l.owner, role: "owner" as const };
   let rest = l.amountKobo;
+  let saleId: string | null = null;
   if (l.for.kind === "balance") {
-    const saleId = l.for.saleId;
-    const sale = (await getLedger(owner)).sales.find((s) => s.id === saleId);
+    const id = l.for.saleId;
+    const sale = (await getLedger(owner)).sales.find((s) => s.id === id);
     const owed = sale ? owedOf(sale) : 0;
-    if (owed > 0 && (await payBalance(owner, saleId, Math.min(owed, rest) / 100, "pay_link", now))) rest -= Math.min(owed, rest);
+    if (owed > 0 && (await payBalance(owner, id, Math.min(owed, rest) / 100, "pay_link", now))) {
+      rest -= Math.min(owed, rest);
+      saleId = id;
+    }
   }
   // Anything not settling a balance (a Tikka's price, a custom job, more than was owed) is its own sale.
-  if (rest > 0) await recordSale(owner, { name: l.customerName ?? "Customer", item: l.note, totalNaira: rest / 100, paidNaira: rest / 100, method: "pay_link", phone: l.phone }, now);
+  if (rest > 0) {
+    const id = await recordSale(owner, { name: l.customerName ?? "Customer", item: l.note, totalNaira: rest / 100, paidNaira: rest / 100, method: "pay_link", phone: l.phone }, now);
+    saleId ??= id;
+  }
+  // Paid online, so the receipt comes with it: the pay page links to it.
+  if (saleId) {
+    l.saleId = saleId;
+    l.receiptToken = (await receiptFor(owner, saleId, now)) ?? undefined;
+  }
   return { kind: "paid", link: { ...l } };
 }

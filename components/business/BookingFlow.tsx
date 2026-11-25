@@ -9,7 +9,7 @@ import { ArrowLeft, CalendarX, Check, ChevronLeft, ChevronRight, Info, Loader2, 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { slotLabel } from "@/lib/booking";
-import { freeDays, openRange, PROBLEM_TEXT, watInstant, watParts, type BookingRules } from "@/lib/bookings";
+import { freeDays, gapAfter, openRange, PROBLEM_TEXT, watInstant, watParts, type BookingRules } from "@/lib/bookings";
 import { MAX_PEOPLE, priceBooking, type DepositRule } from "@/lib/booking-price";
 import type { ServiceItem, WorkPlace } from "@/lib/types";
 
@@ -22,6 +22,9 @@ export interface FlowBusiness {
   address: string;
   rules: string[];
   deposit?: DepositRule;
+  /** Gap time: kept free after a booking (and extra after a home visit), so free times leave room for it. */
+  gapMinutes?: number;
+  homeGapMinutes?: number;
 }
 
 type Step = "option" | "place" | "time" | "date" | "call" | "people" | "extras" | "details" | "review" | "pay";
@@ -105,7 +108,8 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
   const steps = svc ? stepsFor(svc, b) : [];
   const index = steps.indexOf(step);
   const price = svc ? priceBooking(svc, { option: option ?? 0, people, extras, home: !!home }, b.travelFee, b.deposit) : null;
-  const days = useMemo(() => (rules && svc && !svc.eventDay ? freeDays(rules, price?.minutes ?? 60, new Date()) : []), [rules, svc, price?.minutes]);
+  const after = svc ? gapAfter(b, svc, home === true) : 0;
+  const days = useMemo(() => (rules && svc && !svc.eventDay ? freeDays(rules, price?.minutes ?? 60, new Date(), undefined, after) : []), [rules, svc, price?.minutes, after]);
 
   const taken = (key: string) => {
     if (!rules) return false;

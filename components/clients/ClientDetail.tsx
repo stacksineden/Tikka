@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { matchWalkInAction, saveClientNoteAction } from "@/app/app/client-actions";
 import { PayLinkSheet } from "@/components/payments/PayLinkSheet";
+import { ReceiptButton } from "@/components/payments/ReceiptButton";
 import { payLinkReasons, relativeDay, type Client } from "@/lib/clients";
 import { METHOD_LABEL, reminderText, waLink } from "@/lib/ledger";
 import { initials, Tag } from "./ClientList";
@@ -186,6 +187,11 @@ export function ClientDetail({
                 <Tag tone={STATUS[h.status][1]}>{STATUS[h.status][0]}</Tag>
                 {h.owedKobo > 0 && <Tag tone="bad">Owes {naira(h.owedKobo)}</Tag>}
               </div>
+              {h.saleId && h.paidKobo > 0 && (
+                <div className="mt-1">
+                  <ReceiptButton saleId={h.saleId} name={c.name} phone={c.phone} item={h.title} businessName={businessName} />
+                </div>
+              )}
             </li>
           ))}
         </ul>

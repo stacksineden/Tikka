@@ -3,11 +3,12 @@
 // NEW DIRECTION: Booking settings in one place. Each row says what's set now; tapping it opens one
 // question in a sheet (one decision at a time), and saving updates the page straight away.
 
-import { CalendarClock, Car, ChevronRight, CircleCheck, Clock, Loader2, MessageCircleQuestion, Plus, Power, ScrollText, Trash2, Users, Wallet } from "lucide-react";
+import { CalendarClock, Car, ChevronRight, CircleCheck, Clock, Loader2, MessageCircleQuestion, Plus, Power, ScrollText, Timer, Trash2, Users, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { saveBookingPatch, type BookingPatch } from "@/app/app/booking-settings-actions";
 import { Chip, MIN_DEPOSIT_PERCENT, NairaInput, PercentInput, Sheet } from "@/components/today/Sheet";
+import { GAP_CHOICES, gapLabel } from "@/lib/bookings";
 import { reachLabel } from "@/lib/presets";
 import type { OpeningHours, TravelReach, WorkPlace } from "@/lib/types";
 
@@ -23,10 +24,12 @@ export interface BookingSettingsData {
   place: { area: string; city: string; state: string };
   deposit: { mode: "off" | "percent" | "fixed"; percent?: number; fixedKobo?: number; counts: boolean };
   rules: string[];
-  services: { id: string; name: string; questions: string[] }[];
+  services: { id: string; name: string; questions: string[]; gapMinutes?: number }[];
+  gapMinutes: number;
+  homeGapMinutes: number;
 }
 
-type Row = "hours" | "capacity" | "timing" | "place" | "deposit" | "rules" | "questions" | null;
+type Row = "hours" | "capacity" | "timing" | "gap" | "place" | "deposit" | "rules" | "questions" | null;
 const naira = (n: number) => "₦" + Math.round(n).toLocaleString("en-NG");
 const t12 = (hhmm: string) => {
   const [h, m] = hhmm.split(":").map(Number);
@@ -82,6 +85,7 @@ export function BookingSettingsV2({ d }: { d: BookingSettingsData }) {
         <SettingRow icon={Clock} title="Opening hours" value={`Mon–Fri ${dayText(d.hours.weekdays)} · Sat ${dayText(d.hours.saturday)} · Sun ${dayText(d.hours.sunday)}`} onClick={() => setOpen("hours")} />
         <SettingRow icon={Users} title="Customers at the same time" value={d.capacity === 1 ? "1: just you" : `${d.capacity} at once`} onClick={() => setOpen("capacity")} />
         <SettingRow icon={CalendarClock} title="How soon and how far ahead" value={`${NOTICE.find(([m]) => m === d.noticeMinutes)?.[1] ?? `${d.noticeMinutes} min before`} · up to ${AHEAD.find(([n]) => n === d.aheadDays)?.[1] ?? `${d.aheadDays} days`} ahead`} onClick={() => setOpen("timing")} />
+        <SettingRow icon={Timer} title="Time between bookings" value={gapText(d)} onClick={() => setOpen("gap")} />
         <SettingRow icon={Car} title="Where you work" value={d.workPlace === "shop" ? "Customers come to you" : `${d.workPlace === "home" ? "You go to customers" : "Both"} · travel fee ${naira(d.travelFee)}`} onClick={() => setOpen("place")} />
         <SettingRow icon={Wallet} title="Deposit" value={`${depositText}${d.deposit.mode !== "off" ? (d.deposit.counts ? " · counts towards the bill" : " · on top of the bill") : ""}`} onClick={() => setOpen("deposit")} />
         <SettingRow icon={ScrollText} title="Booking rules" value={d.rules.length ? `${d.rules.length} rules customers see before they pay` : "No rules yet"} onClick={() => setOpen("rules")} />
@@ -96,6 +100,7 @@ export function BookingSettingsV2({ d }: { d: BookingSettingsData }) {
       {open === "hours" && <HoursSheet initial={d.hours} pending={pending} error={error} onSave={(hours) => save({ kind: "hours", hours })} onClose={() => setOpen(null)} />}
       {open === "capacity" && <CapacitySheet initial={d.capacity} pending={pending} onSave={(capacity) => save({ kind: "capacity", capacity })} onClose={() => setOpen(null)} />}
       {open === "timing" && <TimingSheet d={d} pending={pending} onSave={(noticeMinutes, aheadDays) => save({ kind: "timing", noticeMinutes, aheadDays })} onClose={() => setOpen(null)} />}
+      {open === "gap" && <GapSheet d={d} pending={pending} onSave={(p) => save({ kind: "gap", ...p })} onClose={() => setOpen(null)} />}
       {open === "place" && <PlaceSheet d={d} pending={pending} onSave={(p) => save({ kind: "place", ...p })} onClose={() => setOpen(null)} />}
       {open === "deposit" && <DepositSheet d={d} pending={pending} onSave={(p) => save({ kind: "deposit", ...p })} onClose={() => setOpen(null)} />}
       {open === "rules" && <RulesSheet initial={d.rules} pending={pending} onSave={(rules) => save({ kind: "rules", rules })} onClose={() => setOpen(null)} />}
@@ -379,6 +384,83 @@ function QuestionsSheet({ services, pending, onSave, onClose }: { services: Book
         }}
         label="Save questions"
       />
+    </Sheet>
+  );
+}
+
+const gapWord = (m: number) => (m ? gapLabel(m) : "None");
+
+function gapText(d: BookingSettingsData): string {
+  const own = d.services.filter((s) => s.gapMinutes != null).length;
+  const parts = [d.gapMinutes ? `${gapLabel(d.gapMinutes)} after each booking` : "No gap between bookings"];
+  if (d.workPlace !== "shop" && d.homeGapMinutes) parts.push(`+${gapLabel(d.homeGapMinutes)} after home visits`);
+  if (own) parts.push(`${own} ${own === 1 ? "service has" : "services have"} its own`);
+  return parts.join(" · ");
+}
+
+/** Gap time: minutes kept free after each booking, extra after a home visit, and any service's own. */
+function GapSheet({ d, pending, onSave, onClose }: { d: BookingSettingsData; pending: boolean; onSave: (p: { gapMinutes: number; homeGapMinutes: number; services: { id: string; gapMinutes: number | null }[] }) => void; onClose: () => void }) {
+  const [gap, setGap] = useState(d.gapMinutes);
+  const [home, setHome] = useState(d.homeGapMinutes);
+  const [own, setOwn] = useState<Record<string, number | null>>(Object.fromEntries(d.services.map((s) => [s.id, s.gapMinutes ?? null])));
+  const [showOwn, setShowOwn] = useState(d.services.some((s) => s.gapMinutes != null));
+  return (
+    <Sheet title="Time between bookings" onClose={onClose}>
+      <p className="text-body text-ink-muted">Time to clean up, rest or get ready before the next customer. Customers can&apos;t book into it, and their booking still shows its real length.</p>
+      <div>
+        <b className="mb-2 block">After every booking</b>
+        <div className="flex flex-wrap gap-2">
+          {GAP_CHOICES.map((m) => (
+            <Chip key={m} on={gap === m} onClick={() => setGap(m)}>
+              {gapWord(m)}
+            </Chip>
+          ))}
+        </div>
+      </div>
+      {d.workPlace !== "shop" && (
+        <div>
+          <b className="block">Extra after a home visit</b>
+          <span className="text-caption mb-2 block text-ink-muted">To get back or on to the next place.</span>
+          <div className="flex flex-wrap gap-2">
+            {[0, 30, 45, 60, 90].map((m) => (
+              <Chip key={m} on={home === m} onClick={() => setHome(m)}>
+                {gapWord(m)}
+              </Chip>
+            ))}
+          </div>
+        </div>
+      )}
+      {d.services.length > 0 &&
+        (showOwn ? (
+          <div className="grid gap-2">
+            <b>Services that need a different time</b>
+            <ul className="divide-y divide-line rounded-card border border-line bg-surface-raised">
+              {d.services.map((s) => (
+                <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                  <span className="min-w-0 truncate">{s.name}</span>
+                  <select
+                    aria-label={`Time after ${s.name}`}
+                    className="input h-11 w-auto shrink-0"
+                    value={own[s.id] == null ? "" : String(own[s.id])}
+                    onChange={(e) => setOwn({ ...own, [s.id]: e.target.value === "" ? null : Number(e.target.value) })}
+                  >
+                    <option value="">Usual ({gapWord(gap)})</option>
+                    {GAP_CHOICES.map((m) => (
+                      <option key={m} value={m}>
+                        {gapWord(m)}
+                      </option>
+                    ))}
+                  </select>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <button type="button" className="text-label justify-self-start text-brand underline underline-offset-4" onClick={() => setShowOwn(true)}>
+            Some services need a different time
+          </button>
+        ))}
+      <SaveButton pending={pending} onClick={() => onSave({ gapMinutes: gap, homeGapMinutes: home, services: Object.entries(own).map(([id, g]) => ({ id, gapMinutes: g })) })} />
     </Sheet>
   );
 }

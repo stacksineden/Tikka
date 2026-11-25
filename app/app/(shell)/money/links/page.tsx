@@ -54,11 +54,11 @@ async function Links() {
         </div>
       </div>
       <PayLinkSheet businessName={b.name} maxKobo={DEMO_MAX_KOBO} />
-      {links.length === 0 && <PayLinkList links={[]} empty="No pay links yet. Send one from here, from Today or from a customer's page." />}
+      {links.length === 0 && <PayLinkList businessName={b.name} links={[]} empty="No pay links yet. Send one from here, from Today or from a customer's page." />}
       {[...days].map(([day, list]) => (
         <section key={day} className="grid gap-2">
           <h2 className="text-label text-ink-muted">{day}</h2>
-          <PayLinkList links={list} />
+          <PayLinkList businessName={b.name} links={list} />
         </section>
       ))}
     </>
