@@ -7,6 +7,7 @@ import { getLedger } from "@/lib/ledger-data";
 import { moneyBetween, weekStart, type MoneyLine } from "@/lib/ledger";
 import type { SessionUser } from "@/lib/types";
 import { AddExpenseButton, HowWeCount } from "./MoneyActions";
+import { MoneyAlerts } from "./MoneyAlerts";
 import { SourceTag } from "./SourceTag";
 
 // NEW DIRECTION, stage 2 (docs/OWNER_JOURNEYS.md journey 6): "Am I making money?" for businesses
@@ -101,7 +102,7 @@ export async function MoneyWeek({ user }: { user: SessionUser }) {
             </span>
           </div>
         </div>
-        <p className="text-caption text-ink-muted">Coming with phone alerts: not sent in the demo yet.</p>
+        <MoneyAlerts vapidKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY} />
       </section>
     </div>
   );
