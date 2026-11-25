@@ -37,6 +37,8 @@ interface Preset {
   minutes?: number;
   options?: [label: string, price: number, minutes: number][];
   eventDay?: boolean;
+  /** The options are people: the first once, the rest as many as needed. */
+  perPerson?: boolean;
 }
 
 // Lagos guide prices in naira (25 Nov 2026). Replace with what owners tell us.
@@ -51,7 +53,7 @@ const SERVICES: Record<TradeId, Preset[]> = {
   makeup: [
     { name: "Soft glam", price: 25000, minutes: 90 },
     { name: "Full glam", price: 35000, minutes: 120 },
-    { name: "Bridal makeup", eventDay: true, options: [["Bride", 150000, 180], ["Each bridesmaid", 25000, 60]] },
+    { name: "Bridal makeup", eventDay: true, perPerson: true, options: [["Bride", 150000, 180], ["Each bridesmaid", 25000, 60]] },
   ],
   nails: [
     { name: "Gel polish", price: 8000, minutes: 60 },
@@ -143,7 +145,7 @@ export function presetServices(trades: TradeId[], state: string): { services: Pr
       services.push({
         trade: t,
         on: i < 3,
-        item: { name: p.name, price, priceKind: options ? "from" : "fixed", minutes, duration: minutes ? durationLabel(minutes) : undefined, options, eventDay: p.eventDay || undefined },
+        item: { name: p.name, price, priceKind: options ? "from" : "fixed", minutes, duration: minutes ? durationLabel(minutes) : undefined, options, eventDay: p.eventDay || undefined, perPerson: p.perPerson || undefined },
       });
     });
     for (const [name, price] of EXTRAS[t]) if (!extras.some((x) => x.name === name)) extras.push({ name, price: roundNaira(price * k), on: false });

@@ -146,6 +146,8 @@ export interface ServiceItem {
   extras?: ServiceExtra[];
   /** NEW DIRECTION (demo only for now): booked as a whole day with a call time (weddings, shoots). */
   eventDay?: boolean;
+  /** NEW DIRECTION: the options are people, not choices ("Bride" once, plus "Each bridesmaid" × n). */
+  perPerson?: boolean;
 }
 
 export interface ServiceOption {

@@ -9,6 +9,8 @@ import { BookingSheet } from "@/components/business/BookingSheet";
 import { DropBand } from "@/components/business/DropBand";
 import { PhotoPage } from "@/components/business/photo/PhotoPage";
 import { CalendarSheet } from "@/components/business/CalendarSheet";
+import { BookingFlow } from "@/components/business/BookingFlow";
+import { reachLabel } from "@/lib/presets";
 import { bizSerif } from "@/components/business/fonts";
 import { Gallery } from "@/components/business/Gallery";
 import { Reveal } from "@/components/business/Reveal";
@@ -16,7 +18,7 @@ import { ServicesSection } from "@/components/business/ServicesSection";
 import { Logo } from "@/components/site/Logo";
 import { ACTION_LABEL, ActionIcon, actionHref } from "@/components/tikka/ActionIcon";
 import { isSocial } from "@/lib/social";
-import { getBookingDeposits, getBookingRules, getTikkaForBooking, serviceLengths } from "@/lib/bookings-data";
+import { demoDepositRule, getBookingDeposits, getBookingRules, getTikkaForBooking, serviceLengths } from "@/lib/bookings-data";
 import { paystackMode } from "@/lib/paystack";
 import { getBusinessBySlug, getBusinessReviews, getPageDrops } from "@/lib/data";
 import { count, place } from "@/lib/format";
@@ -181,7 +183,22 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
 
   const sheets = (
     <>
-      {calendar ? (
+      {calendar && b.trades?.length ? (
+        // NEW DIRECTION, stage 3 (demo only for now): choices, extras, home service, event days and the deposit.
+        <BookingFlow
+          business={{
+            slug: b.slug,
+            name: b.name,
+            workPlace: b.workPlace ?? "shop",
+            travelFee: b.travelFee ?? 0,
+            reach: b.travelReach ? reachLabel(b.travelReach, b) : `Anywhere in ${b.city}`,
+            address: b.address || place(b.area, b.city),
+            rules: b.bookingRules ?? [],
+            deposit: demoDepositRule(found.ownerId, b),
+          }}
+          services={bookable}
+        />
+      ) : calendar ? (
         <CalendarSheet
           slug={b.slug}
           business={b.name}

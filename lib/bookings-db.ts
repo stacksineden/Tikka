@@ -98,6 +98,9 @@ export interface BookingPass {
   holdLive?: boolean;
   /** Booked with a Tikka: its card link (code and QR for the counter), its reward, and whether it's used. */
   tikka?: { token: string; reward: string; used: boolean };
+  /** NEW DIRECTION (demo only for now): a home visit's address, and the option and extras picked. */
+  homeArea?: string;
+  detail?: string;
 }
 
 /** The customer's booking pass, by its link. Never the phone number. */

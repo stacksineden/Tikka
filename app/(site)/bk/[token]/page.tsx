@@ -15,7 +15,8 @@ import { dbCompleteDeposit } from "@/lib/bookings-db";
 import { naira } from "@/lib/format";
 import { verifyPayment } from "@/lib/paystack";
 import { sendBookingAlert } from "@/lib/push";
-import { getBookingPass } from "@/lib/bookings-data";
+import { getBookingPass, passBooking } from "@/lib/bookings-data";
+import { PassChange } from "@/components/bookings/PassChange";
 import { place } from "@/lib/format";
 import { bookingNumber } from "@/lib/page";
 
@@ -48,6 +49,8 @@ async function Pass({ params, searchParams }: { params: PageProps<"/bk/[token]">
   }
   const pass = await getBookingPass(token);
   if (!pass) notFound();
+  // NEW DIRECTION (demo only for now): the customer can move or cancel within the booking rules.
+  const change = await passBooking(token);
   const b = pass.business;
   const number = bookingNumber(b);
   const cancelled = pass.status === "cancelled";
@@ -100,14 +103,19 @@ async function Pass({ params, searchParams }: { params: PageProps<"/bk/[token]">
           <div className="bk-row flex items-center gap-2.5 text-body" style={{ "--i": 0 } as React.CSSProperties}>
             <Clock size={17} className="shrink-0 text-ink-muted" aria-hidden="true" />
             <dt className="sr-only">How long</dt>
-            <dd>{lengthLabel(pass.minutes)}</dd>
+            <dd>{change?.eventDay ? "The whole day is yours" : lengthLabel(pass.minutes)}</dd>
           </div>
+          {pass.detail && (
+            <div className="bk-row flex items-start gap-2.5 text-body" style={{ "--i": 0 } as React.CSSProperties}>
+              <Check size={17} className="mt-0.5 shrink-0 text-ink-muted" aria-hidden="true" />
+              <dt className="sr-only">What you picked</dt>
+              <dd>{pass.detail}</dd>
+            </div>
+          )}
           <div className="bk-row flex items-start gap-2.5 text-body" style={{ "--i": 1 } as React.CSSProperties}>
             <MapPin size={17} className="mt-0.5 shrink-0 text-ink-muted" aria-hidden="true" />
             <dt className="sr-only">Where</dt>
-            <dd>
-              {b.name}, {b.address || place(b.area, b.city)}
-            </dd>
+            <dd>{pass.homeArea ? `${b.name} comes to you: ${pass.homeArea}` : `${b.name}, ${b.address || place(b.area, b.city)}`}</dd>
           </div>
           {pass.depositPaidKobo ? (
             <div className="bk-row flex items-start gap-2.5" style={{ "--i": 2 } as React.CSSProperties}>
@@ -117,7 +125,7 @@ async function Pass({ params, searchParams }: { params: PageProps<"/bk/[token]">
                 {naira(pass.depositPaidKobo / 100)} paid ·{" "}
                 {(() => {
                   const left = leftToPay(pass, pass.depositPaidKobo);
-                  return left === null ? `the rest agreed with ${b.name}` : left > 0 ? `${naira(left / 100)} to pay at ${b.name}` : "nothing more to pay";
+                  return left === null ? `the rest agreed with ${b.name}` : left > 0 ? `${naira(left / 100)} to pay ${pass.homeArea ? "on the day" : `at ${b.name}`}` : "nothing more to pay";
                 })()}
               </dd>
             </div>
@@ -167,8 +175,11 @@ async function Pass({ params, searchParams }: { params: PageProps<"/bk/[token]">
         </p>
       ) : (
         <p className="text-body text-ink-muted">
-          Hi {pass.firstName}, you&apos;re booked. Show this page or your ref when you arrive. To move or cancel, message {b.name}.
+          Hi {pass.firstName}, you&apos;re booked. Show this page or your ref when you arrive.{change ? "" : ` To move or cancel, message ${b.name}.`}
         </p>
+      )}
+      {change && pass.status === "booked" && (
+        <PassChange token={token} slug={change.slug} minutes={change.minutes} eventDay={change.eventDay} startsAt={change.startsAt} depositKobo={pass.depositPaidKobo ?? 0} rules={b.bookingRules ?? []} />
       )}
 
       {number && (

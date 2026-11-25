@@ -17,6 +17,7 @@ import {
   watInstant,
 } from "./bookings";
 import { depositOn } from "./presets";
+import { priceBooking, type BookingChoice } from "./booking-price";
 import {
   dbAddBooking,
   dbBlockTime,
@@ -170,7 +171,15 @@ export function serviceLengths(ownerKey: string, business: Business): Record<str
 
 /** Each service's deposit for the booking sheet and the business page (the demo takes none). */
 export async function getBookingDeposits(ownerKey: string, business: Business, mode: "test" | "live" | null): Promise<{ counts: boolean; services: Record<string, number> }> {
-  if (!isDbId(ownerKey)) return { counts: true, services: {} };
+  if (!isDbId(ownerKey)) {
+    // NEW DIRECTION (demo only): the deposit picked at setup, on each service's lowest price.
+    const dep = business.trades?.length ? demoBook(ownerKey, business)?.setup.deposit : undefined;
+    if (!dep || dep.mode === "off") return { counts: true, services: {} };
+    const services = Object.fromEntries(
+      business.services.filter((s) => s.id).map((s) => [s.id!, priceBooking({ ...s, extras: undefined }, {}, 0, dep).depositNaira * 100]),
+    );
+    return { counts: dep.counts, services };
+  }
   return dbBookingDeposits(business.id, mode);
 }
 
@@ -212,6 +221,8 @@ export async function getBookingPass(token: string): Promise<(BookingPass & { bu
     return {
       code: b.code, service: b.service, minutes: b.minutes, startsAt: b.startsAt, status: b.status, firstName: b.firstName,
       moved: b.moved, businessSlug: owner.slug, businessId: owner.id, business: owner,
+      // NEW DIRECTION (demo only): the price, deposit and home visit from the new booking sheet.
+      priceKobo: b.priceKobo, priceKind: b.priceKind, depositPaidKobo: b.depositPaidKobo, depositCounts: b.depositCounts, homeArea: b.homeArea, detail: b.detail,
       tikka: b.claimId && demoTikkaForBooking(b.claimId) ? { token: b.claimId, reward: demoTikkaForBooking(b.claimId)!.reward, used: demoTikkaForBooking(b.claimId)!.redeemed } : undefined,
     };
   }
@@ -270,6 +281,104 @@ export async function saveBookingSettings(
   const d = demoBook(w.key, w.business)!;
   d.setup = { setUp: true, enabled: s.enabled, capacity: s.capacity, noticeMinutes: s.noticeMinutes, aheadDays: s.aheadDays };
   d.minutes = { ...d.minutes, ...s.minutes };
+}
+
+/**
+ * NEW DIRECTION, stage 3 (demo only): a booking from the new sheet. The server prices it from the
+ * service (never from the browser), takes the deposit as paid (the demo has no Paystack) and keeps
+ * the option, extras and home visit for the owner's Today. Event days take the whole date.
+ */
+export async function bookTimeV2(
+  slug: string,
+  input: { serviceId: string; startsAt: string; choice: BookingChoice; firstName: string; phone: string; address?: string; area?: string; answers?: string },
+): Promise<BookResult> {
+  const found = await getBusinessBySlug(slug);
+  if (!found || isDbId(found.ownerId) || !found.business.trades?.length) return { kind: "not_found" };
+  const { business, ownerId } = found;
+  const d = demoBook(ownerId, business);
+  const svc = business.services.find((s) => s.id === input.serviceId);
+  if (!d || !svc) return { kind: "not_found" };
+  const home = business.workPlace === "home" || (business.workPlace === "both" && !!input.choice.home);
+  const price = priceBooking(svc, { ...input.choice, home }, business.travelFee ?? 0, d.setup.deposit);
+  const start = new Date(input.startsAt);
+  let end: Date;
+  if (svc.eventDay) {
+    const { day, minute } = watParts(start);
+    if (minute < 4 * 60 || minute > 12 * 60) return { kind: "closed" };
+    if (start.getTime() < Date.now() + d.setup.noticeMinutes * 60_000) return { kind: "too_soon" };
+    const dayStart = watInstant(day, 0);
+    const dayEnd = dayStart + 86_400_000;
+    if (d.bookings.some((x) => x.status !== "cancelled" && new Date(x.startsAt).getTime() < dayEnd && new Date(x.endsAt).getTime() > dayStart)) return { kind: "taken" };
+    end = new Date(dayEnd);
+  } else {
+    const problem = demoProblem(d, business.hours, start, price.minutes, null, false);
+    if (problem) return { kind: problem };
+    end = new Date(start.getTime() + price.minutes * 60_000);
+  }
+  if (d.bookings.filter((x) => x.phone === input.phone && x.status === "booked" && new Date(x.startsAt).getTime() > Date.now()).length >= MAX_UPCOMING) return { kind: "too_many" };
+  const b: DemoBooking = {
+    id: `bk_${randomBytes(6).toString("hex")}`, service: svc.name, serviceId: svc.id, minutes: Math.round((end.getTime() - start.getTime()) / 60_000),
+    startsAt: start.toISOString(), endsAt: end.toISOString(), firstName: input.firstName, phone: input.phone, source: "page",
+    status: "booked", code: demoCode(), viewToken: randomBytes(12).toString("hex"), moved: false, createdAt: new Date().toISOString(), futureOffers: false,
+    priceKobo: price.totalNaira * 100, priceKind: "fixed", depositPaidKobo: price.depositNaira ? price.depositNaira * 100 : undefined, depositCounts: d.setup.deposit?.counts ?? true,
+    homeArea: home ? [input.address?.trim(), input.area?.trim()].filter(Boolean).join(", ").slice(0, 120) || business.city : undefined,
+    detail: [price.detail, input.answers?.trim()].filter(Boolean).join(" · ").slice(0, 200) || undefined,
+  };
+  d.bookings.push(b);
+  return { kind: "booked", token: b.viewToken!, code: b.code, id: b.id };
+}
+
+/** NEW DIRECTION (demo only): the deposit rule the new booking sheet prices with. */
+export function demoDepositRule(ownerKey: string, business: Business): BookingSetup["deposit"] | undefined {
+  if (isDbId(ownerKey)) return undefined;
+  return demoBook(ownerKey, business)?.setup.deposit;
+}
+
+/** NEW DIRECTION (demo only): the customer moves or cancels from their pass, within the booking rules. */
+export async function changeFromPass(token: string, change: { kind: "cancel" } | { kind: "move"; startsAt: string }): Promise<{ ok: true } | { ok: false; reason: string }> {
+  for (const [ownerKey, d] of demo) {
+    const b = d.bookings.find((x) => x.viewToken === token);
+    if (!b) continue;
+    if (b.status !== "booked") return { ok: false, reason: "not_booked" };
+    if (change.kind === "cancel") {
+      b.status = "cancelled";
+      return { ok: true };
+    }
+    // Moving needs 24 hours' notice, as the rules filled in at setup say.
+    const owner = await getBusiness({ id: ownerKey });
+    if (!owner) return { ok: false, reason: "not_found" };
+    const svc = owner.services.find((s) => s.id === b.serviceId);
+    if (new Date(b.startsAt).getTime() - Date.now() < 86_400_000) return { ok: false, reason: "too_late" };
+    const start = new Date(change.startsAt);
+    if (svc?.eventDay) {
+      const day = watParts(start).day;
+      const dayStart = watInstant(day, 0);
+      if (d.bookings.some((x) => x.id !== b.id && x.status !== "cancelled" && new Date(x.startsAt).getTime() < dayStart + 86_400_000 && new Date(x.endsAt).getTime() > dayStart)) return { ok: false, reason: "taken" };
+      b.startsAt = start.toISOString();
+      b.endsAt = new Date(dayStart + 86_400_000).toISOString();
+    } else {
+      const problem = demoProblem(d, owner.hours, start, b.minutes, b.id, false);
+      if (problem) return { ok: false, reason: problem };
+      b.startsAt = start.toISOString();
+      b.endsAt = new Date(start.getTime() + b.minutes * 60_000).toISOString();
+    }
+    b.moved = true;
+    return { ok: true };
+  }
+  return { ok: false, reason: "not_found" };
+}
+
+/** NEW DIRECTION (demo only): the pass's booking, for moving it (its business and service). */
+export async function passBooking(token: string): Promise<{ slug: string; serviceId?: string; minutes: number; eventDay: boolean; startsAt: string } | null> {
+  for (const [ownerKey, d] of demo) {
+    const b = d.bookings.find((x) => x.viewToken === token);
+    if (!b) continue;
+    const owner = await getBusiness({ id: ownerKey });
+    if (!owner?.trades?.length) return null;
+    const svc = owner.services.find((s) => s.id === b.serviceId);
+    return { slug: owner.slug, serviceId: b.serviceId, minutes: b.minutes, eventDay: !!svc?.eventDay, startsAt: b.startsAt };
+  }
+  return null;
 }
 
 /**

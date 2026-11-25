@@ -80,6 +80,7 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
         options: options && options.length ? options : undefined,
         extras: input.extras.length ? input.extras.map((x) => ({ name: x.name.trim().slice(0, 40), price: naira(x.price) })) : undefined,
         eventDay: s.eventDay || undefined,
+        perPerson: (s.perPerson && options && options.length > 1) || undefined,
       };
     });
   if (!services.length) return { ok: false, error: "Tick at least one service." };
