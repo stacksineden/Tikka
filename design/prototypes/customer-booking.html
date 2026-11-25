@@ -1,0 +1,616 @@
+<meta charset="utf-8">
+<title>Tikka Customer Booking Prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Space+Mono:wght@400;700&display=swap&subset=latin-ext">
+<style>
+/* Layout: the business's own page at phone width (framed 420px column on a computer), then a full-screen booking flow with a sticky total-and-continue bar. Neutral page, the business's colour as a small accent only (design/BRAND.md, "The business page"). */
+:root {
+  --bg: #F6F4F0; --raised: #FFFFFF; --sunken: #ECE8E1; --line: #E0DAD0; --line-strong: #8F877C;
+  --ink: #161412; --muted: #625C55; --on-ink: #FFFFFF;
+  --accent: #8A2F62;            /* the business's own colour (set per business) */
+  --accent-soft: #F5E6EE;
+  --ok: #0E7A5A; --ok-soft: #DDF4EA; --warn: #8A5A00; --warn-soft: #FDF0D2; --bad: #B42318; --bad-soft: #FDE7E4;
+  --backdrop: rgba(22,20,18,0.5);
+  --serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --sans: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Space Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121110; --raised: #1C1A18; --sunken: #0B0A09; --line: #2E2B27; --line-strong: #7D766D;
+  --ink: #F3F0EB; --muted: #ABA49B; --on-ink: #121110;
+  --accent: #E58AB9; --accent-soft: #3A1F2E;
+  --ok: #47C7B8; --ok-soft: #0F3633; --warn: #F4B63F; --warn-soft: #3B2B0C; --bad: #FF8A7A; --bad-soft: #4A1712;
+  --backdrop: rgba(0,0,0,0.6);
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #121110; --raised: #1C1A18; --sunken: #0B0A09; --line: #2E2B27; --line-strong: #7D766D;
+  --ink: #F3F0EB; --muted: #ABA49B; --on-ink: #121110;
+  --accent: #E58AB9; --accent-soft: #3A1F2E;
+  --ok: #47C7B8; --ok-soft: #0F3633; --warn: #F4B63F; --warn-soft: #3B2B0C; --bad: #FF8A7A; --bad-soft: #4A1712;
+  --backdrop: rgba(0,0,0,0.6);
+  color-scheme: dark;
+}
+.biz-teal { --accent: #0F5E63; --accent-soft: #DDF0F0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .biz-teal { --accent: #6FD0D4; --accent-soft: #10302F; } }
+:root[data-theme="dark"] .biz-teal { --accent: #6FD0D4; --accent-soft: #10302F; }
+
+* { box-sizing: border-box; }
+body { background: var(--sunken); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 24px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.serif { font-family: var(--serif); }
+.phone { max-width: 420px; margin: 0 auto; min-height: 100vh; background: var(--bg); display: flex; flex-direction: column; position: relative; }
+@media (min-width: 640px) { body { padding-block: 24px; } .phone { min-height: calc(100vh - 48px); border-radius: 28px; border: 1px solid var(--line); overflow: hidden; } }
+.pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+
+h1 { font-family: var(--serif); font-weight: 600; font-size: 30px; line-height: 34px; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+h1 em, h2 em { color: var(--accent); font-style: italic; font-weight: 500; }
+h2 { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 28px; margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; line-height: 18px; }
+.label { font-size: 13px; line-height: 18px; font-weight: 600; display: block; margin-bottom: 6px; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+
+.btn { width: 100%; min-height: 52px; border-radius: 999px; border: 0; font-weight: 700; font-size: 17px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 20px; }
+.btn-ink { background: var(--ink); color: var(--on-ink); }
+.btn-ink:disabled { opacity: 0.35; }
+.btn-line { background: var(--raised); border: 1px solid var(--line); }
+.btn-sm { min-height: 44px; font-size: 15px; width: auto; }
+.linkbtn { border: 0; background: transparent; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; font-weight: 600; min-height: 44px; padding: 0; display: inline-flex; align-items: center; gap: 6px; }
+
+/* Business page */
+.cover { height: 220px; position: relative; background: linear-gradient(140deg, var(--accent-soft), var(--sunken) 70%); display: grid; place-items: center; color: var(--muted); }
+.cover .chip-top { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: 12px; }
+.biz-head { display: grid; gap: 10px; padding-block: 20px 8px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: 14px; }
+.meta span { display: inline-flex; align-items: center; gap: 4px; }
+.stars { color: var(--ink); font-weight: 700; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.shot { aspect-ratio: 4 / 5; max-width: 100%; border-radius: 6px; display: grid; place-items: center; color: var(--muted); }
+.shot.a { background: linear-gradient(160deg, var(--accent-soft), var(--sunken)); }
+.shot.b { background: linear-gradient(200deg, var(--sunken), var(--accent-soft)); }
+.shot.c { background: linear-gradient(120deg, var(--raised), var(--accent-soft)); }
+section.block { display: grid; gap: 12px; padding-block: 24px 0; }
+.svc { display: grid; gap: 4px; padding-block: 16px; border-top: 1px solid var(--line); }
+.svc-row { display: flex; align-items: center; gap: 12px; }
+.svc-row > div { flex: 1; min-width: 0; }
+.svc-row b { font-size: 17px; }
+.dep { display: inline-block; font-size: 12px; font-weight: 600; color: var(--accent); }
+.book { min-height: 44px; padding: 0 18px; border-radius: 999px; background: var(--ink); color: var(--on-ink); border: 0; font-weight: 700; }
+.review { padding: 14px 16px; border-radius: 14px; background: var(--raised); border: 1px solid var(--line); }
+.footer { text-align: center; padding-block: 32px 24px; font-size: 13px; color: var(--muted); }
+.stickybook { position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--line); padding-block: 10px calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 5; }
+
+/* Flow */
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 8px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); }
+.iconbtn { min-width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; display: grid; place-items: center; }
+.progress { flex: 1; height: 4px; border-radius: 999px; background: var(--sunken); overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--ink); transition: width 300ms ease; }
+main { flex: 1; padding-block: 20px 24px; display: grid; gap: 20px; align-content: start; }
+.step-title { display: grid; gap: 4px; }
+.bar { position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--line); padding-block: 10px calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 5; display: flex; align-items: center; gap: 12px; }
+.bar .tot { flex: 1; min-width: 0; }
+.bar .tot b { display: block; font-size: 18px; font-family: var(--mono); }
+.bar .btn { width: auto; flex-shrink: 0; }
+
+.opts { display: grid; gap: 10px; }
+.opt { display: flex; align-items: center; gap: 14px; text-align: left; width: 100%; padding: 14px 16px; min-height: 68px; border-radius: 16px; border: 2px solid var(--line); background: var(--raised); }
+.opt > span:nth-child(2) { flex: 1; min-width: 0; }
+.opt b { display: block; font-size: 17px; }
+.opt .price { font-family: var(--mono); font-weight: 700; white-space: nowrap; }
+.opt[aria-pressed="true"], .opt[aria-checked="true"] { border-color: var(--ink); }
+.radio, .box { width: 24px; height: 24px; flex-shrink: 0; border: 2px solid var(--line-strong); border-radius: 50%; display: grid; place-items: center; color: transparent; }
+.box { border-radius: 7px; }
+[aria-pressed="true"] .radio { border: 7px solid var(--ink); }
+[aria-checked="true"] .box { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
+
+.dates { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x mandatory; margin-inline: -16px; padding-inline: 16px; }
+.date { flex: 0 0 64px; scroll-snap-align: start; min-height: 78px; border-radius: 14px; border: 2px solid var(--line); background: var(--raised); display: grid; place-items: center; align-content: center; gap: 2px; padding: 6px 0; }
+.date small { font-size: 12px; color: var(--muted); }
+.date b { font-size: 22px; line-height: 26px; }
+.date .st { font-size: 11px; font-weight: 600; color: var(--ok); }
+.date.closed { opacity: 0.4; }
+.date.full .st { color: var(--warn); }
+.date[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--on-ink); }
+.date[aria-pressed="true"] small, .date[aria-pressed="true"] .st { color: var(--on-ink); }
+.times { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.time { min-height: 48px; border-radius: 12px; border: 1px solid var(--line-strong); background: var(--raised); font-weight: 700; font-family: var(--mono); font-size: 15px; }
+.time[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.time:disabled { opacity: 0.3; text-decoration: line-through; }
+
+.month { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; }
+.month button { min-width: 0; padding: 0; overflow: hidden; }
+.month .dow { font-size: 12px; color: var(--muted); font-weight: 600; padding-bottom: 4px; }
+.month button { aspect-ratio: 1; max-width: 100%; border-radius: 12px; border: 0; background: var(--raised); font-weight: 600; font-size: 15px; display: grid; place-items: center; align-content: center; line-height: 16px; }
+.month button small { font-size: 8px; font-weight: 600; color: var(--warn); }
+.month button:disabled { background: transparent; color: var(--muted); }
+.month button.taken { background: var(--sunken); color: var(--muted); text-decoration: line-through; }
+.month button[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); }
+
+.field { display: grid; }
+.input, textarea.input { width: 100%; min-height: 52px; border-radius: 12px; border: 1px solid var(--line-strong); background: var(--raised); padding: 12px 14px; font-size: 17px; }
+textarea.input { min-height: 84px; resize: vertical; }
+.input:focus { outline: 2px solid var(--ink); outline-offset: 0; }
+.prefix { display: flex; align-items: center; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--raised); min-height: 52px; padding-left: 14px; }
+.prefix span { color: var(--muted); font-size: 17px; }
+.prefix input { border: 0; outline: 0; background: transparent; flex: 1; min-width: 0; min-height: 50px; padding: 0 14px 0 6px; font-size: 17px; }
+.prefix:focus-within { outline: 2px solid var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--raised); font-weight: 600; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+
+.counter { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px; border: 1px solid var(--line); background: var(--raised); }
+.counter > div { flex: 1; min-width: 0; }
+.counter b { display: block; }
+.counter .n { font-family: var(--mono); font-weight: 700; font-size: 20px; min-width: 28px; text-align: center; }
+.counter button { width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--bg); font-size: 22px; display: grid; place-items: center; }
+.counter button:disabled { opacity: 0.3; }
+
+.card { background: var(--raised); border: 1px solid var(--line); border-radius: 16px; }
+.lines { padding: 6px 16px; }
+.ln { display: flex; justify-content: space-between; gap: 12px; padding-block: 8px; }
+.ln span:last-child { font-family: var(--mono); white-space: nowrap; }
+.ln.total { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 12px; font-weight: 700; }
+.ln.now { font-weight: 700; color: var(--ink); }
+.paybox { padding: 16px; border-radius: 16px; background: var(--ink); color: var(--on-ink); display: grid; gap: 6px; }
+.paybox .big { font-family: var(--mono); font-size: 30px; line-height: 34px; font-weight: 700; }
+.rules { padding: 4px 16px; }
+.rules li { padding-block: 8px; list-style: none; display: flex; gap: 10px; font-size: 15px; line-height: 22px; }
+.rules ul { margin: 0; padding: 0; }
+.note { display: flex; gap: 12px; padding: 14px 16px; border-radius: 14px; background: var(--warn-soft); font-size: 15px; line-height: 22px; }
+.note.ok { background: var(--ok-soft); }
+.note.plain { background: var(--sunken); }
+.note svg { flex-shrink: 0; }
+
+.pass { border-radius: 22px; overflow: hidden; border: 1px solid var(--line); background: var(--raised); }
+.pass-top { padding: 20px; background: var(--ink); color: var(--on-ink); display: grid; gap: 4px; }
+.pass-top .when { font-family: var(--serif); font-size: 26px; line-height: 30px; font-weight: 600; }
+.pass-notch { height: 0; border-top: 2px dashed var(--line); margin: 0 16px; }
+.pass-body { padding: 16px 20px 20px; display: grid; gap: 12px; }
+.pass-row { display: flex; gap: 12px; align-items: flex-start; }
+.pass-row svg { flex-shrink: 0; margin-top: 2px; color: var(--muted); }
+.ref { font-family: var(--mono); font-weight: 700; letter-spacing: 0.08em; }
+.tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--ok-soft); color: var(--ok); justify-self: start; }
+
+.payscreen { display: grid; gap: 16px; padding-top: 12px; }
+.fakepay { border: 2px dashed var(--line-strong); border-radius: 16px; padding: 20px; display: grid; gap: 12px; text-align: center; }
+
+.sheet-wrap { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center; background: var(--backdrop); }
+.sheet { width: 100%; max-width: 420px; max-height: 90vh; overflow: auto; background: var(--bg); border-radius: 24px 24px 0 0; padding-block: 8px calc(20px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 16px; animation: up 240ms cubic-bezier(0.22,1,0.36,1); }
+.grab { width: 40px; height: 4px; border-radius: 4px; background: var(--line-strong); margin: 4px auto 0; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+@keyframes up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sheet { animation: none; } .progress i { transition: none; } }
+.toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--on-ink); padding: 12px 18px; border-radius: 999px; font-weight: 600; z-index: 40; max-width: calc(100% - 32px); text-align: center; }
+.start .opt { min-height: 96px; }
+.proto { font-size: 12px; color: var(--muted); text-align: center; }
+</style>
+
+<div class="phone" id="app"></div>
+<div id="layer"></div>
+
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script>
+/* ---------- Businesses ---------- */
+const BIZ = {
+  hair: {
+    name: "Ada's Hair Studio", word: "Hair", lead: "Braids, wigs and silk presses that <em>last</em>.", place: "Bodija, Ibadan", theme: "",
+    address: "14 Awolowo Avenue, Bodija, Ibadan", rating: 4.9, reviews: 38, depositPct: 30,
+    where: "both", travelFee: 3000, reach: "anywhere in Ibadan",
+    open: 9, close: 18, closedDays: [0], fullDates: ["2026-11-28"],
+    rules: [
+      "Please come on time. If you're more than 30 minutes late, we may not be able to see you and the deposit stays with us.",
+      "To move your booking, tell us at least 24 hours before.",
+      "If you cancel or don't come, the deposit is not refunded.",
+      "For home visits, please be ready at the time you booked.",
+    ],
+    review: ["My knotless lasted 7 weeks and she was on time. Booking was easy.", "Temi O. · came in October"],
+    services: [
+      { id: "knotless", name: "Knotless braids", desc: "Neat, light and painless. Hair not included unless you add it.",
+        options: [["Short", 19000, 240], ["Medium", 22500, 300], ["Long", 26500, 360]],
+        extras: [["Add wash", 1500], ["Take down old braids", 2500], ["Add beads", 1000]],
+        questions: [
+          { id: "hair", q: "Hair for your braids", choices: [["I'll bring my own", 0], ["Use the stylist's hair", 6000]] },
+          { id: "allergy", q: "Any allergies or a sensitive scalp?", text: true, optional: true },
+        ] },
+      { id: "cornrows", name: "Cornrows", options: [["Straight back", 6000, 120], ["With design", 8000, 150]], extras: [["Add wash", 1500]], questions: [] },
+      { id: "wig", name: "Wig install", options: [["Frontal", 11500, 90], ["Closure", 9000, 75]], extras: [["Wig wash and style", 3000]], questions: [] },
+      { id: "silk", name: "Silk press", options: [["One price", 9000, 120]], extras: [], questions: [] },
+    ],
+  },
+  bridal: {
+    name: "Glam by Tomi", word: "Makeup", lead: "Soft, glowing bridal makeup that lasts from the church to the <em>last dance</em>.", place: "Lekki, Lagos", theme: "biz-teal",
+    address: "Comes to you anywhere in Lagos", rating: 5.0, reviews: 61, depositPct: 50,
+    where: "go", travelFee: 10000, reach: "anywhere in Lagos",
+    rules: [
+      "A 50% deposit holds your date. The date is yours once it's paid.",
+      "Please make sure the bride is ready to start at the call time, with a clean face.",
+      "To move the date, tell us at least 2 weeks before. We'll move your deposit if the new date is free.",
+      "If you cancel, the deposit is not refunded.",
+    ],
+    review: ["Tomi made me feel calm on the morning of my wedding. My makeup was perfect at 2am.", "Ifeoma A. · bride, September"],
+    takenDates: ["2026-12-05", "2026-12-12", "2026-12-19", "2026-12-26", "2026-12-24"],
+    services: [
+      { id: "bridal", name: "Bridal makeup", event: true, desc: "For the wedding day: the bride, her bridesmaids and family.",
+        bride: 150000, people: [["Bridesmaids", 25000], ["Mothers and family", 30000]],
+        extras: [["Gele for the bride", 15000], ["Touch-up artist stays all day", 50000], ["Second look for the reception", 40000]],
+        questions: [
+          { id: "skin", q: "The bride's skin type, and any allergies", text: true, optional: true, ph: "e.g. oily skin, allergic to some lashes glue" },
+          { id: "colours", q: "Wedding colours", text: true, optional: true, ph: "e.g. emerald and gold" },
+        ] },
+      { id: "softglam", name: "Soft glam", options: [["One person", 25000, 90]], extras: [["Lashes", 3000]], questions: [] },
+    ],
+  },
+};
+
+/* ---------- Helpers ---------- */
+const naira = (n) => "₦" + Math.round(n).toLocaleString("en-NG");
+const hrs = (m) => m < 60 ? `${m} min` : (m % 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m / 60} hour${m === 60 ? "" : "s"}`);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const icon = (n, s = 20) => `<i data-lucide="${n}" style="width:${s}px;height:${s}px" aria-hidden="true"></i>`;
+const TODAY = new Date(2026, 10, 25); // Wed 25 Nov 2026, frozen for the prototype
+const key = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MON = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const dayLong = (d) => `${["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}`;
+const t12 = (m) => { const h = Math.floor(m / 60), mm = m % 60; return `${((h + 11) % 12) + 1}:${String(mm).padStart(2, "0")}${h < 12 ? "am" : "pm"}`; };
+const minFrom = (svc) => svc.event ? svc.bride : Math.min(...svc.options.map((o) => o[1]));
+const depositOf = (total, pct) => Math.max(1000, Math.ceil(total * pct / 100 / 500) * 500);
+
+/* ---------- State ---------- */
+let biz = null, B = null;
+function reset(id, svcId) {
+  biz = BIZ[id];
+  const svc = biz.services.find((s) => s.id === svcId) || biz.services[0];
+  B = { svc, step: 0, opt: null, extras: [], place: biz.where === "go" ? "home" : "", area: "", street: "", landmark: "",
+    date: null, time: null, answers: {}, people: svc.people ? svc.people.map(() => 0) : [], name: "", phone: "", ref: "", moved: false, cancelled: false };
+}
+
+/* Steps depend on the service. */
+function steps() {
+  const s = B.svc, out = [];
+  if (s.event) {
+    out.push("evdate", "calltime", "venue", "people");
+  } else {
+    if (s.options.length > 1) out.push("option");
+    if (biz.where === "both") out.push("place");
+    out.push("datetime");
+  }
+  if (s.extras.length) out.push("extras");
+  if (s.questions.length) out.push("questions");
+  out.push("details", "review", "pay", "pass");
+  return out;
+}
+function prices() {
+  const s = B.svc, lines = [];
+  if (s.event) {
+    lines.push(["Bride", s.bride]);
+    s.people.forEach(([label, p], i) => { if (B.people[i]) lines.push([`${label} × ${B.people[i]}`, p * B.people[i]]); });
+  } else if (B.opt != null) {
+    const [label, p] = s.options[B.opt];
+    lines.push([s.options.length > 1 ? `${s.name}, ${label.toLowerCase()}` : s.name, p]);
+  }
+  B.extras.forEach((i) => lines.push([s.extras[i][0], s.extras[i][1]]));
+  s.questions.forEach((q) => { if (q.choices && B.answers[q.id] != null && q.choices[B.answers[q.id]][1]) lines.push([q.choices[B.answers[q.id]][0], q.choices[B.answers[q.id]][1]]); });
+  if (B.place === "home") lines.push(["Travel fee", biz.travelFee]);
+  const total = lines.reduce((n, l) => n + l[1], 0);
+  const deposit = total ? depositOf(total, biz.depositPct) : 0;
+  return { lines, total, deposit, rest: total - deposit };
+}
+const mins = () => B.svc.event ? 0 : (B.opt != null ? B.svc.options[B.opt][2] : B.svc.options[0][2]);
+
+function ok(step) {
+  switch (step) {
+    case "option": return B.opt != null;
+    case "place": return !!B.place && (B.place === "salon" || (B.area && B.street.trim().length > 2));
+    case "datetime": return !!B.date && B.time != null;
+    case "evdate": return !!B.date && !biz.takenDates.includes(B.date);
+    case "calltime": return B.time != null;
+    case "venue": return B.area && B.street.trim().length > 2;
+    case "questions": return B.svc.questions.every((q) => q.optional || B.answers[q.id] != null);
+    case "details": return B.name.trim().length > 1 && B.phone.replace(/\D/g, "").length >= 10;
+    default: return true;
+  }
+}
+
+/* ---------- Views ---------- */
+const app = document.getElementById("app");
+function startView() {
+  return `<main class="pad start" style="padding-top:32px">
+    <div style="display:grid;gap:8px"><span class="eyebrow" style="color:var(--muted)">Prototype · 25 Nov 2026</span><h1>Booking as a customer</h1>
+      <p class="muted" style="margin:0;font-size:17px">Tap through as a customer would. Nothing is paid, saved or sent.</p></div>
+    <div class="opts">
+      <button class="opt" data-act="go" data-v="hair"><span class="box" style="border:0;color:var(--ink)">${icon("scissors", 22)}</span><span><b>1. Book a hair appointment</b><span class="muted small">Choices, extras, home service, deposit, then move or cancel</span></span></button>
+      <button class="opt" data-act="go" data-v="bridal"><span class="box" style="border:0;color:var(--ink)">${icon("heart", 22)}</span><span><b>2. Book bridal makeup for a wedding</b><span class="muted small">A date, call time, venue, the bridal party and a 50% deposit</span></span></button>
+    </div>
+    <p class="proto">The pages are the businesses' own websites, so they use their colours, not Tikka's.</p>
+  </main>`;
+}
+
+function pageView() {
+  const b = biz;
+  return `<div class="${b.theme}" style="display:flex;flex-direction:column;flex:1">
+    <div class="cover">${icon("image", 34)}<button class="iconbtn chip-top" data-act="home" aria-label="Back to the start" style="background:var(--raised)">${icon("arrow-left", 20)}</button></div>
+    <div class="pad biz-head">
+      <span class="eyebrow">${b.word} · ${b.place}</span>
+      <h1>${esc(b.name)}</h1>
+      <p style="margin:0;font-family:var(--serif);font-size:19px;line-height:27px">${b.lead}</p>
+      <div class="meta"><span class="stars">${icon("star", 15)} ${b.rating.toFixed(1)}</span><span>${b.reviews} reviews from real visits</span>
+        <span>${icon(b.where === "go" ? "car" : "map-pin", 15)} ${b.where === "go" ? "Comes to you" : b.where === "both" ? "Salon or home service" : "At the salon"}</span></div>
+    </div>
+    <div class="pad"><div class="grid3">${["a", "b", "c", "b", "c", "a"].map((c) => `<div class="shot ${c}">${icon("image", 22)}</div>`).join("")}</div></div>
+    <section class="block pad">
+      <h2>Book a <em>time</em></h2>
+      <div>${b.services.map((s) => `
+        <div class="svc">
+          <div class="svc-row"><div><b>${esc(s.name)}</b><br><span class="muted small">${s.event ? "Wedding day · from " : s.options.length > 1 ? "from " : ""}${naira(minFrom(s))}${s.event ? "" : " · " + hrs(Math.min(...s.options.map((o) => o[2])))}</span></div>
+            <button class="book" data-act="book" data-v="${s.id}">Book</button></div>
+          ${s.desc ? `<span class="muted small">${esc(s.desc)}</span>` : ""}
+          <span class="dep">${s.event ? "50% deposit holds your date" : `${naira(depositOf(minFrom(s), b.depositPct))} deposit to book`}</span>
+        </div>`).join("")}</div>
+    </section>
+    <section class="block pad"><h2>What people say</h2>
+      <div class="review"><div class="stars" style="display:flex;gap:2px">${Array.from({ length: 5 }, () => icon("star", 14)).join("")}</div><p style="margin:6px 0 4px">${esc(b.review[0])}</p><span class="small muted">${esc(b.review[1])}</span></div></section>
+    <section class="block pad"><h2>Booking rules</h2>
+      <div class="card rules"><ul>${b.rules.map((r) => `<li>${icon("circle-check", 18)}<span>${esc(r)}</span></li>`).join("")}</ul></div></section>
+    <div class="footer pad">${esc(b.address)}<br><br>Made with Tikka</div>
+    <div class="stickybook pad"><button class="btn btn-ink" data-act="book" data-v="${b.services[0].id}">Book ${esc(b.services[0].name.toLowerCase())}</button></div>
+  </div>`;
+}
+
+function flowView() {
+  const st = steps(), name = st[B.step];
+  if (name === "pay") return `<div class="${biz.theme}" style="display:flex;flex-direction:column;flex:1">${VIEWS.pay()}</div>`;
+  if (name === "pass") return `<div class="${biz.theme}" style="display:flex;flex-direction:column;flex:1"><main class="pad">${VIEWS.pass()}</main></div>`;
+  const pct = Math.round(((B.step + 1) / (st.length - 1)) * 100);
+  const p = prices();
+  const cta = name === "review" ? `Pay ${naira(p.deposit)} deposit` : "Continue";
+  return `<div class="${biz.theme}" style="display:flex;flex-direction:column;flex:1">
+    <div class="topbar pad"><button class="iconbtn" data-act="back" aria-label="Back">${icon("arrow-left", 22)}</button>
+      <div class="progress" role="progressbar" aria-label="Booking progress" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
+      <button class="iconbtn" data-act="closeflow" aria-label="Close">${icon("x", 22)}</button></div>
+    <main class="pad">${VIEWS[name]()}</main>
+    <div class="bar pad"><div class="tot">${p.total ? `<span class="small muted">Total</span><b>${naira(p.total)}</b>` : `<span class="small muted">${esc(B.svc.name)}</span>`}</div>
+      <button class="btn btn-ink" data-act="next" ${ok(name) ? "" : "disabled"}>${cta}</button></div>
+  </div>`;
+}
+
+const head = (t, sub) => `<div class="step-title"><span class="eyebrow">${esc(B.svc.name)}</span><h1>${t}</h1>${sub ? `<p class="muted" style="margin:0">${sub}</p>` : ""}</div>`;
+
+const VIEWS = {
+  option: () => `${head("Choose your length")}
+    <div class="opts">${B.svc.options.map(([l, p, m], i) => `<button class="opt" data-act="opt" data-i="${i}" aria-pressed="${B.opt === i}"><span class="radio"></span><span><b>${l}</b><span class="muted small">About ${hrs(m)}</span></span><span class="price">${naira(p)}</span></button>`).join("")}</div>`,
+
+  place: () => `${head("Where should it happen?")}
+    <div class="opts">
+      <button class="opt" data-act="place" data-v="salon" aria-pressed="${B.place === "salon"}"><span class="radio"></span><span><b>At the salon</b><span class="muted small">${esc(biz.address)}</span></span></button>
+      <button class="opt" data-act="place" data-v="home" aria-pressed="${B.place === "home"}"><span class="radio"></span><span><b>At my place</b><span class="muted small">The stylist comes to you, ${esc(biz.reach)}</span></span><span class="price">+${naira(biz.travelFee)}</span></button>
+    </div>
+    ${B.place === "home" ? addressFields("Your address") : ""}`,
+
+  datetime: () => {
+    const days = Array.from({ length: 14 }, (_, i) => { const d = new Date(TODAY); d.setDate(d.getDate() + i + 1); return d; });
+    let times = "";
+    if (B.date) {
+      const len = mins(), slots = [];
+      for (let m = biz.open * 60; m + len <= biz.close * 60; m += 30) slots.push(m);
+      const seed = Number(B.date.slice(-2));
+      times = slots.length ? `<div class="times">${slots.map((m, i) => { const taken = (i * 7 + seed) % 5 === 0; return `<button class="time" data-act="time" data-v="${m}" aria-pressed="${B.time === m}" ${taken ? "disabled aria-label=\"" + t12(m) + " taken\"" : ""}>${t12(m)}</button>`; }).join("")}</div>
+        <p class="small muted" style="margin:0">Takes about ${hrs(len)}. Only free times show.</p>` : `<div class="note plain">This takes about ${hrs(len)}, which doesn't fit before closing on this day.</div>`;
+    }
+    return `${head("Pick a day and time")}
+      <div class="dates" role="group" aria-label="Days">${days.map((d) => {
+        const k = key(d), closed = biz.closedDays.includes(d.getDay()), full = biz.fullDates.includes(k);
+        return `<button class="date ${closed ? "closed" : ""} ${full ? "full" : ""}" data-act="date" data-v="${k}" aria-pressed="${B.date === k}" ${closed ? "disabled" : ""}><small>${DOW[d.getDay()]}</small><b>${d.getDate()}</b><span class="st">${closed ? "Closed" : full ? "Full" : "Free"}</span></button>`;
+      }).join("")}</div>
+      ${B.date && biz.fullDates.includes(B.date) ? waitlistBlock() : times}`;
+  },
+
+  evdate: () => {
+    const y = 2026, m = 11; // December 2026
+    const first = new Date(y, m, 1), dim = new Date(y, m + 1, 0).getDate();
+    const cells = [];
+    for (let i = 0; i < first.getDay(); i++) cells.push(`<span></span>`);
+    for (let d = 1; d <= dim; d++) {
+      const k = key(new Date(y, m, d)), taken = biz.takenDates.includes(k);
+      cells.push(`<button data-act="evdate" data-v="${k}" class="${taken ? "taken" : ""}" aria-pressed="${B.date === k}" ${taken ? `aria-label="${d} December, already booked"` : ""}>${d}${taken ? "<small>Booked</small>" : ""}</button>`);
+    }
+    return `${head("When is the wedding?", "Pick the day you need makeup. Booked days are crossed out.")}
+      <div class="card" style="padding:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><button class="iconbtn" disabled aria-label="Previous month">${icon("chevron-left", 20)}</button><b>December 2026</b><button class="iconbtn" data-act="toast" data-msg="In the real app you can look months ahead." aria-label="Next month">${icon("chevron-right", 20)}</button></div>
+        <div class="month">${DOW.map((d) => `<span class="dow">${d[0]}</span>`).join("")}${cells.join("")}</div>
+      </div>
+      ${B.date && biz.takenDates.includes(B.date) ? waitlistBlock() : ""}`;
+  },
+
+  calltime: () => {
+    const opts = [300, 330, 360, 390, 420, 450, 480, 540];
+    return `${head("What time should she start?", `On ${dayLong(new Date(B.date + "T12:00"))}. Pick when the makeup artist should arrive.`)}
+      <div class="times">${opts.map((m) => `<button class="time" data-act="time" data-v="${m}" aria-pressed="${B.time === m}">${t12(m)}</button>`).join("")}</div>
+      <div class="note plain">${icon("info", 20)}<span>For a bride, a bridesmaid and one mother, allow about 4 hours before you need to leave.</span></div>`;
+  },
+
+  venue: () => `${head("Where is everyone getting ready?", "The makeup artist comes to you.")}${addressFields("Venue or home address", true)}
+    <div class="note plain">${icon("car", 20)}<span>Travel fee ${naira(biz.travelFee)} for ${esc(biz.reach)}.</span></div>`,
+
+  people: () => `${head("Who's getting ready?")}
+    <div class="counter"><div><b>Bride</b><span class="small muted">${naira(B.svc.bride)}</span></div><span class="n">1</span></div>
+    ${B.svc.people.map(([l, p], i) => `<div class="counter"><div><b>${l}</b><span class="small muted">${naira(p)} each</span></div>
+      <button data-act="ppl" data-i="${i}" data-v="-1" aria-label="Fewer ${l.toLowerCase()}" ${B.people[i] ? "" : "disabled"}>−</button><span class="n" aria-live="polite">${B.people[i]}</span><button data-act="ppl" data-i="${i}" data-v="1" aria-label="More ${l.toLowerCase()}">+</button></div>`).join("")}`,
+
+  extras: () => `${head("Anything to add?", "Optional. Tick what you want.")}
+    <div class="opts">${B.svc.extras.map(([l, p], i) => `<button class="opt" role="checkbox" data-act="extra" data-i="${i}" aria-checked="${B.extras.includes(i)}"><span class="box">${icon("check", 15)}</span><span><b>${l}</b></span><span class="price">+${naira(p)}</span></button>`).join("")}</div>`,
+
+  questions: () => `${head(B.svc.event ? "A few details for the day" : "A couple of questions")}
+    ${B.svc.questions.map((q) => q.choices ? `
+      <div class="field"><span class="label">${esc(q.q)}</span><div class="opts">${q.choices.map(([l, p], j) => `<button class="opt" data-act="ans" data-q="${q.id}" data-i="${j}" aria-pressed="${B.answers[q.id] === j}" style="min-height:60px"><span class="radio"></span><span><b style="font-size:16px">${l}</b></span>${p ? `<span class="price">+${naira(p)}</span>` : ""}</button>`).join("")}</div></div>` : `
+      <div class="field"><label class="label" for="q-${q.id}">${esc(q.q)}${q.optional ? ' <span class="muted" style="font-weight:400">(optional)</span>' : ""}</label>
+        <textarea class="input" id="q-${q.id}" data-ans="${q.id}" placeholder="${esc(q.ph || "")}">${esc(B.answers[q.id] || "")}</textarea></div>`).join("")}`,
+
+  details: () => `${head("Your details", `${esc(biz.name)} will use these to reach you about your booking.`)}
+    <div class="field"><label class="label" for="f-name">Your name</label><input class="input" id="f-name" data-bind="name" value="${esc(B.name)}" autocomplete="name" placeholder="e.g. Chiamaka"></div>
+    <div class="field"><label class="label" for="f-phone">WhatsApp number</label><div class="prefix"><span>+234</span><input id="f-phone" data-bind="phone" inputmode="tel" value="${esc(B.phone)}" placeholder="803 000 0000" autocomplete="tel-national"></div></div>
+    <p class="proto">Prototype. Any number works, and nothing is sent.</p>`,
+
+  review: () => {
+    const p = prices();
+    const when = B.svc.event ? `${dayLong(new Date(B.date + "T12:00"))}, start ${t12(B.time)}` : `${dayLong(new Date(B.date + "T12:00"))} at ${t12(B.time)}`;
+    const where = B.place === "home" ? `${B.street}, ${B.area}` : biz.address;
+    return `${head("Check and pay your deposit")}
+      <div class="card lines">
+        <div class="ln"><span class="muted">When</span><span style="font-family:var(--sans);text-align:right">${esc(when)}</span></div>
+        <div class="ln"><span class="muted">Where</span><span style="font-family:var(--sans);text-align:right">${esc(where)}</span></div>
+      </div>
+      <div class="card lines">${p.lines.map(([l, v]) => `<div class="ln"><span>${esc(l)}</span><span>${naira(v)}</span></div>`).join("")}
+        <div class="ln total"><span>Total</span><span>${naira(p.total)}</span></div></div>
+      <div class="paybox"><span class="small" style="opacity:.8">Deposit to pay now (${biz.depositPct}%)</span><span class="big">${naira(p.deposit)}</span>
+        <span class="small" style="opacity:.8">${naira(p.rest)} to pay ${B.svc.event ? "on the day" : "at the appointment"}. The deposit goes straight to ${esc(biz.name)}.</span></div>
+      <div><h2 style="font-size:19px;margin-bottom:8px">Booking rules</h2><div class="card rules"><ul>${biz.rules.map((r) => `<li>${icon("circle-check", 18)}<span>${esc(r)}</span></li>`).join("")}</ul></div></div>
+      <div class="note">${icon("info", 20)}<span>The deposit is not refundable. By paying, you agree to these rules.</span></div>`;
+  },
+
+  pay: () => {
+    const p = prices();
+    return `<div class="topbar pad"><button class="iconbtn" data-act="back" aria-label="Back">${icon("arrow-left", 22)}</button><b style="flex:1">Secure payment</b></div>
+      <main class="pad payscreen">
+        <div class="fakepay">
+          ${icon("lock", 28)}
+          <b style="font-size:18px">Paystack's payment page opens here</b>
+          <span class="muted">In the real app the customer pays ${naira(p.deposit)} by card, bank transfer or USSD on Paystack's own secure page, then comes straight back.</span>
+          <span class="mono" style="font-size:28px;font-weight:700">${naira(p.deposit)}</span>
+          <span class="small muted">to ${esc(biz.name)}</span>
+        </div>
+        <button class="btn btn-ink" data-act="paid">${icon("check", 20)} Pretend it's paid</button>
+        <p class="proto">Prototype. No money moves.</p>
+      </main>`;
+  },
+
+  pass: () => {
+    const p = prices();
+    const d = new Date(B.date + "T12:00");
+    if (B.cancelled) return `<div style="display:grid;gap:16px;padding-top:24px;text-align:center;justify-items:center">${icon("calendar-x", 40)}<h1>Booking cancelled</h1>
+      <p class="muted" style="margin:0">${esc(biz.name)} has been told. As the rules say, the ${naira(p.deposit)} deposit isn't refunded.</p>
+      <button class="btn btn-line" data-act="home">Back to the start</button></div>`;
+    const homeVisit = B.place === "home";
+    return `<div style="display:grid;gap:8px;text-align:center;justify-items:center;padding-top:8px">
+        <span class="tag">${icon("check", 13)} ${B.moved ? "Booking moved" : B.svc.event ? "Your date is held" : "You're booked"}</span>
+        <h1>${B.svc.event ? `See you on the <em>big day</em>` : `See you <em>soon</em>, ${esc(B.name.split(" ")[0] || "")}`}</h1>
+      </div>
+      <div class="pass">
+        <div class="pass-top"><span class="small" style="opacity:.75">${esc(biz.name)}</span><span class="when">${dayLong(d)}</span><span>${B.svc.event ? "Start " : ""}${t12(B.time)}${B.svc.event ? "" : ` · about ${hrs(mins())}`}</span></div>
+        <div class="pass-body">
+          <div class="pass-row">${icon(B.svc.event ? "heart" : "scissors", 18)}<span>${esc(p.lines.filter((l) => l[0] !== "Travel fee").map((l) => l[0]).join(", "))}</span></div>
+          <div class="pass-row">${icon(homeVisit ? "car" : "map-pin", 18)}<span>${homeVisit ? `${esc(biz.name)} comes to you: ${esc(B.street)}, ${esc(B.area)}` : esc(biz.address)}</span></div>
+          <div class="pass-row">${icon("wallet", 18)}<span>Deposit paid <b class="mono">${naira(p.deposit)}</b><br><b class="mono">${naira(p.rest)}</b> to pay ${B.svc.event ? "on the day" : "at the appointment"}</span></div>
+          <div class="pass-notch" style="margin:4px 0"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span class="small muted">Booking ref</span><span class="ref">${B.ref}</span></div>
+        </div>
+      </div>
+      <button class="btn btn-ink" data-act="toast" data-msg="Opens WhatsApp to ${esc(biz.name)}, with your booking ref ready.">${icon("message-circle", 20)} Message ${esc(biz.name.split(" ")[0] === "Glam" ? "Tomi" : "Ada")} on WhatsApp</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button class="btn btn-line btn-sm" style="width:100%" data-act="toast" data-msg="Adds it to your phone's calendar.">${icon("calendar-plus", 18)} Add to calendar</button>
+        <button class="btn btn-line btn-sm" style="width:100%" data-act="change">${icon("calendar-clock", 18)} Move or cancel</button>
+      </div>
+      <div class="note plain">${icon("bell", 20)}<span>Keep this page. The link is also on your WhatsApp. ${esc(biz.name)} may send you a reminder before the day.</span></div>
+      <button class="linkbtn" data-act="home" style="justify-self:center">Back to the start</button>`;
+  },
+};
+
+function addressFields(label, venue) {
+  const areas = biz === BIZ.hair ? ["Bodija", "Agodi", "Ring Road", "Apete", "Challenge", "Mokola"] : ["Lekki", "Ikoyi", "Victoria Island", "Ikeja", "Surulere", "Ajah"];
+  return `<div class="card" style="padding:16px;display:grid;gap:14px">
+    <div class="field"><span class="label">Area</span><div class="chips">${areas.map((a) => `<button class="chip" data-act="area" data-v="${a}" aria-pressed="${B.area === a}">${a}</button>`).join("")}</div></div>
+    <div class="field"><label class="label" for="f-street">${label}</label><input class="input" id="f-street" data-bind="street" value="${esc(B.street)}" placeholder="${venue ? "e.g. Oriental Hotel, or 5 Admiralty Way" : "House number and street"}" autocomplete="street-address"></div>
+    <div class="field"><label class="label" for="f-land">Landmark <span class="muted" style="font-weight:400">(optional)</span></label><input class="input" id="f-land" data-bind="landmark" value="${esc(B.landmark)}" placeholder="e.g. opposite the filling station"></div>
+  </div>`;
+}
+function waitlistBlock() {
+  return `<div class="note">${icon("calendar-x", 20)}<div style="display:grid;gap:10px"><span><b>This day is fully booked.</b> Join the waitlist and ${esc(biz.name)} will message you on WhatsApp if a place opens. Or pick another day.</span>
+    <button class="btn btn-ink btn-sm" data-act="waitlist" style="justify-self:start">Join the waitlist</button></div></div>`;
+}
+
+/* ---------- Move or cancel ---------- */
+function sheet(html) {
+  document.getElementById("layer").innerHTML = `<div class="sheet-wrap ${biz ? biz.theme : ""}" data-act="closesheet"><div class="sheet pad" role="dialog" aria-modal="true" data-stop><div class="grab"></div>${html}</div></div>`;
+  paint();
+}
+const closeSheet = () => { document.getElementById("layer").innerHTML = ""; };
+const sheetHead = (t) => `<div class="sheet-head"><h2>${t}</h2><button class="iconbtn" data-act="closesheet" aria-label="Close">${icon("x", 22)}</button></div>`;
+function changeSheet() {
+  const p = prices();
+  const ruleMove = biz.rules.find((r) => r.startsWith("To move")) || "";
+  sheet(`${sheetHead("Move or cancel")}
+    <div class="note plain">${icon("info", 20)}<span>${esc(ruleMove)}</span></div>
+    <button class="opt" data-act="move"><span class="box" style="border:0;color:var(--ink)">${icon("calendar-clock", 22)}</span><span><b>Move to another ${B.svc.event ? "date" : "time"}</b><span class="muted small">Your deposit moves with it</span></span></button>
+    <button class="opt" data-act="cancelask"><span class="box" style="border:0;color:var(--bad)">${icon("calendar-x", 22)}</span><span><b>Cancel my booking</b><span class="muted small">The ${naira(p.deposit)} deposit isn't refunded</span></span></button>`);
+}
+
+/* ---------- Render + events ---------- */
+let view = "start";
+function route() { return (location.hash || "").replace("#", ""); }
+function render(keep) {
+  const y = window.scrollY;
+  const r = route();
+  if (!BIZ[r]) { view = "start"; biz = null; }
+  else if (view === "start" || biz !== BIZ[r]) { biz = BIZ[r]; view = "page"; }
+  app.innerHTML = view === "start" ? startView() : view === "page" ? pageView() : flowView();
+  paint();
+  window.scrollTo(0, keep ? y : 0);
+}
+function paint() { if (window.lucide) lucide.createIcons(); }
+let tt;
+function toast(m) { document.querySelectorAll(".toast").forEach((t) => t.remove()); const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.textContent = m; document.body.appendChild(t); clearTimeout(tt); tt = setTimeout(() => t.remove(), 2600); }
+function refreshBar() { const n = steps()[B.step], b = document.querySelector('[data-act="next"]'); if (b) b.disabled = !ok(n); }
+
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  if (el.dataset.act === "closesheet" && e.target.closest("[data-stop]") && !e.target.closest(".iconbtn")) return;
+  const a = el.dataset.act, v = el.dataset.v, i = Number(el.dataset.i);
+  const keep = () => render(true);
+  switch (a) {
+    case "go": location.hash = v; break;
+    case "home": closeSheet(); location.hash = ""; break;
+    case "book": reset(Object.keys(BIZ).find((k) => BIZ[k] === biz), v); if (B.svc.options && B.svc.options.length === 1) B.opt = 0; view = "flow"; render(); break;
+    case "closeflow": view = "page"; render(); break;
+    case "back": if (B.step === 0) { view = "page"; } else { B.step--; } render(); break;
+    case "next": {
+      const st = steps();
+      if (st[B.step] === "review") B.ref = "BK-" + Math.random().toString(36).slice(2, 7).toUpperCase();
+      if (B.moved && (st[B.step] === "datetime" || st[B.step] === "calltime")) { B.step = st.indexOf("pass"); render(); toast("Moved. Your deposit moved with it."); break; }
+      B.step = Math.min(st.length - 1, B.step + 1); render(); break;
+    }
+    case "paid": B.step++; render(); break;
+    case "opt": B.opt = i; B.time = null; keep(); break;
+    case "place": B.place = v; keep(); break;
+    case "area": B.area = v; keep(); break;
+    case "date": B.date = v; B.time = null; keep(); break;
+    case "evdate": B.date = v; keep(); break;
+    case "time": B.time = Number(v); keep(); break;
+    case "ppl": B.people[i] = Math.max(0, Math.min(10, B.people[i] + Number(v))); keep(); break;
+    case "extra": B.extras = B.extras.includes(i) ? B.extras.filter((x) => x !== i) : [...B.extras, i]; keep(); break;
+    case "ans": B.answers[el.dataset.q] = i; keep(); break;
+    case "waitlist": toast(`You're on the waitlist. ${biz.name} will message you if a place opens.`); break;
+    case "change": changeSheet(); break;
+    case "move": closeSheet(); B.step = steps().indexOf(B.svc.event ? "evdate" : "datetime"); B.moved = true; B.time = null; B.date = null; render(); toast("Pick a new " + (B.svc.event ? "date" : "time") + ". Your deposit moves with it."); break;
+    case "cancelask": sheet(`${sheetHead("Cancel this booking?")}<p style="margin:0">The ${naira(prices().deposit)} deposit isn't refunded, as the booking rules say. ${esc(biz.name)} will be told.</p>
+      <button class="btn btn-ink" data-act="cancelyes" style="background:var(--bad)">Yes, cancel it</button><button class="btn btn-line" data-act="closesheet">Keep my booking</button>`); break;
+    case "cancelyes": B.cancelled = true; closeSheet(); render(); break;
+    case "toast": toast(el.dataset.msg); break;
+    case "closesheet": closeSheet(); break;
+  }
+});
+document.addEventListener("input", (e) => {
+  const el = e.target;
+  if (el.dataset.bind) { B[el.dataset.bind] = el.value; refreshBar(); }
+  if (el.dataset.ans) { B.answers[el.dataset.ans] = el.value; refreshBar(); }
+});
+window.addEventListener("hashchange", () => { closeSheet(); view = "start"; render(); });
+render();
+</script>
