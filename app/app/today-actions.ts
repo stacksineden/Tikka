@@ -1,6 +1,7 @@
 "use server";
 
-// NEW DIRECTION, stage 2: Today and Money (docs/OWNER_JOURNEYS.md journeys 4–6). Demo store only.
+// Today and Money (docs/OWNER_JOURNEYS.md journeys 4–6). Sales, balances and expenses save to Supabase
+// for real accounts (docs/DB_MOVE.md step 4); pay links from Today are still the demo until step 6.
 
 import { revalidatePath } from "next/cache";
 import { markBooking, seedDemoDay } from "@/lib/bookings-data";

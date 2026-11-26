@@ -1,10 +1,11 @@
 import "server-only";
 
-// NEW DIRECTION, stage 2: sales, balances owed and expenses. Demo store only for now (in memory,
-// per account); real accounts get nothing and write nothing, so this never touches Supabase.
+// Sales, balances owed and expenses. Real accounts: Supabase (lib/ledger-db.ts, docs/DB_MOVE.md
+// step 4), owners only. The demo: in memory, per account.
 
 import { randomBytes } from "node:crypto";
-import { isDbId } from "./data";
+import { isDbId, memberBusinessId } from "./data";
+import { dbAddExpense, dbGetLedger, dbPayBalance, dbRecordSale, PAY_LINK_SALE } from "./ledger-db";
 import { owedOf, type ExpenseKind, type Ledger, type PayMethod, type Sale } from "./ledger";
 import type { SessionUser } from "./types";
 
@@ -16,6 +17,13 @@ function ownerKey(user: Pick<SessionUser, "id" | "role">): string | null {
   return user.id;
 }
 
+/** A real owner's business id (the database checks ownership again), else null. */
+async function realBusiness(user: Pick<SessionUser, "id" | "role">): Promise<string | null> {
+  if (user.role !== "owner" || !isDbId(user.id)) return null;
+  const id = await memberBusinessId({ ...user, businessOwnerId: undefined });
+  return id && isDbId(id) ? id : null;
+}
+
 function ledgerOf(key: string): Ledger {
   let l = store.get(key);
   if (!l) {
@@ -25,8 +33,13 @@ function ledgerOf(key: string): Ledger {
   return l;
 }
 
-/** The owner's ledger; empty for real accounts until it has a table. */
+/** The owner's ledger. Real accounts also see pay links paid online, as sales paid by pay link. */
 export async function getLedger(user: Pick<SessionUser, "id" | "role">): Promise<Ledger> {
+  const biz = await realBusiness(user);
+  if (biz) {
+    const { receipts: _r, ...ledger } = await dbGetLedger(biz);
+    return ledger;
+  }
   const key = ownerKey(user);
   return key ? structuredClone(ledgerOf(key)) : { sales: [], expenses: [], regular: [] };
 }
@@ -39,6 +52,12 @@ export async function recordSale(
   input: { name: string; item: string; totalNaira: number; paidNaira: number; method: PayMethod; bookingId?: string; phone?: string },
   now: Date,
 ): Promise<string | null> {
+  const biz = await realBusiness(user);
+  if (biz) {
+    if (input.method === "pay_link") return null; // pay links are recorded when they're paid
+    const total = kobo(input.totalNaira);
+    return dbRecordSale(biz, { name: input.name, item: input.item, totalKobo: total, paidKobo: Math.min(total, kobo(input.paidNaira)), method: input.method, bookingId: input.bookingId, phone: input.phone });
+  }
   const key = ownerKey(user);
   if (!key) return null;
   const l = ledgerOf(key);
@@ -62,6 +81,8 @@ export async function recordSale(
 
 /** What's still owed on a sale, paid now (all of it, or part). */
 export async function payBalance(user: Pick<SessionUser, "id" | "role">, saleId: string, naira: number, method: PayMethod, now: Date): Promise<boolean> {
+  const biz = await realBusiness(user);
+  if (biz) return method !== "pay_link" && isDbId(saleId) && !saleId.startsWith(PAY_LINK_SALE) ? dbPayBalance(biz, saleId, kobo(naira), method) : false;
   const key = ownerKey(user);
   if (!key) return false;
   const s = ledgerOf(key).sales.find((x) => x.id === saleId);
@@ -73,6 +94,8 @@ export async function payBalance(user: Pick<SessionUser, "id" | "role">, saleId:
 
 /** Something spent: once, or a regular cost counted every week or month from today. */
 export async function addExpense(user: Pick<SessionUser, "id" | "role">, input: { kind: ExpenseKind; naira: number; every?: "week" | "month" }, now: Date): Promise<boolean> {
+  const biz = await realBusiness(user);
+  if (biz) return input.naira > 0 ? dbAddExpense(biz, input.kind, kobo(input.naira), input.every) : false;
   const key = ownerKey(user);
   if (!key || !(input.naira > 0)) return false;
   const l = ledgerOf(key);
