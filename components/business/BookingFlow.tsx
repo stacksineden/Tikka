@@ -99,6 +99,8 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [waitlisted, setWaitlisted] = useState(false);
+  // A general "Book" (not on one service): pick the service first, like a menu.
+  const [picking, setPicking] = useState(false);
 
   function start(s: ServiceItem) {
     setSvc(s);
@@ -139,8 +141,16 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
       const el = (e.target as Element | null)?.closest<HTMLElement>("[data-book]");
       if (!el) return;
       e.preventDefault();
-      const chosen = services.find((s) => s.id === el.dataset.bookId) ?? services[0];
-      start(chosen);
+      const chosen = services.find((s) => s.id === el.dataset.bookId);
+      if (chosen || services.length === 1) {
+        setPicking(false);
+        start(chosen ?? services[0]);
+      } else {
+        // Book with no service named: show the services first, never pick one for them.
+        setSvc(null);
+        setPicking(true);
+        if (!ref.current?.open) ref.current?.showModal();
+      }
     }
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
@@ -211,7 +221,8 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
     ref.current?.close();
   }
   function back() {
-    if (index <= 0) return close();
+    // Back from a service's first step returns to the list it was picked from.
+    if (index <= 0) return picking ? (setError(""), setSvc(null)) : close();
     setError("");
     setStep(steps[index - 1]);
   }
@@ -288,6 +299,7 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
   return (
     <dialog ref={ref} aria-label="Book" data-theme={theme.tone} style={theme.vars as React.CSSProperties} className="sheet m-0 mt-auto h-dvh max-h-none w-full max-w-none bg-transparent p-0 text-ink sm:mx-auto sm:max-w-[480px]">
       {tikka && !svc && <TikkaStart tikka={tikka} business={b.name} services={services} onPick={start} onClose={close} />}
+      {!tikka && !svc && picking && <ServicePick business={b.name} services={services} onPick={start} onClose={close} />}
       {svc && price && (
         <div className="flex h-full flex-col bg-surface text-ink">
           {step !== "pay" ? (
@@ -645,6 +657,43 @@ function hours(m: number) {
   if (m < 60) return `${m} min`;
   if (m % 60 === 0) return `${m / 60} hour${m === 60 ? "" : "s"}`;
   return `${Math.floor(m / 60)}h ${m % 60}m`;
+}
+
+/** A general "Book": every service with its time and price, grouped like the page; picking one starts its booking. */
+function ServicePick({ business, services, onPick, onClose }: { business: string; services: ServiceItem[]; onPick: (s: ServiceItem) => void; onClose: () => void }) {
+  const groups = [...new Set(services.map((s) => s.group ?? ""))];
+  const price = (s: ServiceItem) => {
+    const low = s.options?.length ? Math.min(...s.options.map((o) => o.price)) : s.price;
+    if (s.priceKind === "ask" || low === null || low === undefined) return "Ask";
+    return `${s.priceKind === "from" || (s.options?.length ?? 0) > 1 ? "From " : ""}${naira(low)}`;
+  };
+  return (
+    <div className="flex h-full flex-col bg-surface text-ink">
+      <div className="flex justify-end border-b border-line px-2 py-2">
+        <button type="button" onClick={onClose} aria-label="Close" className="grid size-11 place-items-center rounded-pill">
+          <X size={22} aria-hidden="true" />
+        </button>
+      </div>
+      <div className="grid flex-1 content-start gap-5 overflow-y-auto px-4 pt-5 pb-6">
+        <div className="grid gap-1">
+          <span className="text-caption font-semibold tracking-[0.08em] uppercase" style={{ color: "var(--bf-acc)" }}>
+            {business}
+          </span>
+          <h2 className="biz-serif text-[28px] leading-[1.1]">What would you like?</h2>
+        </div>
+        {groups.map((g) => (
+          <div key={g || "all"} className="grid gap-2.5">
+            {g && groups.length > 1 && <h3 className="text-label text-ink-muted">{g}</h3>}
+            {services
+              .filter((s) => (s.group ?? "") === g)
+              .map((s) => (
+                <Opt key={s.id} on={false} onClick={() => onPick(s)} title={s.name} sub={s.eventDay ? "A whole day" : s.minutes ? `About ${hours(s.minutes)}` : undefined} price={price(s)} />
+              ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function Opt({ on, onClick, title, sub, price }: { on: boolean; onClick: () => void; title: string; sub?: string; price?: string }) {

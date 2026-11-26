@@ -22,7 +22,7 @@ Three questions, like Airbnb's Where / When / Who, in the order a customer think
 ## 2. The homepage, top to bottom
 
 1. **Header:** the Tikka logo, "For businesses", "Sign in" (for businesses), a menu.
-2. **Hero:** "Book trusted pros near you" / "Hair, makeup, nails, lashes and photographers across Nigeria. See who's free, book in a minute, and pay a small deposit to hold your time." Then the search. The headline stays as Tikka adds kinds of business; only the line under it and the category row change (decided 26 Nov 2026).
+2. **Hero:** "Book local beauty and photo services" / "Hair, makeup, nails, lashes and photographers across Nigeria. See who's free, book in a minute, and pay a small deposit to hold your time." Then the search. The headline stays as Tikka adds kinds of business; only the line under it and the category row change (decided 26 Nov 2026).
 3. **Categories:** a row of trades with icons, swipeable on phones. Tapping one fills "What".
 4. **Rows of businesses** (swipeable on phones, like Airbnb's rows):
    - "Free tomorrow near you"
@@ -51,6 +51,6 @@ Today's landing page, rewritten for the new direction, in this order: the hero (
 
 ## 5. Decisions for Samuel
 
-1. **The headline (decided 26 Nov 2026):** "Book trusted pros near you", with today's trades named in the line under it. New kinds of business are added when there are businesses in them (the categories and setup already work by trade), not all at once like Fresha's list.
+1. **The headline (decided 26 Nov 2026):** "Book local beauty and photo services", with today's trades named in the line under it. New kinds of business are added when there are businesses in them (the categories and setup already work by trade), not all at once like Fresha's list.
 2. **A city with nobody yet (decided 26 Nov 2026):** "Nobody in Lagos yet. Tikka is new there. Here's who's free soonest, including people who come to you." Then those businesses, the ones that come to you first.
 3. **The old landing page (decided 26 Nov 2026):** launch the homepage and the rewritten "For businesses" together, at the merge. The old drops-first page is never moved as it is.

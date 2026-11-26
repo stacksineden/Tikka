@@ -85,6 +85,8 @@ People see your work on Instagram and WhatsApp, send "How much?", then disappear
 
 ## 8. Pricing
 
+**Revised 26 Nov 2026 (Samuel: the table was confusing):** two plain lists. Free: your website, bookings and your calendar, Today and Money, your customer list, receipts and business cards, your first drop. Paid: deposits and pay links (1% of each payment plus Paystack's fee), each drop after your first, 3 drops at once. The photo limits and the guarantee move out of this section. The original table below is kept for reference.
+
 **Heading:** Free to run your business. Pay for drops when you want new customers.
 
 | | Price |
@@ -127,7 +129,7 @@ People see your work on Instagram and WhatsApp, send "How much?", then disappear
 
 ## Questions for Samuel
 
-1. ~~The hero line~~: decided 26 Nov 2026, "Your posts get views. Tikka turns them into bookings." 
+1. ~~The hero line~~: decided 26 Nov 2026, revised the same day to "Turn \"How much?\" into a paid booking" (the first pick read too much like an ad line).
 2. ~~"About 10 minutes"~~: kept (decided 26 Nov 2026).
 3. ~~Tikka Studio~~: kept as a strip near the end (decided 26 Nov 2026).
 4. **Founding prices:** admin shows the founding prices equal to the normal ones (₦10,000 a drop, ₦25,000 a pack), while the project notes say ₦5,000 and ₦12,000. The page follows admin either way; is the discount meant to be off now?

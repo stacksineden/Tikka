@@ -1,8 +1,7 @@
-import { ArrowRight, BadgeCheck, CalendarCheck, Car, Check, Clock3, Globe, Layers, QrCode, ReceiptText, Smartphone, Users, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowRight, CalendarCheck, Car, Check, Clock3, Globe, Layers, QrCode, ReceiptText, Smartphone, Users, Wallet, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { Tick } from "@/components/tikka/glyphs";
 import { count } from "@/lib/format";
-import { PORTFOLIO_FREE, PORTFOLIO_OPEN } from "@/lib/portfolio";
 import { paidTier, priceLabel, type DropPack, type DropTier } from "@/lib/pricing";
 
 // "For businesses" (usetikka.com/business), the wording agreed in docs/BUSINESS_PAGE_COPY.md: the
@@ -54,7 +53,7 @@ export function BizHero() {
       <div className="max-w-xl">
         <Eyebrow onNight>For hair, makeup, nails, lashes and photographers across Nigeria</Eyebrow>
         <h1 className="mt-4 text-[36px] leading-[40px] font-extrabold tracking-[-0.03em] text-on-night sm:text-display-xl sm:leading-[58px] sm:tracking-[-0.025em]">
-          Your posts get views. Tikka turns them into bookings.
+          Turn &ldquo;How much?&rdquo; into a paid booking
         </h1>
         <p className="text-body-lg mt-5 max-w-lg text-on-night-muted">A free website people book from, deposits that stop no-shows, and knowing what you made each week. All from your phone.</p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -85,7 +84,7 @@ export function BizProblem() {
   return (
     <section className="border-b border-line bg-surface px-5 py-10 sm:px-6 sm:py-14">
       <p className="text-heading mx-auto max-w-3xl text-center text-balance">
-        People see your work on Instagram and WhatsApp, send &ldquo;How much?&rdquo;, then disappear. Or they book and don&apos;t come.
+        Right now, people see your work on Instagram and WhatsApp, ask the price in your DMs, then disappear. Or they book and don&apos;t come.
       </p>
     </section>
   );
@@ -248,38 +247,51 @@ export function BizPricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPac
   const drop = paidTier(tiers);
   const pack = cheapestPack(packs);
   const founding = (normal: number, f?: number | null) => (f && f < normal ? ` (founding members ${priceLabel(f)})` : "");
-  const rows: [string, string][] = [
-    ["Website, bookings, Today, Money, your customer list, receipts, business cards", "Free"],
-    ["Deposits and pay links", "1% of each payment, plus Paystack's fee"],
-    ["Your first drop", "Free"],
-    ...(drop ? ([["Each drop after that", `${priceLabel(drop.priceKobo)}, whatever its size${founding(drop.priceKobo, drop.foundingPriceKobo)}`]] as [string, string][]) : []),
-    ...(pack ? ([[`A season pack of ${count(pack.drops)} drops`, `${priceLabel(pack.priceKobo)}${founding(pack.priceKobo, pack.foundingPriceKobo)}`]] as [string, string][]) : []),
+  // Two plain lists: what's free, and what you pay for (docs/BUSINESS_PAGE_COPY.md, revised 26 Nov 2026).
+  const free = [
+    "Your website at usetikka.com/yourname",
+    "Bookings and your calendar",
+    "Today and Money",
+    "Your customer list",
+    "Receipts and business cards",
+    "Your first drop",
   ];
-  const min = drop?.guaranteeMinRedemptions;
+  const paid: [string, string][] = [
+    ["Deposits and pay links", "1% of each payment, plus Paystack's fee"],
+    ...(drop ? ([["Each drop after your first", `${priceLabel(drop.priceKobo)}${founding(drop.priceKobo, drop.foundingPriceKobo)}`]] as [string, string][]) : []),
+    ...(pack ? ([[`${count(pack.drops)} drops at once`, `${priceLabel(pack.priceKobo)}${founding(pack.priceKobo, pack.foundingPriceKobo)}`]] as [string, string][]) : []),
+  ];
   return (
     <section id="pricing" className="scroll-mt-6 border-t border-line bg-surface-sunken px-5 py-14 sm:px-6 sm:py-20">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-5xl">
         <Eyebrow>Pricing</Eyebrow>
-        <h2 className="mt-3 text-heading sm:text-display-lg">Free to run your business. Pay for drops when you want new customers.</h2>
-        <dl className="mt-8 divide-y divide-line overflow-hidden rounded-card border border-line bg-surface-raised">
-          {rows.map(([what, price]) => (
-            <div key={what} className="grid gap-1 px-5 py-4 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-6">
-              <dt className="text-body font-semibold">{what}</dt>
-              <dd className="text-body text-ink-muted sm:text-right">{price}</dd>
-            </div>
-          ))}
-        </dl>
-        <p className="text-body mt-5 text-ink-muted">
-          Your free page holds {PORTFOLIO_FREE.items} photos and {PORTFOLIO_FREE.videos} videos. While you have a paid drop running, or a season pack with drops left, it holds {PORTFOLIO_OPEN.items} photos and {PORTFOLIO_OPEN.videos} videos in up to {PORTFOLIO_OPEN.collections} collections (founding members always). Nothing is ever deleted when that ends.
-        </p>
-        {min ? (
-          <p id="guarantee" className="text-body mt-4 flex items-start gap-2.5 rounded-md bg-gold-soft px-4 py-3">
-            <BadgeCheck size={20} className="mt-0.5 shrink-0 text-gold-text" aria-hidden="true" />
-            <span>
-              <b>The guarantee:</b> if a paid drop brings fewer than {count(min)} customers through your door, your next drop is free. Share it in at least 3 places. Once per business.
-            </span>
-          </p>
-        ) : null}
+        <h2 className="mt-3 text-heading sm:text-display-lg">What&apos;s free, and what you pay for</h2>
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          <div className="rounded-card border border-line bg-surface-raised p-6">
+            <h3 className="text-title">Free</h3>
+            <p className="text-caption mt-1 text-ink-muted">No monthly fee. No card needed to start.</p>
+            <ul className="mt-5 grid gap-3">
+              {free.map((f) => (
+                <li key={f} className="text-body flex items-start gap-2.5">
+                  <Check size={20} className="mt-0.5 shrink-0 text-success" aria-hidden="true" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-card border border-line bg-surface-raised p-6">
+            <h3 className="text-title">Paid</h3>
+            <p className="text-caption mt-1 text-ink-muted">Only when money comes in, or when you want new customers.</p>
+            <dl className="mt-5 grid gap-4">
+              {paid.map(([what, price]) => (
+                <div key={what}>
+                  <dt className="text-body font-semibold">{what}</dt>
+                  <dd className="text-body text-ink-muted">{price}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
         <Link href="/sign-up" className="btn btn-lg mt-8">
           Start free <ArrowRight aria-hidden="true" />
         </Link>

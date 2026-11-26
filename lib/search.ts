@@ -148,3 +148,39 @@ export function matchPlaces(typed: string, limit = 8): { label: string; hint: st
   }
   return out.slice(0, limit);
 }
+
+/* ------------------------------------------------------------ open now (the listing page) */
+
+type Day = { open: boolean; from: string; to: string };
+type Hours = { weekdays: Day; saturday: Day; sunday: Day };
+
+const mins = (hhmm: string) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + (m || 0);
+};
+const clock = (hhmm: string) => {
+  const t = mins(hhmm);
+  const h = Math.floor(t / 60);
+  const m = t % 60;
+  return `${h % 12 || 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h < 12 ? "am" : "pm"}`;
+};
+const dayOf = (h: Hours, dow: number): Day => (dow === 0 ? h.sunday : dow === 6 ? h.saturday : h.weekdays);
+
+/** "Open until 7pm", "Opens 9am", "Opens tomorrow at 9am", "Opens Monday at 9am", or null without hours. */
+export function openLabel(hours: Hours | undefined | null, now: Date): { open: boolean; text: string } | null {
+  if (!hours) return null;
+  const wat = new Date(now.getTime() + 3_600_000);
+  const dow = wat.getUTCDay();
+  const minute = wat.getUTCHours() * 60 + wat.getUTCMinutes();
+  const today = dayOf(hours, dow);
+  if (today.open && minute >= mins(today.from) && minute < mins(today.to)) return { open: true, text: `Open until ${clock(today.to)}` };
+  if (today.open && minute < mins(today.from)) return { open: false, text: `Opens ${clock(today.from)}` };
+  for (let i = 1; i <= 7; i++) {
+    const d = dayOf(hours, (dow + i) % 7);
+    if (d.open) {
+      const name = i === 1 ? "tomorrow" : ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][(dow + i) % 7];
+      return { open: false, text: `Opens ${name} at ${clock(d.from)}` };
+    }
+  }
+  return null;
+}

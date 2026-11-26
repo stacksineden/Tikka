@@ -16,7 +16,7 @@ import { searchBusinesses, type BizCard as Card } from "@/lib/search-db";
 // search first (what, where, when), then the kinds of business, rows of businesses with their next
 // free time, the offers (drops), how it works, and the way in for businesses.
 
-const TITLE = "Tikka · Book trusted pros near you";
+const TITLE = "Tikka · Book local beauty and photo services";
 const DESCRIPTION = "Hair, makeup, nails, lashes and photographers across Nigeria. See who's free, book in a minute, and pay a small deposit to hold your time.";
 
 export const metadata: Metadata = {
@@ -76,7 +76,7 @@ export default function HomePage() {
       <HomeHeader />
       <main className="overflow-x-clip">
         <div className="mx-auto max-w-6xl px-4 pt-7 pb-2 text-center sm:px-6 md:pt-16">
-          <h1 className="mx-auto max-w-[14ch] text-[clamp(34px,7vw,64px)] leading-[1.02] font-bold tracking-[-0.03em]">Book trusted pros near you</h1>
+          <h1 className="mx-auto max-w-[14ch] text-[clamp(34px,7vw,64px)] leading-[1.02] font-bold tracking-[-0.03em]">Book local beauty and photo services</h1>
           <p className="mx-auto mt-3.5 max-w-[46ch] text-[clamp(16px,2.2vw,20px)] leading-normal text-ink-muted">{DESCRIPTION}</p>
           <SearchBox />
         </div>

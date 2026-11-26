@@ -4,7 +4,7 @@ import { TRADES } from "@/lib/presets";
 import { freeLabel } from "@/lib/search";
 import type { BizCard as Card } from "@/lib/search-db";
 
-// One business in the homepage rows and the results: its photo, name, place, rating, starting price
+// One business in the homepage rows and the results (it opens the business's listing, /book/[slug]): its photo, name, place, rating, starting price
 // and, the part a directory can't show, when it's next free.
 
 const naira = (n: number) => "₦" + Math.round(n).toLocaleString("en-NG");
@@ -13,7 +13,7 @@ export function BizCard({ b, now, wide = false }: { b: Card; now: Date; wide?: b
   const trade = TRADES.find((t) => b.trades.includes(t.id))?.name ?? b.category;
   const place = b.onlyComesToYou ? `Comes to you · ${b.city}` : `${b.area}, ${b.city}`;
   return (
-    <Link href={`/${b.slug}`} className={`group block ${wide ? "" : "snap-start"}`}>
+    <Link href={`/book/${b.slug}`} className={`group block ${wide ? "" : "snap-start"}`}>
       <div className="relative aspect-[4/3] overflow-hidden rounded-card bg-surface-sunken">
         {b.coverUrl ? (
           <img src={b.coverUrl} alt="" loading="lazy" className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />

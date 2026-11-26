@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayRange, freeLabel, matchPlaces, parseSearch, searchHref, whenLabel } from "./search";
+import { dayRange, freeLabel, matchPlaces, openLabel, parseSearch, searchHref, whenLabel } from "./search";
 
 // Thursday 26 November 2026, 13:00 WAT.
 const now = new Date("2026-11-26T12:00:00Z");
@@ -52,5 +52,18 @@ describe("places", () => {
     expect(m[0]).toEqual({ label: "Ibadan", hint: "Oyo" });
     expect(matchPlaces("lagos").map((p) => p.label)).toContain("Lagos");
     expect(matchPlaces("")).toEqual([]);
+  });
+});
+
+
+describe("open now", () => {
+  const hours = { weekdays: { open: true, from: "09:00", to: "19:00" }, saturday: { open: true, from: "10:00", to: "16:30" }, sunday: { open: false, from: "09:00", to: "18:00" } };
+  it("says until when, or when it opens", () => {
+    expect(openLabel(hours, now)).toEqual({ open: true, text: "Open until 7pm" }); // Thursday 13:00
+    expect(openLabel(hours, new Date("2026-11-26T06:00:00Z"))).toEqual({ open: false, text: "Opens 9am" }); // 07:00
+    expect(openLabel(hours, new Date("2026-11-26T19:30:00Z"))).toEqual({ open: false, text: "Opens tomorrow at 9am" }); // 20:30
+    expect(openLabel(hours, new Date("2026-11-28T17:00:00Z"))).toEqual({ open: false, text: "Opens Monday at 9am" }); // Saturday 18:00
+    expect(openLabel(hours, new Date("2026-11-28T12:00:00Z"))).toEqual({ open: true, text: "Open until 4:30pm" });
+    expect(openLabel(undefined, now)).toBeNull();
   });
 });

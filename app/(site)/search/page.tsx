@@ -15,7 +15,7 @@ import { searchBusinesses } from "@/lib/search-db";
 
 export async function generateMetadata({ searchParams }: PageProps<"/search">): Promise<Metadata> {
   const s = parseSearch(await searchParams);
-  const what = whatLabel(s) || "Book trusted pros";
+  const what = whatLabel(s) || "Beauty and photo services";
   return { title: `${what}${s.where ? ` in ${s.where}` : ""}`, robots: { index: false, follow: true } };
 }
 

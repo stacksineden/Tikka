@@ -7,7 +7,7 @@ import { getDropPacks, getDropTiers } from "@/lib/data";
 // "For businesses" (usetikka.com/business): the wording agreed in docs/BUSINESS_PAGE_COPY.md.
 // usetikka.com itself is the customer search (docs/HOMEPAGE_PLAN.md).
 
-const TITLE = "Tikka for businesses · Your posts get views. Tikka turns them into bookings.";
+const TITLE = "Tikka for businesses · Turn \"How much?\" into a paid booking";
 const DESCRIPTION = "A free website people book from, deposits that stop no-shows, and knowing what you made each week. For hair, makeup, nails, lashes and photographers across Nigeria.";
 
 export const metadata: Metadata = {
