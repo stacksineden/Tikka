@@ -19,7 +19,7 @@ function Eyebrow({ children, onNight = false }: { children: React.ReactNode; onN
 
 export function BizHero() {
   return (
-    <section className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] items-center gap-10 px-5 pt-6 pb-14 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:pt-10 lg:pb-20">
+    <section className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] items-center gap-10 px-5 pt-6 pb-10 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:pt-6 lg:pb-14">
       <div className="max-w-xl">
         <Eyebrow onNight>For hair, makeup, nails, lashes and photographers across Nigeria</Eyebrow>
         <h1 className="mt-4 text-[36px] leading-[40px] font-extrabold tracking-[-0.03em] text-on-night sm:text-display-xl sm:leading-[58px] sm:tracking-[-0.025em]">

@@ -31,7 +31,7 @@ function AskScene() {
           <span className="text-[11px] text-ink-muted">Message from your post</span>
         </span>
       </div>
-      <div className="flex flex-1 flex-col gap-2.5 px-3.5 py-4 text-[13px] leading-snug">
+      <div className="flex flex-1 flex-col gap-2 px-3 py-3 text-[13px] leading-snug">
         <p className="max-w-[78%] self-start rounded-2xl rounded-bl-md bg-surface-sunken px-3.5 py-2.5">Hi! How much for knotless braids? 😍 Are you free this weekend?</p>
         <p className="hd-pop max-w-[78%] self-end rounded-2xl rounded-br-md bg-brand px-3.5 py-2.5 text-on-brand" style={at(0, 1.2)}>
           Prices and my free times are here. Book any time 👇
@@ -55,7 +55,7 @@ function AskScene() {
 function BookScene() {
   const slots = ["9:00am", "10:30am", "1:00pm", "3:30pm"];
   return (
-    <div className="hd-scene flex flex-col bg-surface px-4 pt-4">
+    <div className="hd-scene flex flex-col bg-surface px-3.5 pt-3.5">
       <div className="flex items-center gap-2.5">
         <Avatar initials="AB" />
         <span>
@@ -63,17 +63,17 @@ function BookScene() {
           <span className="text-[11px] text-ink-muted">Bodija, Ibadan · ★ 4.9</span>
         </span>
       </div>
-      <div className="mt-4 rounded-md border border-line bg-surface-raised p-3">
+      <div className="mt-3 rounded-md border border-line bg-surface-raised p-2.5">
         <div className="flex justify-between text-[13px] font-semibold">
           <span>Knotless braids · medium</span>
           <span>₦15,000</span>
         </div>
         <span className="text-[11px] text-ink-muted">4 hours · ₦4,500 deposit to book</span>
       </div>
-      <p className="mt-4 text-[11px] font-semibold text-ink-muted">Free on Saturday</p>
-      <div className="mt-2 grid grid-cols-2 gap-2">
+      <p className="mt-3 text-[11px] font-semibold text-ink-muted">Free on Saturday</p>
+      <div className="mt-1.5 grid grid-cols-2 gap-1.5">
         {slots.map((s, i) => (
-          <span key={s} className="relative rounded-pill border border-line-strong py-2 text-center text-[12px] font-semibold">
+          <span key={s} className="relative rounded-pill border border-line-strong py-1.5 text-center text-[12px] font-semibold">
             {s}
             {i === 1 && (
               <span className="hd-tap absolute inset-[-1px] grid place-items-center rounded-pill bg-ink text-surface" style={at(4, 1.2)}>
@@ -83,13 +83,12 @@ function BookScene() {
           </span>
         ))}
       </div>
-      <div className="hd-pop mt-4 grid gap-1.5 rounded-md border border-line bg-surface-raised p-3 text-[12px]" style={at(4, 1.8)}>
+      <div className="hd-pop mt-3 grid gap-1 rounded-md border border-line bg-surface-raised p-2.5 text-[12px]" style={at(4, 1.8)}>
         <span className="text-[11px] font-semibold text-ink-muted">Your details</span>
         <span className="flex justify-between"><span className="text-ink-muted">Name</span><b>Aisha O.</b></span>
         <span className="flex justify-between"><span className="text-ink-muted">WhatsApp</span><b>0803 ••• ••12</b></span>
       </div>
-      <p className="mt-3 text-[11px] leading-snug text-ink-muted">Move with 24 hours&apos; notice. The deposit isn&apos;t refunded if you cancel.</p>
-      <span className="hd-press mt-auto mb-5 block rounded-pill bg-brand py-3 text-center text-[13px] font-semibold text-on-brand" style={at(4, 2.4)}>
+      <span className="hd-press mt-auto mb-4 block rounded-pill bg-brand py-2.5 text-center text-[13px] font-semibold text-on-brand" style={at(4, 2.4)}>
         Pay ₦4,500 deposit
       </span>
     </div>
@@ -99,7 +98,7 @@ function BookScene() {
 /** 3. Booked: the customer's pass, and the owner's phone buzzing with the deposit. */
 function PaidScene() {
   return (
-    <div className="hd-scene flex flex-col bg-surface px-4 pt-16">
+    <div className="hd-scene flex flex-col bg-surface px-3.5 pt-14">
       <div className="hd-drop absolute inset-x-2.5 top-2.5 z-10 rounded-xl border border-line bg-surface-raised p-3 shadow-card" style={at(8, 0.8)}>
         <div className="flex items-center gap-1.5 text-[10px] font-semibold tracking-wide text-ink-muted uppercase">
           <span className="grid size-4 place-items-center rounded bg-brand text-[9px] text-on-brand">t</span> Tikka · now
@@ -107,14 +106,14 @@ function PaidScene() {
         <b className="mt-1 block text-[13px]">₦4,500 deposit paid</b>
         <span className="block text-[12px] leading-snug text-ink-muted">Aisha booked Knotless braids, Saturday 10:30am</span>
       </div>
-      <div className="mt-6 grid justify-items-center text-center">
-        <span className="grid size-14 place-items-center rounded-pill bg-success-soft text-success">
+      <div className="mt-3 grid justify-items-center text-center">
+        <span className="grid size-12 place-items-center rounded-pill bg-success-soft text-success">
           <Check size={28} aria-hidden="true" />
         </span>
         <b className="mt-3 text-[18px]">You&apos;re booked</b>
         <span className="text-[12px] text-ink-muted">Adunni Braids · Bodija, Ibadan</span>
       </div>
-      <dl className="mt-5 grid gap-2 rounded-md border border-line bg-surface-raised p-3 text-[12px]">
+      <dl className="mt-4 grid gap-1.5 rounded-md border border-line bg-surface-raised p-3 text-[12px]">
         {[
           ["When", "Saturday, 10:30am"],
           ["Service", "Knotless braids · medium"],
@@ -137,9 +136,9 @@ function PaidScene() {
 /** 4. Her Today and the week's money. */
 function WeekScene() {
   const coming = [
-    ["10:30", "Aisha", "Knotless braids", "Deposit paid"],
-    ["2:00", "Tolu", "Silk press", "Deposit paid"],
-    ["4:30", "Kemi", "Wig install", "₦8,000 to collect"],
+    ["10:30", "Aisha", "Braids", "Paid ₦4,500"],
+    ["2:00", "Tolu", "Silk press", "Paid ₦3,000"],
+    ["4:30", "Kemi", "Wig install", "₦8,000 due"],
   ];
   const money = [
     ["In", "₦186,500", "w-full"],
@@ -147,10 +146,10 @@ function WeekScene() {
     ["Kept", "₦154,500", "w-[83%]"],
   ];
   return (
-    <div className="hd-scene flex flex-col bg-surface px-4 pt-4">
+    <div className="hd-scene flex flex-col bg-surface px-3.5 pt-3.5">
       <b className="text-[16px]">Today</b>
       <span className="text-[11px] text-ink-muted">Saturday · 3 coming</span>
-      <ul className="mt-3 grid gap-2">
+      <ul className="mt-2.5 grid gap-1.5">
         {coming.map(([t, n, s, p], i) => (
           <li key={n} className="hd-pop flex items-center gap-2.5 rounded-md border border-line bg-surface-raised px-3 py-2" style={at(12, 0.3 + i * 0.35)}>
             <span className="font-mono text-[11px] text-ink-muted">{t}</span>
@@ -158,13 +157,13 @@ function WeekScene() {
               <b className="block text-[12px] leading-tight">{n}</b>
               <span className="block truncate text-[11px] text-ink-muted">{s}</span>
             </span>
-            <span className={`shrink-0 rounded-pill px-2 py-0.5 text-[10px] font-semibold ${p.startsWith("Deposit") ? "bg-success-soft text-success" : "bg-gold-soft text-gold-text"}`}>{p}</span>
+            <span className={`shrink-0 rounded-pill px-2 py-0.5 text-[10px] font-semibold ${p.startsWith("Paid") ? "bg-success-soft text-success" : "bg-gold-soft text-gold-text"}`}>{p}</span>
           </li>
         ))}
       </ul>
-      <div className="mt-4 rounded-md border border-line bg-surface-raised p-3">
+      <div className="mt-3 rounded-md border border-line bg-surface-raised p-2.5">
         <b className="text-[12px]">This week</b>
-        <div className="mt-2 grid gap-2">
+        <div className="mt-1.5 grid gap-1.5">
           {money.map(([k, v, w], i) => (
             <div key={k}>
               <div className="flex justify-between text-[11px]">
@@ -178,7 +177,7 @@ function WeekScene() {
           ))}
         </div>
       </div>
-      <nav className="mt-auto -mx-4 grid grid-cols-5 border-t border-line bg-surface-raised py-2 text-center text-[10px] text-ink-muted">
+      <nav className="mt-auto -mx-3.5 grid grid-cols-5 border-t border-line bg-surface-raised py-2 text-center text-[10px] text-ink-muted">
         {["Today", "Calendar", "Customers", "Money", "More"].map((t, i) => (
           <span key={t} className={i === 0 ? "font-bold text-brand" : ""}>
             {t}
@@ -192,8 +191,8 @@ function WeekScene() {
 export function HeroDemo() {
   return (
     <figure className="grid justify-items-center gap-5" aria-label="How a booking reaches you on Tikka: they ask the price, pick a free time and pay a deposit, and you see your week.">
-      <div aria-hidden="true" className="w-[272px] rounded-[40px] border-[10px] border-night-raised bg-night-raised shadow-card sm:w-[300px]">
-        <div data-theme="light" className="hd-screen h-[520px] rounded-[30px] text-ink sm:h-[560px]">
+      <div aria-hidden="true" className="w-[248px] rounded-[34px] border-[8px] border-night-raised bg-night-raised shadow-card sm:w-[264px]">
+        <div data-theme="light" className="hd-screen h-[420px] rounded-[26px] text-ink sm:h-[440px]">
           <AskScene />
           <BookScene />
           <PaidScene />
