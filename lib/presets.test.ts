@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { depositOn, presetRules, presetServices, priceScale, roundNaira, tradeCategory, travelFeeFor } from "./presets";
+import { depositOn, presetRules, presetServices, priceScale, roundNaira, TRADES, tradeCategory, travelFeeFor } from "./presets";
 
 describe("presets", () => {
   it("scales prices by place and rounds to ₦500", () => {
@@ -41,5 +41,21 @@ describe("presets", () => {
     expect(tradeCategory(["photo", "makeup"])).toBe("Beauty");
     expect(travelFeeFor("Lagos")).toBe(5000);
     expect(travelFeeFor("Oyo")).toBe(3000);
+  });
+
+  it("gives every trade examples, at least three services and unique service names", () => {
+    for (const t of TRADES) {
+      expect(t.examples.length).toBeGreaterThan(0);
+      const names = presetServices([t.id], "Lagos").services.map((s) => s.item.name);
+      expect(names.length).toBeGreaterThanOrEqual(3);
+      expect(new Set(names).size).toBe(names.length);
+    }
+  });
+
+  it("treats content studios like photographers", () => {
+    expect(tradeCategory(["content"])).toBe("Photography");
+    expect(tradeCategory(["content", "photo", "video"])).toBe("Photography");
+    const { services } = presetServices(["content"], "Lagos");
+    expect(services.filter((s) => s.on).map((s) => s.item.name)).toEqual(["Content day", "Product shoot", "Reels package"]);
   });
 });

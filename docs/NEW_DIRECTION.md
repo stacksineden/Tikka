@@ -26,9 +26,10 @@ The rule behind it (the founder's): a real problem, a solution already proven el
 
 ## 3. Who it's for
 
-- **Mega-niche: "Look good and celebrate".** Everyday looks (hair, makeup, nails, lashes and brows, barbers, spas) and big days (bridal makeup, gele, photographers and videographers; later tailors for aso ebi, decorators, cakes). Same customer, they refer each other, and a bride books several of them for one date.
+- **Mega-niche: "Look good and celebrate".** Everyday looks (hair, makeup, nails, lashes and brows, barbers, spas) and big days (bridal makeup, gele, photographers and videographers; later tailors for aso ebi, decorators, cakes), plus content studios (added 26 Nov 2026: reels, product and brand shoots, studio hire, podcasts; they sell to brands and creators, book time slots and days, and use the photographers' page styles). Same customer, they refer each other, and a bride books several of them for one date.
 - **Every size:** solo artists come for the free website and deposits; salons with staff and a front desk switch because Tikka is cheaper, built for naira and WhatsApp, and easy to move to. Most businesses still run on DMs and notebooks.
-- **Order:** beauty and photography now; gele, bridal and videographers next; tailors, decorators and cakes once **Orders** exists (they sell orders with a due date, not time slots).
+- **Order:** beauty and photography (with content studios) now; gele, bridal and videographers next; tailors, decorators and cakes once **Orders** exists (they sell orders with a due date, not time slots).
+- **The trades and their ready-made services** are in `lib/presets.ts` (`TRADES`, `SERVICES`, `EXTRAS`): ten trades, each with a full list to tick and the three most common ticked. Wig making, tailoring and cakes are made to order and wait for Orders.
 - **Not ours:** online product sellers (Bumpa's market; they may still run drops). Restaurants can use drops only.
 
 ## 4. What makes Tikka different

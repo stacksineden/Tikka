@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Camera,
+  Clapperboard,
   Car,
   Check,
   CircleCheck,
@@ -63,7 +64,7 @@ import {
 import { initialsFrom, normalizeNgPhone, suggestPrefix } from "@/lib/setup";
 import type { OpeningHours, PortfolioPhoto, TravelReach, WorkPlace } from "@/lib/types";
 
-const TRADE_ICONS: Record<TradeId, LucideIcon> = { hair: Scissors, makeup: Sparkles, nails: Hand, lashes: Eye, barber: UserRound, spa: Flower2, gele: Crown, photo: Camera, video: Video };
+const TRADE_ICONS: Record<TradeId, LucideIcon> = { hair: Scissors, makeup: Sparkles, nails: Hand, lashes: Eye, barber: UserRound, spa: Flower2, gele: Crown, photo: Camera, video: Video, content: Clapperboard };
 const BANKS = ["Access Bank", "First Bank", "GTBank", "Kuda", "Moniepoint", "Opay", "Palmpay", "UBA", "Zenith Bank"];
 const ID_TYPES = ["NIN slip", "Driver's licence", "Voter's card", "International passport"];
 const MIN_PHOTOS = 3;
@@ -297,7 +298,7 @@ export function StartFlow() {
         {step === "trade" && (
           <>
             <Title title="What do you do?" lead="Pick all that apply. We'll fill in your page for you." />
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-2 gap-2.5">
               {TRADES.map((t) => {
                 const Icon = TRADE_ICONS[t.id];
                 const on = trades.includes(t.id);
@@ -307,17 +308,20 @@ export function StartFlow() {
                     type="button"
                     aria-pressed={on}
                     onClick={() => setTrades((cur) => (cur.includes(t.id) ? cur.filter((x) => x !== t.id) : [...cur, t.id]))}
-                    className={`relative grid min-h-26 content-center justify-items-center gap-2 rounded-card border-2 p-2 text-center text-sm leading-tight font-semibold ${on ? "border-brand bg-brand-soft" : "border-line bg-surface-raised"}`}
+                    className={`relative grid min-h-24 content-start gap-2 rounded-card border-2 p-3 text-left ${on ? "border-brand bg-brand-soft" : "border-line bg-surface-raised"}`}
                   >
                     {on && (
-                      <span className="absolute top-2 right-2 grid size-5.5 place-items-center rounded-pill bg-brand text-on-brand">
+                      <span className="absolute top-2.5 right-2.5 grid size-5.5 place-items-center rounded-pill bg-brand text-on-brand">
                         <Check size={14} aria-hidden="true" />
                       </span>
                     )}
-                    <span className={`grid size-11 place-items-center rounded-pill ${on ? "bg-brand text-on-brand" : "bg-brand-soft text-brand"}`}>
-                      <Icon size={22} aria-hidden="true" />
+                    <span className={`grid size-10 place-items-center rounded-pill ${on ? "bg-brand text-on-brand" : "bg-brand-soft text-brand"}`}>
+                      <Icon size={20} aria-hidden="true" />
                     </span>
-                    {t.name}
+                    <span className="grid gap-0.5">
+                      <span className="text-[15px] leading-tight font-semibold">{t.name}</span>
+                      <span className="text-caption leading-snug text-ink-muted">{t.examples}</span>
+                    </span>
                   </button>
                 );
               })}
