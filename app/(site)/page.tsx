@@ -23,7 +23,7 @@ import { searchBusinesses, type BizCard as Card } from "@/lib/search-db";
 // upfront, no "How much?" in the DMs). "Stop asking 'How much?'" is kept for ads and posters.
 const TITLE = "Tikka · Book what makes you look and feel good";
 const HEADLINE = "Book what makes you look and feel good";
-const SUBLINE = "Salons, barbers, spas, makeup artists, photographers and content studios across Nigeria, with real prices and free times upfront. No more \u201cHow\u00a0much?\u201d in the\u00a0DMs.";
+const SUBLINE = "Salons, barbers, spas, makeup artists and photographers near you, with prices and free times upfront. No more \u201cHow\u00a0much?\u201d in the\u00a0DMs.";
 // For search engines and link previews: what's on Tikka, in plain words.
 const DESCRIPTION = "Book salons, barbers, spas, makeup artists, photographers and content studios anywhere in Nigeria. See their work, real prices and free times, and book in a minute.";
 
