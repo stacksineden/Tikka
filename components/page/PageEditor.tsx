@@ -4,6 +4,7 @@ import { Check, ChevronDown, ImagePlus, Loader2, Plus, Trash2 } from "lucide-rea
 import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 import { savePageAction, saveServicesAction } from "@/app/app/actions";
+import { UnitFields } from "@/components/page/UnitFields";
 import { PortfolioEditor } from "@/components/setup/PortfolioEditor";
 import { prepareAbout, prepareCropped, prepareHero, prepareService, uploadPhoto, type MediaKind, type Prepared } from "@/lib/media-client";
 import { focalPosition, heroHeadline, heroLine, PAGE_LIMITS, PAGE_STYLES, priceText } from "@/lib/page";
@@ -535,6 +536,7 @@ function ServicesCard({ b }: { b: Business }) {
                         </span>
                       )}
                     </div>
+                    {x.priceKind !== "ask" && <UnitFields x={x} patch={(p) => patch(x.id!, p)} />}
                     <div className="grid gap-3 sm:grid-cols-2">
                       <Field label="Group (optional)">
                         <input className="input" list="service-groups" value={x.group ?? ""} maxLength={PAGE_LIMITS.group} placeholder="e.g. Hair" onChange={(e) => patch(x.id!, { group: e.target.value })} />

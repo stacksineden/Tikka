@@ -1,6 +1,7 @@
 // The business page: a one-page website (PRD A5). Pure rules shared by the page, the editor
 // ("Your page") and the tests: what shows, how prices and the hero read, and the booking link.
 
+import { perText } from "./units";
 import { naira, place } from "./format";
 import { normalizeNgPhone } from "./setup";
 import type { Business, BusinessPage, Drop, PageStyle, ServiceItem } from "./types";
@@ -78,9 +79,10 @@ export function showsLocation(b: Pick<Business, "serveMode">): boolean {
   return (b.serveMode ?? "in_store") === "in_store";
 }
 
-export function priceText(s: Pick<ServiceItem, "price" | "priceKind">): string {
+export function priceText(s: Pick<ServiceItem, "price" | "priceKind" | "unit" | "unitLabel">): string {
   if (s.priceKind === "ask" || s.price === null) return "Ask for price";
-  return s.priceKind === "from" ? `From ${naira(s.price)}` : naira(s.price);
+  const per = s.unit ? ` ${perText(s)}` : "";
+  return s.priceKind === "from" ? `From ${naira(s.price)}${per}` : `${naira(s.price)}${per}`;
 }
 
 /** The number "Book on WhatsApp" goes to: the Chat on WhatsApp button's, else the owner's. */
@@ -178,6 +180,7 @@ export function validateServices(services: ServiceItem[]): PageErrors {
     else if (tooLong(s.description, PAGE_LIMITS.serviceDescription)) e[`service-${i}`] = `Keep the description under ${PAGE_LIMITS.serviceDescription} characters.`;
     else if (tooLong(s.group, PAGE_LIMITS.group)) e[`service-${i}`] = `Keep the group under ${PAGE_LIMITS.group} characters.`;
     else if (s.priceKind !== "ask" && (s.price === null || !Number.isFinite(s.price) || s.price < 0)) e[`service-${i}`] = "Add a price, or choose Ask for price.";
+    else if (s.unit === "item" && s.priceKind !== "ask" && !s.unitLabel?.trim()) e[`service-${i}`] = "Say what one is, like photo or look.";
   });
   return e;
 }

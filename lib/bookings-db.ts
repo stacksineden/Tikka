@@ -144,6 +144,8 @@ export interface ChoiceInput {
   people?: number[];
   extras?: number[];
   home?: boolean;
+  /** Per hour or per item: how many (the server keeps it within the owner's range). */
+  qty?: number;
 }
 
 /** book_time_v2(): Postgres prices the picks and works out the deposit. Server only, after the route's rate limits. */

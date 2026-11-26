@@ -87,3 +87,8 @@ export const MISSING_TEXT: Record<ListingMissing, string> = {
   space_photo: "Add at least one photo of your space",
   priced_service: "Add a price to at least one service on Your page",
 };
+
+/** Still inside the 14 days businesses listed before the terms have to accept them. */
+export function inListingGrace(until: string | undefined, now: Date = new Date()): boolean {
+  return !!until && new Date(until).getTime() > now.getTime();
+}

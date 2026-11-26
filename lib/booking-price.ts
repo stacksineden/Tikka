@@ -4,6 +4,7 @@
 
 import { depositOn, EVENT_DEPOSIT_PERCENT } from "./presets";
 import type { ServiceItem } from "./types";
+import { clampQty, countText } from "./units";
 
 export interface BookingChoice {
   /** Which option (choices), when the service has options and they aren't people. */
@@ -14,6 +15,8 @@ export interface BookingChoice {
   extras?: number[];
   /** The owner comes to the customer. */
   home?: boolean;
+  /** Per hour or per item: how many. */
+  qty?: number;
 }
 
 export interface DepositRule {
@@ -58,6 +61,17 @@ export function priceBooking(service: ServiceItem, choice: BookingChoice, travel
     if (options.length > 1) detail.push(o.label);
   } else {
     lines.push({ label: service.name, naira: service.price ?? 0 });
+  }
+
+  // Per hour or per item: the line above is for one, times how many (price_choice() does the same).
+  if (service.unit && !service.perPerson && !service.eventDay && lines.length) {
+    const n = clampQty(service, choice.qty);
+    const one = lines[0];
+    lines[0] = { label: `${one.label} · ${countText(service, n)} × ₦${one.naira.toLocaleString("en-NG")}`, naira: one.naira * n };
+    if (service.unit === "hour") minutes = 60 * n;
+    else if (service.unitMinutes) minutes = service.unitMinutes * n;
+    minutes = Math.min(minutes, 600);
+    detail.push(countText(service, n));
   }
 
   const extras = service.extras ?? [];

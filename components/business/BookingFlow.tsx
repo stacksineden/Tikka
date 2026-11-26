@@ -17,6 +17,7 @@ import { freeDays, gapAfter, openRange, PROBLEM_TEXT, watInstant, watParts, type
 import { MAX_PEOPLE, priceBooking, type DepositRule } from "@/lib/booking-price";
 import type { SheetTheme } from "@/lib/sheet-theme";
 import type { ServiceItem, WorkPlace } from "@/lib/types";
+import { clampQty, countText, perText, unitRange, unitWord } from "@/lib/units";
 
 export interface FlowBusiness {
   slug: string;
@@ -52,7 +53,7 @@ export interface FlowTikka {
   booking?: { token: string; startsAt: string; service: string };
 }
 
-type Step = "option" | "place" | "time" | "date" | "call" | "people" | "extras" | "details" | "review" | "pay";
+type Step = "option" | "qty" | "place" | "time" | "date" | "call" | "people" | "extras" | "details" | "review" | "pay";
 const CALL_TIMES = [300, 330, 360, 390, 420, 450, 480, 540, 600];
 const naira = (n: number) => "₦" + Math.round(n).toLocaleString("en-NG");
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];
@@ -62,6 +63,8 @@ function stepsFor(s: ServiceItem, b: FlowBusiness, forTikka = false): Step[] {
   const out: Step[] = [];
   if (s.eventDay) out.push("date", "call");
   if (s.options && s.options.length > 1 && !s.perPerson) out.push("option");
+  // Per hour or per item: how many, after the choice that sets the price for one.
+  if (s.unit && !s.perPerson && !s.eventDay) out.push("qty");
   // A Tikka is used at the shop, so it never asks where.
   if (b.workPlace !== "shop" && !forTikka) out.push("place");
   if (s.perPerson) out.push("people");
@@ -98,6 +101,7 @@ export function BookingFlow({
   const [step, setStep] = useState<Step>("option");
   const [rules, setRules] = useState<BookingRules | null>(null);
   const [option, setOption] = useState<number | null>(null);
+  const [qty, setQty] = useState(1);
   const [home, setHome] = useState<boolean | null>(null);
   const [area, setArea] = useState("");
   const [address, setAddress] = useState("");
@@ -122,6 +126,7 @@ export function BookingFlow({
   function start(s: ServiceItem) {
     setSvc(s);
     setOption(s.options && s.options.length === 1 ? 0 : null);
+    setQty(clampQty(s, undefined));
     setHome(b.workPlace === "home" ? true : b.workPlace === "shop" ? false : null);
     setPeople(s.options?.map((_, i) => (i === 0 ? 1 : 0)) ?? []);
     setExtras([]);
@@ -176,7 +181,7 @@ export function BookingFlow({
 
   const steps = svc ? stepsFor(svc, b, !!tikka) : [];
   const index = steps.indexOf(step);
-  const local = svc ? priceBooking(svc, { option: option ?? 0, people, extras, home: !!home }, b.travelFee, tikka ? undefined : b.deposit) : null;
+  const local = svc ? priceBooking(svc, { option: option ?? 0, people, extras, home: !!home, qty }, b.travelFee, tikka ? undefined : b.deposit) : null;
   // A real business: the total and deposit are the server's (the same sums book_time_v2() charges).
   const price =
     local && b.live && server
@@ -189,14 +194,14 @@ export function BookingFlow({
   const needsEmail = !!b.live && !tikka && (server?.depositKobo ?? 0) > 0;
 
   // Ask the server for the price once the picks are made (details and review).
-  const pickKey = JSON.stringify([svc?.id, option, people, extras, home]);
+  const pickKey = JSON.stringify([svc?.id, option, people, extras, home, qty]);
   useEffect(() => {
     if (!b.live || !svc?.id || (step !== "details" && step !== "review")) return;
     let gone = false;
     void fetch("/api/book-v2/price", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ slug: b.slug, serviceId: svc.id, option: option ?? 0, people, extras, home: !!home }),
+      body: JSON.stringify({ slug: b.slug, serviceId: svc.id, option: option ?? 0, people, extras, home: !!home, qty }),
     })
       .then((r) => r.json())
       .then((d: { price: ServerPrice | null }) => !gone && setServer(d.price))
@@ -223,6 +228,7 @@ export function BookingFlow({
     date: !!dayKey && !taken(dayKey),
     call: time !== null,
     people: true,
+    qty: true,
     extras: true,
     details:
       (!!tikka || (name.trim().length > 1 && phone.replace(/\D/g, "").length >= 10)) &&
@@ -262,6 +268,7 @@ export function BookingFlow({
           option: option ?? 0,
           people,
           extras,
+          qty,
           home: !!home,
           area,
           address,
@@ -353,7 +360,7 @@ export function BookingFlow({
             {step === "option" && (
               <div className="grid gap-2.5">
                 {svc.options!.map((o, i) => (
-                  <Opt key={o.label} on={option === i} onClick={() => setOption(i)} title={o.label} sub={`About ${hours(o.minutes)}`} price={`${svc.priceKind === "from" ? "From " : ""}${naira(o.price)}`} />
+                  <Opt key={o.label} on={option === i} onClick={() => setOption(i)} title={o.label} sub={svc.unit ? perText(svc).replace(/^per/, "Price per") : `About ${hours(o.minutes)}`} price={`${svc.priceKind === "from" ? "From " : ""}${naira(o.price)}${svc.unit ? ` ${perText(svc)}` : ""}`} />
                 ))}
               </div>
             )}
@@ -375,6 +382,34 @@ export function BookingFlow({
                 )}
               </>
             )}
+
+            {step === "qty" && (() => {
+              const range = unitRange(svc)!;
+              const one = svc.options?.length ? svc.options[Math.max(0, Math.min(svc.options.length - 1, option ?? 0))].price : (svc.price ?? 0);
+              return (
+                <div className="grid gap-4">
+                  <div className="flex items-center justify-center gap-6 rounded-card border border-line bg-surface-raised px-4 py-6">
+                    <Round label={svc.unit === "hour" ? "One hour less" : "One fewer"} disabled={qty <= range.min} onClick={() => setQty((n) => Math.max(range.min, n - 1))}>
+                      −
+                    </Round>
+                    <span className="grid min-w-28 justify-items-center text-center" aria-live="polite">
+                      <span className="text-code text-[40px] leading-none">{qty}</span>
+                      <span className="text-label mt-1">{countText(svc, qty).replace(/^\d+ /, "")}</span>
+                    </span>
+                    <Round label={svc.unit === "hour" ? "One hour more" : "One more"} disabled={qty >= range.max} onClick={() => setQty((n) => Math.min(range.max, n + 1))}>
+                      +
+                    </Round>
+                  </div>
+                  <p className="text-body text-center">
+                    {naira(one)} {perText(svc)} × {qty} = <b>{naira(one * qty)}</b>
+                  </p>
+                  <p className="text-caption text-center text-ink-muted">
+                    From {range.min} to {range.max}
+                    {svc.unit === "hour" ? ". Your booking takes this long." : svc.unitMinutes ? `. About ${svc.unitMinutes} minutes each.` : "."}
+                  </p>
+                </div>
+              );
+            })()}
 
             {step === "people" && (
               <div className="grid gap-2.5">
@@ -674,6 +709,7 @@ const TITLES: Record<Step, (s: ServiceItem) => string> = {
   date: () => "When is the big day?",
   call: () => "What time should we start?",
   people: () => "Who's getting ready?",
+  qty: (s) => (s.unit === "hour" ? "How many hours?" : `How many ${unitWord(s.unitLabel || "item", 2)}?`),
   extras: () => "Anything to add?",
   details: () => "Your details",
   review: () => "Check and pay your deposit",
@@ -692,7 +728,7 @@ function ServicePick({ business, services, onPick, onClose }: { business: string
   const price = (s: ServiceItem) => {
     const low = s.options?.length ? Math.min(...s.options.map((o) => o.price)) : s.price;
     if (s.priceKind === "ask" || low === null || low === undefined) return "Ask";
-    return `${s.priceKind === "from" || (s.options?.length ?? 0) > 1 ? "From " : ""}${naira(low)}`;
+    return `${s.priceKind === "from" || (s.options?.length ?? 0) > 1 ? "From " : ""}${naira(low)}${s.unit ? ` ${perText(s)}` : ""}`;
   };
   return (
     <div className="flex h-full flex-col bg-surface text-ink">

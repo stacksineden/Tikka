@@ -10,7 +10,7 @@ import { paystackMode } from "@/lib/paystack";
 const noStore = { "Cache-Control": "no-store" };
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as { slug?: string; serviceId?: string; option?: number; people?: number[]; extras?: number[]; home?: boolean } | null;
+  const body = (await request.json().catch(() => null)) as { slug?: string; serviceId?: string; option?: number; people?: number[]; extras?: number[]; home?: boolean; qty?: number } | null;
   if (!body?.slug || !body.serviceId) return NextResponse.json({ price: null }, { status: 400, headers: noStore });
   const found = await getBusinessBySlug(body.slug);
   if (!found || !isDbId(found.ownerId)) return NextResponse.json({ price: null }, { status: 404, headers: noStore });
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   const price = await dbPriceBooking(
     found.business.id,
     body.serviceId,
-    { option: Number.isInteger(body.option) ? body.option : undefined, people: nums(body.people), extras: nums(body.extras), home: !!body.home },
+    { option: Number.isInteger(body.option) ? body.option : undefined, people: nums(body.people), extras: nums(body.extras), home: !!body.home, qty: Number.isInteger(body.qty) && (body.qty as number) > 0 && (body.qty as number) <= 50 ? body.qty : undefined },
     paystackMode(),
   );
   return NextResponse.json({ price }, { status: price ? 200 : 404, headers: noStore });

@@ -6,8 +6,10 @@
 
 import { Check, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { UnitFields } from "@/components/page/UnitFields";
 import { durationLabel, type PresetService } from "@/lib/presets";
 import type { ServiceItem, ServiceOption } from "@/lib/types";
+import { perText } from "@/lib/units";
 
 export const LENGTHS = [15, 30, 45, 60, 75, 90, 105, 120, 150, 180, 210, 240, 300, 360, 420, 480, 600, 720];
 const naira = (n: number) => "₦" + Math.round(n).toLocaleString("en-NG");
@@ -15,6 +17,7 @@ const naira = (n: number) => "₦" + Math.round(n).toLocaleString("en-NG");
 /** A ticked service with a missing price can't take a deposit, so setup asks for one. */
 export function serviceProblem(s: ServiceItem): string | null {
   if (!s.name.trim()) return "Name this service.";
+  if (s.unit === "item" && !s.unitLabel?.trim()) return "Say what one is, like photo or look.";
   if (s.options?.length) {
     if (s.options.some((o) => !o.label.trim())) return "Name each choice.";
     if (s.options.some((o) => !(o.price > 0))) return "Add a price for each choice.";
@@ -29,7 +32,7 @@ export function priceSummary(s: ServiceItem): string {
     const low = Math.min(...s.options.map((o) => o.price || 0));
     return `${s.options.length} ${s.perPerson ? "prices" : "choices"} · from ${naira(low)}`;
   }
-  const price = (s.price ?? 0) > 0 ? `${from ? "From " : ""}${naira(s.price!)}` : "No price yet";
+  const price = (s.price ?? 0) > 0 ? `${from ? "From " : ""}${naira(s.price!)}${s.unit ? ` ${perText(s)}` : ""}` : "No price yet";
   return s.minutes ? `${price} · ${durationLabel(s.minutes)}` : price;
 }
 
@@ -158,6 +161,8 @@ export function ServicesEditor({ services, onChange, city }: { services: PresetS
                     </button>
                   </div>
                 )}
+
+                <UnitFields x={s.item} patch={(p) => set(i, p)} />
 
                 <label className="flex min-h-11 items-center gap-3">
                   <Tick on={!!s.item.eventDay} label="Booked as a whole day" onClick={() => set(i, { eventDay: !s.item.eventDay || undefined })} />

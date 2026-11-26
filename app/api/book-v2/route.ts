@@ -27,6 +27,8 @@ export async function POST(request: Request) {
     serviceId?: string;
     startsAt?: string;
     option?: number;
+    /** Per hour or per item: how many. */
+    qty?: number;
     people?: number[];
     extras?: number[];
     home?: boolean;
@@ -55,7 +57,7 @@ export async function POST(request: Request) {
   const phone = tikka ? "" : (normalizeNgPhone(String(body.phone ?? "")) ?? "");
   if (!tikka && !phone) return fail("bad_phone", 400);
   const nums = (a: unknown) => (Array.isArray(a) ? a.filter((n) => Number.isInteger(n) && n >= 0 && n < 50).slice(0, 20) : undefined);
-  const choice = { option: Number.isInteger(body.option) ? body.option : undefined, people: nums(body.people), extras: nums(body.extras), home: !!body.home };
+  const choice = { option: Number.isInteger(body.option) ? body.option : undefined, people: nums(body.people), extras: nums(body.extras), home: !!body.home, qty: Number.isInteger(body.qty) && (body.qty as number) > 0 && (body.qty as number) <= 50 ? body.qty : undefined };
   const startsAt = new Date(body.startsAt).toISOString();
   const address = typeof body.address === "string" ? body.address.slice(0, 120) : undefined;
   const area = typeof body.area === "string" ? body.area.slice(0, 60) : undefined;

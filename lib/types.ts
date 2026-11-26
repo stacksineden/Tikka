@@ -171,6 +171,15 @@ export interface ServiceItem {
   questions?: string[];
   /** NEW DIRECTION: this service's own time after it, instead of the business's (bridal makeup 30, a wash 0). */
   gapMinutes?: number;
+  /** Priced for one hour or one item ("₦15,000 per hour", "₦5,000 per photo"); the customer picks how many. */
+  unit?: "hour" | "item";
+  /** Per item: what one is, singular ("photo", "look"). */
+  unitLabel?: string;
+  /** How many a customer can pick: at least, at most (hours at most 10). */
+  unitMin?: number;
+  unitMax?: number;
+  /** Per item: how long each takes; unset means the service's own time covers them all. */
+  unitMinutes?: number;
 }
 
 export interface ServiceOption {

@@ -3,6 +3,7 @@
 // business_team, business_faqs). Files are stored as paths (lib/media-path.ts). Pure, so the
 // mapping is pinned by tests.
 
+import { unitRange } from "./units";
 import { fromStored, toStored } from "./media-path";
 import { initialsFrom } from "./setup";
 import type { Business, BusinessPage, CardBackground, PageStyle, PatternId, PhotoCamera, PortfolioCollection, PortfolioPhoto, ServiceItem, TeamMember, FaqItem, TravelReach, WorkPlace } from "./types";
@@ -102,6 +103,12 @@ export interface ServiceRow {
   per_person?: boolean;
   questions?: string[] | null;
   gap_minutes?: number | null;
+  /** Added by the per_hour_per_item migration. */
+  unit?: "hour" | "item" | null;
+  unit_label?: string | null;
+  unit_min?: number | null;
+  unit_max?: number | null;
+  unit_minutes?: number | null;
 }
 
 export interface PortfolioRow {
@@ -184,6 +191,11 @@ export function serviceFrom(r: ServiceRow): ServiceItem {
     perPerson: r.per_person || undefined,
     questions: r.questions?.length ? r.questions : undefined,
     gapMinutes: r.gap_minutes ?? undefined,
+    unit: r.unit ?? undefined,
+    unitLabel: r.unit_label ?? undefined,
+    unitMin: r.unit_min ?? undefined,
+    unitMax: r.unit_max ?? undefined,
+    unitMinutes: r.unit_minutes ?? undefined,
   };
 }
 
@@ -211,6 +223,20 @@ export function serviceTo(s: ServiceItem) {
     per_person: !!s.perPerson && (s.options?.length ?? 0) >= 2,
     questions: s.questions?.map((q) => q.trim()).filter(Boolean).slice(0, 3) ?? null,
     gap_minutes: s.gapMinutes ?? null,
+    // Per hour or per item: never with per person or event days, and per item needs its name (the database insists).
+    ...unitTo(s),
+  };
+}
+
+function unitTo(s: ServiceItem) {
+  const r = unitRange(s);
+  if (!s.unit || s.perPerson || s.eventDay || !r || (s.unit === "item" && !s.unitLabel?.trim())) return { unit: null };
+  return {
+    unit: s.unit,
+    unit_label: s.unit === "item" ? s.unitLabel!.trim().slice(0, 20) : null,
+    unit_min: r.min,
+    unit_max: r.max,
+    unit_minutes: s.unit === "item" && s.unitMinutes ? Math.max(5, Math.min(600, Math.round(s.unitMinutes))) : null,
   };
 }
 

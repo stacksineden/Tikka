@@ -12,6 +12,7 @@ import { place } from "@/lib/format";
 import { getSessionUser } from "@/lib/session";
 import { actionMeta } from "@/lib/setup";
 import { newExperience } from "@/lib/experience";
+import { inListingGrace } from "@/lib/listing";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -68,7 +69,7 @@ async function Hub() {
     const business: Row[] = [
       { href: "/app/page", label: "Your page", meta: "Services, photos, hours and style", Icon: Globe },
       { href: "/app/bookings?edit=1", label: "Booking settings", meta: "Hours, gaps, deposit and rules", Icon: CalendarClock },
-      { href: "/app/settings/listing", label: "Your Tikka listing", meta: !b.listingTermsAt ? (b.listingGraceUntil && new Date(b.listingGraceUntil).getTime() > Date.now() ? "Accept the terms to stay in search" : "Not listed yet: get listed, free for now") : b.listed === false ? "Hidden from search" : "In Tikka's search · photos, pin, extras", Icon: MapPin },
+      { href: "/app/settings/listing", label: "Your Tikka listing", meta: !b.listingTermsAt ? (inListingGrace(b.listingGraceUntil) ? "Accept the terms to stay in search" : "Not listed yet: get listed, free for now") : b.listed === false ? "Hidden from search" : "In Tikka's search · photos, pin, extras", Icon: MapPin },
       { href: "/app/settings/get-paid", label: "Get paid", meta: "Your ID and bank account", Icon: Landmark },
       { href: "/app/settings/profile#basics", label: "Name, tagline and location", meta: `${b.name} · ${place(b.area, b.city)}`, Icon: Store },
     ];
