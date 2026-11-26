@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import {
-  CalendarClock, Landmark, ChevronRight, Clock, Film, Globe, Images, Wallet, ListChecks, Palette, Phone, Sparkles, Store, UserRound, UsersRound, type LucideIcon } from "lucide-react";
+  CalendarClock, Landmark, MapPin, ChevronRight, Clock, Film, Globe, Images, Wallet, ListChecks, Palette, Phone, Sparkles, Store, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -68,6 +68,7 @@ async function Hub() {
     const business: Row[] = [
       { href: "/app/page", label: "Your page", meta: "Services, photos, hours and style", Icon: Globe },
       { href: "/app/bookings?edit=1", label: "Booking settings", meta: "Hours, gaps, deposit and rules", Icon: CalendarClock },
+      { href: "/app/settings/listing", label: "Your Tikka listing", meta: b.listed === false ? "Hidden from search" : "In Tikka's search · map pin, space photos", Icon: MapPin },
       { href: "/app/settings/get-paid", label: "Get paid", meta: "Your ID and bank account", Icon: Landmark },
       { href: "/app/settings/profile#basics", label: "Name, tagline and location", meta: `${b.name} · ${place(b.area, b.city)}`, Icon: Store },
     ];

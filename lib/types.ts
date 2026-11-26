@@ -74,6 +74,12 @@ export interface Business {
   /** NEW DIRECTION (demo only for now): minutes kept free after every booking (clean-up), and extra after a home visit (travel). */
   gapMinutes?: number;
   homeGapMinutes?: number;
+  /** Your Tikka listing (listing_and_location migration): shown in Tikka's search, and the map pin. */
+  listed?: boolean;
+  lat?: number;
+  lng?: number;
+  /** True for a pin worked out from the area and city, until the owner places their own. */
+  locationApprox?: boolean;
 }
 
 export interface PortfolioPhoto {

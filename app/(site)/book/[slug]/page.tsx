@@ -10,6 +10,7 @@ import { HomeHeader } from "@/components/home/HomeHeader";
 import { SiteFooter } from "@/components/site/SiteChrome";
 import { demoDepositRule, getBookingRules } from "@/lib/bookings-data";
 import { getBusinessBySlug, getBusinessReviews, isDbId } from "@/lib/data";
+import { getSpacePhotos } from "@/lib/listing-db";
 import { place } from "@/lib/format";
 import { bookingLink, bookingNumber, pageStyle, priceText } from "@/lib/page";
 import { reachLabel, TRADES } from "@/lib/presets";
@@ -67,7 +68,7 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
   if (!found) notFound();
   const b: Business = found.business;
   const now = new Date();
-  const [reviews, rules] = await Promise.all([getBusinessReviews(found.ownerId), getBookingRules(found.ownerId, b)]);
+  const [reviews, rules, space] = await Promise.all([getBusinessReviews(found.ownerId), getBookingRules(found.ownerId, b), isDbId(b.id) ? getSpacePhotos(b.id) : []]);
 
   // Booking works as on the business's own page: the booking sheet when bookings are on, else a
   // WhatsApp request, or the owner's own booking link.
@@ -88,9 +89,19 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
   const open = openLabel(b.hours, now);
   const goesToCustomers = b.workPlace === "home" || b.workPlace === "both";
   const where = b.workPlace === "home" ? `Comes to you · ${b.city}` : place(b.area, b.city);
-  const directions = b.workPlace !== "home" ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${b.name}, ${b.address || b.area}, ${b.city}`)}` : null;
-  const photos = b.portfolio.filter((p) => p.kind !== "video");
-  const cover = b.page?.heroImageUrl ?? photos[0]?.url;
+  // The owner's own pin when they placed one, else their address in words.
+  const exactPin = b.lat != null && b.lng != null && b.locationApprox === false;
+  const directions =
+    b.workPlace === "home"
+      ? null
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(exactPin ? `${b.lat},${b.lng}` : `${b.name}, ${b.address || b.area}, ${b.city}`)}`;
+  // Photos of the space lead (Your Tikka listing), then their work.
+  const work = b.portfolio.filter((p) => p.kind !== "video");
+  const photos = [
+    ...space.map((p, i) => ({ id: `space-${i}`, url: p.url, thumbUrl: p.thumbUrl })),
+    ...work.map((p) => ({ id: p.id, url: p.url, thumbUrl: p.thumbUrl })),
+  ];
+  const cover = space[0]?.url ?? b.page?.heroImageUrl ?? photos[0]?.url;
   const side = photos.filter((p) => p.url !== cover).slice(0, 2);
   const team = b.page?.team ?? [];
   const shown = reviews.filter((r) => r.status !== "hidden").slice(0, 6);
@@ -118,7 +129,13 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
           <span className="text-ink">{b.name}</span>
         </nav>
 
-        <h1 className="mt-4 text-[clamp(32px,6vw,56px)] leading-[1.05] font-bold tracking-tight">{b.name}</h1>
+        <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
+          <h1 className="text-[clamp(32px,6vw,56px)] leading-[1.05] font-bold tracking-tight">{b.name}</h1>
+          {/* Their own website: the bio link, with everything about them. */}
+          <Link href={`/${b.slug}`} className="btn btn-secondary mt-1 min-h-11 shrink-0 rounded-pill px-4">
+            <Globe size={18} aria-hidden="true" /> View website
+          </Link>
+        </div>
         <div className="text-body mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
           <Stars rating={b.rating} count={b.reviewCount} />
           {open && (

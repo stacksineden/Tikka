@@ -21,6 +21,7 @@ import {
   UsersRound,
   X,
   type LucideIcon,
+  MapPin,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -255,6 +256,7 @@ function MoreSheet({ open, onClose, account, path }: { open: boolean; onClose: (
   const rows: { href: string; label: string; Icon: LucideIcon; meta?: string }[] = account?.newDirection ? [
     { href: "/app/page", label: "Your page", Icon: Globe, meta: "Photos, services, prices" },
     { href: "/app/bookings?edit=1", label: "Booking settings", Icon: CalendarDays, meta: "Hours, deposits, rules" },
+    { href: "/app/settings/listing", label: "Your Tikka listing", Icon: MapPin, meta: "Search, map pin, space photos" },
     { href: "/app/redeem", label: "Check a code", Icon: ScanLine, meta: "Gifts, drop cards, bookings" },
     { href: "/app/drops", label: "Drops", Icon: Layers, meta: "Bring in new customers" },
     { href: "/app/reviews", label: "Reviews", Icon: MessageSquareText, meta: account?.rating ? `${account.rating} · ${account.reviewCount}` : undefined },

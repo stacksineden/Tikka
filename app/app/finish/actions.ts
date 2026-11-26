@@ -5,6 +5,8 @@
 // Its page, services and photos stay as they are. Owners only; saved through saveBusiness().
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { ensureStartingPin } from "@/lib/listing-db";
 import { BusinessSaveError, getBusiness, saveBusiness } from "@/lib/data";
 import { isTrade } from "@/lib/presets";
 import { getOwnerUser } from "@/lib/session";
@@ -35,6 +37,7 @@ export async function finishSetupAction(input: { trades: string[]; workPlace: Wo
   } catch (e) {
     return { ok: false, error: e instanceof BusinessSaveError ? e.message : "We couldn't save that. Try again." };
   }
+  if (b.lat == null) after(() => ensureStartingPin({ ...b }));
   revalidatePath("/app", "layout");
   revalidatePath(`/${b.slug}`);
   return { ok: true };

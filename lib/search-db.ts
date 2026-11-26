@@ -31,6 +31,11 @@ export interface BizCard {
   isNew: boolean;
   /** The next bookable time (ISO), within the search's days. */
   nextFree?: string;
+  /** Map pin; none for businesses that only go to customers. */
+  lat?: number;
+  lng?: number;
+  /** The pin was worked out from the area, not placed by the owner. */
+  approx: boolean;
 }
 
 type Row = Record<string, unknown>;
@@ -75,5 +80,8 @@ export async function searchBusinesses(s: Partial<SearchQuery> & { sort?: "soone
     bookable: r.bookable === true,
     isNew: r.is_new === true,
     nextFree: (r.next_free as string | null) ?? undefined,
+    lat: r.lat == null ? undefined : Number(r.lat),
+    lng: r.lng == null ? undefined : Number(r.lng),
+    approx: r.location_approx !== false,
   }));
 }

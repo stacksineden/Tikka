@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "jiti scripts/check-legal.ts && next build",
+    "dev": "node scripts/copy-maplibre-worker.mjs && next dev",
+    "build": "jiti scripts/check-legal.ts && node scripts/copy-maplibre-worker.mjs && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
@@ -18,6 +18,7 @@
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
     "lucide-react": "1.60.0",
+    "maplibre-gl": "^6.19.0",
     "next": "16.4.6",
     "qr-scanner": "1.4.2",
     "qrcode": "1.5.4",

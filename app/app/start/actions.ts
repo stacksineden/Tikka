@@ -7,6 +7,8 @@
 // demo pretends them here.
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { ensureStartingPin } from "@/lib/listing-db";
 import { BusinessSaveError, getBusiness, isDbId, saveBusiness, takenPrefixes, takenSlugs } from "@/lib/data";
 import { saveBookingSettings, saveDemoDeposit } from "@/lib/bookings-data";
 import { checkBrandColor, parseColor, SWATCHES } from "@/lib/color";
@@ -165,7 +167,9 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
   const first = next.portfolio.find((p) => p.kind !== "video");
   if (first && !next.page?.heroImageUrl) next.page = { ...next.page, heroImageUrl: first.url };
   try {
-    await saveBusiness(user, next);
+    const saved = await saveBusiness(user, next);
+    // A starting map pin from the area and city, after the response (the owner can move it later).
+    if (real && isDbId(saved.id)) after(() => ensureStartingPin(saved));
     await saveBookingSettings(user, {
       enabled: true,
       capacity: Math.max(1, Math.min(8, Math.round(input.capacity))),

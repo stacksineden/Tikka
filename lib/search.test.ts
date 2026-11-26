@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayRange, freeLabel, matchPlaces, openLabel, parseSearch, searchHref, whenLabel } from "./search";
+import { dayRange, freeLabel, matchPlaces, openLabel, parseSearch, searchHref, whenLabel, whenPhrase } from "./search";
 
 // Thursday 26 November 2026, 13:00 WAT.
 const now = new Date("2026-11-26T12:00:00Z");
@@ -65,5 +65,14 @@ describe("open now", () => {
     expect(openLabel(hours, new Date("2026-11-28T17:00:00Z"))).toEqual({ open: false, text: "Opens Monday at 9am" }); // Saturday 18:00
     expect(openLabel(hours, new Date("2026-11-28T12:00:00Z"))).toEqual({ open: true, text: "Open until 4:30pm" });
     expect(openLabel(undefined, now)).toBeNull();
+  });
+});
+
+describe("when, in a sentence", () => {
+  it("reads naturally", () => {
+    expect(whenPhrase({ when: "date", date: "2026-11-26" })).toBe("on Thu 26 Nov");
+    expect(whenPhrase({ when: "today", tod: "morning" })).toBe("today in the morning");
+    expect(whenPhrase({ when: "any", tod: "evening" })).toBe("in the evening");
+    expect(whenPhrase({ when: "weekend" })).toBe("this weekend");
   });
 });

@@ -42,6 +42,11 @@ export interface BusinessRow {
   booking_rules?: string[] | null;
   gap_minutes?: number | null;
   home_gap_minutes?: number | null;
+  /** Added by the listing_and_location migration. */
+  listed?: boolean;
+  lat?: number | string | null;
+  lng?: number | string | null;
+  location_approx?: boolean;
 }
 
 export interface PrivateRow {
@@ -322,6 +327,10 @@ export function businessFrom(
     bookingRules: b.booking_rules?.length ? b.booking_rules : undefined,
     gapMinutes: b.gap_minutes ?? undefined,
     homeGapMinutes: b.home_gap_minutes ?? undefined,
+    listed: b.listed ?? true,
+    lat: b.lat == null ? undefined : Number(b.lat),
+    lng: b.lng == null ? undefined : Number(b.lng),
+    locationApprox: b.location_approx ?? true,
   };
 }
 

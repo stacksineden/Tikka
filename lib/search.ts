@@ -184,3 +184,11 @@ export function openLabel(hours: Hours | undefined | null, now: Date): { open: b
   }
   return null;
 }
+
+/** "today", "tomorrow in the morning", "this weekend", "on Sat 5 Dec", for sentences. */
+export function whenPhrase(s: Pick<SearchQuery, "when" | "date" | "tod">): string {
+  const tod = s.tod ? `in the ${TOD_LABEL[s.tod]}` : "";
+  const day =
+    s.when === "today" ? "today" : s.when === "tomorrow" ? "tomorrow" : s.when === "weekend" ? "this weekend" : s.when === "date" && s.date ? `on ${whenLabel({ when: "date", date: s.date })}` : "";
+  return [day, tod].filter(Boolean).join(" ");
+}
