@@ -39,6 +39,8 @@ export async function signIn(_prev: FormState, form: FormData): Promise<FormStat
     return { error: "That email and password don't match.", fields: { email } };
   }
   await rememberRole(supabase, data.user.id);
+  // A real sign-in replaces a demo session left in this browser (development only).
+  await clearDemoSession();
   redirect(safeNext(form.get("next")));
 }
 
@@ -60,7 +62,10 @@ export async function signUp(_prev: FormState, form: FormData): Promise<FormStat
   if (error) return { error: authError(error, "We couldn't create your account. Try again in a minute."), fields };
   // An email that already has an account comes back with no identities (and no email is sent).
   if (data.user && data.user.identities?.length === 0) return { error: "There's already an account for this email. Sign in instead.", fields };
-  if (data.session) redirect("/app/welcome");
+  if (data.session) {
+    await clearDemoSession();
+    redirect("/app/welcome");
+  }
   redirect(`/check-email?email=${encodeURIComponent(email)}`);
 }
 

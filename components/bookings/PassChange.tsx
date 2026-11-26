@@ -72,7 +72,7 @@ export function PassChange({ token, slug, minutes, gap = 0, eventDay, startsAt, 
             <CalendarX size={22} className="text-danger" aria-hidden="true" />
             <span>
               <b className="block">Cancel my booking</b>
-              <span className="text-caption text-ink-muted">{depositKobo ? `The ${naira(depositKobo)} deposit isn't refunded` : "The business will be told"}</span>
+              <span className="text-caption text-ink-muted">{depositKobo ? `The ${naira(depositKobo)} deposit isn't refunded` : "Your time goes back to other customers"}</span>
             </span>
           </button>
         </Sheet>

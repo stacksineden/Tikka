@@ -5,7 +5,7 @@
 
 import { fromStored, toStored } from "./media-path";
 import { initialsFrom } from "./setup";
-import type { Business, BusinessPage, CardBackground, PageStyle, PatternId, PhotoCamera, PortfolioCollection, PortfolioPhoto, ServiceItem, TeamMember, FaqItem } from "./types";
+import type { Business, BusinessPage, CardBackground, PageStyle, PatternId, PhotoCamera, PortfolioCollection, PortfolioPhoto, ServiceItem, TeamMember, FaqItem, TravelReach, WorkPlace } from "./types";
 
 export interface BusinessRow {
   id: string;
@@ -34,6 +34,14 @@ export interface BusinessRow {
   rating_avg: number | string | null;
   rating_count: number;
   is_demo: boolean;
+  /** Added by the new_direction_fields migration (docs/DB_MOVE.md step 1); absent on rows read before it. */
+  trades?: string[] | null;
+  work_place?: WorkPlace | null;
+  travel_fee_kobo?: number | null;
+  travel_reach?: TravelReach | null;
+  booking_rules?: string[] | null;
+  gap_minutes?: number | null;
+  home_gap_minutes?: number | null;
 }
 
 export interface PrivateRow {
@@ -78,6 +86,13 @@ export interface ServiceRow {
   /** Added by the deposits migration. */
   deposit_mode?: "none" | "fixed" | "full" | null;
   deposit_kobo?: number | null;
+  /** Added by the new_direction_fields migration. Amounts in kobo. */
+  options?: { label: string; price_kobo: number; minutes: number }[] | null;
+  extras?: { name: string; price_kobo: number }[] | null;
+  event_day?: boolean;
+  per_person?: boolean;
+  questions?: string[] | null;
+  gap_minutes?: number | null;
 }
 
 export interface PortfolioRow {
@@ -154,6 +169,12 @@ export function serviceFrom(r: ServiceRow): ServiceItem {
     depositKobo: r.deposit_kobo ?? undefined,
     imageUrl: fromStored(r.image_path),
     focal: r.focal_x == null || r.focal_y == null ? undefined : { x: Number(r.focal_x), y: Number(r.focal_y) },
+    options: r.options?.length ? r.options.map((o) => ({ label: o.label, price: o.price_kobo / 100, minutes: o.minutes })) : undefined,
+    extras: r.extras?.length ? r.extras.map((x) => ({ name: x.name, price: x.price_kobo / 100 })) : undefined,
+    eventDay: r.event_day || undefined,
+    perPerson: r.per_person || undefined,
+    questions: r.questions?.length ? r.questions : undefined,
+    gapMinutes: r.gap_minutes ?? undefined,
   };
 }
 
@@ -174,6 +195,13 @@ export function serviceTo(s: ServiceItem) {
     image_path: toStored(s.imageUrl),
     focal_x: s.focal?.x ?? 0.5,
     focal_y: s.focal?.y ?? 0.3,
+    options: s.options?.length ? s.options.map((o) => ({ label: o.label.trim(), price_kobo: Math.round(o.price * 100), minutes: Math.round(o.minutes) })) : null,
+    extras: s.extras?.length ? s.extras.map((x) => ({ name: x.name.trim(), price_kobo: Math.round(x.price * 100) })) : null,
+    event_day: !!s.eventDay,
+    // The database insists on two options or more for per person.
+    per_person: !!s.perPerson && (s.options?.length ?? 0) >= 2,
+    questions: s.questions?.map((q) => q.trim()).filter(Boolean).slice(0, 3) ?? null,
+    gap_minutes: s.gapMinutes ?? null,
   };
 }
 
@@ -287,6 +315,13 @@ export function businessFrom(
     dailySummary: priv ? priv.daily_summary : undefined,
     isDemo: b.is_demo,
     guaranteeUsed: !!priv?.guarantee_used,
+    trades: b.trades?.length ? b.trades : undefined,
+    workPlace: b.work_place ?? undefined,
+    travelFee: b.travel_fee_kobo == null ? undefined : b.travel_fee_kobo / 100,
+    travelReach: b.travel_reach ?? undefined,
+    bookingRules: b.booking_rules?.length ? b.booking_rules : undefined,
+    gapMinutes: b.gap_minutes ?? undefined,
+    homeGapMinutes: b.home_gap_minutes ?? undefined,
   };
 }
 
@@ -312,6 +347,22 @@ export function cardTo(b: Business) {
     hours: b.hours ?? null,
     actions: b.actions ?? [],
     serve_mode: b.serveMode ?? "in_store",
+    ...newDirectionTo(b),
+  };
+}
+
+/** The new direction's business fields (new_direction_fields migration). A shop has no travel fee. */
+export function newDirectionTo(b: Business) {
+  const travels = !!b.workPlace && b.workPlace !== "shop";
+  const rules = (b.bookingRules ?? []).map((r) => r.trim()).filter(Boolean).slice(0, 10);
+  return {
+    trades: b.trades?.length ? b.trades : null,
+    work_place: b.workPlace ?? null,
+    travel_fee_kobo: travels && typeof b.travelFee === "number" ? Math.round(b.travelFee * 100) : null,
+    travel_reach: travels ? (b.travelReach ?? null) : null,
+    booking_rules: rules.length ? rules : null,
+    gap_minutes: b.gapMinutes ?? null,
+    home_gap_minutes: b.homeGapMinutes ?? null,
   };
 }
 

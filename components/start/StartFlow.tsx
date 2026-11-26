@@ -40,7 +40,7 @@ import { useMemo, useState, useTransition } from "react";
 import { addPhoto } from "@/app/app/actions";
 import { MIN_DEPOSIT_PERCENT, PercentInput } from "@/components/today/Sheet";
 import { saveStartMoney, saveStartPage, type StartPage } from "@/app/app/start/actions";
-import { prepareLogo, preparePortfolio } from "@/lib/media-client";
+import { prepareLogo, preparePortfolio, uploadMedia, uploadPhoto } from "@/lib/media-client";
 import { CardPreview } from "@/components/setup/CardPreview";
 import { draftToFace } from "@/components/setup/SetupFlow";
 import { BRAND_SWATCHES, checkBrandColor, colorName, parseColor, SWATCHES } from "@/lib/color";
@@ -77,11 +77,15 @@ const SOCIALS: [SocialKey, string, string][] = [
 
 type Step = "trade" | "name" | "look" | "where" | "work" | "services" | "photos" | "hours" | "live" | "id" | "bank" | "deposit" | "rules" | "done";
 const STEPS: Step[] = ["trade", "name", "look", "where", "work", "services", "photos", "hours", "live", "id", "bank", "deposit", "rules", "done"];
+// Real accounts add their ID, bank and deposit on the real Get paid screens (an admin checks the ID),
+// so their setup goes from the live page straight to the booking rules.
+const REAL_STEPS: Step[] = STEPS.filter((s) => s !== "id" && s !== "bank" && s !== "deposit");
 
 const naira = (n: number) => "₦" + Math.round(n).toLocaleString("en-NG");
 const digits = (s: string) => Number(s.replace(/\D/g, "")) || 0;
 
-export function StartFlow() {
+export function StartFlow({ real = false, ownerName = "" }: { real?: boolean; ownerName?: string }) {
+  const steps = real ? REAL_STEPS : STEPS;
   const [step, setStep] = useState<Step>("trade");
   const [pending, start] = useTransition();
   const [problem, setProblem] = useState<string>();
@@ -126,13 +130,13 @@ export function StartFlow() {
   const [counts, setCounts] = useState(true);
   const [rules, setRules] = useState<string[] | null>(null);
 
-  const index = STEPS.indexOf(step);
+  const index = steps.indexOf(step);
   const go = (s: Step) => {
     setProblem(undefined);
     setStep(s);
     window.scrollTo(0, 0);
   };
-  const back = () => index > 0 && go(STEPS[index - 1]);
+  const back = () => index > 0 && go(steps[index - 1]);
 
   function seed() {
     const key = `${trades.join(",")}|${state}`;
@@ -175,7 +179,7 @@ export function StartFlow() {
   function saveMoney() {
     start(async () => {
       const deposit = depositMode === "fixed" ? { mode: "fixed" as const, amount: depositFixed, counts } : { mode: "percent" as const, percent: depositPercent, counts };
-      const r = await saveStartMoney({ ownerName: idName, deposit, rules: rules ?? [] });
+      const r = await saveStartMoney({ ownerName: idName, deposit: real ? undefined : deposit, rules: rules ?? [] });
       if (!r.ok) return setProblem(r.error);
       go("done");
     });
@@ -194,10 +198,14 @@ export function StartFlow() {
       case "deposit":
         if (!rules) setRules(presetRules(workPlace ?? "shop", services.some((s) => s.on && s.item.eventDay)));
         return go("rules");
+      case "live":
+        if (!real) return go("id");
+        if (!rules) setRules(presetRules(workPlace ?? "shop", services.some((s) => s.on && s.item.eventDay)));
+        return go("rules");
       case "rules":
         return saveMoney();
       default:
-        return go(STEPS[index + 1]);
+        return go(steps[index + 1]);
     }
   }
 
@@ -217,13 +225,13 @@ export function StartFlow() {
     rules: true,
     done: true,
   };
-  const label: Partial<Record<Step, string>> = { live: "Take deposits", id: "Send my ID", deposit: "Use this deposit", rules: "Save my rules", hours: "Put my page live" };
+  const label: Partial<Record<Step, string>> = { live: real ? "Add my booking rules" : "Take deposits", id: "Send my ID", deposit: "Use this deposit", rules: "Save my rules", hours: "Put my page live" };
 
   async function addLogo(file: File | undefined) {
     if (!file) return;
     setProblem(undefined);
     try {
-      setLogoUrl(await demoUpload(await prepareLogo(file)));
+      setLogoUrl(await uploadMedia(await (await fetch(await prepareLogo(file))).blob(), "logo"));
     } catch (e) {
       setProblem((e as Error).message);
     }
@@ -251,8 +259,7 @@ export function StartFlow() {
     for (const file of picked) {
       try {
         const prepared = await preparePortfolio(file);
-        const full = typeof prepared.url === "string" ? prepared.url : prepared.url.full;
-        const [url, thumbUrl] = await Promise.all([demoUpload(full), demoUpload(prepared.thumbUrl)]);
+        const [url, thumbUrl] = await Promise.all([uploadPhoto(prepared.url, "portfolio"), uploadPhoto(prepared.thumbUrl, "portfolio")]);
         const r = await addPhoto({ url, thumbUrl, ...prepared.details });
         if (!r.ok) {
           setProblem(r.error);
@@ -267,11 +274,12 @@ export function StartFlow() {
     }
   }
 
-  const pct = Math.round((index / (STEPS.length - 1)) * 100);
+  const pct = Math.round((index / (steps.length - 1)) * 100);
   const sampleSvc = useMemo(() => services.find((s) => s.on && !s.item.eventDay) ?? services.find((s) => s.on), [services]);
   const samplePrice = sampleSvc ? (sampleSvc.item.options ? sampleSvc.item.options[sampleSvc.item.options.length - 1].price : sampleSvc.item.price ?? 0) : 20000;
   const sampleDeposit = depositOn(samplePrice, depositMode === "fixed" ? { mode: "fixed", amount: depositFixed } : { mode: "percent", percent: depositPercent });
-  const firstName = (idName.trim() || name.trim()).split(" ")[0] || "there";
+  // The owner's own name: from their account (real), or the demo's ID step.
+  const firstName = (real ? ownerName.trim() : idName.trim()).split(/\s+/)[0] || "there";
   const noun = TRADES.find((t) => t.id === trades[0])?.noun ?? "beauty";
 
   return (
@@ -578,9 +586,11 @@ export function StartFlow() {
               </label>
             </div>
             <p className="text-caption text-ink-muted">{photos.length < MIN_PHOTOS ? `${MIN_PHOTOS - photos.length} more to go.` : `${photos.length} photos. You can add more later.`}</p>
-            <button type="button" className="text-label justify-self-start text-brand underline underline-offset-4" onClick={() => go("hours")}>
-              Skip for now (demo)
-            </button>
+            {!real && (
+              <button type="button" className="text-label justify-self-start text-brand underline underline-offset-4" onClick={() => go("hours")}>
+                Skip for now (demo)
+              </button>
+            )}
           </>
         )}
 
@@ -657,9 +667,15 @@ export function StartFlow() {
             <Link href={`/${slug}`} target="_blank" className="btn btn-secondary btn-lg w-full rounded-pill">
               <ExternalLink aria-hidden="true" /> See your page
             </Link>
-            <Note tone="gold" icon={ShieldCheck}>
-              <b>One more step: stop no-shows.</b> Customers pay a small deposit when they book. If they don&apos;t come, you keep it.
-            </Note>
+            {real ? (
+              <Note icon={ShieldCheck}>
+                <b>Next: your booking rules.</b> Customers see them before they book. Deposits come after, once we&apos;ve checked your ID.
+              </Note>
+            ) : (
+              <Note tone="gold" icon={ShieldCheck}>
+                <b>One more step: stop no-shows.</b> Customers pay a small deposit when they book. If they don&apos;t come, you keep it.
+              </Note>
+            )}
           </>
         )}
 
@@ -841,7 +857,7 @@ export function StartFlow() {
                 <PartyPopper size={34} aria-hidden="true" />
               </span>
               <h1 className="text-heading">You&apos;re all set, {firstName}!</h1>
-              <p className="text-body-lg text-ink-muted">Customers can book you and pay a deposit.</p>
+              <p className="text-body-lg text-ink-muted">{real ? "Customers can see your work and book you." : "Customers can book you and pay a deposit."}</p>
             </div>
             <ul className="grid gap-0.5 rounded-card border border-line bg-surface-raised px-4 py-2">
               {[
@@ -849,8 +865,9 @@ export function StartFlow() {
                 `${services.filter((s) => s.on).length} services with prices`,
                 `${photos.length} photos of your work`,
                 "Your working hours",
-                "ID sent: we check it the same day",
-                `Deposits: ${depositMode === "fixed" ? naira(depositFixed) : `${depositPercent}%`} to ${bank || "your bank"}`,
+                ...(real
+                  ? []
+                  : ["ID sent: we check it the same day", `Deposits: ${depositMode === "fixed" ? naira(depositFixed) : `${depositPercent}%`} to ${bank || "your bank"}`]),
                 "Your booking rules",
               ].map((t) => (
                 <li key={t} className="flex min-h-12 items-center gap-3">
@@ -861,10 +878,26 @@ export function StartFlow() {
                 </li>
               ))}
             </ul>
-            <Note icon={Clock}>Until we&apos;ve checked your ID, customers can still book. Deposits switch on once it&apos;s checked.</Note>
-            <Link href="/app" className="btn btn-lg w-full rounded-pill">
-              Go to my dashboard <ArrowRight aria-hidden="true" />
-            </Link>
+            {real ? (
+              <>
+                <Note tone="gold" icon={ShieldCheck}>
+                  <b>Stop no-shows with deposits.</b> Add your ID and bank account. We check your ID the same day, then customers pay a deposit when they book.
+                </Note>
+                <Link href="/app/settings/get-paid" className="btn btn-lg w-full rounded-pill">
+                  Take deposits <ArrowRight aria-hidden="true" />
+                </Link>
+                <Link href="/app" className="btn btn-secondary btn-lg w-full rounded-pill">
+                  Go to my dashboard
+                </Link>
+              </>
+            ) : (
+              <>
+                <Note icon={Clock}>Until we&apos;ve checked your ID, customers can still book. Deposits switch on once it&apos;s checked.</Note>
+                <Link href="/app" className="btn btn-lg w-full rounded-pill">
+                  Go to my dashboard <ArrowRight aria-hidden="true" />
+                </Link>
+              </>
+            )}
             <Link href={`/${slug}`} target="_blank" className="btn btn-secondary btn-lg w-full rounded-pill">
               <ExternalLink aria-hidden="true" /> See my page
             </Link>
@@ -888,15 +921,6 @@ export function StartFlow() {
       )}
     </div>
   );
-}
-
-/** DEMO: photos go to the in-memory media route, never to Supabase Storage. */
-async function demoUpload(dataUrl: string): Promise<string> {
-  const blob = await (await fetch(dataUrl)).blob();
-  const res = await fetch("/api/demo/media", { method: "POST", body: blob, headers: { "Content-Type": blob.type } });
-  const r = (await res.json().catch(() => ({ ok: false }))) as { ok: boolean; url?: string; error?: string };
-  if (!r.ok || !r.url) throw new Error(r.error ?? "That upload didn't go through. Try again.");
-  return r.url;
 }
 
 function Title({ title, lead }: { title: string; lead?: string }) {

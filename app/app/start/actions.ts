@@ -1,14 +1,18 @@
 "use server";
 
-// NEW DIRECTION, stage 1 (docs/OWNER_JOURNEYS.md journey 1): the new setup, saved to the demo store
-// only. Real accounts are refused here, so nothing in this flow touches Supabase.
+// The new setup (docs/OWNER_JOURNEYS.md journey 1). Real accounts save to Supabase through the same
+// saveBusiness() as the rest of the dashboard (docs/DB_MOVE.md step 1); the demo saves to the demo
+// store. A real business set up the old way (no trades) is refused, so this never replaces its
+// services or page. ID, bank and deposit are the real Get paid screens for real accounts; the
+// demo pretends them here.
 
 import { revalidatePath } from "next/cache";
-import { getBusiness, isDbId, saveBusiness, takenPrefixes, takenSlugs } from "@/lib/data";
+import { BusinessSaveError, getBusiness, isDbId, saveBusiness, takenPrefixes, takenSlugs } from "@/lib/data";
 import { saveBookingSettings, saveDemoDeposit } from "@/lib/bookings-data";
 import { checkBrandColor, parseColor, SWATCHES } from "@/lib/color";
 import { STATE_NAMES } from "@/lib/nigeria";
 import { isTrade, tradeCategory, type TradeId } from "@/lib/presets";
+import { toStored } from "@/lib/media-path";
 import { demoAllowed, getOwnerUser, setDemoSession } from "@/lib/session";
 import { initialsFrom, normalizeNgPhone, prefixAlternatives, suggestPrefix } from "@/lib/setup";
 import { slugAlternatives, suggestSlug } from "@/lib/slug";
@@ -40,26 +44,35 @@ export interface StartPage {
 export interface StartMoney {
   /** The owner's name from the ID step, so the dashboard can greet them. */
   ownerName: string;
-  deposit: { mode: "percent"; percent: number; counts: boolean } | { mode: "fixed"; amount: number; counts: boolean };
+  /** The demo only: real deposits are set on Get paid once the ID is approved. */
+  deposit?: { mode: "percent"; percent: number; counts: boolean } | { mode: "fixed"; amount: number; counts: boolean };
   rules: string[];
 }
 
 type Result = { ok: true; slug: string } | { ok: false; error: string };
 
-async function demoOwner() {
-  if (!demoAllowed) return null;
+async function setupOwner() {
   const user = await getOwnerUser();
-  // Demo only for now: a real account would write to Supabase.
-  if (!user || isDbId(user.id)) return null;
+  if (!user) return null;
+  if (!isDbId(user.id) && !demoAllowed) return null;
   return user;
+}
+
+/** A logo the owner uploaded: their own Storage folder (real), or the demo media route. */
+function ownLogo(url: string | undefined, userId: string): string | undefined {
+  if (!url) return undefined;
+  if (!isDbId(userId)) return url.startsWith("/api/demo/media/") ? url : undefined;
+  const path = toStored(url);
+  return path && path !== url && path.startsWith(`images/${userId}/logo/`) ? url : undefined;
 }
 
 const naira = (n: unknown) => (typeof n === "number" && Number.isFinite(n) ? Math.max(0, Math.min(10_000_000, Math.round(n))) : 0);
 
 /** Creates (or updates) the business page from the setup screens. Called when the page goes live. */
 export async function saveStartPage(input: StartPage): Promise<Result> {
-  const user = await demoOwner();
-  if (!user) return { ok: false, error: "This new setup only works with the demo for now." };
+  const user = await setupOwner();
+  if (!user) return { ok: false, error: "Sign in again to set up your business." };
+  const real = isDbId(user.id);
 
   const trades = input.trades.filter(isTrade) as TradeId[];
   const name = input.name.trim().slice(0, 40);
@@ -96,6 +109,7 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
   if (unpriced) return { ok: false, error: `Add a price for ${unpriced.name}.` };
 
   const current = await getBusiness(user);
+  if (real && current && !current.trades?.length) return { ok: false, error: "Your page is already set up. Open your dashboard." };
   const taken = await takenSlugs(user);
   let slug = current?.slug ?? suggestSlug(name);
   if (!current && taken.has(slug)) slug = slugAlternatives(slug, input.city, taken, 1)[0] ?? `${slug}-${Date.now() % 1000}`;
@@ -104,8 +118,7 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
   if (!current && prefixes.has(codePrefix)) codePrefix = prefixAlternatives(name, prefixes, 1)[0] ?? "TK";
   // Any colour the owner picked or typed (a swatch, a hex code or a colour word, made a hex in the browser).
   const brandColor = parseColor(String(input.brandColor ?? "")) ?? current?.brandColor ?? SWATCHES[0].hex;
-  // DEMO: logos come from the in-memory media route only.
-  const logoUrl = input.logoUrl?.startsWith("/api/demo/media/") ? input.logoUrl : current?.logoUrl;
+  const logoUrl = ownLogo(input.logoUrl, user.id) ?? current?.logoUrl;
 
   const actions: Business["actions"] = [{ kind: "whatsapp", value: phone }];
   for (const kind of ["instagram", "tiktok", "facebook"] as const) {
@@ -145,19 +158,25 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
     workPlace: input.workPlace,
     travelFee: input.workPlace === "shop" ? undefined : naira(input.travelFee),
     travelReach: input.workPlace === "shop" ? undefined : input.travelReach,
-    isDemo: true,
+    // Real businesses are never demo ones (the database keeps is_demo for Tikka anyway).
+    isDemo: real ? current?.isDemo : true,
   };
   // Their best photo opens the page until they pick a cover under Your page.
   const first = next.portfolio.find((p) => p.kind !== "video");
   if (first && !next.page?.heroImageUrl) next.page = { ...next.page, heroImageUrl: first.url };
-  await saveBusiness(user, next);
-  await saveBookingSettings(user, {
-    enabled: true,
-    capacity: Math.max(1, Math.min(8, Math.round(input.capacity))),
-    noticeMinutes: 120,
-    aheadDays: 92,
-    minutes: Object.fromEntries(services.map((s) => [s.id!, s.minutes ?? null])),
-  });
+  try {
+    await saveBusiness(user, next);
+    await saveBookingSettings(user, {
+      enabled: true,
+      capacity: Math.max(1, Math.min(8, Math.round(input.capacity))),
+      noticeMinutes: 120,
+      aheadDays: 92,
+      // Real services carry their minutes (save_services); the demo store keeps them here.
+      minutes: real ? {} : Object.fromEntries(services.map((s) => [s.id!, s.minutes ?? null])),
+    });
+  } catch (e) {
+    return { ok: false, error: e instanceof BusinessSaveError ? e.message : "We couldn't save your page. Try again." };
+  }
   revalidatePath("/app", "layout");
   revalidatePath(`/${slug}`);
   return { ok: true, slug };
@@ -165,18 +184,26 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
 
 /** Saves the deposit and booking rules (the ID and bank steps are pretend in the demo). */
 export async function saveStartMoney(input: StartMoney): Promise<Result> {
-  const user = await demoOwner();
-  if (!user) return { ok: false, error: "This new setup only works with the demo for now." };
+  const user = await setupOwner();
+  if (!user) return { ok: false, error: "Sign in again to set up your business." };
+  const real = isDbId(user.id);
   const b = await getBusiness(user);
   if (!b) return { ok: false, error: "Set up your page first." };
+  // Real deposits need an approved ID and a bank account first (Get paid), so only the demo saves one here.
   const d = input.deposit;
-  await saveDemoDeposit(user, d.mode === "percent"
-    ? { mode: "percent", percent: Math.max(10, Math.min(100, Math.round(d.percent))), counts: d.counts }
-    : { mode: "fixed", fixedKobo: naira(d.amount) * 100, counts: d.counts });
+  if (!real && d) {
+    await saveDemoDeposit(user, d.mode === "percent"
+      ? { mode: "percent", percent: Math.max(10, Math.min(100, Math.round(d.percent))), counts: d.counts }
+      : { mode: "fixed", fixedKobo: naira(d.amount) * 100, counts: d.counts });
+  }
   const rules = input.rules.map((r) => r.trim().slice(0, 240)).filter(Boolean).slice(0, 10);
-  await saveBusiness(user, { ...b, bookingRules: rules });
+  try {
+    await saveBusiness(user, { ...b, bookingRules: rules });
+  } catch (e) {
+    return { ok: false, error: e instanceof BusinessSaveError ? e.message : "We couldn't save your rules. Try again." };
+  }
   const first = input.ownerName.trim().split(/\s+/)[0];
-  if (first) await setDemoSession({ ...user, name: first.slice(0, 30) });
+  if (!real && first) await setDemoSession({ ...user, name: first.slice(0, 30) });
   revalidatePath("/app", "layout");
   revalidatePath(`/${b.slug}`);
   return { ok: true, slug: b.slug };

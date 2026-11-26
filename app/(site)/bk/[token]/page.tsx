@@ -49,7 +49,7 @@ async function Pass({ params, searchParams }: { params: PageProps<"/bk/[token]">
   }
   const pass = await getBookingPass(token);
   if (!pass) notFound();
-  // NEW DIRECTION (demo only for now): the customer can move or cancel within the booking rules.
+  // The customer can move (24 hours' notice) or cancel within the booking rules.
   const change = await passBooking(token);
   const b = pass.business;
   const number = bookingNumber(b);
@@ -115,7 +115,7 @@ async function Pass({ params, searchParams }: { params: PageProps<"/bk/[token]">
           <div className="bk-row flex items-start gap-2.5 text-body" style={{ "--i": 1 } as React.CSSProperties}>
             <MapPin size={17} className="mt-0.5 shrink-0 text-ink-muted" aria-hidden="true" />
             <dt className="sr-only">Where</dt>
-            <dd>{pass.homeArea ? `${b.name} comes to you: ${pass.homeArea}` : `${b.name}, ${b.address || place(b.area, b.city)}`}</dd>
+            <dd>{pass.homeArea || pass.home ? `${b.name} comes to you${pass.homeArea ? `: ${pass.homeArea}` : " at the address you gave"}` : `${b.name}, ${b.address || place(b.area, b.city)}`}</dd>
           </div>
           {pass.depositPaidKobo ? (
             <div className="bk-row flex items-start gap-2.5" style={{ "--i": 2 } as React.CSSProperties}>
@@ -125,7 +125,7 @@ async function Pass({ params, searchParams }: { params: PageProps<"/bk/[token]">
                 {naira(pass.depositPaidKobo / 100)} paid ·{" "}
                 {(() => {
                   const left = leftToPay(pass, pass.depositPaidKobo);
-                  return left === null ? `the rest agreed with ${b.name}` : left > 0 ? `${naira(left / 100)} to pay ${pass.homeArea ? "on the day" : `at ${b.name}`}` : "nothing more to pay";
+                  return left === null ? `the rest agreed with ${b.name}` : left > 0 ? `${naira(left / 100)} to pay ${pass.homeArea || pass.home ? "on the day" : `at ${b.name}`}` : "nothing more to pay";
                 })()}
               </dd>
             </div>
@@ -171,7 +171,8 @@ async function Pass({ params, searchParams }: { params: PageProps<"/bk/[token]">
 
       {pass.status === "held" ? null : cancelled ? (
         <p className="text-body rounded-md bg-surface-sunken px-4 py-3">
-          {b.name} cancelled this booking. Message them to find another time.
+          {/* The customer can cancel from here too, so don't say who did. */}
+          This booking was cancelled. Message {b.name} to find another time.
         </p>
       ) : (
         <p className="text-body text-ink-muted">

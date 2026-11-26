@@ -3,7 +3,9 @@
 // NEW DIRECTION, stage 3 (docs/OWNER_JOURNEYS.md journeys 2 and 3, prototype
 // design/prototypes/customer-booking.html): the customer books from the business page. Choices,
 // extras, home service, a free time or a wedding date, the total and deposit, then the pass.
-// Opens from every [data-book] link, like CalendarSheet. Demo businesses only for now.
+// Opens from every [data-book] link, like CalendarSheet. Real businesses book through book_time_v2()
+// (docs/DB_MOVE.md step 2): the server's price and deposit are shown before Book, and a deposit goes
+// to Paystack. Demo businesses price in the browser and pretend the payment.
 // It wears the page's colours (lib/sheet-theme.ts), and from a Tikka's card ("Book a time to use it",
 // ?tikka=) it opens by itself and books for that Tikka: before its use-by, no details, no deposit.
 
@@ -28,6 +30,16 @@ export interface FlowBusiness {
   /** Gap time: kept free after a booking (and extra after a home visit), so free times leave room for it. */
   gapMinutes?: number;
   homeGapMinutes?: number;
+  /** A real business: the server prices the booking (price_booking()) and the deposit is paid on Paystack. */
+  live?: boolean;
+}
+
+/** price_booking()'s answer, in kobo. */
+interface ServerPrice {
+  totalKobo: number;
+  depositKobo: number;
+  depositCounts: boolean;
+  minutes: number;
 }
 
 /** "Book a time to use it": the claimer's Tikka, read on the server (getTikkaForBooking). */
@@ -54,8 +66,9 @@ function stepsFor(s: ServiceItem, b: FlowBusiness, forTikka = false): Step[] {
   if (s.perPerson) out.push("people");
   if (!s.eventDay) out.push("time");
   if (s.extras?.length) out.push("extras");
-  // A Tikka booking: name and number come from the claim, and it never takes a deposit.
-  out.push(...(forTikka ? (["review"] as const) : (["details", "review", "pay"] as const)));
+  // A Tikka booking: name and number come from the claim, and it never takes a deposit. A real
+  // business's deposit is paid on Paystack's own page, so there's no pretend pay step.
+  out.push(...(forTikka ? (["review"] as const) : b.live ? (["details", "review"] as const) : (["details", "review", "pay"] as const)));
   return out;
 }
 
@@ -81,6 +94,8 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
   const [answers, setAnswers] = useState<string[]>([]);
+  const [email, setEmail] = useState("");
+  const [server, setServer] = useState<ServerPrice | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [waitlisted, setWaitlisted] = useState(false);
@@ -97,6 +112,7 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
     setError("");
     setWaitlisted(false);
     setAnswers((s.questions ?? []).map(() => ""));
+    setServer(null);
     setStep(stepsFor(s, b, !!tikka)[0]);
     if (!ref.current?.open) ref.current?.showModal();
     void fetch(`/api/book?slug=${encodeURIComponent(b.slug)}`, { cache: "no-store" })
@@ -133,7 +149,36 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
 
   const steps = svc ? stepsFor(svc, b, !!tikka) : [];
   const index = steps.indexOf(step);
-  const price = svc ? priceBooking(svc, { option: option ?? 0, people, extras, home: !!home }, b.travelFee, tikka ? undefined : b.deposit) : null;
+  const local = svc ? priceBooking(svc, { option: option ?? 0, people, extras, home: !!home }, b.travelFee, tikka ? undefined : b.deposit) : null;
+  // A real business: the total and deposit are the server's (the same sums book_time_v2() charges).
+  const price =
+    local && b.live && server
+      ? (() => {
+          const total = server.totalKobo / 100;
+          const deposit = tikka ? 0 : server.depositKobo / 100;
+          return { ...local, totalNaira: total, depositNaira: deposit, restNaira: Math.max(0, server.depositCounts ? total - deposit : total), depositLabel: "" };
+        })()
+      : local;
+  const needsEmail = !!b.live && !tikka && (server?.depositKobo ?? 0) > 0;
+
+  // Ask the server for the price once the picks are made (details and review).
+  const pickKey = JSON.stringify([svc?.id, option, people, extras, home]);
+  useEffect(() => {
+    if (!b.live || !svc?.id || (step !== "details" && step !== "review")) return;
+    let gone = false;
+    void fetch("/api/book-v2/price", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ slug: b.slug, serviceId: svc.id, option: option ?? 0, people, extras, home: !!home }),
+    })
+      .then((r) => r.json())
+      .then((d: { price: ServerPrice | null }) => !gone && setServer(d.price))
+      .catch(() => undefined);
+    return () => {
+      gone = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [b.live, b.slug, pickKey, step]);
   const after = svc ? gapAfter(b, svc, home === true) : 0;
   const days = useMemo(() => (rules && svc && !svc.eventDay ? freeDays(rules, price?.minutes ?? 60, new Date(), tikka?.until, after) : []), [rules, svc, price?.minutes, after, tikka?.until]);
 
@@ -152,8 +197,13 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
     call: time !== null,
     people: true,
     extras: true,
-    details: name.trim().length > 1 && phone.replace(/\D/g, "").length >= 10 && (svc?.questions ?? []).every((_, i) => (answers[i] ?? "").trim().length > 0),
-    review: true,
+    details:
+      name.trim().length > 1 &&
+      phone.replace(/\D/g, "").length >= 10 &&
+      (svc?.questions ?? []).every((_, i) => (answers[i] ?? "").trim().length > 0) &&
+      (!needsEmail || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())),
+    // A real booking waits for the server's price before Book or Pay.
+    review: !b.live || !!server || !!tikka,
     pay: true,
   };
 
@@ -189,10 +239,15 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
           area,
           address,
           answers: [...(svc.questions ?? []).map((q, i) => (answers[i]?.trim() ? `${q} ${answers[i].trim()}` : "")), note.trim()].filter(Boolean).join(" · "),
-          ...(tikka ? { tikka: tikka.token } : { name, phone }),
+          ...(tikka ? { tikka: tikka.token } : { name, phone, email: needsEmail ? email.trim() : undefined }),
         }),
       });
-      const data = (await res.json()) as { ok: boolean; token?: string; reason?: string };
+      const data = (await res.json()) as { ok: boolean; token?: string; pay?: string; reason?: string };
+      // A deposit: on to Paystack's own page; it comes back to the pass.
+      if (data.ok && data.pay) {
+        window.location.href = data.pay;
+        return;
+      }
       if (data.ok && data.token) {
         close();
         router.push(tikka ? `/t/${tikka.token}` : `/bk/${data.token}`);
@@ -473,7 +528,10 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
                   </label>
                   <textarea id="bf-note" className="input h-auto min-h-21 py-3" value={note} onChange={(e) => setNote(e.target.value)} placeholder={svc.eventDay ? "e.g. oily skin, emerald and gold" : "e.g. sensitive scalp, I'll bring my own hair"} maxLength={160} />
                 </div>
-                <p className="text-caption text-center text-ink-muted">Demo: nothing is sent. Any number works.</p>
+                {needsEmail && (
+                  <Input id="bf-email" label="Email, for your payment receipt" value={email} onChange={setEmail} placeholder="you@example.com" inputMode="email" autoComplete="email" />
+                )}
+                {!b.live && <p className="text-caption text-center text-ink-muted">Demo: nothing is sent. Any number works.</p>}
               </>
             )}
 
@@ -494,7 +552,7 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
                 {svc.priceKind === "from" && <p className="text-caption -mt-2 text-ink-muted">This is the starting price. {b.name} confirms the final price with you; the deposit is on the starting price.</p>}
                 {price.depositNaira > 0 ? (
                   <div className="grid gap-1.5 rounded-card bg-ink p-4 text-surface">
-                    <span className="text-caption opacity-80">Deposit to pay now ({price.depositLabel})</span>
+                    <span className="text-caption opacity-80">Deposit to pay now{price.depositLabel ? ` (${price.depositLabel})` : ""}</span>
                     <span className="text-code-lg tracking-normal">{naira(price.depositNaira)}</span>
                     <span className="text-caption opacity-80">
                       {naira(price.restNaira)} to pay {svc.eventDay ? "on the day" : "at the appointment"}. The deposit goes straight to {b.name}.
@@ -558,7 +616,7 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
                 type="button"
                 className="btn btn-lg shrink-0 rounded-pill bg-(--bf-acc) text-(--bf-on-acc) hover:bg-(--bf-acc)"
                 disabled={!ready[step] || busy}
-                onClick={step === "review" ? (price.depositNaira > 0 ? next : pay) : next}
+                onClick={step === "review" ? (price.depositNaira > 0 && !b.live ? next : pay) : next}
               >
                 {step === "review" ? (price.depositNaira > 0 ? `Pay ${naira(price.depositNaira)} deposit` : "Book") : "Continue"}
               </button>
@@ -610,7 +668,7 @@ function Round({ label, disabled, onClick, children }: { label: string; disabled
   );
 }
 
-function Input({ id, label, value, onChange, placeholder, inputMode, autoComplete }: { id: string; label: string; value: string; onChange: (v: string) => void; placeholder?: string; inputMode?: "tel"; autoComplete?: string }) {
+function Input({ id, label, value, onChange, placeholder, inputMode, autoComplete }: { id: string; label: string; value: string; onChange: (v: string) => void; placeholder?: string; inputMode?: "tel" | "email"; autoComplete?: string }) {
   return (
     <div>
       <label htmlFor={id} className="text-label mb-1.5 block">

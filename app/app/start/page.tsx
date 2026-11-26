@@ -2,19 +2,23 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { StartFlow } from "@/components/start/StartFlow";
-import { isDbId } from "@/lib/data";
+import { getBusiness, isDbId } from "@/lib/data";
 import { demoAllowed, getSessionUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Set up your business" };
 
-// NEW DIRECTION, stage 1: the new setup (docs/OWNER_JOURNEYS.md journey 1). Demo businesses only
-// for now, so nothing here touches Supabase; real accounts keep the current setup.
+// The new setup (docs/OWNER_JOURNEYS.md journey 1), for every new business (docs/DB_MOVE.md step 1).
+// Real accounts save to Supabase; the demo saves to the demo store. A business set up the old way
+// already has its page, so it goes to the dashboard (its "finish setting up" is step 8).
 async function Start() {
   const user = await getSessionUser();
-  if (!user) redirect("/sign-in");
-  if (!demoAllowed || isDbId(user.id)) redirect("/app/setup");
+  if (!user) redirect("/sign-in?next=/app/start");
   if (user.role !== "owner") redirect("/app/redeem");
-  return <StartFlow />;
+  const real = isDbId(user.id);
+  if (!real && !demoAllowed) redirect("/sign-in");
+  const b = await getBusiness(user);
+  if (b && !b.trades?.length) redirect("/app");
+  return <StartFlow real={real} ownerName={user.name} />;
 }
 
 export default function StartPage() {

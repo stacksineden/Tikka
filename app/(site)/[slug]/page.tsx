@@ -23,7 +23,7 @@ import { ACTION_LABEL, ActionIcon, actionHref } from "@/components/tikka/ActionI
 import { isSocial } from "@/lib/social";
 import { demoDepositRule, getBookingDeposits, getBookingRules, getTikkaForBooking, serviceLengths } from "@/lib/bookings-data";
 import { paystackMode } from "@/lib/paystack";
-import { getBusinessBySlug, getBusinessReviews, getPageDrops } from "@/lib/data";
+import { getBusinessBySlug, getBusinessReviews, getPageDrops, isDbId } from "@/lib/data";
 import { count, place } from "@/lib/format";
 import { bookingLink, bookingNumber, focalPosition, priceText, heroHeadline, pageStyle, serviceGroups, showsLocation, visibleSections, whereLine } from "@/lib/page";
 import { photoSrcSet } from "@/lib/media-path";
@@ -186,8 +186,9 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
 
   const sheets = (
     <>
-      {calendar && b.trades?.length ? (
-        // NEW DIRECTION, stage 3 (demo only for now): choices, extras, home service, event days and the deposit.
+      {calendar && (b.trades?.length || isDbId(found.ownerId)) ? (
+        // The booking sheet with choices, extras, home service, event days and the deposit. Every real
+        // business (docs/DB_MOVE.md: everyone gets the new experience) and the new-setup demo ones.
         <BookingFlow
           business={{
             slug: b.slug,
@@ -200,6 +201,7 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
             deposit: demoDepositRule(found.ownerId, b),
             gapMinutes: b.gapMinutes,
             homeGapMinutes: b.homeGapMinutes,
+            live: isDbId(found.ownerId),
           }}
           services={bookable}
           theme={sheetTheme(pageStyle(b), b.page?.galleryTone, b.brandColor, b.onBrandColor)}

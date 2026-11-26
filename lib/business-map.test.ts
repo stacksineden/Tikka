@@ -138,3 +138,50 @@ describe("portfolio photo details", () => {
     expect(portfolioDetailsTo({ camera: { camera: "x".repeat(400) } })).toEqual({});
   });
 });
+
+describe("the new direction's fields (docs/DB_MOVE.md step 1)", () => {
+  const row = (b: Business): BusinessRow => ({ id: "b1", verified: false, suspended: false, rating_avg: null, rating_count: 0, is_demo: false, ...cardTo(b) }) as BusinessRow;
+
+  it("round-trip trades, home service, rules and gaps", () => {
+    const b: Business = { ...business, trades: ["hair", "makeup"], workPlace: "both", travelFee: 5000, travelReach: "city", bookingRules: ["Come with washed hair"], gapMinutes: 15, homeGapMinutes: 30 };
+    const back = businessFrom(row(b), null, null, [], [], [], []);
+    expect(back).toMatchObject({ trades: ["hair", "makeup"], workPlace: "both", travelFee: 5000, travelReach: "city", bookingRules: ["Come with washed hair"], gapMinutes: 15, homeGapMinutes: 30 });
+    expect(cardTo(b)).toMatchObject({ travel_fee_kobo: 500000 });
+  });
+
+  it("stay empty for a business set up the old way", () => {
+    const back = businessFrom(row(business), null, null, [], [], [], []);
+    expect(back.trades).toBeUndefined();
+    expect(back.workPlace).toBeUndefined();
+    expect(back.bookingRules).toBeUndefined();
+    expect(cardTo(business)).toMatchObject({ trades: null, work_place: null, travel_fee_kobo: null, booking_rules: null, gap_minutes: null });
+  });
+
+  it("drop the travel fee for a shop and blank booking rules (the database insists)", () => {
+    const c = cardTo({ ...business, workPlace: "shop", travelFee: 5000, travelReach: "city", bookingRules: [" ", "Be on time "] });
+    expect(c).toMatchObject({ work_place: "shop", travel_fee_kobo: null, travel_reach: null, booking_rules: ["Be on time"] });
+  });
+
+  it("round-trip service options, extras, questions and gaps in kobo", () => {
+    const s = {
+      name: "Bridal makeup",
+      price: 80000,
+      minutes: 120,
+      options: [{ label: "Bride", price: 80000, minutes: 120 }, { label: "Each bridesmaid", price: 25000, minutes: 45 }],
+      extras: [{ name: "Lashes", price: 3000 }],
+      eventDay: true,
+      perPerson: true,
+      questions: ["How many people? ", ""],
+      gapMinutes: 30,
+    };
+    const out = serviceTo(s);
+    expect(out).toMatchObject({ options: [{ label: "Bride", price_kobo: 8000000, minutes: 120 }, { label: "Each bridesmaid", price_kobo: 2500000, minutes: 45 }], extras: [{ name: "Lashes", price_kobo: 300000 }], event_day: true, per_person: true, questions: ["How many people?"], gap_minutes: 30 });
+    const back = serviceFrom({ id: "s1", ...out } as Parameters<typeof serviceFrom>[0]);
+    expect(back).toMatchObject({ options: s.options, extras: s.extras, eventDay: true, perPerson: true, questions: ["How many people?"], gapMinutes: 30 });
+  });
+
+  it("never send per person without two options", () => {
+    expect(serviceTo({ name: "Gele", price: 5000, perPerson: true, options: [{ label: "One", price: 5000, minutes: 30 }] }).per_person).toBe(false);
+    expect(serviceTo({ name: "Silk press", price: 15000 })).toMatchObject({ options: null, extras: null, event_day: false, per_person: false, questions: null, gap_minutes: null });
+  });
+});

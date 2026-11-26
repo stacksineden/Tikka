@@ -31,6 +31,9 @@ export function bookingFrom(r: Row): Booking {
     priceKobo: r.price_kobo == null ? undefined : Number(r.price_kobo),
     priceKind: (r.price_kind as Booking["priceKind"]) ?? undefined,
     depositCounts: r.deposit_counts == null ? undefined : r.deposit_counts === true,
+    // Booking with choices (booking_choices migration): the address reaches owners only.
+    homeArea: (r.home_area as string | null) ?? undefined,
+    detail: (r.detail as string | null) ?? undefined,
   };
 }
 
@@ -98,8 +101,9 @@ export interface BookingPass {
   holdLive?: boolean;
   /** Booked with a Tikka: its card link (code and QR for the counter), its reward, and whether it's used. */
   tikka?: { token: string; reward: string; used: boolean };
-  /** NEW DIRECTION (demo only for now): a home visit's address, and the option and extras picked. */
+  /** A home visit's address (the demo; real passes say only that it's a home visit), and what was picked. */
   homeArea?: string;
+  home?: boolean;
   detail?: string;
 }
 
@@ -126,7 +130,97 @@ export async function dbBookingPass(token: string): Promise<BookingPass | null> 
     priceKind: (r.price_kind as string | null) ?? undefined,
     holdLive: r.hold_live === true,
     tikka: r.tikka_token ? { token: String(r.tikka_token), reward: String(r.tikka_reward ?? ""), used: r.tikka_used === true } : undefined,
+    home: r.home === true,
+    detail: (r.detail as string | null) ?? undefined,
   };
+}
+
+/* ------------------------------------------------ booking with choices (docs/DB_MOVE.md step 2) */
+
+export interface ChoiceInput {
+  option?: number;
+  people?: number[];
+  extras?: number[];
+  home?: boolean;
+}
+
+/** book_time_v2(): Postgres prices the picks and works out the deposit. Server only, after the route's rate limits. */
+export async function dbBookTimeV2(input: {
+  businessId: string;
+  serviceId: string;
+  startsAt: string;
+  firstName: string;
+  phone: string;
+  choice: ChoiceInput;
+  address?: string;
+  area?: string;
+  answers?: string;
+  futureOffers: boolean;
+  visitorId: string;
+  mode: "test" | "live" | null;
+  email: string | null;
+}): Promise<BookResult> {
+  const { data, error } = await adminClient().rpc("book_time_v2", {
+    p_business: input.businessId,
+    p_service: input.serviceId,
+    p_start: input.startsAt,
+    p_first_name: input.firstName,
+    p_phone: input.phone,
+    p_choice: input.choice,
+    p_address: input.address ?? null,
+    p_area: input.area ?? null,
+    p_answers: input.answers ?? null,
+    p_future: input.futureOffers,
+    p_visitor: input.visitorId,
+    p_mode: input.mode,
+    p_email: input.email,
+  });
+  if (error) return { kind: "error" };
+  return data as BookResult;
+}
+
+export interface ServerPrice {
+  totalKobo: number;
+  depositKobo: number;
+  depositCounts: boolean;
+  minutes: number;
+  gapMinutes: number;
+}
+
+/** price_booking(): what the sheet shows before Pay, the same sums book_time_v2() charges. Public. */
+export async function dbPriceBooking(businessId: string, serviceId: string, choice: ChoiceInput, mode: "test" | "live" | null): Promise<ServerPrice | null> {
+  const { data, error } = await adminClient().rpc("price_booking", { p_business: businessId, p_service: serviceId, p_choice: choice, p_mode: mode });
+  if (error || !data) return null;
+  const r = data as Row;
+  return {
+    totalKobo: Number(r.total_kobo),
+    depositKobo: Number(r.deposit_kobo),
+    depositCounts: r.deposit_counts === true,
+    minutes: Number(r.minutes),
+    gapMinutes: Number(r.gap_minutes ?? 0),
+  };
+}
+
+/** change_from_pass(): move (24 hours' notice, the deposit stays) or cancel (no refund). Server only. */
+export async function dbChangeFromPass(token: string, change: { kind: "cancel" } | { kind: "move"; startsAt: string }): Promise<{ ok: true } | { ok: false; reason: string }> {
+  if (!/^[0-9a-f]{24}$/.test(token)) return { ok: false, reason: "not_found" };
+  const { data, error } = await adminClient().rpc("change_from_pass", {
+    p_token: token,
+    p_kind: change.kind,
+    p_start: change.kind === "move" ? change.startsAt : null,
+  });
+  if (error || !data) return { ok: false, reason: "error" };
+  const kind = String((data as Row).kind);
+  return kind === "moved" || kind === "cancelled" ? { ok: true } : { ok: false, reason: kind };
+}
+
+/** What moving from the pass needs: the business, the booking's own time and gap, and whether it's an event day. */
+export async function dbPassBooking(token: string): Promise<{ slug: string; minutes: number; gap: number; eventDay: boolean; startsAt: string } | null> {
+  if (!/^[0-9a-f]{24}$/.test(token)) return null;
+  const { data, error } = await adminClient().rpc("booking_pass", { p_token: token });
+  if (error || !data) return null;
+  const r = data as Row;
+  return { slug: String(r.business_slug), minutes: Number(r.minutes), gap: Number(r.gap_minutes ?? 0), eventDay: r.event_day === true, startsAt: String(r.starts_at) };
 }
 
 export async function dbBookings(businessId: string, from: Date, to: Date): Promise<Booking[]> {

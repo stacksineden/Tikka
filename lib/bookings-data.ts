@@ -39,6 +39,8 @@ import {
   dbCheckBookingCode,
   type BookingPass,
   type BookResult,
+  dbChangeFromPass,
+  dbPassBooking,
 } from "./bookings-db";
 import { demoTikkaForBooking, getBusiness, getBusinessBySlug, isDbId, memberBusinessId } from "./data";
 import type { SessionUser } from "./types";
@@ -406,7 +408,7 @@ export function demoDepositRule(ownerKey: string, business: Business): BookingSe
   return demoBook(ownerKey, business)?.setup.deposit;
 }
 
-/** NEW DIRECTION (demo only): the customer moves or cancels from their pass, within the booking rules. */
+/** The customer moves or cancels from their pass, within the booking rules (demo store, else the database). */
 export async function changeFromPass(token: string, change: { kind: "cancel" } | { kind: "move"; startsAt: string }): Promise<{ ok: true } | { ok: false; reason: string }> {
   for (const [ownerKey, d] of demo) {
     const b = d.bookings.find((x) => x.viewToken === token);
@@ -437,10 +439,11 @@ export async function changeFromPass(token: string, change: { kind: "cancel" } |
     b.moved = true;
     return { ok: true };
   }
-  return { ok: false, reason: "not_found" };
+  // A real booking (docs/DB_MOVE.md step 2): change_from_pass() checks the notice and the free time.
+  return dbChangeFromPass(token, change);
 }
 
-/** NEW DIRECTION (demo only): the pass's booking, for moving it (its business and service). */
+/** The pass's booking, for moving it (its business and service): the demo store, else the database. */
 export async function passBooking(token: string): Promise<{ slug: string; serviceId?: string; minutes: number; gap: number; eventDay: boolean; startsAt: string } | null> {
   for (const [ownerKey, d] of demo) {
     const b = d.bookings.find((x) => x.viewToken === token);
@@ -450,7 +453,7 @@ export async function passBooking(token: string): Promise<{ slug: string; servic
     const svc = owner.services.find((s) => s.id === b.serviceId);
     return { slug: owner.slug, serviceId: b.serviceId, minutes: b.minutes, gap: bookingGap(owner, b), eventDay: !!svc?.eventDay, startsAt: b.startsAt };
   }
-  return null;
+  return dbPassBooking(token);
 }
 
 /**
