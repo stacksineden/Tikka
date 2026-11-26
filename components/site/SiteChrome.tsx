@@ -5,10 +5,10 @@ import { SiteMenu } from "./SiteMenu";
 
 const NAV = [
   { href: "/drops", label: "Browse drops" },
-  { href: "/#how-it-works", label: "How it works" },
-  { href: "/#who-its-for", label: "Who it's for" },
-  { href: "/#pricing", label: "Pricing" },
-  { href: "/#faq", label: "FAQs" },
+  { href: "/business#how-it-works", label: "How it works" },
+  { href: "/business#who-its-for", label: "Who it's for" },
+  { href: "/business#pricing", label: "Pricing" },
+  { href: "/business#faq", label: "FAQs" },
   { href: "/studio", label: "Studio" },
 ];
 
@@ -56,18 +56,20 @@ export function SiteFooter() {
         <div>
           <h2 className="text-label text-ink">For businesses</h2>
           <ul className="text-body mt-3 grid gap-2 text-ink-muted">
+            <li><Link className="hover:text-ink" href="/business">Tikka for businesses</Link></li>
             <li><Link className="hover:text-ink" href="/sign-up">Start free</Link></li>
             <li><Link className="hover:text-ink" href="/sign-in">Sign in</Link></li>
-            <li><Link className="hover:text-ink" href="/#pricing">Pricing</Link></li>
+            <li><Link className="hover:text-ink" href="/business#pricing">Pricing</Link></li>
             <li><Link className="hover:text-ink" href="/help">Help</Link></li>
           </ul>
         </div>
         <div>
           <h2 className="text-label text-ink">Tikka</h2>
           <ul className="text-body mt-3 grid gap-2 text-ink-muted">
-            <li><Link className="hover:text-ink" href="/drops">Browse drops</Link></li>
+            <li><Link className="hover:text-ink" href="/">Find and book</Link></li>
+            <li><Link className="hover:text-ink" href="/drops">Offers near you</Link></li>
             <li><Link className="hover:text-ink" href="/studio">Studio</Link></li>
-            <li><Link className="hover:text-ink" href="/#faq">FAQs</Link></li>
+            <li><Link className="hover:text-ink" href="/business#faq">FAQs</Link></li>
             <li><Link className="hover:text-ink" href="/privacy">Privacy policy</Link></li>
             <li><Link className="hover:text-ink" href="/terms">Terms</Link></li>
             <li><Link className="hover:text-ink" href="/acceptable-use">Acceptable use</Link></li>

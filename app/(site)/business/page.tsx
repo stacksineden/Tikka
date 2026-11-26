@@ -1,0 +1,87 @@
+import {
+  ExampleResults,
+  Faq,
+  FinalCta,
+  Hero,
+  HowItWorks,
+  LiveDrops,
+  Outcomes,
+  Pricing,
+  ProblemLine,
+  Tiers,
+  WhoItsFor,
+} from "@/components/landing/Sections";
+import { SiteFooter, SiteHeader } from "@/components/site/SiteChrome";
+import { LiveStats } from "@/components/landing/LiveStats";
+import { SparkSection, StudioStrip } from "@/components/landing/StudioAndSpark";
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import { getDropPacks, getDropTiers, getMarketplaceDrops, getPlatformStats } from "@/lib/data";
+
+const TITLE = "Tikka · Turn your views into customers who show up and pay";
+const DESCRIPTION =
+  "Share a limited reward worth coming in for. People claim it on WhatsApp, and a deposit holds their booking.";
+
+export const metadata: Metadata = {
+  title: { absolute: TITLE },
+  description: DESCRIPTION,
+  openGraph: { title: TITLE, description: DESCRIPTION, siteName: "Tikka", type: "website" },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
+};
+
+/**
+ * Real numbers only (PRD B1): demo businesses never count, and each live block is hidden until
+ * it passes its threshold. Streams in, since it's live data.
+ */
+async function LiveBand() {
+  const stats = await getPlatformStats();
+  return <LiveStats initial={stats} />;
+}
+
+/** "Live on Tikka now": real live drops only, from 6 up; the count matches the stats bar. */
+async function LiveDropsNow() {
+  const stats = await getPlatformStats();
+  if (!stats.show.strip) return null;
+  const drops = await getMarketplaceDrops({ includeDemo: false });
+  return <LiveDrops drops={drops} liveCount={stats.dropsLive} now={new Date()} />;
+}
+
+// "For businesses" (docs/HOMEPAGE_PLAN.md): the landing page for businesses, moved here from the
+// homepage when usetikka.com became the customer search. Its wording is rewritten for the new
+// direction before the merge to main (the old drops-first text never goes live here as it is).
+export default async function LandingPage() {
+  const [tiers, packs] = await Promise.all([getDropTiers(), getDropPacks()]);
+  return (
+    <>
+      <div className="stage bg-night">
+        <SiteHeader />
+      </div>
+      {/* Clip the sides: the hero's sparks and the torn wrapper fly past the edge on phones, and
+          the page must never get wider than the screen (it makes phones zoom out for a moment). */}
+      <main className="overflow-x-clip">
+        <div className="stage bg-night">
+          <Hero />
+        </div>
+        <ProblemLine />
+        <Outcomes />
+        <HowItWorks />
+        <Tiers />
+        <WhoItsFor />
+        <ExampleResults tiers={tiers} />
+        {/* Live on Tikka: the stats band and the strip, each only above its threshold. */}
+        <Suspense fallback={null}>
+          <div className="stage bg-night">
+            <LiveBand />
+          </div>
+          <LiveDropsNow />
+        </Suspense>
+        <Pricing tiers={tiers} packs={packs} />
+        <StudioStrip />
+        <SparkSection />
+        <Faq tiers={tiers} packs={packs} />
+        <FinalCta />
+      </main>
+      <SiteFooter />
+    </>
+  );
+}

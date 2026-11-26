@@ -1,26 +1,23 @@
-import {
-  ExampleResults,
-  Faq,
-  FinalCta,
-  Hero,
-  HowItWorks,
-  LiveDrops,
-  Outcomes,
-  Pricing,
-  ProblemLine,
-  Tiers,
-  WhoItsFor,
-} from "@/components/landing/Sections";
-import { SiteFooter, SiteHeader } from "@/components/site/SiteChrome";
-import { LiveStats } from "@/components/landing/LiveStats";
-import { SparkSection, StudioStrip } from "@/components/landing/StudioAndSpark";
 import type { Metadata } from "next";
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
-import { getDropPacks, getDropTiers, getMarketplaceDrops, getPlatformStats } from "@/lib/data";
+import { BizCard } from "@/components/home/BizCard";
+import { HomeHeader } from "@/components/home/HomeHeader";
+import { SearchBox } from "@/components/home/SearchBox";
+import { TRADE_ICONS } from "@/components/home/tradeIcons";
+import { SiteFooter } from "@/components/site/SiteChrome";
+import { TRADES } from "@/lib/presets";
+import { searchHref } from "@/lib/search";
+import { searchBusinesses, type BizCard as Card } from "@/lib/search-db";
 
-const TITLE = "Tikka · Turn your views into customers who show up and pay";
-const DESCRIPTION =
-  "Share a limited reward worth coming in for. People claim it on WhatsApp, and a deposit holds their booking.";
+// The customer homepage (docs/HOMEPAGE_PLAN.md, prototype design/prototypes/homepage.html): the
+// search first (what, where, when), then the kinds of business, rows of businesses with their next
+// free time, the offers (drops), how it works, and the way in for businesses.
+
+const TITLE = "Tikka · Book trusted pros near you";
+const DESCRIPTION = "Hair, makeup, nails, lashes and photographers across Nigeria. See who's free, book in a minute, and pay a small deposit to hold your time.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -29,54 +26,122 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 
-/**
- * Real numbers only (PRD B1): demo businesses never count, and each live block is hidden until
- * it passes its threshold. Streams in, since it's live data.
- */
-async function LiveBand() {
-  const stats = await getPlatformStats();
-  return <LiveStats initial={stats} />;
+function Row({ title, sub, more, cards, now }: { title: string; sub?: string; more?: string; cards: Card[]; now: Date }) {
+  if (!cards.length) return null;
+  return (
+    <section className="mt-10">
+      <div className="mb-3.5 flex items-end justify-between gap-3">
+        <div>
+          <h2 className="text-[22px] leading-tight font-bold tracking-tight">{title}</h2>
+          {sub && <p className="mt-1 text-[14px] text-ink-muted">{sub}</p>}
+        </div>
+        {more && (
+          <Link href={more} className="text-label inline-flex min-h-11 shrink-0 items-center underline underline-offset-4">
+            See all
+          </Link>
+        )}
+      </div>
+      {/* Swipe on a phone, four across on a computer. */}
+      <div className="-mx-4 grid snap-x snap-mandatory auto-cols-[72%] grid-flow-col gap-3.5 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:auto-cols-[42%] lg:mx-0 lg:auto-cols-[calc((100%-42px)/4)] lg:px-0">
+        {cards.map((b) => (
+          <BizCard key={b.slug} b={b} now={now} />
+        ))}
+      </div>
+    </section>
+  );
 }
 
-/** "Live on Tikka now": real live drops only, from 6 up; the count matches the stats bar. */
-async function LiveDropsNow() {
-  const stats = await getPlatformStats();
-  if (!stats.show.strip) return null;
-  const drops = await getMarketplaceDrops({ includeDemo: false });
-  return <LiveDrops drops={drops} liveCount={stats.dropsLive} now={new Date()} />;
-}
-
-export default async function LandingPage() {
-  const [tiers, packs] = await Promise.all([getDropTiers(), getDropPacks()]);
+async function Rows() {
+  await connection();
+  const now = new Date();
+  const [soon, top, photo, fresh] = await Promise.all([
+    searchBusinesses({ sort: "soonest", limit: 12 }, now),
+    searchBusinesses({ sort: "rating", limit: 12 }, now),
+    searchBusinesses({ trade: "photo", limit: 12 }, now),
+    searchBusinesses({ sort: "new", limit: 12 }, now),
+  ]);
   return (
     <>
-      <div className="stage bg-night">
-        <SiteHeader />
-      </div>
-      {/* Clip the sides: the hero's sparks and the torn wrapper fly past the edge on phones, and
-          the page must never get wider than the screen (it makes phones zoom out for a moment). */}
+      <Row title="Free soon" sub="Book a time this week" more={searchHref({ when: "any" })} cards={soon.filter((b) => b.nextFree)} now={now} />
+      <Row title="Top rated" cards={top.filter((b) => b.rating)} now={now} />
+      <Row title="Photographers" sub="Portraits, birthdays, weddings and graduations" more={searchHref({ trade: "photo" })} cards={photo} now={now} />
+      <Row title="New on Tikka" cards={fresh.filter((b) => b.isNew)} now={now} />
+    </>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <>
+      <HomeHeader />
       <main className="overflow-x-clip">
-        <div className="stage bg-night">
-          <Hero />
+        <div className="mx-auto max-w-6xl px-4 pt-7 pb-2 text-center sm:px-6 md:pt-16">
+          <h1 className="mx-auto max-w-[14ch] text-[clamp(34px,7vw,64px)] leading-[1.02] font-bold tracking-[-0.03em]">Book trusted pros near you</h1>
+          <p className="mx-auto mt-3.5 max-w-[46ch] text-[clamp(16px,2.2vw,20px)] leading-normal text-ink-muted">{DESCRIPTION}</p>
+          <SearchBox />
         </div>
-        <ProblemLine />
-        <Outcomes />
-        <HowItWorks />
-        <Tiers />
-        <WhoItsFor />
-        <ExampleResults tiers={tiers} />
-        {/* Live on Tikka: the stats band and the strip, each only above its threshold. */}
-        <Suspense fallback={null}>
-          <div className="stage bg-night">
-            <LiveBand />
+
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <nav aria-label="Kinds of business" className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pt-6 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:justify-center md:px-0 md:pt-9">
+            {TRADES.map((t) => {
+              const Icon = TRADE_ICONS[t.id];
+              return (
+                <Link key={t.id} href={searchHref({ trade: t.id })} className="grid min-w-21 shrink-0 snap-start justify-items-center gap-1.5 rounded-md px-1.5 py-2.5 text-[13px] font-semibold text-ink-muted hover:text-ink">
+                  <Icon size={26} className="text-ink" aria-hidden="true" />
+                  {t.name}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <Suspense fallback={<div className="mt-10 h-72 animate-pulse rounded-card bg-surface-sunken" />}>
+            <Rows />
+          </Suspense>
+
+          <section aria-labelledby="offers-h" className="relative mt-12 grid gap-5 overflow-hidden rounded-[28px] bg-night p-6 text-on-night md:grid-cols-[1.2fr_1fr] md:items-center md:p-10">
+            <div>
+              <h2 id="offers-h" className="text-[clamp(24px,4vw,34px)] leading-tight font-bold tracking-tight">
+                Offers near you
+              </h2>
+              <p className="mt-2.5 text-[16px] leading-normal text-on-night-muted">
+                Some businesses give out a limited batch of gifts and discounts, called a drop. Open one, it lands on your WhatsApp, and you show it at the counter.
+              </p>
+              <Link href="/drops" className="btn mt-5 min-h-12 rounded-pill bg-gold px-6 text-on-gold hover:bg-gold">
+                See offers <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+            </div>
+            {/* The ticket shape, Tikka's signature, kept to this one card on the page. */}
+            <div aria-hidden="true" className="relative hidden aspect-[5/7] w-48 -rotate-6 justify-self-center rounded-card bg-gradient-to-br from-brand to-[#6B4FE0] shadow-card md:block">
+              <div className="absolute inset-x-4 top-5 text-[18px] font-bold">20% off any service</div>
+              <div className="absolute inset-x-0 top-[72%] border-t-2 border-dashed border-white/40" />
+              <div className="text-serial absolute inset-x-4 bottom-4 font-mono text-gold uppercase">23 of 100 left</div>
+            </div>
+          </section>
+
+          <div aria-label="How it works" className="mt-14 grid gap-3.5 md:grid-cols-3">
+            {[
+              ["Find someone good", "Photos of their work, real reviews and prices, near you or coming to you."],
+              ["Book a free time", "Only free times show. A small deposit holds yours, and it goes straight to the business."],
+              ["Show up", "Your booking pass has everything. Need to move it? Do it from the pass."],
+            ].map(([h, p], i) => (
+              <div key={h} className="rounded-card border border-line bg-surface-raised p-5.5">
+                <span className="grid size-9 place-items-center rounded-pill bg-brand-soft font-bold text-brand">{i + 1}</span>
+                <h3 className="mt-3.5 mb-1.5 text-[18px] font-bold">{h}</h3>
+                <p className="text-[15px] leading-normal text-ink-muted">{p}</p>
+              </div>
+            ))}
           </div>
-          <LiveDropsNow />
-        </Suspense>
-        <Pricing tiers={tiers} packs={packs} />
-        <StudioStrip />
-        <SparkSection />
-        <Faq tiers={tiers} packs={packs} />
-        <FinalCta />
+
+          <section className="mt-14 mb-14 grid gap-4 rounded-[28px] bg-brand-soft p-6 md:grid-cols-[1fr_auto] md:items-center md:p-10">
+            <div>
+              <h2 className="text-[clamp(22px,3.5vw,30px)] leading-tight font-bold tracking-tight">Run your business on Tikka</h2>
+              <p className="mt-2 leading-normal text-ink-muted">A free website people book from, deposits that stop no-shows, and knowing what you made each week.</p>
+            </div>
+            <Link href="/business" className="btn btn-lg rounded-pill">
+              For businesses
+            </Link>
+          </section>
+        </div>
       </main>
       <SiteFooter />
     </>
