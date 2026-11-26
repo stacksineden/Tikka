@@ -32,6 +32,8 @@ export const LIMITS = {
   // database also caps 3 upcoming bookings per number per business.
   book: [{ max: 6, seconds: 3600 }, { max: 60, seconds: 3600 }],
   book_day: [{ max: 12, seconds: 86_400 }, { max: 400, seconds: 86_400 }],
+  // Joining a full day's waitlist (docs/DB_MOVE.md step 3): typed numbers, like bookings.
+  waitlist: [{ max: 6, seconds: 3600 }, { max: 60, seconds: 3600 }],
   // Get paid: checking an account name at Paystack (per owner, per connection).
   resolve_account: [{ max: 15, seconds: 3600 }, { max: 60, seconds: 3600 }],
   // Starting a checkout on a pay link.

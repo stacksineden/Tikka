@@ -214,6 +214,55 @@ export async function dbChangeFromPass(token: string, change: { kind: "cancel" }
   return kind === "moved" || kind === "cancelled" ? { ok: true } : { ok: false, reason: kind };
 }
 
+/* ------------------------------------------------------------ the waitlist (docs/DB_MOVE.md step 3) */
+
+/** join_waitlist(): one entry per number per day. Server only, after the route's rate limits. */
+export async function dbJoinWaitlist(input: { businessId: string; serviceId: string; day: string; firstName: string; phone: string; visitorId: string }): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const { data, error } = await adminClient().rpc("join_waitlist", {
+    p_business: input.businessId,
+    p_service: input.serviceId,
+    p_day: input.day,
+    p_first_name: input.firstName,
+    p_phone: input.phone,
+    p_visitor: input.visitorId,
+  });
+  if (error || !data) return { ok: false, reason: "error" };
+  const kind = String((data as Row).kind);
+  return kind === "joined" ? { ok: true } : { ok: false, reason: kind };
+}
+
+export interface WaitlistRow {
+  id: string;
+  day: string;
+  serviceId?: string;
+  service: string;
+  name: string;
+  phone: string;
+  createdAt: string;
+}
+
+/** get_waitlist(): the owner's waitlist from today on (owners only: it holds numbers). */
+export async function dbGetWaitlist(businessId: string): Promise<WaitlistRow[]> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("get_waitlist", { p_business: businessId });
+  if (error) return [];
+  return ((data ?? []) as Row[]).map((r) => ({
+    id: String(r.id),
+    day: String(r.day),
+    serviceId: (r.service_id as string | null) ?? undefined,
+    service: String(r.service),
+    name: String(r.first_name),
+    phone: String(r.phone),
+    createdAt: String(r.created_at),
+  }));
+}
+
+/** remove_waitlist(): "Done, remove" (owners only). */
+export async function dbRemoveWaitlist(businessId: string, id: string): Promise<void> {
+  const sb = await createClient();
+  await sb.rpc("remove_waitlist", { p_business: businessId, p_id: id });
+}
+
 /** What moving from the pass needs: the business, the booking's own time and gap, and whether it's an event day. */
 export async function dbPassBooking(token: string): Promise<{ slug: string; minutes: number; gap: number; eventDay: boolean; startsAt: string } | null> {
   if (!/^[0-9a-f]{24}$/.test(token)) return null;

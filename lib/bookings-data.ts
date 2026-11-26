@@ -41,6 +41,9 @@ import {
   type BookResult,
   dbChangeFromPass,
   dbPassBooking,
+  dbJoinWaitlist,
+  dbGetWaitlist,
+  dbRemoveWaitlist,
 } from "./bookings-db";
 import { demoTikkaForBooking, getBusiness, getBusinessBySlug, isDbId, memberBusinessId } from "./data";
 import type { SessionUser } from "./types";
@@ -360,7 +363,7 @@ export async function bookTimeV2(
   return { kind: "booked", token: b.viewToken!, code: b.code, id: b.id };
 }
 
-/* ------------------------------------------------------------ NEW DIRECTION: waitlist (demo) */
+/* ------------------------------------------------------------ the waitlist (demo store, else the database) */
 
 export interface WaitlistEntry {
   id: string;
@@ -376,10 +379,13 @@ export interface WaitlistEntry {
 const waitlists: Map<string, WaitlistEntry[]> = ((globalThis as { __tikkaWaitlists?: Map<string, WaitlistEntry[]> }).__tikkaWaitlists ??= new Map());
 
 /** A customer asks to hear if a full day opens up. One entry per number per day. */
-export async function joinWaitlist(slug: string, input: { serviceId: string; day: string; name: string; phone: string }): Promise<{ ok: true } | { ok: false; reason: string }> {
+export async function joinWaitlist(slug: string, input: { serviceId: string; day: string; name: string; phone: string; visitorId?: string }): Promise<{ ok: true } | { ok: false; reason: string }> {
   const found = await getBusinessBySlug(slug);
-  if (!found || isDbId(found.ownerId) || !found.business.trades?.length) return { ok: false, reason: "not_found" };
+  if (!found) return { ok: false, reason: "not_found" };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.day) || input.day < watParts(new Date()).day) return { ok: false, reason: "closed" };
+  // A real business (docs/DB_MOVE.md step 3): join_waitlist() checks the rest.
+  if (isDbId(found.ownerId)) return dbJoinWaitlist({ businessId: found.business.id, serviceId: input.serviceId, day: input.day, firstName: input.name, phone: input.phone, visitorId: input.visitorId ?? "" });
+  if (!found.business.trades?.length) return { ok: false, reason: "not_found" };
   const svc = found.business.services.find((s) => s.id === input.serviceId);
   const list = waitlists.get(found.ownerId) ?? [];
   if (!list.some((w) => w.day === input.day && w.phone === input.phone)) {
@@ -391,14 +397,23 @@ export async function joinWaitlist(slug: string, input: { serviceId: string; day
 }
 
 /** The owner's waitlist from today on, soonest day first. */
-export async function getWaitlist(user: Pick<SessionUser, "id" | "role">): Promise<WaitlistEntry[]> {
-  if (user.role !== "owner" || isDbId(user.id)) return [];
+export async function getWaitlist(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">): Promise<WaitlistEntry[]> {
+  if (user.role !== "owner") return [];
+  if (isDbId(user.id)) {
+    const key = await memberBusinessId(user);
+    return key && isDbId(key) ? dbGetWaitlist(key) : [];
+  }
   const today = watParts(new Date()).day;
   return (waitlists.get(user.id) ?? []).filter((w) => w.day >= today).sort((a, b) => a.day.localeCompare(b.day) || a.createdAt.localeCompare(b.createdAt));
 }
 
-export async function removeWaitlist(user: Pick<SessionUser, "id" | "role">, id: string): Promise<void> {
-  if (user.role !== "owner" || isDbId(user.id)) return;
+export async function removeWaitlist(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, id: string): Promise<void> {
+  if (user.role !== "owner") return;
+  if (isDbId(user.id)) {
+    const key = await memberBusinessId(user);
+    if (key && isDbId(key) && isDbId(id)) await dbRemoveWaitlist(key, id);
+    return;
+  }
   waitlists.set(user.id, (waitlists.get(user.id) ?? []).filter((w) => w.id !== id));
 }
 
