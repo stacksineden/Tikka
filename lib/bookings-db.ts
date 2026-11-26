@@ -34,6 +34,8 @@ export function bookingFrom(r: Row): Booking {
     // Booking with choices (booking_choices migration): the address reaches owners only.
     homeArea: (r.home_area as string | null) ?? undefined,
     detail: (r.detail as string | null) ?? undefined,
+    foundVia: r.found_via === "search" ? "search" : undefined,
+    foundNew: r.found_new == null ? undefined : r.found_new === true,
   };
 }
 

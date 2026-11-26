@@ -80,6 +80,12 @@ export interface Business {
   lng?: number;
   /** True for a pin worked out from the area and city, until the owner places their own. */
   locationApprox?: boolean;
+  /** Extras for Tikka's listing (lib/listing.ts ids). */
+  amenities?: string[];
+  /** Tikka's listing terms: when they were agreed, and the 14 days businesses listed before them have. */
+  listingTermsAt?: string;
+  listingGraceUntil?: string;
+  languages?: string[];
 }
 
 export interface PortfolioPhoto {

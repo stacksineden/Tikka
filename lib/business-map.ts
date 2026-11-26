@@ -47,6 +47,10 @@ export interface BusinessRow {
   lat?: number | string | null;
   lng?: number | string | null;
   location_approx?: boolean;
+  amenities?: string[] | null;
+  listing_terms_at?: string | null;
+  listing_grace_until?: string | null;
+  languages?: string[] | null;
 }
 
 export interface PrivateRow {
@@ -331,6 +335,10 @@ export function businessFrom(
     lat: b.lat == null ? undefined : Number(b.lat),
     lng: b.lng == null ? undefined : Number(b.lng),
     locationApprox: b.location_approx ?? true,
+    amenities: b.amenities ?? undefined,
+    listingTermsAt: b.listing_terms_at ?? undefined,
+    listingGraceUntil: b.listing_grace_until ?? undefined,
+    languages: b.languages ?? undefined,
   };
 }
 

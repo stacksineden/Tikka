@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowUpRight, Clock3, Globe, MapPin, Star } from "lucide-react";
+import { ArrowUpRight, Check, Clock3, Globe, MapPin, Star } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
@@ -10,6 +10,7 @@ import { HomeHeader } from "@/components/home/HomeHeader";
 import { SiteFooter } from "@/components/site/SiteChrome";
 import { demoDepositRule, getBookingRules } from "@/lib/bookings-data";
 import { getBusinessBySlug, getBusinessReviews, isDbId } from "@/lib/data";
+import { extrasForPage } from "@/lib/listing";
 import { getSpacePhotos } from "@/lib/listing-db";
 import { place } from "@/lib/format";
 import { bookingLink, bookingNumber, pageStyle, priceText } from "@/lib/page";
@@ -132,9 +133,9 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
         <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
           <h1 className="text-[clamp(32px,6vw,56px)] leading-[1.05] font-bold tracking-tight">{b.name}</h1>
           {/* Their own website: the bio link, with everything about them. */}
-          <Link href={`/${b.slug}`} className="btn btn-secondary mt-1 min-h-11 shrink-0 rounded-pill px-4">
+          <a target="_blank" rel="noopener" href={`/${b.slug}`} className="btn btn-secondary mt-1 min-h-11 shrink-0 rounded-pill px-4">
             <Globe size={18} aria-hidden="true" /> View website
-          </Link>
+          </a>
         </div>
         <div className="text-body mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
           <Stars rating={b.rating} count={b.reviewCount} />
@@ -162,9 +163,9 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
           </div>
         )}
         {photos.length > 3 && (
-          <Link href={`/${b.slug}#work`} className="text-label mt-3 inline-flex min-h-11 items-center underline underline-offset-4">
+          <a target="_blank" rel="noopener" href={`/${b.slug}#work`} className="text-label mt-3 inline-flex min-h-11 items-center underline underline-offset-4">
             See all {photos.length} photos
-          </Link>
+          </a>
         )}
 
         <div className="mt-8 grid items-start gap-10 lg:grid-cols-[1fr_360px]">
@@ -272,6 +273,19 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
                     </dd>
                   </div>
                 )}
+                {/* What customers compare on (Your Tikka listing, lib/listing.ts). */}
+                {extrasForPage(b.amenities, b.languages).map((g) => (
+                  <div key={g.label}>
+                    <dt className="text-label">{g.label}</dt>
+                    <dd className="text-body mt-1.5 flex flex-wrap gap-1.5">
+                      {g.items.map((t) => (
+                        <span key={t} className="inline-flex items-center gap-1 rounded-pill bg-surface-sunken px-3 py-1 text-[14px]">
+                          <Check size={14} aria-hidden="true" /> {t}
+                        </span>
+                      ))}
+                    </dd>
+                  </div>
+                ))}
               </dl>
             </section>
           </div>
@@ -310,9 +324,9 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
                   )}
                 </span>
               </p>
-              <Link href={`/${b.slug}`} className="text-body flex items-center gap-2.5 font-semibold text-brand">
+              <a target="_blank" rel="noopener" href={`/${b.slug}`} className="text-body flex items-center gap-2.5 font-semibold text-brand">
                 <Globe size={20} aria-hidden="true" /> Visit their website <ArrowUpRight size={16} aria-hidden="true" />
-              </Link>
+              </a>
             </div>
           </aside>
         </div>
@@ -344,6 +358,7 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
           }}
           services={bookable}
           theme={sheetTheme(pageStyle(b), b.page?.galleryTone, b.brandColor, b.onBrandColor)}
+          via="search"
         />
       ) : sheet && number ? (
         <BookingSheet business={b.name} number={number} hours={b.hours} />

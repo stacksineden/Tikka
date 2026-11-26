@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { after, NextResponse } from "next/server";
 import { bookForTikka, bookTimeV2 } from "@/lib/bookings-data";
+import { noteFoundVia } from "@/lib/listing-db";
 import { dbBookTimeV2, type BookResult } from "@/lib/bookings-db";
 import { firstName, VISITOR_COOKIE } from "@/lib/claim";
 import { getBusinessBySlug, isDbId } from "@/lib/data";
@@ -39,6 +40,8 @@ export async function POST(request: Request) {
     futureOffers?: boolean;
     /** "Book a time to use it": the Tikka's card link. Name and number come from the claim. */
     tikka?: string;
+    /** Booked from Tikka's listing page (/book/[slug]). */
+    via?: string;
   } | null;
   if (!body?.slug || !body.serviceId || !body.startsAt || Number.isNaN(Date.parse(body.startsAt))) return fail("not_found", 400);
   const found = await getBusinessBySlug(body.slug);
@@ -96,6 +99,9 @@ export async function POST(request: Request) {
       email: typeof body.email === "string" ? body.email.trim().slice(0, 120) : null,
     });
   }
+  // Booked from Tikka's listing page: note that Tikka found it, after the response (never blocks).
+  const bookedId = "id" in r ? r.id : undefined;
+  if (body.via === "search" && !tikka && bookedId && isDbId(bookedId) && (r.kind === "booked" || r.kind === "pay")) after(() => noteFoundVia(bookedId));
   // A deposit holds the time for 10 minutes: straight on to Paystack (REVENUE_PLAN 5.4).
   if (r.kind === "pay" && "token" in r) {
     const start = await startDepositCheckout(r.token);

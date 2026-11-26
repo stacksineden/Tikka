@@ -4,6 +4,7 @@
 
 - **Bookings with deposits** (live since 20 to 23 November): customers book a free time on a business's page, sometimes paying a deposit.
 - **Pay links** (live since 22 November): a business sends a customer a link to pay an amount.
+- **Being listed in Tikka's search** (built, not yet released): customers search Tikka by service, place and time and see businesses on a map. A business chooses to be listed and agrees to listing terms; Tikka records the date and which version they agreed to.
 - **Coming with the new version** (built, not yet released): home visits, a waitlist for full days, a record of each customer's visits, spending, notes and birthday kept for the business, sales the business records at the counter, receipts, and alerts on the owner's phone.
 
 Below is proposed wording in the same plain style as the current text. Each item says whether it's **new** or **changes** an existing section. Questions for you are at the end.
@@ -104,6 +105,18 @@ Below is proposed wording in the same plain style as the current text. Each item
 > - Before switching on payments, we check your ID and bank account. We may set a maximum per payment, and pause payments if we see fraud or a broken rule.
 > - Receipts made on Tikka are proof of payment, not tax invoices. You're responsible for your own tax.
 
+### B. Being listed in Tikka's search (new)
+
+The owner agrees to these lines on screen before being listed (lib/listing.ts, version 2026-11-26), and Tikka records when.
+
+> - Listing is free for now.
+> - If Tikka adds a fee, it applies only to new customers who find you through Tikka search. Never to your regulars, your own link or your Instagram.
+> - We'll tell you 30 days before any fee starts.
+> - You can leave Tikka's search any time. Your own page keeps working.
+> - Your listing shows your page's details, services, prices, photos, reviews and free times. Your customers' numbers are never shown.
+> - Photos of your space must be of your own business and yours to use. We may remove a listing that's misleading, or hide a business from search while we check a report.
+> - We record whether a booking came from Tikka's search, and whether that customer was new to you, so any future fee only ever applies to new customers Tikka found.
+
 ### B. Your customers' details (changes: adds three points)
 
 > - The customer list, notes and waitlist are for serving your customers. Only use waitlist numbers to tell people a place is free.
@@ -121,3 +134,4 @@ Below is proposed wording in the same plain style as the current text. Each item
 5. **Health details in notes.** Beauty businesses note things like allergies or a sensitive scalp. Does that need its own wording, or a limit on what owners can write?
 6. **Links anyone can open.** Booking passes and receipts open to anyone with the link (never showing the number or address). Is "keep the link private" enough?
 7. **Age.** The policy says Tikka is for people aged 18 and over. Should booking and paying say the same?
+8. **A future fee on new customers from search.** Is "we'll tell you 30 days before any fee starts" enough notice to change the price later, or do businesses need to accept again when a fee starts? Today we record the version they agreed to, so we could ask again.

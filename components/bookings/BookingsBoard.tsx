@@ -128,6 +128,7 @@ export function BookingsBoard({
                 </span>
               ) : null}
               <span>{SOURCE[b.source]}</span>
+              {b.foundVia === "search" && <span className="tag bg-brand-soft text-brand">{b.foundNew ? "New · found you on Tikka" : "Found you on Tikka"}</span>}
               {b.moved && <span>Moved</span>}
               {b.status === "arrived" && <span className="tag tag--redeemed">Came in</span>}
               {b.status === "no_show" && <span className="tag bg-danger-soft text-danger">No-show</span>}

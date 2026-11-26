@@ -57,6 +57,9 @@ export interface Booking {
   homeArea?: string;
   /** NEW DIRECTION (demo only for now): the option and extras picked ("Long, add wash"). */
   detail?: string;
+  /** Booked from Tikka's listing page; `foundNew` (owners only): the number was new to the business. */
+  foundVia?: "search";
+  foundNew?: boolean;
 }
 
 export interface BookingBlock {

@@ -78,7 +78,20 @@ function stepsFor(s: ServiceItem, b: FlowBusiness, forTikka = false): Step[] {
 const dayKeyOf = (y: number, m: number, d: number) => `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 const longDay = (key: string) => new Date(`${key}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
 
-export function BookingFlow({ business: b, services, theme, tikka }: { business: FlowBusiness; services: ServiceItem[]; theme: SheetTheme; tikka?: FlowTikka }) {
+export function BookingFlow({
+  business: b,
+  services,
+  theme,
+  tikka,
+  via,
+}: {
+  business: FlowBusiness;
+  services: ServiceItem[];
+  theme: SheetTheme;
+  tikka?: FlowTikka;
+  /** Opened from Tikka's listing page: the booking records that Tikka found it. */
+  via?: "search";
+}) {
   const ref = useRef<HTMLDialogElement>(null);
   const router = useRouter();
   const [svc, setSvc] = useState<ServiceItem | null>(null);
@@ -253,7 +266,7 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
           area,
           address,
           answers: [...(svc.questions ?? []).map((q, i) => (answers[i]?.trim() ? `${q} ${answers[i].trim()}` : "")), note.trim()].filter(Boolean).join(" · "),
-          ...(tikka ? { tikka: tikka.token } : { name, phone, futureOffers: offers, email: needsEmail ? email.trim() : undefined }),
+          ...(tikka ? { tikka: tikka.token } : { name, phone, futureOffers: offers, email: needsEmail ? email.trim() : undefined, via }),
         }),
       });
       const data = (await res.json()) as { ok: boolean; token?: string; pay?: string; reason?: string };

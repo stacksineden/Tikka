@@ -19,12 +19,13 @@ reset role;
 insert into public.business_members (business_id, user_id, role)
 values ((select v from t where k = 'biz'), '00000000-0000-4000-c070-000000000002', 'staff');
 
--- Listed by default, no pin yet.
+-- Not listed until the owner accepts the terms (20261218100000_listing_journey.sql), no pin yet.
 do $$
 declare b public.businesses := (select x from public.businesses x where id = (select v from t where k = 'biz'));
 begin
-  assert b.listed and b.lat is null and b.location_approx, 'listed, no pin, approximate by default';
+  assert not b.listed and b.lat is null and b.location_approx, 'not listed, no pin, approximate by default';
 end $$;
+update public.businesses set listed = true, listing_terms_at = now(), listing_terms_version = '2026-11-26' where id = (select v from t where k = 'biz');
 
 -- The server's starting pin is approximate.
 set local role service_role;

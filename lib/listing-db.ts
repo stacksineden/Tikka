@@ -5,6 +5,7 @@ import "server-only";
 // checks); space photos are public, like the rest of the business page.
 
 import { approxLocation } from "./geocode";
+import { LISTING_TERMS_VERSION, type ListingMissing } from "./listing";
 import { fromStored, toStored } from "./media-path";
 import { adminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
@@ -53,5 +54,58 @@ export async function ensureStartingPin(b: { id: string; area: string; city: str
     if (pin) await adminClient().rpc("set_approx_location", { p_business: b.id, p_lat: pin.lat, p_lng: pin.lng });
   } catch {
     // A missing pin only keeps the business off the map until the owner places one.
+  }
+}
+
+export interface ListingState {
+  listed: boolean;
+  inSearch: boolean;
+  termsAt?: string;
+  graceUntil?: string;
+  missing: ListingMissing[];
+  amenities: string[];
+  languages: string[];
+}
+
+/** The owner's listing: in search or not, the terms, the checklist and the extras (owner only). */
+export async function getListingState(businessId: string): Promise<ListingState | null> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("listing_state", { p_business: businessId });
+  if (error || !data) return null;
+  const r = data as Record<string, unknown>;
+  return {
+    listed: r.listed === true,
+    inSearch: r.in_search === true,
+    termsAt: (r.terms_at as string | null) ?? undefined,
+    graceUntil: (r.grace_until as string | null) ?? undefined,
+    missing: ((r.missing as string[] | null) ?? []) as ListingMissing[],
+    amenities: (r.amenities as string[] | null) ?? [],
+    languages: (r.languages as string[] | null) ?? [],
+  };
+}
+
+/** The owner agrees to the listing terms and goes into search. */
+export async function acceptListing(businessId: string): Promise<{ kind: "listed" } | { kind: "missing"; missing: ListingMissing[] } | { kind: "error" }> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("accept_listing", { p_business: businessId, p_version: LISTING_TERMS_VERSION });
+  if (error || !data) return { kind: "error" };
+  const r = data as { kind: string; missing?: ListingMissing[] };
+  if (r.kind === "listed") return { kind: "listed" };
+  if (r.kind === "missing") return { kind: "missing", missing: r.missing ?? [] };
+  return { kind: "error" };
+}
+
+export async function saveListingExtras(businessId: string, amenities: string[], languages: string[]): Promise<boolean> {
+  const sb = await createClient();
+  const { error } = await sb.rpc("save_listing_extras", { p_business: businessId, p_amenities: amenities, p_languages: languages });
+  return !error;
+}
+
+/** A booking made from Tikka's listing page: Tikka found it (server only; never throws). */
+export async function noteFoundVia(bookingId: string): Promise<void> {
+  try {
+    await adminClient().rpc("note_found_via", { p_booking: bookingId });
+  } catch {
+    // Only the record of where it came from is lost; the booking stands.
   }
 }

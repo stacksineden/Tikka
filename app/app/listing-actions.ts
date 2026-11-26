@@ -5,7 +5,8 @@
 
 import { revalidatePath } from "next/cache";
 import { getBusiness, isDbId } from "@/lib/data";
-import { saveLocation, saveSpacePhotos, setListed, type SpacePhoto } from "@/lib/listing-db";
+import { cleanExtras, cleanLanguages, type ListingMissing } from "@/lib/listing";
+import { acceptListing, saveListingExtras, saveLocation, saveSpacePhotos, setListed, type SpacePhoto } from "@/lib/listing-db";
 import { getOwnerUser } from "@/lib/session";
 
 async function ownerBusiness() {
@@ -17,6 +18,7 @@ async function ownerBusiness() {
 function refresh(slug: string) {
   revalidatePath("/app/settings/listing");
   revalidatePath(`/book/${slug}`);
+  revalidatePath("/app");
 }
 
 export async function setListedAction(listed: boolean): Promise<{ ok: boolean }> {
@@ -40,6 +42,24 @@ export async function saveSpacePhotosAction(photos: SpacePhoto[]): Promise<{ ok:
   if (!b || !Array.isArray(photos)) return { ok: false };
   const clean = photos.filter((p) => typeof p?.url === "string").slice(0, 6).map((p) => ({ url: p.url, thumbUrl: typeof p.thumbUrl === "string" ? p.thumbUrl : undefined }));
   const ok = await saveSpacePhotos(b.id, clean);
+  refresh(b.slug);
+  return { ok };
+}
+
+/** "List me": the owner agrees to the listing terms (the database checks the photo and prices). */
+export async function acceptListingAction(): Promise<{ ok: true } | { ok: false; missing?: ListingMissing[] }> {
+  const b = await ownerBusiness();
+  if (!b) return { ok: false };
+  const r = await acceptListing(b.id);
+  refresh(b.slug);
+  if (r.kind === "listed") return { ok: true };
+  return { ok: false, missing: r.kind === "missing" ? r.missing : undefined };
+}
+
+export async function saveListingExtrasAction(amenities: string[], languages: string[]): Promise<{ ok: boolean }> {
+  const b = await ownerBusiness();
+  if (!b) return { ok: false };
+  const ok = await saveListingExtras(b.id, cleanExtras(amenities), cleanLanguages(languages));
   refresh(b.slug);
   return { ok };
 }

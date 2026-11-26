@@ -27,6 +27,8 @@ select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-c071-0000000
 insert into t select 'nails', public.create_business('Tip Top', 'tiptop71', 'TQ', 'Beauty', 'Oyo', 'Ibadan', 'Bodija', '#9C3B5C', '#FFFFFF');
 select public.save_services((select v from t where k = 'nails'), '[{"name":"Short GelX set","price_kobo":1200000,"price_kind":"fixed","minutes":60}]');
 reset role;
+-- All of them accepted the listing terms (20261218100000_listing_journey.sql).
+update public.businesses set listed = true, listing_terms_at = now(), listing_terms_version = '2026-11-26' where id in (select v from t);
 
 create function pg_temp.found(r jsonb) returns text[] language sql as $$
   select coalesce(array_agg((x ->> 'slug') || ':' || coalesce(x ->> 'match', '-') order by o), '{}')

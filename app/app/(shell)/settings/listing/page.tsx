@@ -5,7 +5,7 @@ import { ListingSettings } from "@/components/settings/ListingSettings";
 import { SettingsPage } from "@/components/settings/SettingsPage";
 import { getBusiness, isDbId } from "@/lib/data";
 import { place } from "@/lib/format";
-import { getSpacePhotos } from "@/lib/listing-db";
+import { getListingState, getSpacePhotos } from "@/lib/listing-db";
 import { getOwnerUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Your Tikka listing" };
@@ -24,19 +24,30 @@ async function Listing() {
         <p className="text-body">The demo business isn&apos;t in Tikka&apos;s search. Real businesses set their listing here: shown in search, a map pin and photos of their space.</p>
       </section>
     );
-  const photos = await getSpacePhotos(b.id);
+  const [photos, state] = await Promise.all([getSpacePhotos(b.id), getListingState(b.id)]);
+  if (!state) return <p className="text-body">That didn&apos;t load. Try again.</p>;
   return (
     <ListingSettings
       slug={b.slug}
       area={place(b.area, b.city)}
-      initial={{ listed: b.listed !== false, lat: b.lat, lng: b.lng, approx: b.locationApprox !== false, goesToCustomers: b.workPlace === "home", photos }}
+      goesToCustomers={b.workPlace === "home"}
+      listed={state.listed}
+      termsAt={state.termsAt}
+      graceUntil={state.graceUntil}
+      missing={state.missing}
+      amenities={state.amenities}
+      languages={state.languages}
+      lat={b.lat}
+      lng={b.lng}
+      approx={b.locationApprox !== false}
+      photos={photos}
     />
   );
 }
 
 export default function Page() {
   return (
-    <SettingsPage title="Your Tikka listing" intro="How you show when customers search Tikka for a service near them. Your own website stays the same.">
+    <SettingsPage title="Your Tikka listing">
       <Suspense fallback={<div className="h-48 rounded-card bg-surface-sunken" />}>
         <Listing />
       </Suspense>
