@@ -121,6 +121,7 @@ async function Results({ searchParams }: { searchParams: PageProps<"/search">["s
     if (!fallback.length) empty = { title: tries[tries.length - 1].title, body: "Try again soon: new businesses join every week." };
   }
   const where = s.where ? ` in ${s.where}` : "";
+  const related = found.filter((b) => b.match === "related").length;
 
   return (
     <>
@@ -140,6 +141,14 @@ async function Results({ searchParams }: { searchParams: PageProps<"/search">["s
               {found.length} {found.length === 1 ? "place" : "places"}
               {where} · {whenLabel(s)}
             </p>
+            {/* Close matches: say so, never pretend they list exactly what was asked. */}
+            {s.q && related > 0 && (
+              <p className="mt-2 text-[15px]">
+                {related === found.length
+                  ? `Nobody lists “${s.q}” exactly${where} yet. ${found.length === 1 ? "This does" : "These do"} similar work.`
+                  : `${found.length - related} ${found.length - related === 1 ? "lists" : "list"} “${s.q}”. ${related} more ${related === 1 ? "does" : "do"} similar work.`}
+              </p>
+            )}
             <Cards list={found} now={now} />
           </>
         ) : (

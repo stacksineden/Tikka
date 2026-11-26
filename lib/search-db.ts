@@ -36,6 +36,8 @@ export interface BizCard {
   lng?: number;
   /** The pin was worked out from the area, not placed by the owner. */
   approx: boolean;
+  /** For a search with words: every word matched ("all"), or similar work ("related"). */
+  match?: "all" | "related";
 }
 
 type Row = Record<string, unknown>;
@@ -83,5 +85,6 @@ export async function searchBusinesses(s: Partial<SearchQuery> & { sort?: "soone
     lat: r.lat == null ? undefined : Number(r.lat),
     lng: r.lng == null ? undefined : Number(r.lng),
     approx: r.location_approx !== false,
+    match: r.match === "all" || r.match === "related" ? r.match : undefined,
   }));
 }
