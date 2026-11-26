@@ -28,6 +28,8 @@ export function TikkaMap({
   pins = [],
   selected,
   onSelect,
+  onMapClick,
+  focusOffset,
   drag,
   className = "",
   label = "Map",
@@ -35,6 +37,10 @@ export function TikkaMap({
   pins?: MapPin[];
   selected?: string | null;
   onSelect?: (id: string) => void;
+  /** A tap on the map itself, away from the pins (closes the business card). */
+  onMapClick?: () => void;
+  /** When a pin is picked, move the map so the pin sits this many pixels below the middle (clear of a card). */
+  focusOffset?: number;
   /** One draggable pin (an owner placing their shop). */
   drag?: { lat?: number; lng?: number; onMove: (lat: number, lng: number) => void };
   className?: string;
@@ -46,6 +52,8 @@ export function TikkaMap({
   const dragMarker = useRef<MlMarker | null>(null);
   const lib = useRef<typeof import("maplibre-gl") | null>(null);
   const onSelectRef = useRef(onSelect);
+  const onMapClickRef = useRef(onMapClick);
+  onMapClickRef.current = onMapClick;
   const onMoveRef = useRef(drag?.onMove);
   onSelectRef.current = onSelect;
   onMoveRef.current = drag?.onMove;
@@ -76,7 +84,7 @@ export function TikkaMap({
           onMoveRef.current?.(e.lngLat.lat, e.lngLat.lng);
         });
         dragMarker.current = mk;
-      }
+      } else m.on("click", () => onMapClickRef.current?.());
       m.on("load", () => syncPins());
     });
     const all = markers.current;
@@ -141,6 +149,8 @@ export function TikkaMap({
       const e = markers.current.get(p.id);
       if (e) paint(e.el, p.id === selected, !!p.approx);
     }
+    const p = pins.find((x) => x.id === selected);
+    if (p && focusOffset != null) map.current?.easeTo({ center: [p.lng, p.lat], offset: [0, focusOffset], duration: 300 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
 

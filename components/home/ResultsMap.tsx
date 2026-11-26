@@ -21,7 +21,46 @@ export interface ResultPin extends MapPin {
   place: string;
   coverUrl?: string;
   rating?: number;
+  reviews: number;
+  trade: string;
+  /** "Free tomorrow, 9am". */
+  free?: string;
   price?: string;
+}
+
+/** The business behind a pin, over the map (like Fresha's): photo, name, rating, where, what. */
+function PinCard({ p, onClose, wide }: { p: ResultPin; onClose: () => void; wide: boolean }) {
+  return (
+    <div
+      className={`absolute z-10 overflow-hidden rounded-card border border-line bg-surface-raised shadow-xl ${wide ? "top-4 left-1/2 w-[min(380px,calc(100%-32px))] -translate-x-1/2" : "inset-x-3 bottom-24"}`}
+    >
+      <Link href={p.href ?? "#"} className="block">
+        <span className={`relative block bg-surface-sunken ${wide ? "aspect-[16/9]" : "aspect-[2/1]"}`}>
+          {p.coverUrl ? <img src={p.coverUrl} alt="" className="size-full object-cover" /> : <span className="block size-full bg-brand" />}
+          {p.free && <span className="absolute bottom-2.5 left-2.5 rounded-pill bg-success px-2.5 py-1 text-[12px] font-semibold text-on-success">{p.free}</span>}
+        </span>
+        <span className="block px-4 pt-3 pb-3.5">
+          <span className="flex items-start justify-between gap-3">
+            <b className="min-w-0 text-[17px] leading-snug">{p.name}</b>
+            {p.rating != null && (
+              <span className="inline-flex shrink-0 items-center gap-1 text-[15px] font-semibold">
+                <Star size={15} className="fill-current" aria-hidden="true" /> {p.rating.toFixed(1)}
+              </span>
+            )}
+          </span>
+          <span className="mt-0.5 block text-[14px] text-ink-muted">{p.place}</span>
+          <span className="block text-[14px] text-ink-muted">
+            {p.trade}
+            {p.reviews > 0 && ` · ${p.reviews} review${p.reviews === 1 ? "" : "s"}`}
+            {p.price && ` · From ${p.price}`}
+          </span>
+        </span>
+      </Link>
+      <button type="button" onClick={onClose} aria-label="Close" className="absolute top-2.5 right-2.5 grid size-10 place-items-center rounded-pill bg-surface-raised text-ink shadow-md">
+        <X size={18} aria-hidden="true" />
+      </button>
+    </div>
+  );
 }
 
 export function ResultsMap({ pins, children }: { pins: ResultPin[]; children: React.ReactNode }) {
@@ -45,7 +84,6 @@ export function ResultsMap({ pins, children }: { pins: ResultPin[]; children: Re
 
   function pick(id: string) {
     setSelected(id);
-    if (wide) document.getElementById(`biz-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   // The card that goes with the picked pin, highlighted in the list.
@@ -66,30 +104,9 @@ export function ResultsMap({ pins, children }: { pins: ResultPin[]; children: Re
           style={wide ? { top: top + 16, height: `calc(100vh - ${top + 32}px)` } : { top }}
           className={wide ? "sticky mt-4 overflow-hidden rounded-card border border-line" : "fixed inset-x-0 bottom-0 z-20 bg-surface"}
         >
-          <TikkaMap pins={pins} selected={selected} onSelect={pick} className="size-full" label="Results on a map" />
-          {!wide && chosen && (
-            <div className="absolute inset-x-3 bottom-24 flex items-stretch overflow-hidden rounded-card border border-line bg-surface-raised shadow-lg">
-              <Link href={chosen.href ?? "#"} className="flex min-w-0 flex-1 items-stretch">
-                {chosen.coverUrl ? <img src={chosen.coverUrl} alt="" className="w-24 shrink-0 object-cover" /> : <span className="w-3 shrink-0 bg-brand" />}
-                <span className="min-w-0 flex-1 px-3 py-2.5">
-                  <b className="block truncate text-[15px]">{chosen.name}</b>
-                  <span className="block truncate text-[13px] text-ink-muted">{chosen.place}</span>
-                  <span className="mt-1 flex items-center gap-2 text-[13px]">
-                    {chosen.rating != null && (
-                      <span className="inline-flex items-center gap-0.5 font-semibold">
-                        <Star size={13} className="fill-current" aria-hidden="true" /> {chosen.rating.toFixed(1)}
-                      </span>
-                    )}
-                    {chosen.price && <span>From {chosen.price}</span>}
-                  </span>
-                </span>
-              </Link>
-              <button type="button" onClick={() => setSelected(null)} aria-label="Close" className="grid w-11 shrink-0 place-items-start justify-center pt-2 text-ink-muted">
-                <X size={18} aria-hidden="true" />
-              </button>
-            </div>
-          )}
-          {wide && pins.some((p) => p.approx) && (
+          <TikkaMap pins={pins} selected={selected} onSelect={pick} onMapClick={() => setSelected(null)} focusOffset={wide ? 150 : -110} className="size-full" label="Results on a map" />
+          {chosen && <PinCard p={chosen} wide={wide} onClose={() => setSelected(null)} />}
+          {wide && !chosen && pins.some((p) => p.approx) && (
             <p className="absolute top-2 left-2 rounded-pill bg-surface-raised/90 px-3 py-1 text-[12px] text-ink-muted shadow">Dashed pins show the area</p>
           )}
         </div>

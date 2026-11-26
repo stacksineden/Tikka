@@ -7,9 +7,10 @@ import { HomeHeader } from "@/components/home/HomeHeader";
 import { ResultsMap, type ResultPin } from "@/components/home/ResultsMap";
 import { SearchBox } from "@/components/home/SearchBox";
 import { SiteFooter } from "@/components/site/SiteChrome";
-import { parseSearch, searchHref, whatLabel, whenLabel, whenPhrase, type SearchQuery } from "@/lib/search";
+import { freeLabel, parseSearch, searchHref, whatLabel, whenLabel, whenPhrase, type SearchQuery } from "@/lib/search";
 import { searchBusinesses, type BizCard as Card } from "@/lib/search-db";
 import { place } from "@/lib/format";
+import { TRADES } from "@/lib/presets";
 
 // Search results (docs/HOMEPAGE_PLAN.md): the businesses that match what, where and when, each with
 // its next free time; filters for people who come to you and no deposit. A city with nobody yet says
@@ -43,7 +44,7 @@ function pinPrice(n?: number): string | undefined {
   return `₦${n.toLocaleString("en-NG")}`;
 }
 
-function pinsFor(list: Card[]): ResultPin[] {
+function pinsFor(list: Card[], now: Date): ResultPin[] {
   return list
     .filter((b) => b.lat != null && b.lng != null)
     .map((b) => ({
@@ -57,13 +58,16 @@ function pinsFor(list: Card[]): ResultPin[] {
       place: place(b.area, b.city),
       coverUrl: b.coverUrl,
       rating: b.rating,
+      reviews: b.reviews,
+      trade: TRADES.find((t) => b.trades.includes(t.id))?.name ?? b.category,
+      free: b.nextFree ? freeLabel(b.nextFree, now) : undefined,
       price: pinPrice(b.fromNaira),
     }));
 }
 
 /** The cards, with the map beside them when any of them has a pin. */
 function Cards({ list, now }: { list: Card[]; now: Date }) {
-  const pins = pinsFor(list);
+  const pins = pinsFor(list, now);
   const grid = (cols: string) => (
     <div className={`mt-4 grid gap-6 sm:grid-cols-2 ${cols}`}>
       {list.map((b) => (
