@@ -1,18 +1,18 @@
 {
   "slug": "follow-up-with-leads",
-  "title": "Follow up with your leads",
-  "section": "followup",
-  "order": 1,
+  "title": "Follow up with people from your drops",
+  "section": "drops",
+  "order": 5,
   "minutes": 3,
-  "summary": "Everyone who claims becomes a lead you can message on WhatsApp, from your own phone.",
+  "summary": "Everyone who claims is in your customers. Message them on WhatsApp, from your own phone.",
   "app": {
     "href": "/app/leads",
-    "label": "Open Leads"
+    "label": "Open Customers"
   },
   "steps": [
     {
-      "title": "Open Leads",
-      "body": "Tap Leads in the bar at the bottom. You see everyone who claimed, as it happens. They're yours to follow up."
+      "title": "Open Customers, then From drops",
+      "body": "Tap Customers in the bar at the bottom, then \"From drops\". You see everyone who claimed, as it happens, with the drop tools below."
     },
     {
       "title": "See who's coming in",

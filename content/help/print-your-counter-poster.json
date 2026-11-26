@@ -1,6 +1,6 @@
 {
   "slug": "print-your-counter-poster",
-  "title": "Print your counter poster",
+  "title": "Print your drop poster",
   "section": "drops",
   "order": 3,
   "minutes": 3,
@@ -11,8 +11,8 @@
   },
   "steps": [
     {
-      "title": "Open Posters",
-      "body": "On a phone, tap More, then Cards & posters. On a computer, it's Cards & posters in the menu on the left."
+      "title": "Open Drop posters",
+      "body": "On a phone, tap More, then Cards & posters, then Drop posters. On a computer, it's Cards & posters in the menu on the left."
     },
     {
       "title": "Choose the line on your poster",

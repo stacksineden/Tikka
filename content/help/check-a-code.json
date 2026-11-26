@@ -1,0 +1,34 @@
+{
+  "slug": "check-a-code",
+  "title": "Check a code at the counter",
+  "section": "bookings",
+  "order": 3,
+  "minutes": 3,
+  "summary": "Check a booking ref, a drop card or a gift. Checking never uses it; confirming does.",
+  "app": {
+    "href": "/app/redeem",
+    "label": "Open Check a code"
+  },
+  "steps": [
+    {
+      "title": "Open Check a code",
+      "body": "On a phone, tap More, then Check a code (staff see it as soon as they sign in). On a computer, it's in the menu on the left."
+    },
+    {
+      "title": "Type or scan the code",
+      "body": "Type the code from the customer's phone, or scan their QR. A booking ref starts with BK-. A drop card has your two code letters, like GS-. You see what it is and whether it's ready to use, with nothing used yet."
+    },
+    {
+      "title": "For a booking",
+      "body": "You see the service, the time, the deposit paid and what's left to collect. Tap Arrived when they come in. If someone doesn't come, the owner marks it on Calendar: tap the booking, then No-show."
+    },
+    {
+      "title": "For a drop card",
+      "body": "Check the reward and any condition (\"Only if…\"), give it, then tap \"Confirm redemption\". That's when it's used. If the drop asks for it, check the last 6 digits of their WhatsApp number on their own phone first. You can add what they spent, or add it later."
+    }
+  ],
+  "tips": [
+    "A Tikka that has run out shows who it was. Only the owner can give it more time, once, for 7 days."
+  ],
+  "published": true
+}

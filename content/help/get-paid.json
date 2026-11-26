@@ -1,0 +1,35 @@
+{
+  "slug": "get-paid",
+  "title": "Get paid: your ID and bank account",
+  "section": "money",
+  "order": 1,
+  "minutes": 5,
+  "summary": "Add your ID and bank account once. Deposits and pay links then go straight to your bank.",
+  "app": {
+    "href": "/app/settings/get-paid",
+    "label": "Open Get paid"
+  },
+  "steps": [
+    {
+      "title": "Open Get paid",
+      "body": "On a phone, tap More, then Get paid. On a computer, go to Settings, then Get paid."
+    },
+    {
+      "title": "Add your ID",
+      "body": "Pick your ID (NIN slip or card, driver's licence, passport or voter's card), type your full name as it is on it, and add a photo of the front. Say whether you're registered with CAC; if you are, add your BN or RC number and certificate. Not being registered doesn't stop you taking payments. Tap \"Send for review\"."
+    },
+    {
+      "title": "Add your bank account",
+      "body": "Pick your bank and type your account number. Tikka shows the account name from your bank: check it's yours and confirm. Tikka keeps the bank, the last 4 digits and the name, never the full number."
+    },
+    {
+      "title": "Wait for the check",
+      "body": "Tikka checks your details, usually within 1 working day, and tells you on WhatsApp. If something needs fixing, Get paid says what. Once you're Verified, payments switch on."
+    }
+  ],
+  "tips": [
+    "Tikka never holds your money. Paystack sends each payment to your bank the next working day.",
+    "Your ID is only seen by Tikka's team, to check your business."
+  ],
+  "published": true
+}

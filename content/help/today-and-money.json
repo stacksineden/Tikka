@@ -1,0 +1,42 @@
+{
+  "slug": "today-and-money",
+  "title": "Today and Money: who's coming and what you made",
+  "section": "money",
+  "order": 3,
+  "minutes": 5,
+  "summary": "Open Tikka in the morning to see your day. Tap Paid as people pay. On Sunday, see what you kept.",
+  "app": {
+    "href": "/app/money",
+    "label": "Open Money"
+  },
+  "steps": [
+    {
+      "title": "Your day",
+      "body": "Today shows who's coming, in time order, with what they've paid. Tap \"Here now\" when they arrive, Paid when they pay, or \"Didn't come\". Done ones fold away at the bottom."
+    },
+    {
+      "title": "Mark how they paid",
+      "body": "When you tap Paid, pick how: cash, transfer, or a pay link they pay on their phone. If they pay part now, type what they paid: the rest shows under \"Still owed to you\"."
+    },
+    {
+      "title": "New sale",
+      "body": "Someone walked in, or bought a product? Tap \"New sale\", pick or add the customer with their WhatsApp number, say what they had and how they paid."
+    },
+    {
+      "title": "Still owed to you",
+      "body": "Everyone who owes you, with how much. Tap Remind and WhatsApp opens on your phone with a polite message ready, or tap Paid when they settle."
+    },
+    {
+      "title": "Before you close",
+      "body": "From 6pm, Today asks two quick things: anyone not marked paid, and anything you spent today. That keeps your money report right."
+    },
+    {
+      "title": "Money",
+      "body": "Money shows this week: what came in, what you spent and what you kept, and where each number came from. Add regular costs like rent once and they're counted for you."
+    }
+  ],
+  "tips": [
+    "Send a receipt from the done list: it's proof of payment your customer can keep."
+  ],
+  "published": true
+}

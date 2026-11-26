@@ -1,7 +1,7 @@
 import { ArrowRight, Clock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { SiteFooter, SiteHeader } from "@/components/site/SiteChrome";
 import { StillStuck } from "@/components/site/StillStuck";
 import { claimMode } from "@/lib/claim-mode";
@@ -31,9 +31,20 @@ export async function generateMetadata({ params }: PageProps<"/help/[slug]">): P
 }
 
 /** One Help guide: numbered steps, a way into the dashboard, tips, and the next guide. */
+// Guides renamed when the help was rewritten for the new tabs (26 Nov 2026): old links still land.
+const MOVED: Record<string, string> = {
+  "set-up-your-card": "your-card-look",
+  "redeem-a-tikka": "check-a-code",
+  "get-lead-alerts": "phone-alerts",
+};
+
 export default async function HelpGuidePage({ params }: PageProps<"/help/[slug]">) {
-  const g = helpGuide((await params).slug);
-  if (!g) notFound();
+  const slug = (await params).slug;
+  const g = helpGuide(slug);
+  if (!g) {
+    if (MOVED[slug]) permanentRedirect(`/help/${MOVED[slug]}`);
+    notFound();
+  }
   const next = nextGuide(helpGuides(), g.slug);
   const section = HELP_SECTIONS.find((s) => s.id === g.section)?.label;
 

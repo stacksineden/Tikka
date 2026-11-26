@@ -1,0 +1,38 @@
+{
+  "slug": "your-customers",
+  "title": "Your customers",
+  "section": "customers",
+  "order": 1,
+  "minutes": 4,
+  "summary": "Everyone who booked, bought or claimed from you, by their WhatsApp number: visits, spend, notes and birthdays.",
+  "app": {
+    "href": "/app/leads",
+    "label": "Open Customers"
+  },
+  "steps": [
+    {
+      "title": "Open Customers",
+      "body": "Tap Customers in the bar at the bottom. Everyone is here once, by their WhatsApp number, whether they booked, came in or claimed a drop."
+    },
+    {
+      "title": "Find and sort",
+      "body": "Search by name or number (0803…, 803… or +234… all work). Sort by recent, most visits or top spenders, or filter: people who owe you, people you haven't seen lately, walk-ins, people from drops."
+    },
+    {
+      "title": "Open a customer",
+      "body": "See every visit, what they spent, what they owe, no-shows, and their next booking. Add notes like \"sensitive scalp\" and their birthday (day and month). Only you see them."
+    },
+    {
+      "title": "Message, book or remind",
+      "body": "Tap Message to open WhatsApp on your phone. \"Book them in\" adds a booking with their details filled in. If they owe you, send a reminder or a pay link."
+    },
+    {
+      "title": "Is this the same person?",
+      "body": "Customers saved before without a number show as their own. Add their number, or answer \"Is this the same person?\" when Tikka spots a match, and their visits and notes join up."
+    }
+  ],
+  "tips": [
+    "Only you see your customers' numbers. Your team never does."
+  ],
+  "published": true
+}

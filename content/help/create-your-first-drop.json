@@ -4,15 +4,11 @@
   "section": "drops",
   "order": 1,
   "minutes": 5,
-  "summary": "A drop is a batch of Tikkas behind one link. Tikka walks you through it one step at a time. Your first one is free.",
-  "app": {
-    "href": "/app/drops",
-    "label": "Open Drops"
-  },
+  "summary": "A drop is a limited batch of offers behind one link, to bring in new customers. Your first one is free.",
   "steps": [
     {
       "title": "Start a drop",
-      "body": "Go to Drops and tap \"Create a drop\". You need to set up your card first.\n\nTap Continue to go to the next step, or the arrow at the top to go back."
+      "body": "On a phone, tap More, then Drops. On a computer, it's Drops in the menu on the left. Tap \"Create a drop\".\n\nTap Continue to go to the next step, or the arrow at the top to go back."
     },
     {
       "title": "Pick a goal",
@@ -53,5 +49,9 @@
     "Once it's published you can extend the end date, add Tikkas or end it early, but not change the rewards.",
     "You can run one drop at a time, and schedule your next one while it runs."
   ],
-  "published": true
+  "published": true,
+  "app": {
+    "href": "/app/drops",
+    "label": "Open Drops"
+  }
 }

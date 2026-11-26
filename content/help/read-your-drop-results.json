@@ -1,8 +1,8 @@
 {
   "slug": "read-your-drop-results",
   "title": "Read your drop's results",
-  "section": "followup",
-  "order": 2,
+  "section": "drops",
+  "order": 4,
   "minutes": 3,
   "summary": "See what your drop brought in, where people came from, and what to change next time.",
   "app": {
@@ -12,7 +12,7 @@
   "steps": [
     {
       "title": "Open your drop",
-      "body": "Go to Drops and tap the drop. The numbers update live while it runs."
+      "body": "On a phone, tap More, then Drops, and tap the drop. The numbers update live while it runs."
     },
     {
       "title": "The headline numbers",

@@ -1,0 +1,30 @@
+{
+  "slug": "phone-alerts",
+  "title": "Get alerts on your phone",
+  "section": "customers",
+  "order": 2,
+  "minutes": 2,
+  "summary": "A notification for every new booking, deposit and lead, plus an 8pm money check and your week on Sunday.",
+  "app": {
+    "href": "/app/settings/account",
+    "label": "Open Account"
+  },
+  "steps": [
+    {
+      "title": "Turn on alerts",
+      "body": "Go to Settings, then Account, and tap \"Turn on alerts\". Allow notifications when your phone asks. Each phone or tablet you sign in on is switched on separately."
+    },
+    {
+      "title": "On an iPhone",
+      "body": "Add Tikka to your home screen first: in Safari, tap Share, then \"Add to Home Screen\". Open Tikka from that icon and turn alerts on there. It needs iOS 16.4 or newer."
+    },
+    {
+      "title": "What you'll get",
+      "body": "A notification when someone books or pays a deposit, when a pay link is paid, and when someone claims a drop. At 8pm: anything you spent today? On Sunday evening: what came in, what you spent and what you kept."
+    }
+  ],
+  "tips": [
+    "Tap \"Send it now\" to see a test notification on this phone straight away."
+  ],
+  "published": true
+}

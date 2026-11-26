@@ -1,9 +1,9 @@
 {
   "slug": "print-business-cards",
   "title": "Print your business cards",
-  "section": "start",
-  "order": 4,
-  "minutes": 3,
+  "section": "customers",
+  "order": 3,
+  "minutes": 4,
   "summary": "Free business cards in your own colours. The QR opens your page, so people can see your work and book.",
   "app": {
     "href": "/app/posters/cards",
@@ -12,7 +12,7 @@
   "steps": [
     {
       "title": "Open Business cards",
-      "body": "On a phone, tap More, then Cards & posters, then Business cards. On a computer, it's Cards & posters in the menu on the left. Your card is already made from your page: your logo, name, number, Instagram and where you are."
+      "body": "On a phone, tap More, then Cards & posters. On a computer, it's Cards & posters in the menu on the left. Your card is already made from your page: your logo, name, number, Instagram and where you are."
     },
     {
       "title": "Pick a style",

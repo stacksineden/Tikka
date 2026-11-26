@@ -1,0 +1,30 @@
+{
+  "slug": "your-tikka-listing",
+  "title": "Show up in Tikka's search",
+  "section": "start",
+  "order": 3,
+  "minutes": 3,
+  "summary": "Customers search Tikka by service, place and time. Choose whether you show, place your pin and add photos of your space.",
+  "app": {
+    "href": "/app/settings/listing",
+    "label": "Open Your Tikka listing"
+  },
+  "steps": [
+    {
+      "title": "Open Your Tikka listing",
+      "body": "On a phone, tap More, then Your Tikka listing. You're shown in Tikka's search from the start; switch \"Show me in Tikka's search\" off if you'd rather not be. Your own page works either way."
+    },
+    {
+      "title": "Put your pin on your shop",
+      "body": "Tikka places your pin near your area to start. Drag it to your door, or tap the map where you are, then tap \"Save my pin\". Customers see it on the map and get directions to it. If you only go to customers, search shows your area instead."
+    },
+    {
+      "title": "Add photos of your space",
+      "body": "Add up to 6 photos of your studio, chairs or shop front. They come first on your listing, before your work, so customers know where they're going."
+    }
+  ],
+  "tips": [
+    "Search understands what people mean: someone typing \"bridal glam\" still finds your \"Bridal makeup\". Name your services the way your customers say them."
+  ],
+  "published": true
+}

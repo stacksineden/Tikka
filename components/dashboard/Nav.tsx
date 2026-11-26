@@ -261,7 +261,7 @@ function MoreSheet({ open, onClose, account, path }: { open: boolean; onClose: (
     { href: "/app/drops", label: "Drops", Icon: Layers, meta: "Bring in new customers" },
     { href: "/app/reviews", label: "Reviews", Icon: MessageSquareText, meta: account?.rating ? `${account.rating} · ${account.reviewCount}` : undefined },
     { href: "/app/posters/cards", label: "Cards & posters", Icon: QrCode, meta: "Free business cards, and QR posters for your drops" },
-    { href: "/app/settings/team", label: "Helpers", Icon: UsersRound, meta: "People who work with you" },
+    { href: "/app/settings/team", label: "Team", Icon: UsersRound, meta: "People who work with you" },
     { href: "/app/settings/get-paid", label: "Get paid", Icon: Banknote, meta: "Your bank and ID" },
     { href: "/app/settings", label: "Settings", Icon: Settings, meta: "Account and alerts" },
     { href: "/help", label: "Help", Icon: CircleHelp, meta: "Step-by-step guides" },

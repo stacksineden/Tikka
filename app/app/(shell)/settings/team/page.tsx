@@ -80,7 +80,7 @@ async function Team() {
 
 export default function Page() {
   return (
-    <SettingsPage title="Team" intro="The people who redeem Tikkas at your counter.">
+    <SettingsPage title="Team" intro="The people who check codes and mark who came. They never see your customers' numbers or your money.">
       <Suspense fallback={<div className="h-64 rounded-card bg-surface-sunken" />}>
         <Team />
       </Suspense>
