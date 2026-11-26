@@ -4,6 +4,8 @@
 // design/prototypes/customer-booking.html): the customer books from the business page. Choices,
 // extras, home service, a free time or a wedding date, the total and deposit, then the pass.
 // Opens from every [data-book] link, like CalendarSheet. Demo businesses only for now.
+// It wears the page's colours (lib/sheet-theme.ts), and from a Tikka's card ("Book a time to use it",
+// ?tikka=) it opens by itself and books for that Tikka: before its use-by, no details, no deposit.
 
 import { ArrowLeft, CalendarX, Check, ChevronLeft, ChevronRight, Info, Loader2, Lock, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -11,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { slotLabel } from "@/lib/booking";
 import { freeDays, gapAfter, openRange, PROBLEM_TEXT, watInstant, watParts, type BookingRules } from "@/lib/bookings";
 import { MAX_PEOPLE, priceBooking, type DepositRule } from "@/lib/booking-price";
+import type { SheetTheme } from "@/lib/sheet-theme";
 import type { ServiceItem, WorkPlace } from "@/lib/types";
 
 export interface FlowBusiness {
@@ -27,13 +30,23 @@ export interface FlowBusiness {
   homeGapMinutes?: number;
 }
 
+/** "Book a time to use it": the claimer's Tikka, read on the server (getTikkaForBooking). */
+export interface FlowTikka {
+  token: string;
+  name: string;
+  /** The last WAT day it can be used, "2026-12-03". */
+  until: string;
+  reward: string;
+  booking?: { token: string; startsAt: string; service: string };
+}
+
 type Step = "option" | "place" | "time" | "date" | "call" | "people" | "extras" | "details" | "review" | "pay";
 const CALL_TIMES = [300, 330, 360, 390, 420, 450, 480, 540, 600];
 const naira = (n: number) => "₦" + Math.round(n).toLocaleString("en-NG");
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-function stepsFor(s: ServiceItem, b: FlowBusiness): Step[] {
+function stepsFor(s: ServiceItem, b: FlowBusiness, forTikka = false): Step[] {
   const out: Step[] = [];
   if (s.eventDay) out.push("date", "call");
   if (s.options && s.options.length > 1 && !s.perPerson) out.push("option");
@@ -41,14 +54,15 @@ function stepsFor(s: ServiceItem, b: FlowBusiness): Step[] {
   if (s.perPerson) out.push("people");
   if (!s.eventDay) out.push("time");
   if (s.extras?.length) out.push("extras");
-  out.push("details", "review", "pay");
+  // A Tikka booking: name and number come from the claim, and it never takes a deposit.
+  out.push(...(forTikka ? (["review"] as const) : (["details", "review", "pay"] as const)));
   return out;
 }
 
 const dayKeyOf = (y: number, m: number, d: number) => `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 const longDay = (key: string) => new Date(`${key}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
 
-export function BookingFlow({ business: b, services }: { business: FlowBusiness; services: ServiceItem[] }) {
+export function BookingFlow({ business: b, services, theme, tikka }: { business: FlowBusiness; services: ServiceItem[]; theme: SheetTheme; tikka?: FlowTikka }) {
   const ref = useRef<HTMLDialogElement>(null);
   const router = useRouter();
   const [svc, setSvc] = useState<ServiceItem | null>(null);
@@ -83,13 +97,25 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
     setError("");
     setWaitlisted(false);
     setAnswers((s.questions ?? []).map(() => ""));
-    setStep(stepsFor(s, b)[0]);
-    ref.current?.showModal();
+    setStep(stepsFor(s, b, !!tikka)[0]);
+    if (!ref.current?.open) ref.current?.showModal();
     void fetch(`/api/book?slug=${encodeURIComponent(b.slug)}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d: { rules: BookingRules | null }) => setRules(d.rules))
       .catch(() => setError("Couldn't load the free times. Check your connection."));
   }
+
+  // From a Tikka's card: open straight away, on its booking if it has one, else on the only service
+  // or the list to pick from.
+  useEffect(() => {
+    if (!tikka) return;
+    const t = setTimeout(() => {
+      if (!tikka.booking && services.length === 1) start(services[0]);
+      else ref.current?.showModal();
+    }, 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tikka?.token]);
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -105,11 +131,11 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [services]);
 
-  const steps = svc ? stepsFor(svc, b) : [];
+  const steps = svc ? stepsFor(svc, b, !!tikka) : [];
   const index = steps.indexOf(step);
-  const price = svc ? priceBooking(svc, { option: option ?? 0, people, extras, home: !!home }, b.travelFee, b.deposit) : null;
+  const price = svc ? priceBooking(svc, { option: option ?? 0, people, extras, home: !!home }, b.travelFee, tikka ? undefined : b.deposit) : null;
   const after = svc ? gapAfter(b, svc, home === true) : 0;
-  const days = useMemo(() => (rules && svc && !svc.eventDay ? freeDays(rules, price?.minutes ?? 60, new Date(), undefined, after) : []), [rules, svc, price?.minutes, after]);
+  const days = useMemo(() => (rules && svc && !svc.eventDay ? freeDays(rules, price?.minutes ?? 60, new Date(), tikka?.until, after) : []), [rules, svc, price?.minutes, after, tikka?.until]);
 
   const taken = (key: string) => {
     if (!rules) return false;
@@ -163,18 +189,23 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
           area,
           address,
           answers: [...(svc.questions ?? []).map((q, i) => (answers[i]?.trim() ? `${q} ${answers[i].trim()}` : "")), note.trim()].filter(Boolean).join(" · "),
-          name,
-          phone,
+          ...(tikka ? { tikka: tikka.token } : { name, phone }),
         }),
       });
       const data = (await res.json()) as { ok: boolean; token?: string; reason?: string };
       if (data.ok && data.token) {
         close();
-        router.push(`/bk/${data.token}`);
+        router.push(tikka ? `/t/${tikka.token}` : `/bk/${data.token}`);
         return;
       }
       const reason = data.reason ?? "error";
-      setError(PROBLEM_TEXT[reason] ?? "Something went wrong. Try again.");
+      setError(
+        reason === "after_use_by"
+          ? "Pick a time before your Tikka runs out."
+          : reason === "used"
+            ? "This Tikka can't be booked any more."
+            : (PROBLEM_TEXT[reason] ?? "Something went wrong. Try again."),
+      );
       if (reason === "taken" || reason === "too_soon" || reason === "closed") {
         setStep(svc.eventDay ? "date" : "time");
         setTime(null);
@@ -200,7 +231,8 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
   const firstKey = days[0]?.key ?? dayKeyOf(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
 
   return (
-    <dialog ref={ref} aria-label="Book" className="sheet m-0 mt-auto h-dvh max-h-none w-full max-w-none bg-transparent p-0 sm:mx-auto sm:max-w-[480px]">
+    <dialog ref={ref} aria-label="Book" data-theme={theme.tone} style={theme.vars as React.CSSProperties} className="sheet m-0 mt-auto h-dvh max-h-none w-full max-w-none bg-transparent p-0 text-ink sm:mx-auto sm:max-w-[480px]">
+      {tikka && !svc && <TikkaStart tikka={tikka} business={b.name} services={services} onPick={start} onClose={close} />}
       {svc && price && (
         <div className="flex h-full flex-col bg-surface text-ink">
           {step !== "pay" ? (
@@ -209,7 +241,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
                 <ArrowLeft size={22} aria-hidden="true" />
               </button>
               <div className="h-1 flex-1 overflow-hidden rounded-pill bg-surface-sunken" role="progressbar" aria-label="Booking progress" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length - 1}>
-                <div className="h-full bg-ink transition-[width]" style={{ width: `${((index + 1) / (steps.length - 1)) * 100}%` }} />
+                <div className="h-full bg-(--bf-acc) transition-[width]" style={{ width: `${((index + 1) / (steps.length - 1)) * 100}%` }} />
               </div>
               <button type="button" onClick={close} aria-label="Close" className="grid size-11 place-items-center rounded-pill">
                 <X size={22} aria-hidden="true" />
@@ -227,10 +259,11 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
           <div className="grid flex-1 content-start gap-5 overflow-y-auto px-4 pt-5 pb-6">
             {step !== "pay" && (
               <div className="grid gap-1">
-                <span className="text-caption font-semibold tracking-[0.08em] uppercase" style={{ color: "var(--biz)" }}>
+                <span className="text-caption font-semibold tracking-[0.08em] uppercase" style={{ color: "var(--bf-acc)" }}>
                   {svc.name}
                 </span>
-                <h2 className="biz-serif text-[28px] leading-[1.1]">{TITLES[step](svc)}</h2>
+                <h2 className="biz-serif text-[28px] leading-[1.1]">{step === "review" && price.depositNaira === 0 ? "Check and book" : TITLES[step](svc)}</h2>
+                {tikka && <p className="text-label mt-1">For your Tikka: {tikka.reward}</p>}
               </div>
             )}
 
@@ -313,7 +346,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
                               setTime(null);
                               setWaitlisted(false);
                             }}
-                            className={`grid min-h-19.5 w-16 shrink-0 snap-start content-center justify-items-center gap-0.5 rounded-md border-2 py-1.5 disabled:opacity-40 ${dayKey === d.key ? "border-ink bg-ink text-surface" : "border-line bg-surface-raised"}`}
+                            className={`grid min-h-19.5 w-16 shrink-0 snap-start content-center justify-items-center gap-0.5 rounded-md border-2 py-1.5 disabled:opacity-40 ${dayKey === d.key ? "border-(--bf-acc) bg-(--bf-acc) text-(--bf-on-acc)" : "border-line bg-surface-raised"}`}
                           >
                             <small className="text-xs opacity-75">{d.short}</small>
                             <b className="text-[22px] leading-[26px]">{d.date}</b>
@@ -327,7 +360,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
                       <>
                         <div className="grid grid-cols-3 gap-2">
                           {day.slots.map((t) => (
-                            <button key={t} type="button" aria-pressed={time === t} onClick={() => setTime(t)} className={`text-code min-h-12 rounded-md border ${time === t ? "border-ink bg-ink text-surface" : "border-line-strong bg-surface-raised"}`}>
+                            <button key={t} type="button" aria-pressed={time === t} onClick={() => setTime(t)} className={`text-code min-h-12 rounded-md border ${time === t ? "border-(--bf-acc) bg-(--bf-acc) text-(--bf-on-acc)" : "border-line-strong bg-surface-raised"}`}>
                               {slotLabel(t)}
                             </button>
                           ))}
@@ -366,7 +399,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
                     ))}
                     {Array.from({ length: dim }, (_, i) => {
                       const key = dayKeyOf(y, m, i + 1);
-                      const past = key < firstKey;
+                      const past = key < firstKey || (!!tikka && key > tikka.until);
                       const isTaken = !past && taken(key);
                       return (
                         <button
@@ -379,7 +412,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
                             setDayKey(key);
                             setWaitlisted(false);
                           }}
-                          className={`grid aspect-square min-w-0 content-center rounded-md text-[15px] leading-4 font-semibold disabled:bg-transparent disabled:text-ink-muted/50 ${dayKey === key ? "bg-ink text-surface" : isTaken ? "bg-surface-sunken text-ink-muted line-through" : "bg-surface"}`}
+                          className={`grid aspect-square min-w-0 content-center rounded-md text-[15px] leading-4 font-semibold disabled:bg-transparent disabled:text-ink-muted/50 ${dayKey === key ? "bg-(--bf-acc) text-(--bf-on-acc)" : isTaken ? "bg-surface-sunken text-ink-muted line-through" : "bg-surface"}`}
                         >
                           {i + 1}
                           {isTaken && <small className="text-[8px] text-gold-text no-underline">Booked</small>}
@@ -397,7 +430,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
                 <p className="text-body text-ink-muted">On {dayKey && longDay(dayKey)}. When should {b.name} start?</p>
                 <div className="grid grid-cols-3 gap-2">
                   {CALL_TIMES.map((t) => (
-                    <button key={t} type="button" aria-pressed={time === t} onClick={() => setTime(t)} className={`text-code min-h-12 rounded-md border ${time === t ? "border-ink bg-ink text-surface" : "border-line-strong bg-surface-raised"}`}>
+                    <button key={t} type="button" aria-pressed={time === t} onClick={() => setTime(t)} className={`text-code min-h-12 rounded-md border ${time === t ? "border-(--bf-acc) bg-(--bf-acc) text-(--bf-on-acc)" : "border-line-strong bg-surface-raised"}`}>
                       {slotLabel(t)}
                     </button>
                   ))}
@@ -414,9 +447,9 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
                     role="checkbox"
                     aria-checked={extras.includes(i)}
                     onClick={() => setExtras((e) => (e.includes(i) ? e.filter((j) => j !== i) : [...e, i]))}
-                    className={`flex min-h-17 w-full items-center gap-3.5 rounded-card border-2 bg-surface-raised px-4 text-left ${extras.includes(i) ? "border-ink" : "border-line"}`}
+                    className={`flex min-h-17 w-full items-center gap-3.5 rounded-card border-2 bg-surface-raised px-4 text-left ${extras.includes(i) ? "border-(--bf-acc)" : "border-line"}`}
                   >
-                    <span className={`grid size-6 shrink-0 place-items-center rounded-[7px] border-2 ${extras.includes(i) ? "border-ink bg-ink text-surface" : "border-line-strong text-transparent"}`}>
+                    <span className={`grid size-6 shrink-0 place-items-center rounded-[7px] border-2 ${extras.includes(i) ? "border-(--bf-acc) bg-(--bf-acc) text-(--bf-on-acc)" : "border-line-strong text-transparent"}`}>
                       <Check size={15} aria-hidden="true" />
                     </span>
                     <b className="flex-1">{x.name}</b>
@@ -501,7 +534,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
                   <span className="text-code-lg tracking-normal">{naira(price.depositNaira)}</span>
                   <span className="text-caption text-ink-muted">to {b.name}</span>
                 </div>
-                <button type="button" className="btn btn-lg w-full rounded-pill bg-ink text-surface hover:bg-ink" disabled={busy} onClick={pay}>
+                <button type="button" className="btn btn-lg w-full rounded-pill bg-(--bf-acc) text-(--bf-on-acc) hover:bg-(--bf-acc)" disabled={busy} onClick={pay}>
                   {busy ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Check aria-hidden="true" />} Pretend it&apos;s paid (demo)
                 </button>
                 <p className="text-caption text-center text-ink-muted">Demo: no money moves.</p>
@@ -523,7 +556,7 @@ export function BookingFlow({ business: b, services }: { business: FlowBusiness;
               </div>
               <button
                 type="button"
-                className="btn btn-lg shrink-0 rounded-pill bg-ink text-surface hover:bg-ink"
+                className="btn btn-lg shrink-0 rounded-pill bg-(--bf-acc) text-(--bf-on-acc) hover:bg-(--bf-acc)"
                 disabled={!ready[step] || busy}
                 onClick={step === "review" ? (price.depositNaira > 0 ? next : pay) : next}
               >
@@ -558,8 +591,8 @@ function hours(m: number) {
 
 function Opt({ on, onClick, title, sub, price }: { on: boolean; onClick: () => void; title: string; sub?: string; price?: string }) {
   return (
-    <button type="button" aria-pressed={on} onClick={onClick} className={`flex min-h-17 w-full items-center gap-3.5 rounded-card border-2 bg-surface-raised px-4 py-3 text-left ${on ? "border-ink" : "border-line"}`}>
-      <span className={`size-6 shrink-0 rounded-pill border-2 ${on ? "border-[7px] border-ink" : "border-line-strong"}`} aria-hidden="true" />
+    <button type="button" aria-pressed={on} onClick={onClick} className={`flex min-h-17 w-full items-center gap-3.5 rounded-card border-2 bg-surface-raised px-4 py-3 text-left ${on ? "border-(--bf-acc)" : "border-line"}`}>
+      <span className={`size-6 shrink-0 rounded-pill border-2 ${on ? "border-[7px] border-(--bf-acc)" : "border-line-strong"}`} aria-hidden="true" />
       <span className="min-w-0 flex-1">
         <b className="block text-[17px]">{title}</b>
         {sub && <span className="text-caption text-ink-muted">{sub}</span>}
@@ -631,7 +664,7 @@ function Waitlist({ name, slug, serviceId, day, done, onJoin }: { name: string; 
             <input aria-label="Your first name" className="input" value={first} onChange={(e) => setFirst(e.target.value)} placeholder="Your first name" autoComplete="given-name" />
             <input aria-label="Your WhatsApp number" className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0803 000 0000" inputMode="tel" autoComplete="tel-national" />
             {error && <span role="alert" className="text-body text-danger">{error}</span>}
-            <button type="button" disabled={busy || first.trim().length < 2 || phone.replace(/\D/g, "").length < 10} className="btn justify-self-start rounded-pill bg-ink text-surface hover:bg-ink" onClick={join}>
+            <button type="button" disabled={busy || first.trim().length < 2 || phone.replace(/\D/g, "").length < 10} className="btn justify-self-start rounded-pill bg-(--bf-acc) text-(--bf-on-acc) hover:bg-(--bf-acc)" onClick={join}>
               {busy && <Loader2 className="animate-spin" aria-hidden="true" />} Add me to the waitlist
             </button>
           </>
@@ -640,9 +673,55 @@ function Waitlist({ name, slug, serviceId, day, done, onJoin }: { name: string; 
             <span className="text-body">
               <b>This day is fully booked.</b> Join the waitlist and {name} will message you if a place opens, or pick another day.
             </span>
-            <button type="button" className="btn justify-self-start rounded-pill bg-ink text-surface hover:bg-ink" onClick={() => setForm(true)}>
+            <button type="button" className="btn justify-self-start rounded-pill bg-(--bf-acc) text-(--bf-on-acc) hover:bg-(--bf-acc)" onClick={() => setForm(true)}>
               Join the waitlist
             </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TikkaStart({ tikka, business, services, onPick, onClose }: { tikka: FlowTikka; business: string; services: ServiceItem[]; onPick: (s: ServiceItem) => void; onClose: () => void }) {
+  const when = (iso: string) =>
+    new Date(iso).toLocaleString("en-GB", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZone: "Africa/Lagos" });
+  return (
+    <div className="flex h-full flex-col bg-surface text-ink">
+      <div className="flex justify-end border-b border-line px-2 py-2">
+        <button type="button" onClick={onClose} aria-label="Close" className="grid size-11 place-items-center rounded-pill">
+          <X size={22} aria-hidden="true" />
+        </button>
+      </div>
+      <div className="grid flex-1 content-start gap-5 overflow-y-auto px-4 pt-5 pb-6">
+        <div className="grid gap-1">
+          <span className="text-caption font-semibold tracking-[0.08em] uppercase" style={{ color: "var(--bf-acc)" }}>
+            {business}
+          </span>
+          <h2 className="biz-serif text-[28px] leading-[1.1]">{tikka.booking ? "You're booked" : "Book a time to use your Tikka"}</h2>
+          <p className="text-label mt-1">For your Tikka: {tikka.reward}</p>
+        </div>
+        {tikka.booking ? (
+          <>
+            <p className="text-body rounded-md bg-surface-sunken px-4 py-3 font-semibold">
+              {tikka.booking.service} · {when(tikka.booking.startsAt)}
+            </p>
+            <a href={`/t/${tikka.token}`} className="btn btn-lg w-full rounded-pill bg-(--bf-acc) text-(--bf-on-acc) hover:bg-(--bf-acc)">
+              Back to your Tikka
+            </a>
+            <a href={`/bk/${tikka.booking.token}`} className="btn btn-lg w-full rounded-pill border border-line-strong">
+              See your booking
+            </a>
+            <p className="text-caption text-ink-muted">To change it, message {business} from your booking.</p>
+          </>
+        ) : (
+          <>
+            <p className="text-body text-ink-muted">Pick what you&apos;d like. Only times before your Tikka runs out show.</p>
+            <div className="grid gap-2.5">
+              {services.map((s) => (
+                <Opt key={s.id} on={false} onClick={() => onPick(s)} title={s.name} sub={s.minutes ? `About ${hours(s.minutes)}` : undefined} />
+              ))}
+            </div>
           </>
         )}
       </div>

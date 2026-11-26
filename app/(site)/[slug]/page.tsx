@@ -12,6 +12,7 @@ import { LuxePage, SoftPage } from "@/components/business/styles/BeautyStyles";
 import { FilmPage, PortfolioPage } from "@/components/business/styles/PhotoStyles";
 import { CalendarSheet } from "@/components/business/CalendarSheet";
 import { BookingFlow } from "@/components/business/BookingFlow";
+import { sheetTheme } from "@/lib/sheet-theme";
 import { reachLabel } from "@/lib/presets";
 import { bizSerif } from "@/components/business/fonts";
 import { Gallery } from "@/components/business/Gallery";
@@ -201,6 +202,8 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
             homeGapMinutes: b.homeGapMinutes,
           }}
           services={bookable}
+          theme={sheetTheme(pageStyle(b), b.page?.galleryTone, b.brandColor, b.onBrandColor)}
+          tikka={tikka ?? undefined}
         />
       ) : calendar ? (
         <CalendarSheet

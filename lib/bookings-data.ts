@@ -308,7 +308,7 @@ export async function saveBookingSettings(
  */
 export async function bookTimeV2(
   slug: string,
-  input: { serviceId: string; startsAt: string; choice: BookingChoice; firstName: string; phone: string; address?: string; area?: string; answers?: string },
+  input: { serviceId: string; startsAt: string; choice: BookingChoice; firstName: string; phone: string; address?: string; area?: string; answers?: string; tikka?: string },
 ): Promise<BookResult> {
   const found = await getBusinessBySlug(slug);
   if (!found || isDbId(found.ownerId) || !found.business.trades?.length) return { kind: "not_found" };
@@ -316,9 +316,20 @@ export async function bookTimeV2(
   const d = demoBook(ownerId, business);
   const svc = business.services.find((s) => s.id === input.serviceId);
   if (!d || !svc) return { kind: "not_found" };
-  const home = business.workPlace === "home" || (business.workPlace === "both" && !!input.choice.home);
-  const price = priceBooking(svc, { ...input.choice, home }, business.travelFee ?? 0, d.setup.deposit);
   const start = new Date(input.startsAt);
+  // "Book a time to use it" from a Tikka's card: this business's unused Tikka, before its use-by, one
+  // upcoming booking per Tikka. Name and number come from the claim, never the browser; no deposit.
+  const tikka = input.tikka ? demoTikkaForBooking(input.tikka) : null;
+  if (input.tikka) {
+    if (!tikka || tikka.ownerId !== ownerId) return { kind: "not_found" };
+    if (tikka.redeemed) return { kind: "used" };
+    const have = d.bookings.find((x) => x.claimId === input.tikka && x.status === "booked" && new Date(x.endsAt).getTime() > Date.now());
+    if (have) return { kind: "already", token: have.viewToken!, code: have.code, id: have.id };
+    if (start.getTime() >= new Date(tikka.expiresAt).getTime()) return { kind: "after_use_by" };
+  }
+  const who = tikka ? { firstName: tikka.firstName, phone: tikka.phone ?? "" } : { firstName: input.firstName, phone: input.phone };
+  const home = business.workPlace === "home" || (business.workPlace === "both" && !!input.choice.home);
+  const price = priceBooking(svc, { ...input.choice, home }, business.travelFee ?? 0, tikka ? undefined : d.setup.deposit);
   let end: Date;
   if (svc.eventDay) {
     const { day, minute } = watParts(start);
@@ -333,11 +344,12 @@ export async function bookTimeV2(
     if (problem) return { kind: problem };
     end = new Date(start.getTime() + price.minutes * 60_000);
   }
-  if (d.bookings.filter((x) => x.phone === input.phone && x.status === "booked" && new Date(x.startsAt).getTime() > Date.now()).length >= MAX_UPCOMING) return { kind: "too_many" };
+  if (!tikka && d.bookings.filter((x) => x.phone === who.phone && x.status === "booked" && new Date(x.startsAt).getTime() > Date.now()).length >= MAX_UPCOMING) return { kind: "too_many" };
   const b: DemoBooking = {
     id: `bk_${randomBytes(6).toString("hex")}`, service: svc.name, serviceId: svc.id, minutes: Math.round((end.getTime() - start.getTime()) / 60_000),
-    startsAt: start.toISOString(), endsAt: end.toISOString(), firstName: input.firstName, phone: input.phone, source: "page",
+    startsAt: start.toISOString(), endsAt: end.toISOString(), firstName: who.firstName, phone: who.phone || undefined, source: tikka ? "tikka" : "page",
     status: "booked", code: demoCode(), viewToken: randomBytes(12).toString("hex"), moved: false, createdAt: new Date().toISOString(), futureOffers: false,
+    claimId: tikka ? input.tikka : undefined,
     priceKobo: price.totalNaira * 100, priceKind: "fixed", depositPaidKobo: price.depositNaira ? price.depositNaira * 100 : undefined, depositCounts: d.setup.deposit?.counts ?? true,
     homeArea: home ? [input.address?.trim(), input.area?.trim()].filter(Boolean).join(", ").slice(0, 120) || business.city : undefined,
     detail: [price.detail, input.answers?.trim()].filter(Boolean).join(" · ").slice(0, 200) || undefined,
