@@ -6,6 +6,7 @@ import "server-only";
 
 import { fromStored } from "./media-path";
 import { dayRange, type SearchQuery } from "./search";
+import { adminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
 
 export interface BizCard {
@@ -49,7 +50,10 @@ function smallCopy(path: string | null): string | null {
 
 export async function searchBusinesses(s: Partial<SearchQuery> & { sort?: "soonest" | "rating" | "new"; limit?: number }, now = new Date()): Promise<BizCard[]> {
   const days = dayRange({ when: s.when ?? "any", date: s.date }, now);
-  const sb = await createClient();
+  // Local development only: test (demo) businesses show too, through the server's own key. The
+  // database honours p_include_demo only for that key, so usetikka.com never shows them.
+  const local = process.env.NODE_ENV !== "production";
+  const sb = local ? adminClient() : await createClient();
   const { data, error } = await sb.rpc("search_businesses", {
     p_query: s.q ?? null,
     p_trade: s.trade ?? null,
@@ -59,6 +63,7 @@ export async function searchBusinesses(s: Partial<SearchQuery> & { sort?: "soone
     p_tod: s.tod ?? null,
     p_sort: s.sort ?? "soonest",
     p_limit: s.limit ?? 24,
+    ...(local ? { p_include_demo: true } : {}),
   });
   if (error || !Array.isArray(data)) return [];
   return (data as Row[]).map((r) => ({
