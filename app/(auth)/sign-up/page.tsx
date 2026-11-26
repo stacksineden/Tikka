@@ -10,7 +10,7 @@ export default function SignUpPage() {
     <>
       <h1 className="text-heading">Start free</h1>
       <p className="text-body mt-2 text-ink-muted">
-        Set up your card and run your first drop today. Free to start.
+        Your website, bookings and deposits, set up from your phone in about 10 minutes. Free to start.
       </p>
       <div className="mt-8">
         <Suspense>

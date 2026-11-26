@@ -1,0 +1,39 @@
+{
+  "slug": "booking-settings",
+  "title": "Set up your bookings",
+  "section": "bookings",
+  "order": 1,
+  "minutes": 5,
+  "summary": "Your hours, how many customers at once, gaps between bookings and how far ahead people can book.",
+  "app": {
+    "href": "/app/bookings",
+    "label": "Open Calendar"
+  },
+  "steps": [
+    {
+      "title": "Open Booking settings",
+      "body": "Tap Calendar, then Settings. Or on a phone tap More, then Booking settings. You can pause bookings here any time; your page then asks people to message you instead."
+    },
+    {
+      "title": "Your opening hours",
+      "body": "Set the days and times customers can book. Close a day by switching it off."
+    },
+    {
+      "title": "Customers at the same time",
+      "body": "If you or your team can do two customers at once, say 2. Tikka only shows a time while there's room."
+    },
+    {
+      "title": "Time between bookings",
+      "body": "Keep a few minutes free after each booking to clean up or rest, and extra after a home visit to travel. A service can have its own gap."
+    },
+    {
+      "title": "How soon and how far ahead",
+      "body": "The latest someone can book, like 2 hours before, and how far ahead they can book. Brides book months ahead: 6 months works well for weddings."
+    },
+    {
+      "title": "Deposit, rules and questions",
+      "body": "Choose your deposit (see \"Take deposits on bookings\"), the booking rules customers see before they pay, and up to 3 questions for any service, like \"What length?\" or \"Is it your first time?\"."
+    }
+  ],
+  "published": true
+}

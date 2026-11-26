@@ -31,6 +31,11 @@ export function bookingFrom(r: Row): Booking {
     priceKobo: r.price_kobo == null ? undefined : Number(r.price_kobo),
     priceKind: (r.price_kind as Booking["priceKind"]) ?? undefined,
     depositCounts: r.deposit_counts == null ? undefined : r.deposit_counts === true,
+    // Booking with choices (booking_choices migration): the address reaches owners only.
+    homeArea: (r.home_area as string | null) ?? undefined,
+    detail: (r.detail as string | null) ?? undefined,
+    foundVia: r.found_via === "search" ? "search" : undefined,
+    foundNew: r.found_new == null ? undefined : r.found_new === true,
   };
 }
 
@@ -98,6 +103,10 @@ export interface BookingPass {
   holdLive?: boolean;
   /** Booked with a Tikka: its card link (code and QR for the counter), its reward, and whether it's used. */
   tikka?: { token: string; reward: string; used: boolean };
+  /** A home visit's address (the demo; real passes say only that it's a home visit), and what was picked. */
+  homeArea?: string;
+  home?: boolean;
+  detail?: string;
 }
 
 /** The customer's booking pass, by its link. Never the phone number. */
@@ -123,7 +132,148 @@ export async function dbBookingPass(token: string): Promise<BookingPass | null> 
     priceKind: (r.price_kind as string | null) ?? undefined,
     holdLive: r.hold_live === true,
     tikka: r.tikka_token ? { token: String(r.tikka_token), reward: String(r.tikka_reward ?? ""), used: r.tikka_used === true } : undefined,
+    home: r.home === true,
+    detail: (r.detail as string | null) ?? undefined,
   };
+}
+
+/* ------------------------------------------------ booking with choices (docs/DB_MOVE.md step 2) */
+
+export interface ChoiceInput {
+  option?: number;
+  people?: number[];
+  extras?: number[];
+  home?: boolean;
+  /** Per hour or per item: how many (the server keeps it within the owner's range). */
+  qty?: number;
+}
+
+/** book_time_v2(): Postgres prices the picks and works out the deposit. Server only, after the route's rate limits. */
+export async function dbBookTimeV2(input: {
+  businessId: string;
+  serviceId: string;
+  startsAt: string;
+  firstName: string;
+  phone: string;
+  choice: ChoiceInput;
+  address?: string;
+  area?: string;
+  answers?: string;
+  futureOffers: boolean;
+  visitorId: string;
+  mode: "test" | "live" | null;
+  email: string | null;
+}): Promise<BookResult> {
+  const { data, error } = await adminClient().rpc("book_time_v2", {
+    p_business: input.businessId,
+    p_service: input.serviceId,
+    p_start: input.startsAt,
+    p_first_name: input.firstName,
+    p_phone: input.phone,
+    p_choice: input.choice,
+    p_address: input.address ?? null,
+    p_area: input.area ?? null,
+    p_answers: input.answers ?? null,
+    p_future: input.futureOffers,
+    p_visitor: input.visitorId,
+    p_mode: input.mode,
+    p_email: input.email,
+  });
+  if (error) return { kind: "error" };
+  return data as BookResult;
+}
+
+export interface ServerPrice {
+  totalKobo: number;
+  depositKobo: number;
+  depositCounts: boolean;
+  minutes: number;
+  gapMinutes: number;
+}
+
+/** price_booking(): what the sheet shows before Pay, the same sums book_time_v2() charges. Public. */
+export async function dbPriceBooking(businessId: string, serviceId: string, choice: ChoiceInput, mode: "test" | "live" | null): Promise<ServerPrice | null> {
+  const { data, error } = await adminClient().rpc("price_booking", { p_business: businessId, p_service: serviceId, p_choice: choice, p_mode: mode });
+  if (error || !data) return null;
+  const r = data as Row;
+  return {
+    totalKobo: Number(r.total_kobo),
+    depositKobo: Number(r.deposit_kobo),
+    depositCounts: r.deposit_counts === true,
+    minutes: Number(r.minutes),
+    gapMinutes: Number(r.gap_minutes ?? 0),
+  };
+}
+
+/** change_from_pass(): move (24 hours' notice, the deposit stays) or cancel (no refund). Server only. */
+export async function dbChangeFromPass(token: string, change: { kind: "cancel" } | { kind: "move"; startsAt: string }): Promise<{ ok: true } | { ok: false; reason: string }> {
+  if (!/^[0-9a-f]{24}$/.test(token)) return { ok: false, reason: "not_found" };
+  const { data, error } = await adminClient().rpc("change_from_pass", {
+    p_token: token,
+    p_kind: change.kind,
+    p_start: change.kind === "move" ? change.startsAt : null,
+  });
+  if (error || !data) return { ok: false, reason: "error" };
+  const kind = String((data as Row).kind);
+  return kind === "moved" || kind === "cancelled" ? { ok: true } : { ok: false, reason: kind };
+}
+
+/* ------------------------------------------------------------ the waitlist (docs/DB_MOVE.md step 3) */
+
+/** join_waitlist(): one entry per number per day. Server only, after the route's rate limits. */
+export async function dbJoinWaitlist(input: { businessId: string; serviceId: string; day: string; firstName: string; phone: string; visitorId: string }): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const { data, error } = await adminClient().rpc("join_waitlist", {
+    p_business: input.businessId,
+    p_service: input.serviceId,
+    p_day: input.day,
+    p_first_name: input.firstName,
+    p_phone: input.phone,
+    p_visitor: input.visitorId,
+  });
+  if (error || !data) return { ok: false, reason: "error" };
+  const kind = String((data as Row).kind);
+  return kind === "joined" ? { ok: true } : { ok: false, reason: kind };
+}
+
+export interface WaitlistRow {
+  id: string;
+  day: string;
+  serviceId?: string;
+  service: string;
+  name: string;
+  phone: string;
+  createdAt: string;
+}
+
+/** get_waitlist(): the owner's waitlist from today on (owners only: it holds numbers). */
+export async function dbGetWaitlist(businessId: string): Promise<WaitlistRow[]> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("get_waitlist", { p_business: businessId });
+  if (error) return [];
+  return ((data ?? []) as Row[]).map((r) => ({
+    id: String(r.id),
+    day: String(r.day),
+    serviceId: (r.service_id as string | null) ?? undefined,
+    service: String(r.service),
+    name: String(r.first_name),
+    phone: String(r.phone),
+    createdAt: String(r.created_at),
+  }));
+}
+
+/** remove_waitlist(): "Done, remove" (owners only). */
+export async function dbRemoveWaitlist(businessId: string, id: string): Promise<void> {
+  const sb = await createClient();
+  await sb.rpc("remove_waitlist", { p_business: businessId, p_id: id });
+}
+
+/** What moving from the pass needs: the business, the booking's own time and gap, and whether it's an event day. */
+export async function dbPassBooking(token: string): Promise<{ slug: string; minutes: number; gap: number; eventDay: boolean; startsAt: string } | null> {
+  if (!/^[0-9a-f]{24}$/.test(token)) return null;
+  const { data, error } = await adminClient().rpc("booking_pass", { p_token: token });
+  if (error || !data) return null;
+  const r = data as Row;
+  return { slug: String(r.business_slug), minutes: Number(r.minutes), gap: Number(r.gap_minutes ?? 0), eventDay: r.event_day === true, startsAt: String(r.starts_at) };
 }
 
 export async function dbBookings(businessId: string, from: Date, to: Date): Promise<Booking[]> {
@@ -260,9 +410,15 @@ export async function dbTikkaInfo(token: string): Promise<TikkaInfo | null> {
   };
 }
 
-/** book_for_claim(): the claimer books a time to use their Tikka (server only). */
-export async function dbBookForClaim(token: string, serviceId: string, startsAt: string): Promise<BookResult> {
-  const { data, error } = await adminClient().rpc("book_for_claim", { p_view_token: token, p_service: serviceId, p_start: startsAt });
+/** book_for_claim_v2(): the claimer books a time to use their Tikka, with the choice (server only). */
+export async function dbBookForClaim(token: string, serviceId: string, startsAt: string, picks?: { choice?: Record<string, unknown>; answers?: string }): Promise<BookResult> {
+  const { data, error } = await adminClient().rpc("book_for_claim_v2", {
+    p_view_token: token,
+    p_service: serviceId,
+    p_start: startsAt,
+    p_choice: picks?.choice ?? {},
+    p_answers: picks?.answers ?? null,
+  });
   if (error) return { kind: error.code === "P0002" ? "not_found" : "error" };
   return data as BookResult;
 }

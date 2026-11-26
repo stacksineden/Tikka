@@ -1,10 +1,10 @@
 {
   "slug": "add-staff",
-  "title": "Add staff to redeem",
-  "section": "counter",
-  "order": 2,
+  "title": "Add your team",
+  "section": "bookings",
+  "order": 4,
   "minutes": 2,
-  "summary": "Let whoever works your counter redeem Tikkas, without seeing your leads.",
+  "summary": "Your staff check codes and mark who came. They never see customers' numbers or your money.",
   "app": {
     "href": "/app/settings/team",
     "label": "Open Team"
@@ -15,17 +15,17 @@
       "body": "On a phone, tap More, then Team. On a computer, go to Settings, then Team."
     },
     {
-      "title": "Invite them",
-      "body": "Type their email address and tap \"Send invite\". Then send them the invite link on WhatsApp."
+      "title": "Invite someone",
+      "body": "Under \"Invite staff\", type their email and tap \"Send invite\". Send them the invite link on WhatsApp too (tap Copy). They sign in with Google or an email and password, and go straight to Check a code."
     },
     {
-      "title": "They sign in",
-      "body": "They open the link and sign in with Google or an email and password. They go straight to Redeem."
+      "title": "What they can do",
+      "body": "Staff see Check a code: today's bookings, booking refs and drop cards. They tap Arrived when customers come in and confirm Tikkas. They never see your customers' numbers, your customer list or your money."
+    },
+    {
+      "title": "Remove someone",
+      "body": "When someone leaves, tap Remove next to their name, then \"Remove\" again to be sure. They can't sign in to your business any more."
     }
-  ],
-  "tips": [
-    "Staff can only redeem. They never see your leads or anyone's phone number.",
-    "To remove someone, open Team and tap Remove next to their name (it asks you to confirm)."
   ],
   "published": true
 }

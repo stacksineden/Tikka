@@ -8,7 +8,12 @@ import { Fragment, Suspense } from "react";
 import { BookingSheet } from "@/components/business/BookingSheet";
 import { DropBand } from "@/components/business/DropBand";
 import { PhotoPage } from "@/components/business/photo/PhotoPage";
+import { LuxePage, SoftPage } from "@/components/business/styles/BeautyStyles";
+import { FilmPage, PortfolioPage } from "@/components/business/styles/PhotoStyles";
 import { CalendarSheet } from "@/components/business/CalendarSheet";
+import { BookingFlow } from "@/components/business/BookingFlow";
+import { sheetTheme } from "@/lib/sheet-theme";
+import { reachLabel } from "@/lib/presets";
 import { bizSerif } from "@/components/business/fonts";
 import { Gallery } from "@/components/business/Gallery";
 import { Reveal } from "@/components/business/Reveal";
@@ -16,9 +21,9 @@ import { ServicesSection } from "@/components/business/ServicesSection";
 import { Logo } from "@/components/site/Logo";
 import { ACTION_LABEL, ActionIcon, actionHref } from "@/components/tikka/ActionIcon";
 import { isSocial } from "@/lib/social";
-import { getBookingDeposits, getBookingRules, getTikkaForBooking, serviceLengths } from "@/lib/bookings-data";
+import { demoDepositRule, getBookingDeposits, getBookingRules, getTikkaForBooking, serviceLengths } from "@/lib/bookings-data";
 import { paystackMode } from "@/lib/paystack";
-import { getBusinessBySlug, getBusinessReviews, getPageDrops } from "@/lib/data";
+import { getBusinessBySlug, getBusinessReviews, getPageDrops, isDbId } from "@/lib/data";
 import { count, place } from "@/lib/format";
 import { bookingLink, bookingNumber, focalPosition, priceText, heroHeadline, pageStyle, serviceGroups, showsLocation, visibleSections, whereLine } from "@/lib/page";
 import { photoSrcSet } from "@/lib/media-path";
@@ -181,7 +186,28 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
 
   const sheets = (
     <>
-      {calendar ? (
+      {calendar && (b.trades?.length || isDbId(found.ownerId)) ? (
+        // The booking sheet with choices, extras, home service, event days and the deposit. Every real
+        // business (docs/DB_MOVE.md: everyone gets the new experience) and the new-setup demo ones.
+        <BookingFlow
+          business={{
+            slug: b.slug,
+            name: b.name,
+            workPlace: b.workPlace ?? "shop",
+            travelFee: b.travelFee ?? 0,
+            reach: b.travelReach ? reachLabel(b.travelReach, b) : `Anywhere in ${b.city}`,
+            address: b.address || place(b.area, b.city),
+            rules: b.bookingRules ?? [],
+            deposit: demoDepositRule(found.ownerId, b),
+            gapMinutes: b.gapMinutes,
+            homeGapMinutes: b.homeGapMinutes,
+            live: isDbId(found.ownerId),
+          }}
+          services={bookable}
+          theme={sheetTheme(pageStyle(b), b.page?.galleryTone, b.brandColor, b.onBrandColor)}
+          tikka={tikka ?? undefined}
+        />
+      ) : calendar ? (
         <CalendarSheet
           slug={b.slug}
           business={b.name}
@@ -195,8 +221,31 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
     </>
   );
 
-  // Photographers get the gallery (lib/page.ts pageStyle()): the same content and booking, another look.
-  if (pageStyle(b) === "photography") {
+  // The page's style (lib/page.ts pageStyle()): the same content and booking, another look.
+  const look = pageStyle(b);
+  const styleProps = {
+    fromCard,
+    b,
+    live,
+    next,
+    reviews,
+    sections,
+    book,
+    bookProps,
+    sheet,
+    serviceLinks: b.services.map((s) => external ?? bookingLink(b, s) ?? (calendar ? "#book" : null)),
+    deposits: deposits.services,
+  };
+  const Other = look === "luxe" ? LuxePage : look === "soft" ? SoftPage : look === "portfolio" ? PortfolioPage : look === "film" ? FilmPage : null;
+  if (Other) {
+    return (
+      <div className={bizSerif.variable}>
+        <Other {...styleProps} />
+        {sheets}
+      </div>
+    );
+  }
+  if (look === "photography") {
     return (
       <div className={bizSerif.variable}>
         <PhotoPage

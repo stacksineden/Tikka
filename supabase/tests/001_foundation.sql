@@ -16,11 +16,19 @@ do $$ begin
   assert not (select is_admin from public.profiles where user_id = '00000000-0000-4000-a000-000000000001'), 'nobody starts as admin';
 end $$;
 
+-- The live project has real businesses, so pick a code prefix and slug nobody uses yet.
+create temp table px as
+  select (select a || b from unnest(string_to_array('QWXZJVKYUPHNRLGDCBFSTMOIEA', null)) a,
+            unnest(string_to_array('QWXZJVKYUPHNRLGDCBFSTMOIEA', null)) b
+          where a || b not in (select code_prefix from public.businesses) limit 1) as prefix,
+         'teststudio' || substr(md5(random()::text), 1, 8) as slug;
+grant select on px to anon, authenticated;
+
 -- ------------------------------------------------- the owner sets up
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-000000000001","role":"authenticated"}', true);
 
-insert into t select 'biz', public.create_business('Test Studio', 'teststudio', 'TS', 'Beauty', 'Lagos', 'Lagos', 'Lekki', '#9C3B5C', '#FFFFFF');
+insert into t select 'biz', public.create_business('Test Studio', (select slug from px), (select prefix from px), 'Beauty', 'Lagos', 'Lagos', 'Lekki', '#9C3B5C', '#FFFFFF');
 
 do $$ begin
   assert private.is_owner((select v from t where k = 'biz')), 'the creator is the owner';
@@ -91,18 +99,18 @@ set local role anon;
 select set_config('request.jwt.claims', '', true);
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 do $$ begin
-  assert (select count(*) from public.businesses where slug = 'teststudio') = 1, 'anyone can open a business page';
+  assert (select count(*) from public.businesses where slug = (select slug from px)) = 1, 'anyone can open a business page';
   assert (select count(*) from public.business_private) = 0, 'anonymous visitors never see owner-only details';
   assert (select count(*) from public.business_members) = 0, 'anonymous visitors never see teams';
 end $$;
 
 reset role;
 -- A suspended business disappears for the public.
-update public.businesses set suspended = true where slug = 'teststudio';
+update public.businesses set suspended = true where slug = (select slug from px);
 set local role anon;
 select set_config('request.jwt.claims', '', true);
 do $$ begin
-  assert (select count(*) from public.businesses where slug = 'teststudio') = 0, 'suspended businesses are hidden';
+  assert (select count(*) from public.businesses where slug = (select slug from px)) = 0, 'suspended businesses are hidden';
 end $$;
 
 reset role;

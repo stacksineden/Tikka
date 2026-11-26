@@ -58,9 +58,10 @@ export async function addBookingAction(input: { serviceId: string; startsAt: str
   const u = await user();
   if (!isIso(input.startsAt) || typeof input.serviceId !== "string") return { kind: "bad_time" };
   const name = firstName(String(input.name ?? ""));
+  // Every customer has a WhatsApp number; a booking for a Tikka brings the claimer's.
   const raw = String(input.phone ?? "").trim();
   const phone = raw ? normalizeNgPhone(raw) : null;
-  if (raw && !phone) return { kind: "bad_phone" };
+  if ((raw || !input.claimId) && !phone) return { kind: "bad_phone" };
   if (!name && !input.claimId) return { kind: "bad_name" };
   const r = await addBooking(u, { serviceId: input.serviceId, startsAt: new Date(input.startsAt).toISOString(), firstName: name, phone, force: input.force === true, claimId: input.claimId });
   if (r.kind === "booked") refresh();

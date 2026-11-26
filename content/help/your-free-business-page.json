@@ -1,10 +1,10 @@
 {
   "slug": "your-free-business-page",
-  "title": "Your free business page",
+  "title": "Your page: the website people book from",
   "section": "start",
   "order": 2,
-  "minutes": 3,
-  "summary": "Every business gets a free page at usetikka.com/your-name. Put it in your Instagram and WhatsApp bio.",
+  "minutes": 4,
+  "summary": "Your page at usetikka.com/yourname shows your work, services, prices, hours and reviews. Put it in your bio.",
   "app": {
     "href": "/app/page",
     "label": "Open Your page"
@@ -12,35 +12,28 @@
   "steps": [
     {
       "title": "Open Your page",
-      "body": "On a phone, tap More, then Your page. On a computer, it's in the menu on the left."
+      "body": "On a phone, tap More, then Your page. On a computer, it's Your page in the menu on the left. Tap \"See my page\" any time to see it the way customers do."
     },
     {
-      "title": "Add a hero photo and headline",
-      "body": "Under Hero, add a wide, bright photo of your space or your best work, a headline and a short line under it. Tap the part of the photo that matters most so phones never cut it off."
+      "title": "Add your services and prices",
+      "body": "Each service has a price (fixed, from, or ask me), how long it takes, and choices like short, medium or long with their own price and time. Add extras like a wash, and up to 3 questions to ask when someone books. Services for weddings and shoots can book a whole day."
     },
     {
-      "title": "Say how customers use their Tikka",
-      "body": "Choose whether people come to you, you go to them, or you work online anywhere in Nigeria. This decides whether your page shows your hours, address and Directions."
+      "title": "Add your work",
+      "body": "Add photos and short videos of what you've done. The best ones go first: people decide from the first few. A paid drop opens more room and collections, each with its own page."
     },
     {
-      "title": "Add what people ask about",
-      "body": "Add your story (About), services and prices, your team, FAQs, a text section and your best work (Portfolio). Each service gets a Book button: with bookings on, customers pick a free time and it's booked; with them off, it opens WhatsApp to you. Group them (like Hair or Nails) to show them in tabs.\n\nSections you leave empty don't show on your page. Add what you have and come back for the rest."
+      "title": "Pick a page style",
+      "body": "Under \"Page style\", choose the look that suits you: soft and light, luxe, or a gallery for photographers. Only the look changes; your services, bookings and reviews stay the same."
     },
     {
-      "title": "Show your work in collections",
-      "body": "Your free page shows up to 20 photos and videos in one grid.\n\nWhen you run a paid drop, your portfolio opens up: 60 photos and videos, sorted into up to 8 collections, like Bridal or Gele. Under Portfolio, tap New collection, name it, then choose a collection for each photo. Pick the service its Book button should ask for.\n\nEvery collection gets its own link. Copy it and share it on WhatsApp or Instagram to show only that work.\n\nCollections stay open until 7 days after your drop ends (a season pack keeps them open all season). After that, nothing is hidden or removed and your links still work. You just can't add, move or rename until your next drop. You can always remove a photo."
-    },
-    {
-      "title": "How booking works",
-      "body": "When someone taps Book on your page, they pick a day and time, and WhatsApp opens with their request written. You confirm with them on WhatsApp."
-    },
-    {
-      "title": "Share the address",
-      "body": "Copy your page address and put it in your Instagram bio, your WhatsApp Business profile and anywhere else people find you. When you're running a drop, your page shows it, and reviews from people who redeemed show there too."
+      "title": "Share your link",
+      "body": "Put usetikka.com/yourname in your Instagram and WhatsApp bio. When someone asks \"How much?\", send the link: they see your prices and free times and book on the spot."
     }
   ],
   "tips": [
-    "Your business page is always free, even when you're not running a drop."
+    "Your page is free, always.",
+    "Clear, bright photos of finished work bring in more bookings than anything else on your page."
   ],
   "published": true
 }

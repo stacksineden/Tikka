@@ -114,3 +114,60 @@ export function deepen(hex: string, min = 7): string {
   }
   return ON_INK;
 }
+
+/**
+ * NEW DIRECTION: the brand colours offered at setup, dark to light. Each one is readable with white
+ * or dark text (checkBrandColor picks which). None is WhatsApp green.
+ */
+export const BRAND_SWATCHES = [
+  { hex: "#111111", name: "Black" },
+  { hex: "#2B2B2B", name: "Charcoal" },
+  { hex: "#14213D", name: "Navy" },
+  { hex: "#1F3A93", name: "Royal" },
+  { hex: "#1E6F8C", name: "Lagoon" },
+  { hex: "#5DADE2", name: "Sky" },
+  { hex: "#0F5C4D", name: "Forest" },
+  { hex: "#0B7A5A", name: "Emerald" },
+  { hex: "#5B2A86", name: "Plum" },
+  { hex: "#B39DDB", name: "Lilac" },
+  { hex: "#6D1A36", name: "Wine" },
+  { hex: "#9C3B5C", name: "Berry" },
+  { hex: "#C2185B", name: "Rose" },
+  { hex: "#F4C2C2", name: "Blush" },
+  { hex: "#B4372F", name: "Clay" },
+  { hex: "#E76F51", name: "Coral" },
+  { hex: "#7A4A12", name: "Cocoa" },
+  { hex: "#C9A227", name: "Gold" },
+  { hex: "#D8B49C", name: "Nude" },
+  { hex: "#F3E9D2", name: "Cream" },
+  { hex: "#FFFFFF", name: "White" },
+] as const;
+
+/** Colour words owners type ("wine", "baby pink"), beyond the swatch names. */
+const COLOR_WORDS: Record<string, string> = {
+  ...Object.fromEntries(BRAND_SWATCHES.map((s) => [s.name.toLowerCase(), s.hex])),
+  ...Object.fromEntries(SWATCHES.map((s) => [s.name.toLowerCase(), s.hex])),
+  red: "#C62828", maroon: "#6B1E24", burgundy: "#7B1E3A", pink: "#E91E63", babypink: "#F8BBD0", hotpink: "#E0218A", magenta: "#B0157A",
+  purple: "#6A1B9A", violet: "#7E57C2", lavender: "#C5B3E6", orange: "#E8590C", peach: "#F6B99A", yellow: "#F2C230", mustard: "#C99A0E",
+  green: "#2E7D32", olive: "#6B7A2A", mint: "#A8DCC6", teal: "#00796B", blue: "#1565C0", skyblue: "#5DADE2", royalblue: "#1F3A93",
+  brown: "#6D4C2F", chocolate: "#4E2A14", tan: "#C19A6B", beige: "#E8D9C0", ivory: "#FAF6EC", grey: "#6B6B6B", gray: "#6B6B6B",
+  silver: "#BDBDBD", rosegold: "#B76E79", champagne: "#E9D8B4", turquoise: "#1AA3A3",
+};
+
+/**
+ * A colour as an owner might type it: a hex code ("#9C3B5C", "9c3b5c", "#abc") or a word ("wine",
+ * "Baby pink", "rose gold"). Returns "#RRGGBB" or null when it isn't one we know.
+ */
+export function parseColor(input: string): string | null {
+  const t = input.trim();
+  if (!t) return null;
+  const short = /^#?([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(t);
+  if (short) return ("#" + short[1] + short[1] + short[2] + short[2] + short[3] + short[3]).toUpperCase();
+  return normalizeHex(t) ?? COLOR_WORDS[t.toLowerCase().replace(/[^a-z]/g, "")] ?? null;
+}
+
+/** The name we show for a colour, when it's one of ours. */
+export function colorName(hex: string): string | null {
+  const h = hex.toUpperCase();
+  return BRAND_SWATCHES.find((s) => s.hex === h)?.name ?? SWATCHES.find((s) => s.hex === h)?.name ?? null;
+}

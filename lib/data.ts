@@ -37,7 +37,7 @@ import dropStats from "./mock/drop_stats.json";
 import { generate as generateCode } from "./codes";
 import { followupMessage, followups as followupList, type Followup } from "./followups";
 import { waLink } from "./leads";
-import { pageDropsFrom, pageDropsFromDrops, validatePage, validateServices, videoProblem, type BusinessPageInput, type PageDrop, type PageErrors } from "./page";
+import { isPageStyle, pageDropsFrom, pageDropsFromDrops, validatePage, validateServices, videoProblem, type BusinessPageInput, type PageDrop, type PageErrors } from "./page";
 import { newPosterCode, posterTarget, validateHook, validateLabel, type Poster } from "./posters";
 import { dropReport, type DropFee, type DropReport, type ReportClaim } from "./report";
 import { seasonalNudge } from "./nudges";
@@ -321,7 +321,7 @@ export async function savePage(
   delete page.style; // only styleChoice changes it
   if (page.galleryTone !== undefined && page.galleryTone !== "dark" && page.galleryTone !== "light") delete page.galleryTone;
   // The page style: "auto" follows the category; anything else isn't a style and is ignored.
-  const style = styleChoice === undefined ? b.page?.style : styleChoice === "photography" || styleChoice === "beauty" ? styleChoice : undefined;
+  const style = styleChoice === undefined ? b.page?.style : isPageStyle(styleChoice) ? styleChoice : undefined;
   const merged: BusinessPageInput = { ...b.page, ...page, about: about ?? b.about };
   const errors = validatePage(merged);
   if (Object.keys(errors).length) return { ok: false, errors };

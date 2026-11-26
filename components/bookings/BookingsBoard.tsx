@@ -13,6 +13,7 @@ import {
 } from "@/app/app/bookings-actions";
 import { ActionIcon } from "@/components/tikka/ActionIcon";
 import { naira } from "@/lib/format";
+import { normalizeNgPhone } from "@/lib/setup";
 import { slotLabel, whatsappLink } from "@/lib/booking";
 import {
   byDay,
@@ -20,6 +21,7 @@ import {
   canMark,
   dayLabel,
   hiMessage,
+  gapLabel,
   lengthLabel,
   movedMessage,
   needsMarking,
@@ -57,7 +59,10 @@ export function BookingsBoard({
   businessName,
   staff = false,
   todayOnly = false,
+  gaps = {},
 }: {
+  /** NEW DIRECTION: each booking's gap after it (clean-up, travel), by booking id. */
+  gaps?: Record<string, number>;
   bookings: Booking[];
   blocks: BookingBlock[];
   services: BoardService[];
@@ -75,7 +80,9 @@ export function BookingsBoard({
 
   const rulesFor = (ignore?: string): BookingRules => ({
     ...base,
-    busy: bookings.filter((b) => b.status !== "cancelled" && b.id !== ignore).map((b) => [b.startsAt, b.endsAt]),
+    busy: bookings
+      .filter((b) => b.status !== "cancelled" && b.id !== ignore)
+      .map((b) => [b.startsAt, gaps[b.id] ? new Date(new Date(b.endsAt).getTime() + gaps[b.id] * 60_000).toISOString() : b.endsAt]),
     blocked: blocks.map((k) => [k.startsAt, k.endsAt]),
   });
 
@@ -115,7 +122,13 @@ export function BookingsBoard({
                 <Clock size={12} aria-hidden="true" />
                 {lengthLabel(b.minutes)}
               </span>
+              {gaps[b.id] && !cancelled ? (
+                <span title="Kept free after this booking, so nobody books into it">
+                  then {gapLabel(gaps[b.id])} free{b.homeArea ? " to travel" : ""}
+                </span>
+              ) : null}
               <span>{SOURCE[b.source]}</span>
+              {b.foundVia === "search" && <span className="tag bg-brand-soft text-brand">{b.foundNew ? "New · found you on Tikka" : "Found you on Tikka"}</span>}
               {b.moved && <span>Moved</span>}
               {b.status === "arrived" && <span className="tag tag--redeemed">Came in</span>}
               {b.status === "no_show" && <span className="tag bg-danger-soft text-danger">No-show</span>}
@@ -424,11 +437,11 @@ function AddForm({ services, rules, pending, error, onSubmit }: { services: Boar
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={30} required />
       </label>
       <label className="grid gap-1">
-        <span className="text-label">WhatsApp number (optional)</span>
-        <input className="input font-mono" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="0803 123 4567" />
-        <span className="text-caption text-ink-muted">With a number, they join your leads.</span>
+        <span className="text-label">Their WhatsApp number</span>
+        <input className="input font-mono" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="0803 123 4567" required />
+        <span className="text-caption text-ink-muted">{phone.trim() && !normalizeNgPhone(phone) ? "Type a Nigerian number, like 0803 123 4567." : "So you can remind them and send their pass."}</span>
       </label>
-      <button type="submit" className="btn min-h-12" disabled={pending || !at || !name.trim()}>
+      <button type="submit" className="btn min-h-12" disabled={pending || !at || !name.trim() || !normalizeNgPhone(phone)}>
         {pending ? "Saving…" : at ? `Book ${whenLabel(at)}` : "Pick a time"}
       </button>
       <p role="alert" className="text-caption min-h-5 text-danger">

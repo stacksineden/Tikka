@@ -1,10 +1,10 @@
 {
   "slug": "paying-for-drops",
   "title": "Paying for drops",
-  "section": "money",
-  "order": 1,
+  "section": "drops",
+  "order": 6,
   "minutes": 2,
-  "summary": "Free to start. Pay for each drop: ₦10,000, whatever its size, or buy a season pack.",
+  "summary": "Your first drop is free. After that, one price per drop whatever its size, or a season pack.",
   "app": {
     "href": "/app/settings/payments",
     "label": "Open Payments"
@@ -12,7 +12,7 @@
   "steps": [
     {
       "title": "Free to start",
-      "body": "Your business page, bookings, your QR poster, your list of everyone who claims, reviews, the counter screen and staff logins are free, always. So is your first drop."
+      "body": "Your page, bookings, Today and Money, your customer list, business cards and your team are free, always. So is your first drop."
     },
     {
       "title": "After that, one price per drop",
@@ -24,13 +24,12 @@
     },
     {
       "title": "Season packs",
-      "body": "A season pack is 3 drops paid at once: ₦25,000. Buy one in Payments (on a phone: More, then Payments). Each drop you publish after that uses one, and the button says \"Publish with your season pack\"."
+      "body": "A season pack is 3 drops paid at once: ₦25,000. Buy one in Settings, then Drop payments. Each drop you publish after that uses one, and the button says \"Publish with your season pack\"."
     }
   ],
   "tips": [
-    "Every payment you've made is listed in Payments.",
-    "If a paid drop brings fewer than 10 customers, your next drop is free (once).",
-    "Take deposits when customers book, so no-shows don't cost you. There's no monthly fee: Tikka takes 1% only when a customer pays you, plus Paystack's payment fee. See \"Take bookings and deposits\"."
+    "Every payment you've made for drops is listed in Settings, then Drop payments.",
+    "If a paid drop brings fewer than 10 customers, your next drop is free (once)."
   ],
   "published": true
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import glow from "./mock/business.json";
-import { bookingLink, focalPosition, heroHeadline, heroLine, whereLine, pageChecklist, pageDropsFrom, pageStyle, priceText, serviceGroups, showsLocation, visibleSections } from "./page";
+import { bookingLink, focalPosition, heroHeadline, heroLine, isPageStyle, PAGE_STYLES, whereLine, pageChecklist, pageDropsFrom, pageStyle, priceText, serviceGroups, showsLocation, visibleSections } from "./page";
 import type { Business } from "./types";
 
 const base = { ...(glow as unknown as Business), page: undefined, portfolio: [], services: [], about: undefined, hours: undefined, address: undefined };
@@ -129,5 +129,10 @@ describe("pageStyle", () => {
     expect(pageStyle({ category: "Beauty" })).toBe("beauty");
     expect(pageStyle({ category: "Beauty", page: { style: "photography" } })).toBe("photography");
     expect(pageStyle({ category: "Photography", page: { style: "beauty" } })).toBe("beauty");
+    for (const id of ["luxe", "soft", "portfolio", "film"] as const) expect(pageStyle({ category: "Beauty", page: { style: id } })).toBe(id);
+    expect(PAGE_STYLES.filter((x) => x.for === "beauty").map((x) => x.id)).toEqual(["beauty", "luxe", "soft"]);
+    expect(PAGE_STYLES.filter((x) => x.for === "photography").map((x) => x.id)).toEqual(["photography", "portfolio", "film"]);
+    expect(isPageStyle("film")).toBe(true);
+    expect(isPageStyle("neon")).toBe(false);
   });
 });

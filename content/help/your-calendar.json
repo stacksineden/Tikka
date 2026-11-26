@@ -1,0 +1,39 @@
+{
+  "slug": "your-calendar",
+  "title": "Your calendar: add, move, cancel and block",
+  "section": "bookings",
+  "order": 2,
+  "minutes": 4,
+  "summary": "Every booking in one place. Add the ones that come by phone, move or cancel, and block time off.",
+  "app": {
+    "href": "/app/bookings",
+    "label": "Open Calendar"
+  },
+  "steps": [
+    {
+      "title": "Open Calendar",
+      "body": "Tap Calendar in the bar at the bottom. You see each day's bookings: who, what, when, and where they came from (your page, you, or a Tikka)."
+    },
+    {
+      "title": "Add a booking",
+      "body": "Someone booked by phone or in person? Tap \"Add a booking\", pick the service and time, and add their first name and WhatsApp number so you can remind them and send their pass."
+    },
+    {
+      "title": "Move or cancel",
+      "body": "Tap a booking, then \"Move booking\" to pick a new time, or \"Cancel booking\". Either way the old time becomes free again. If they paid a deposit, Tikka reminds you: any refund comes from you."
+    },
+    {
+      "title": "Mark who came",
+      "body": "After a booking's time, Calendar asks \"Did they come?\". Tap \"Came in\" or No-show, so your customers and money stay right."
+    },
+    {
+      "title": "Block a time",
+      "body": "Going out, or a day off? Tap \"Block a time\" and pick the times. Nobody can book them until you remove the block."
+    },
+    {
+      "title": "Waitlist for full days",
+      "body": "When a day is full, customers can wait for a place. You see them on Calendar. When a place opens, tap \"Tell\" next to their name and WhatsApp opens on your phone with a message ready. Tap Done when they're sorted."
+    }
+  ],
+  "published": true
+}

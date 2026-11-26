@@ -1,0 +1,30 @@
+{
+  "slug": "send-a-pay-link",
+  "title": "Send a pay link",
+  "section": "money",
+  "order": 4,
+  "minutes": 2,
+  "summary": "Ask anyone to pay you online: a balance, a custom job or paying ahead. It goes straight to your bank.",
+  "app": {
+    "href": "/app/money",
+    "label": "Open Money"
+  },
+  "steps": [
+    {
+      "title": "Make the link",
+      "body": "In Money, tap \"Send a pay link\". Or open a customer and send one for what they owe. Pick who it's for, type the amount (from ₦100) and a short note of what it's for, then tap \"Make the link\"."
+    },
+    {
+      "title": "Send it",
+      "body": "Tap \"Send on WhatsApp\" and it opens on your phone with the link ready, or copy it. They pay by card or transfer, and get a receipt."
+    },
+    {
+      "title": "See when it's paid",
+      "body": "Pay links shows each one as Waiting until it's paid. You get a notification on your phone when it is, and it counts in your week's money, settling what they owed."
+    }
+  ],
+  "tips": [
+    "Pay links need Get paid set up, like deposits."
+  ],
+  "published": true
+}

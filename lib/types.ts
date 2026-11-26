@@ -63,6 +63,29 @@ export interface Business {
   isDemo?: boolean;
   /** The guarantee is once per business. */
   guaranteeUsed: boolean;
+  /** NEW DIRECTION (demo only for now): the trades picked at setup ("hair", "makeup"…), lib/presets.ts. */
+  trades?: string[];
+  /** NEW DIRECTION (demo only for now): where the owner works, and home service's fee and reach. */
+  workPlace?: WorkPlace;
+  travelFee?: number;
+  travelReach?: TravelReach;
+  /** NEW DIRECTION (demo only for now): the booking rules customers see before they pay. */
+  bookingRules?: string[];
+  /** NEW DIRECTION (demo only for now): minutes kept free after every booking (clean-up), and extra after a home visit (travel). */
+  gapMinutes?: number;
+  homeGapMinutes?: number;
+  /** Your Tikka listing (listing_and_location migration): shown in Tikka's search, and the map pin. */
+  listed?: boolean;
+  lat?: number;
+  lng?: number;
+  /** True for a pin worked out from the area and city, until the owner places their own. */
+  locationApprox?: boolean;
+  /** Extras for Tikka's listing (lib/listing.ts ids). */
+  amenities?: string[];
+  /** Tikka's listing terms: when they were agreed, and the 14 days businesses listed before them have. */
+  listingTermsAt?: string;
+  listingGraceUntil?: string;
+  languages?: string[];
 }
 
 export interface PortfolioPhoto {
@@ -96,8 +119,12 @@ export interface PhotoCamera {
   iso?: string;
 }
 
-/** The business page's look: "beauty" (the editorial page) or "photography" (the gallery). Only the look changes. */
-export type PageStyle = "beauty" | "photography";
+/**
+ * The business page's look. Only the look changes; the content, booking, deposits, reviews and
+ * drops are the same. "beauty" is the editorial page and "photography" the gallery; "luxe" and
+ * "soft" are for beauty businesses, "portfolio" and "film" for photographers (design/page-styles/).
+ */
+export type PageStyle = "beauty" | "photography" | "luxe" | "soft" | "portfolio" | "film";
 
 export interface PortfolioCollection {
   id: string;
@@ -132,7 +159,44 @@ export interface ServiceItem {
   focal?: { x: number; y: number };
   /** Optional group shown as a tab ("Hair", "Nails") when there's more than one. */
   group?: string;
+  /** NEW DIRECTION (demo only for now): choices that change the price and time ("Short / Medium / Long"). */
+  options?: ServiceOption[];
+  /** NEW DIRECTION (demo only for now): extras the customer can tick when booking ("Add wash"). */
+  extras?: ServiceExtra[];
+  /** NEW DIRECTION (demo only for now): booked as a whole day with a call time (weddings, shoots). */
+  eventDay?: boolean;
+  /** NEW DIRECTION: the options are people, not choices ("Bride" once, plus "Each bridesmaid" × n). */
+  perPerson?: boolean;
+  /** NEW DIRECTION: what the owner asks when someone books this ("Any allergies?"). Up to 3. */
+  questions?: string[];
+  /** NEW DIRECTION: this service's own time after it, instead of the business's (bridal makeup 30, a wash 0). */
+  gapMinutes?: number;
+  /** Priced for one hour or one item ("₦15,000 per hour", "₦5,000 per photo"); the customer picks how many. */
+  unit?: "hour" | "item";
+  /** Per item: what one is, singular ("photo", "look"). */
+  unitLabel?: string;
+  /** How many a customer can pick: at least, at most (hours at most 10). */
+  unitMin?: number;
+  unitMax?: number;
+  /** Per item: how long each takes; unset means the service's own time covers them all. */
+  unitMinutes?: number;
 }
+
+export interface ServiceOption {
+  label: string;
+  price: number;
+  minutes: number;
+}
+
+export interface ServiceExtra {
+  name: string;
+  price: number;
+}
+
+/** NEW DIRECTION: where the owner works. "shop": customers come; "home": the owner goes to them; "both". */
+export type WorkPlace = "shop" | "home" | "both";
+/** How far the owner travels for home service. */
+export type TravelReach = "area" | "city" | "state";
 
 export interface TeamMember {
   id: string;

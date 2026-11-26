@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Check, Download, Search, ShieldCheck } from "lucide-react";
+import { Check, ChevronRight, Download, Search, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { AutoSubmit, FollowUpButton, LiveRefresh } from "@/components/leads/LeadBits";
 import { RarityBadge } from "@/components/tikka/RarityBadge";
@@ -16,6 +17,8 @@ import { dbPayoutState, payReady } from "@/lib/payouts-db";
 import { ActionIcon } from "@/components/tikka/ActionIcon";
 import { whatsappLink } from "@/lib/booking";
 import { whenLabel, type BookingRules } from "@/lib/bookings";
+import { ClientList } from "@/components/clients/ClientList";
+import { getClients } from "@/lib/clients-data";
 import { getBookingLeads, getBookings, getBookingSetup, serviceLengths, type BookingLead } from "@/lib/bookings-data";
 import { isDbId } from "@/lib/data";
 import { getBusiness, getDrops, getFollowups, getLeads, getReviewAsks, leadsNow } from "@/lib/data";
@@ -27,8 +30,9 @@ import { canSetSpent } from "@/lib/spent";
 import { getOwnerUser } from "@/lib/session";
 import { siteUrl } from "@/lib/supabase/env";
 import type { Source, Tier } from "@/lib/types";
+import { newExperience } from "@/lib/experience";
 
-export const metadata: Metadata = { title: "Leads" };
+export const metadata: Metadata = { title: "Customers" };
 
 const TIER_OPTIONS: [Tier, string][] = [
   ["legendary", "Legendary"],
@@ -63,6 +67,25 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
   if (!user) redirect("/app/redeem");
   const [b, all, drops, today, sp, planNow, asks] = await Promise.all([getBusiness(user), getLeads(user), getDrops(user), getFollowups(user), searchParams, leadsNow(user), getReviewAsks(user)]);
   if (!b) redirect("/app/setup");
+  // NEW DIRECTION: the client book for businesses from the new setup (demo only for now).
+  if (newExperience(b) && sp.view !== "drops") {
+    await connection();
+    return (
+      <>
+        <div>
+          <h1 className="text-heading">Customers</h1>
+          <p className="text-body mt-1 text-ink-muted">Everyone who booked, bought or claimed a Tikka, one row each. Tap someone to see every visit.</p>
+        </div>
+        <ClientList clients={await getClients(user)} now={new Date().toISOString()} />
+        {drops.length > 0 && (
+          // The drop leads tools (Message today, follow-ups, the CSV export, review asks) stay one tap away.
+          <Link href="/app/leads?view=drops" className="text-label inline-flex min-h-11 items-center gap-1 justify-self-start text-brand">
+            Drop leads and follow-ups <ChevronRight size={16} aria-hidden="true" />
+          </Link>
+        )}
+      </>
+    );
+  }
 
   const f = parseLeadFilters(sp);
   const rows = filterLeads(all, f);
@@ -106,8 +129,8 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
       {live && <LiveRefresh />}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-heading">Leads</h1>
-          <p className="text-body mt-1 text-ink-muted">Everyone who claimed or booked. They&apos;re yours to follow up.</p>
+          <h1 className="text-heading">Customers</h1>
+          <p className="text-body mt-1 text-ink-muted">Everyone who booked with you or claimed a Tikka. They&apos;re yours to follow up.</p>
         </div>
         <a href={exportHref} className="btn btn-secondary" download>
           <Download />

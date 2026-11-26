@@ -1,0 +1,30 @@
+{
+  "slug": "your-card-look",
+  "title": "Your card look",
+  "section": "drops",
+  "order": 7,
+  "minutes": 3,
+  "summary": "The card people open in a drop: your logo, colour and background. Set it once.",
+  "app": {
+    "href": "/app/settings/card",
+    "label": "Open Card look"
+  },
+  "steps": [
+    {
+      "title": "Open Card look",
+      "body": "Go to Settings, then Card look (under Drops). Your name, logo and colour come from your page, so it's mostly ready."
+    },
+    {
+      "title": "Your look",
+      "body": "Add your logo (a square picture works best), pick your brand colour, and choose a background: your colour, a pattern or a photo. Tikka checks your colour so the writing on your card is always easy to read."
+    },
+    {
+      "title": "Your code letters",
+      "body": "Every Tikka code starts with two letters, like GS for Glow Studio. Staff see them at the counter. Tap \"Save my card\" when you're done."
+    }
+  ],
+  "tips": [
+    "Use a clear logo on a plain background. It shows small on phones."
+  ],
+  "published": true
+}

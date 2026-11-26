@@ -8,7 +8,7 @@ import { BookingSetup } from "@/components/bookings/BookingSetup";
 import { BookingsBoard } from "@/components/bookings/BookingsBoard";
 import { StayFresh } from "@/components/payments/StayFresh";
 import { CopyLink } from "@/components/dashboard/CopyLink";
-import { getBookings, getBookingSetup, serviceLengths } from "@/lib/bookings-data";
+import { bookingGaps, getBookings, getBookingSetup, serviceLengths } from "@/lib/bookings-data";
 import { getBusiness, isDbId } from "@/lib/data";
 import { SITE } from "@/lib/qr";
 import { getOwnerUser } from "@/lib/session";
@@ -16,6 +16,29 @@ import { DepositSettings } from "@/components/bookings/DepositSettings";
 import { paystackMode } from "@/lib/paystack";
 import { dbPayoutState, payReady } from "@/lib/payouts-db";
 import { dbBookingSetup } from "@/lib/bookings-db";
+import { MonthCalendar, type MonthDay } from "@/components/today/MonthCalendar";
+import { BookingSettingsV2 } from "@/components/settings/BookingSettingsV2";
+import { WaitlistList } from "@/components/today/WaitlistList";
+import { START_HOURS } from "@/lib/presets";
+import { getBookingRules, getWaitlist } from "@/lib/bookings-data";
+import { dayLabel, freeDays, openRange, todayKey, watParts, type Booking } from "@/lib/bookings";
+import type { Business } from "@/lib/types";
+import { newExperience } from "@/lib/experience";
+
+/** Each day for the next two months: free times, full or closed, and how many are booked. */
+async function monthDays(ownerKey: string, b: Business, list: Booking[], now: Date): Promise<MonthDay[]> {
+  const rules = await getBookingRules(ownerKey, b);
+  if (!rules) return [];
+  const shortest = Math.min(...b.services.map((s) => s.options?.length ? Math.min(...s.options.map((o) => o.minutes)) : (s.minutes ?? 60)));
+  const counts = new Map<string, number>();
+  for (const x of list) if (x.status !== "cancelled") counts.set(watParts(x.startsAt).day, (counts.get(watParts(x.startsAt).day) ?? 0) + 1);
+  return freeDays({ ...rules, aheadDays: Math.min(rules.aheadDays, 62) }, shortest, now).map((d) => ({
+    key: d.key,
+    // Today with nothing left because it's late reads closed, not full.
+    state: !openRange(rules.hours, d.weekday) || (d.key === todayKey(now) && !d.slots.length && !counts.get(d.key)) ? "closed" : d.slots.length ? "free" : "full",
+    bookings: counts.get(d.key) ?? 0,
+  }));
+}
 
 export const metadata: Metadata = { title: "Bookings" };
 
@@ -31,6 +54,40 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
 
   const services = b.services.filter((s) => s.id).map((s) => ({ id: s.id!, name: s.name }));
   const editing = sp.edit === "1";
+
+  // NEW DIRECTION: Booking settings in one place for businesses from the new setup (demo only for now).
+  if (editing && newExperience(b)) {
+    const dep = setup.deposit;
+    return (
+      <>
+        <Link href="/app/bookings" className="text-label inline-flex min-h-11 items-center justify-self-start text-ink-muted">
+          ← Calendar
+        </Link>
+        <div>
+          <h1 className="text-heading">Booking settings</h1>
+          <p className="text-body mt-1 text-ink-muted">Changes show on your page straight away. Bookings you already have stay as they are.</p>
+        </div>
+        <BookingSettingsV2
+          d={{
+            enabled: setup.enabled,
+            hours: b.hours ?? START_HOURS,
+            capacity: setup.capacity,
+            noticeMinutes: setup.noticeMinutes,
+            aheadDays: setup.aheadDays,
+            workPlace: b.workPlace ?? "shop",
+            travelFee: b.travelFee ?? 0,
+            travelReach: b.travelReach ?? "city",
+            place: { area: b.area, city: b.city, state: b.state },
+            deposit: dep ? { mode: dep.mode, percent: dep.percent, fixedKobo: dep.fixedKobo, counts: dep.counts } : { mode: "off", counts: true },
+            rules: b.bookingRules ?? [],
+            services: b.services.filter((x) => x.id).map((x) => ({ id: x.id!, name: x.name, questions: x.questions ?? [], gapMinutes: x.gapMinutes })),
+            gapMinutes: b.gapMinutes ?? 0,
+            homeGapMinutes: b.homeGapMinutes ?? 0,
+          }}
+        />
+      </>
+    );
+  }
 
   if (!setup.setUp || editing) {
     return (
@@ -59,6 +116,8 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
   const now = new Date();
   const list = await getBookings(user, new Date(now.getTime() - 30 * 86_400_000), new Date(now.getTime() + (setup.aheadDays + 1) * 86_400_000));
   const lengths = serviceLengths(isDbId(b.id) ? b.id : user.id, b);
+  // NEW DIRECTION: "See my calendar" for businesses from the new setup (demo only for now).
+  const month = newExperience(b) ? await monthDays(user.id, b, list, now) : null;
 
   return (
     <>
@@ -66,7 +125,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
       <StayFresh waiting={false} slow={20_000} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-heading">Bookings</h1>
+          <h1 className="text-heading">{newExperience(b) ? "Calendar" : "Bookings"}</h1>
           <p className="text-body mt-1 text-ink-muted">
             {setup.enabled ? "Customers book free times on your page." : "Bookings are off: Book on your page sends a WhatsApp message instead."}
           </p>
@@ -76,6 +135,14 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
           <span className="hidden sm:inline">Settings</span>
         </Link>
       </div>
+      {month && <MonthCalendar days={month} todayKey={todayKey(now)} />}
+      {month && (
+        <WaitlistList
+          rows={(await getWaitlist(user)).map((w) => ({ id: w.id, day: w.day, dayLabel: dayLabel(`${w.day}T12:00:00+01:00`), service: w.service, name: w.name, phone: w.phone, freeNow: month.find((m) => m.key === w.day)?.state === "free" }))}
+          business={b.name}
+          link={`usetikka.com/${b.slug}`}
+        />
+      )}
       {setup.enabled && (
         <div className="grid gap-1">
           <p className="text-label">Your booking link: put it in your Instagram and WhatsApp bio</p>
@@ -88,6 +155,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
         services={services.map((s) => ({ ...s, minutes: lengths[s.id] ?? 60 }))}
         base={{ capacity: setup.capacity, noticeMinutes: setup.noticeMinutes, aheadDays: setup.aheadDays, hours: b.hours ?? null }}
         businessName={b.name}
+        gaps={newExperience(b) ? bookingGaps(b, list) : undefined}
       />
     </>
   );

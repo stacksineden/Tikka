@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { SignInForm } from "@/components/auth/Forms";
 import { demoAllowed } from "@/lib/session";
-import { openDemoBusiness } from "../actions";
+import { openDemoBusiness, startNewDemoBusiness } from "../actions";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -29,6 +29,15 @@ export default function SignInPage() {
           <p className="text-caption text-ink-muted">Development only: the demo business, without an account.</p>
           <button type="submit" className="btn btn-secondary mt-3 w-full">
             Open the demo business
+          </button>
+        </form>
+      )}
+      {/* NEW DIRECTION, stage 1 (development only): the new setup from the first screen, in memory only. */}
+      {demoAllowed && (
+        <form action={startNewDemoBusiness} className="mt-3 rounded-md border border-dashed border-line-strong p-4">
+          <p className="text-caption text-ink-muted">Development only: try the new setup as a brand-new business. Nothing is saved to the database.</p>
+          <button type="submit" className="btn btn-primary mt-3 w-full">
+            Start a new business (demo)
           </button>
         </form>
       )}

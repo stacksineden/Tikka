@@ -1,0 +1,44 @@
+{
+  "slug": "your-tikka-listing",
+  "title": "Get listed on Tikka",
+  "section": "start",
+  "order": 3,
+  "minutes": 3,
+  "summary": "Customers search Tikka by service, place and time. Get listed (free for now): agree to the terms, add photos of your space and your pin.",
+  "app": {
+    "href": "/app/settings/listing",
+    "label": "Open Your Tikka listing"
+  },
+  "steps": [
+    {
+      "title": "Open Your Tikka listing",
+      "body": "On a phone, tap More, then Your Tikka listing. Or tap \"Get listed on Tikka\" on Today. It takes about 3 minutes."
+    },
+    {
+      "title": "Read and agree to the terms",
+      "body": "Listing is free for now. If Tikka adds a fee, it applies only to new customers who find you through Tikka search, never to your regulars, your own link or your Instagram. You'll hear 30 days before any fee starts, and you can leave Tikka's search any time."
+    },
+    {
+      "title": "Add photos of your space",
+      "body": "Your studio, your chairs, your front, so people know where they're going. Add at least one; three to six works best. They come first on your listing. If you only go to customers, this step is skipped."
+    },
+    {
+      "title": "Put your pin on your shop",
+      "body": "Tikka places your pin near your area to start. Drag it to your door, or tap the map where you are, then tap \"Save my pin\". Customers see it on the map and get directions to it."
+    },
+    {
+      "title": "Say what customers like to know",
+      "body": "Tap what's true: air-conditioned, always-on power, parking, Wi-Fi, a waiting area; who it's for; how you take payment; and the languages you speak. It shows on your listing. You can skip this."
+    },
+    {
+      "title": "Check and list",
+      "body": "See how your listing looks, then tap \"List me on Tikka\". If something's missing, like a price on your services, the screen says what. Bookings that come from Tikka search show \"Found you on Tikka\" on your Calendar."
+    }
+  ],
+  "tips": [
+    "Search understands what people mean: someone typing \"bridal glam\" still finds your \"Bridal makeup\". Name your services the way your customers say them.",
+    "Were you listed before the terms? You stay in search until the end of 9 December 2026. Agree to the terms by then to stay.",
+    "To leave, switch off \"Show me in Tikka's search\". Your own page keeps working."
+  ],
+  "published": true
+}

@@ -209,7 +209,7 @@ export async function prepareCropped(file: File, w: number, h: number): Promise<
 }
 
 /** What a file is for: its folder in storage ({user}/{kind}/{file}). */
-export type MediaKind = "logo" | "background" | "video" | "video-poster" | "portfolio" | "hero" | "about" | "service" | "team";
+export type MediaKind = "logo" | "background" | "video" | "video-poster" | "portfolio" | "hero" | "about" | "service" | "team" | "space";
 
 const EXT: Record<string, string> = { "image/webp": "webp", "image/png": "png", "image/jpeg": "jpg", "video/mp4": "mp4", "video/quicktime": "mov" };
 

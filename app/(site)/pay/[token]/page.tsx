@@ -13,6 +13,11 @@ import { getBusinessBySlug } from "@/lib/data";
 import { naira, shortDate } from "@/lib/format";
 import { bookingNumber } from "@/lib/page";
 import { dbCompletePayLink, dbPayPage } from "@/lib/paylinks-db";
+import { demoPayPage, isDemoToken } from "@/lib/paylinks-demo";
+import { DemoPayButton } from "@/components/payments/DemoPayButton";
+
+/** A real pay link, or (new direction, development) a demo one. */
+const payPage = (token: string) => (isDemoToken(token) ? demoPayPage(token) : dbPayPage(token));
 import { sendPayLinkAlert } from "@/lib/push";
 import { verifyPayment } from "@/lib/paystack";
 import { siteUrl } from "@/lib/supabase/env";
@@ -24,7 +29,7 @@ import { siteUrl } from "@/lib/supabase/env";
 // The link preview in WhatsApp says what it is: "Pay ₦200 to Stacks Glow · Conrrows".
 export async function generateMetadata({ params }: PageProps<"/pay/[token]">): Promise<Metadata> {
   const { token } = await params;
-  const link = await dbPayPage(token);
+  const link = await payPage(token);
   const found = link ? await getBusinessBySlug(link.businessSlug) : null;
   if (!link || !found) return { title: "Pay", robots: { index: false, follow: false } };
   const amount = naira(link.amountKobo / 100);
@@ -49,7 +54,7 @@ async function Pay({ params, searchParams }: { params: PageProps<"/pay/[token]">
       if (r.kind === "paid" && id) after(() => sendPayLinkAlert(id));
     }
   }
-  const link = await dbPayPage(token);
+  const link = await payPage(token);
   if (!link) notFound();
   const found = await getBusinessBySlug(link.businessSlug);
   if (!found) notFound();
@@ -77,14 +82,19 @@ async function Pay({ params, searchParams }: { params: PageProps<"/pay/[token]">
                 <BadgeCheck size={20} aria-hidden="true" />
                 Paid{link.paidAt ? ` on ${shortDate(link.paidAt)}` : ""}. Thank you{link.customerName ? `, ${link.customerName}` : ""}!
               </p>
-              <p className="text-body text-ink-muted">Paystack has emailed your receipt. Show this page at {b.name} if they ask.</p>
+              <p className="text-body text-ink-muted">{isDemoToken(token) ? "" : "Paystack has emailed your receipt. "}Show this page at {b.name} if they ask.</p>
+              {"receiptToken" in link && link.receiptToken && (
+                <Link href={`/r/${link.receiptToken}`} className="biz-btn min-h-12 w-full border border-line-strong">
+                  See your receipt
+                </Link>
+              )}
             </>
           ) : link.status === "cancelled" ? (
             <p className="text-body">{b.name} cancelled this pay link. Message them if you still need to pay.</p>
           ) : (
             <>
               {link.customerName && <p className="text-body">Hi {link.customerName}, this is from {b.name}.</p>}
-              <PayButton token={token} label={`Pay ${amount}`} />
+              {isDemoToken(token) ? <DemoPayButton token={token} label={`Pretend it's paid (demo)`} /> : <PayButton token={token} label={`Pay ${amount}`} />}
               <p className="text-caption flex items-start gap-2 text-ink-muted">
                 <Lock size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
                 Paid securely through Tikka with Paystack: card, bank transfer or USSD. The money goes to {b.name}. Payments aren&apos;t refundable through Tikka; for anything about this payment, message {b.name}.

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { rememberRole } from "@/lib/session";
+import { clearDemoSession, rememberRole } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { dbInviteAcceptPath } from "@/lib/team-db";
 
@@ -20,6 +20,8 @@ export async function GET(request: NextRequest) {
       const invite = next.startsWith("/app/welcome") ? await dbInviteAcceptPath(data.user.email).catch(() => null) : null;
       if (invite) return NextResponse.redirect(new URL(invite, origin));
       await rememberRole(supabase, data.user.id);
+      // A real sign-in replaces a demo session left in this browser (development only).
+      await clearDemoSession();
       return NextResponse.redirect(new URL(next, origin));
     }
   }

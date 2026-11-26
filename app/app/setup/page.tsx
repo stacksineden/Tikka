@@ -14,6 +14,8 @@ async function Setup() {
   if (!user) redirect("/sign-in?next=/app/setup");
   if (user.role !== "owner") redirect("/app/redeem");
   const b = await getBusiness(user);
+  // New businesses set up through the new setup (docs/DB_MOVE.md, decided 26 Nov 2026).
+  if (!b) redirect("/app/start");
   const initial: CardDraft = b
     ? {
         name: b.name,

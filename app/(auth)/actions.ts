@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { clearDemoSession, demoAllowed, getSessionUser, rememberRole, setDemoSession, STAFF_HINT } from "@/lib/session";
@@ -38,6 +39,8 @@ export async function signIn(_prev: FormState, form: FormData): Promise<FormStat
     return { error: "That email and password don't match.", fields: { email } };
   }
   await rememberRole(supabase, data.user.id);
+  // A real sign-in replaces a demo session left in this browser (development only).
+  await clearDemoSession();
   redirect(safeNext(form.get("next")));
 }
 
@@ -59,7 +62,10 @@ export async function signUp(_prev: FormState, form: FormData): Promise<FormStat
   if (error) return { error: authError(error, "We couldn't create your account. Try again in a minute."), fields };
   // An email that already has an account comes back with no identities (and no email is sent).
   if (data.user && data.user.identities?.length === 0) return { error: "There's already an account for this email. Sign in instead.", fields };
-  if (data.session) redirect("/app/welcome");
+  if (data.session) {
+    await clearDemoSession();
+    redirect("/app/welcome");
+  }
   redirect(`/check-email?email=${encodeURIComponent(email)}`);
 }
 
@@ -147,6 +153,17 @@ export async function acceptStaffInvite(token: string, _prev: FormState, form: F
   }
   if (data.session) redirect(accept);
   redirect(`/check-email?email=${encodeURIComponent(email)}`);
+}
+
+/**
+ * NEW DIRECTION, stage 1 (development only): a brand-new demo business with no account, so the new
+ * setup can be tried from the first screen. It lives in memory only and never touches Supabase.
+ */
+export async function startNewDemoBusiness() {
+  if (!demoAllowed) redirect("/sign-in");
+  const id = `user_demo_new_${randomBytes(4).toString("hex")}`;
+  await setDemoSession({ id, email: "new@demo.tikka", name: "there", role: "owner", isNew: false });
+  redirect("/app/start");
 }
 
 /** DEMO (development only): opens the Glow Studio demo business without an account. */

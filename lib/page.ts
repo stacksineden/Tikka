@@ -1,6 +1,7 @@
 // The business page: a one-page website (PRD A5). Pure rules shared by the page, the editor
 // ("Your page") and the tests: what shows, how prices and the hero read, and the booking link.
 
+import { perText } from "./units";
 import { naira, place } from "./format";
 import { normalizeNgPhone } from "./setup";
 import type { Business, BusinessPage, Drop, PageStyle, ServiceItem } from "./types";
@@ -39,6 +40,18 @@ const CATEGORY_LINE: Record<string, string> = {
 };
 
 /** The page's look: the owner's pick under "More options", else from the category (Photography → the gallery). */
+/** Every page style, in the order owners see them, with who it suits. */
+export const PAGE_STYLES: { id: PageStyle; name: string; line: string; for: "beauty" | "photography" }[] = [
+  { id: "beauty", name: "Editorial", line: "A big photo, your name in large type, light and modern.", for: "beauty" },
+  { id: "luxe", name: "Luxe", line: "Dark and rich, like a hotel spa. For bridal, lashes and spas.", for: "beauty" },
+  { id: "soft", name: "Soft studio", line: "Light, airy and rounded. For nails, lashes and brows.", for: "beauty" },
+  { id: "photography", name: "Gallery", line: "Your photos lead, in their own colours, with a full-screen viewer.", for: "photography" },
+  { id: "portfolio", name: "Minimal portfolio", line: "A white gallery wall with an index of your work.", for: "photography" },
+  { id: "film", name: "Film", line: "Full-screen photos told in chapters. For weddings and events.", for: "photography" },
+];
+
+export const isPageStyle = (v: unknown): v is PageStyle => PAGE_STYLES.some((s) => s.id === v);
+
 export function pageStyle(b: Pick<Business, "page" | "category">): PageStyle {
   return b.page?.style ?? (b.category === "Photography" ? "photography" : "beauty");
 }
@@ -66,9 +79,10 @@ export function showsLocation(b: Pick<Business, "serveMode">): boolean {
   return (b.serveMode ?? "in_store") === "in_store";
 }
 
-export function priceText(s: Pick<ServiceItem, "price" | "priceKind">): string {
+export function priceText(s: Pick<ServiceItem, "price" | "priceKind" | "unit" | "unitLabel">): string {
   if (s.priceKind === "ask" || s.price === null) return "Ask for price";
-  return s.priceKind === "from" ? `From ${naira(s.price)}` : naira(s.price);
+  const per = s.unit ? ` ${perText(s)}` : "";
+  return s.priceKind === "from" ? `From ${naira(s.price)}${per}` : `${naira(s.price)}${per}`;
 }
 
 /** The number "Book on WhatsApp" goes to: the Chat on WhatsApp button's, else the owner's. */
@@ -166,6 +180,7 @@ export function validateServices(services: ServiceItem[]): PageErrors {
     else if (tooLong(s.description, PAGE_LIMITS.serviceDescription)) e[`service-${i}`] = `Keep the description under ${PAGE_LIMITS.serviceDescription} characters.`;
     else if (tooLong(s.group, PAGE_LIMITS.group)) e[`service-${i}`] = `Keep the group under ${PAGE_LIMITS.group} characters.`;
     else if (s.priceKind !== "ask" && (s.price === null || !Number.isFinite(s.price) || s.price < 0)) e[`service-${i}`] = "Add a price, or choose Ask for price.";
+    else if (s.unit === "item" && s.priceKind !== "ask" && !s.unitLabel?.trim()) e[`service-${i}`] = "Say what one is, like photo or look.";
   });
   return e;
 }

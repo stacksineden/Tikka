@@ -14,7 +14,11 @@ import {
   type BookingBlock,
   type BookingRules,
   type BookingSetup,
+  gapAfter,
+  watInstant,
 } from "./bookings";
+import { depositOn } from "./presets";
+import { priceBooking, type BookingChoice } from "./booking-price";
 import {
   dbAddBooking,
   dbBlockTime,
@@ -35,6 +39,11 @@ import {
   dbCheckBookingCode,
   type BookingPass,
   type BookResult,
+  dbChangeFromPass,
+  dbPassBooking,
+  dbJoinWaitlist,
+  dbGetWaitlist,
+  dbRemoveWaitlist,
 } from "./bookings-db";
 import { demoTikkaForBooking, getBusiness, getBusinessBySlug, isDbId, memberBusinessId } from "./data";
 import type { SessionUser } from "./types";
@@ -116,20 +125,36 @@ function demoBook(ownerId: string, b: Business | null): DemoBook | null {
   return d;
 }
 
-function demoRules(d: DemoBook, hours: Business["hours"]): BookingRules {
+/** NEW DIRECTION: a booking's gap after it (clean-up, travel), from its service and whether it's a home visit. */
+function bookingGap(b: Business, x: Pick<Booking, "serviceId" | "homeArea">): number {
+  return gapAfter(b, b.services.find((s) => s.id === x.serviceId), !!x.homeArea);
+}
+
+/** Each booking's gap after it, by booking id (only the ones with a gap). */
+export function bookingGaps(b: Business, list: Booking[]): Record<string, number> {
+  return Object.fromEntries(list.map((x) => [x.id, bookingGap(b, x)]).filter(([, g]) => (g as number) > 0));
+}
+
+function busyWithGap(b: Business, x: Booking): [number, number] {
+  return [new Date(x.startsAt).getTime(), new Date(x.endsAt).getTime() + bookingGap(b, x) * 60_000];
+}
+
+function demoRules(d: DemoBook, business: Business): BookingRules {
   const live = d.bookings.filter((x) => x.status !== "cancelled");
   return {
     capacity: d.setup.capacity,
     noticeMinutes: d.setup.noticeMinutes,
     aheadDays: d.setup.aheadDays,
-    hours: hours ?? null,
-    busy: live.map((x) => [x.startsAt, x.endsAt]),
+    hours: business.hours ?? null,
+    // Each booking holds its time plus the gap after it, so nobody is booked into the clean-up.
+    busy: live.map((x) => busyWithGap(business, x).map((t) => new Date(t).toISOString()) as [string, string]),
     blocked: d.blocks.map((k) => [k.startsAt, k.endsAt]),
   };
 }
 
 /** The same checks as private.booking_problem(). */
-function demoProblem(d: DemoBook, hours: Business["hours"], start: Date, minutes: number, ignore: string | null, force: boolean): string | null {
+function demoProblem(d: DemoBook, business: Business, start: Date, minutes: number, ignore: string | null, force: boolean, place?: { serviceId?: string; home?: boolean }): string | null {
+  const hours = business.hours;
   if (!d.setup.enabled) return "off";
   if (force) return null;
   const now = Date.now();
@@ -139,9 +164,10 @@ function demoProblem(d: DemoBook, hours: Business["hours"], start: Date, minutes
   const weekday = new Date(`${day}T12:00:00Z`).getUTCDay();
   const range = openRange(hours, weekday);
   if (!range || start.getUTCSeconds() !== 0 || minute % GRID !== 0 || minute < range[0] || minute + minutes > range[1]) return "closed";
-  const busy = d.bookings.filter((x) => x.status !== "cancelled" && x.id !== ignore).map((x) => [new Date(x.startsAt).getTime(), new Date(x.endsAt).getTime()] as [number, number]);
+  const busy = d.bookings.filter((x) => x.status !== "cancelled" && x.id !== ignore).map((x) => busyWithGap(business, x));
   const blocked = d.blocks.map((k) => [new Date(k.startsAt).getTime(), new Date(k.endsAt).getTime()] as [number, number]);
-  return isFull(start.getTime(), start.getTime() + minutes * 60_000, busy, blocked, d.setup.capacity) ? "taken" : null;
+  const after = place ? bookingGap(business, { serviceId: place.serviceId, homeArea: place.home ? "home" : undefined }) : 0;
+  return isFull(start.getTime(), start.getTime() + (minutes + after) * 60_000, busy, blocked, d.setup.capacity) ? "taken" : null;
 }
 
 function strip(b: DemoBooking, owner: boolean): Booking {
@@ -157,7 +183,7 @@ export async function getBookingRules(ownerKey: string, business: Business): Pro
   await connection();
   if (isDbId(ownerKey)) return dbBookingRules(business.id, new Date(), 186);
   const d = demoBook(ownerKey, business);
-  return d?.setup.enabled ? demoRules(d, business.hours) : null;
+  return d?.setup.enabled ? demoRules(d, business) : null;
 }
 
 /** Each service's length for the calendar (the demo keeps its own; real ones are on the service). */
@@ -168,7 +194,15 @@ export function serviceLengths(ownerKey: string, business: Business): Record<str
 
 /** Each service's deposit for the booking sheet and the business page (the demo takes none). */
 export async function getBookingDeposits(ownerKey: string, business: Business, mode: "test" | "live" | null): Promise<{ counts: boolean; services: Record<string, number> }> {
-  if (!isDbId(ownerKey)) return { counts: true, services: {} };
+  if (!isDbId(ownerKey)) {
+    // NEW DIRECTION (demo only): the deposit picked at setup, on each service's lowest price.
+    const dep = business.trades?.length ? demoBook(ownerKey, business)?.setup.deposit : undefined;
+    if (!dep || dep.mode === "off") return { counts: true, services: {} };
+    const services = Object.fromEntries(
+      business.services.filter((s) => s.id).map((s) => [s.id!, priceBooking({ ...s, extras: undefined }, {}, 0, dep).depositNaira * 100]),
+    );
+    return { counts: dep.counts, services };
+  }
   return dbBookingDeposits(business.id, mode);
 }
 
@@ -186,7 +220,7 @@ export async function bookTime(
   if (!d || !svc) return { kind: "not_found" };
   const minutes = d.minutes[svc.id!] ?? DEFAULT_MINUTES;
   const start = new Date(input.startsAt);
-  const problem = demoProblem(d, business.hours, start, minutes, null, false);
+  const problem = demoProblem(d, business, start, minutes, null, false, { serviceId: svc.id });
   if (problem) return { kind: problem };
   if (d.bookings.filter((x) => x.phone === input.phone && x.status === "booked" && new Date(x.startsAt).getTime() > Date.now()).length >= MAX_UPCOMING) return { kind: "too_many" };
   const b: DemoBooking = {
@@ -210,6 +244,8 @@ export async function getBookingPass(token: string): Promise<(BookingPass & { bu
     return {
       code: b.code, service: b.service, minutes: b.minutes, startsAt: b.startsAt, status: b.status, firstName: b.firstName,
       moved: b.moved, businessSlug: owner.slug, businessId: owner.id, business: owner,
+      // NEW DIRECTION (demo only): the price, deposit and home visit from the new booking sheet.
+      priceKobo: b.priceKobo, priceKind: b.priceKind, depositPaidKobo: b.depositPaidKobo, depositCounts: b.depositCounts, homeArea: b.homeArea, detail: b.detail,
       tikka: b.claimId && demoTikkaForBooking(b.claimId) ? { token: b.claimId, reward: demoTikkaForBooking(b.claimId)!.reward, used: demoTikkaForBooking(b.claimId)!.redeemed } : undefined,
     };
   }
@@ -266,8 +302,228 @@ export async function saveBookingSettings(
   if (!w) throw new Error("Set up your card first.");
   if (isDbId(w.key)) return dbSaveBookingSettings(w.key, s);
   const d = demoBook(w.key, w.business)!;
-  d.setup = { setUp: true, enabled: s.enabled, capacity: s.capacity, noticeMinutes: s.noticeMinutes, aheadDays: s.aheadDays };
+  d.setup = { ...d.setup, setUp: true, enabled: s.enabled, capacity: s.capacity, noticeMinutes: s.noticeMinutes, aheadDays: s.aheadDays };
   d.minutes = { ...d.minutes, ...s.minutes };
+}
+
+/**
+ * NEW DIRECTION, stage 3 (demo only): a booking from the new sheet. The server prices it from the
+ * service (never from the browser), takes the deposit as paid (the demo has no Paystack) and keeps
+ * the option, extras and home visit for the owner's Today. Event days take the whole date.
+ */
+export async function bookTimeV2(
+  slug: string,
+  input: { serviceId: string; startsAt: string; choice: BookingChoice; firstName: string; phone: string; address?: string; area?: string; answers?: string; tikka?: string },
+): Promise<BookResult> {
+  const found = await getBusinessBySlug(slug);
+  if (!found || isDbId(found.ownerId) || !found.business.trades?.length) return { kind: "not_found" };
+  const { business, ownerId } = found;
+  const d = demoBook(ownerId, business);
+  const svc = business.services.find((s) => s.id === input.serviceId);
+  if (!d || !svc) return { kind: "not_found" };
+  const start = new Date(input.startsAt);
+  // "Book a time to use it" from a Tikka's card: this business's unused Tikka, before its use-by, one
+  // upcoming booking per Tikka. Name and number come from the claim, never the browser; no deposit.
+  const tikka = input.tikka ? demoTikkaForBooking(input.tikka) : null;
+  if (input.tikka) {
+    if (!tikka || tikka.ownerId !== ownerId) return { kind: "not_found" };
+    if (tikka.redeemed) return { kind: "used" };
+    const have = d.bookings.find((x) => x.claimId === input.tikka && x.status === "booked" && new Date(x.endsAt).getTime() > Date.now());
+    if (have) return { kind: "already", token: have.viewToken!, code: have.code, id: have.id };
+    if (start.getTime() >= new Date(tikka.expiresAt).getTime()) return { kind: "after_use_by" };
+  }
+  const who = tikka ? { firstName: tikka.firstName, phone: tikka.phone ?? "" } : { firstName: input.firstName, phone: input.phone };
+  const home = business.workPlace === "home" || (business.workPlace === "both" && !!input.choice.home);
+  const price = priceBooking(svc, { ...input.choice, home }, business.travelFee ?? 0, tikka ? undefined : d.setup.deposit);
+  let end: Date;
+  if (svc.eventDay) {
+    const { day, minute } = watParts(start);
+    if (minute < 4 * 60 || minute > 12 * 60) return { kind: "closed" };
+    if (start.getTime() < Date.now() + d.setup.noticeMinutes * 60_000) return { kind: "too_soon" };
+    const dayStart = watInstant(day, 0);
+    const dayEnd = dayStart + 86_400_000;
+    if (d.bookings.some((x) => x.status !== "cancelled" && new Date(x.startsAt).getTime() < dayEnd && new Date(x.endsAt).getTime() > dayStart)) return { kind: "taken" };
+    end = new Date(dayEnd);
+  } else {
+    const problem = demoProblem(d, business, start, price.minutes, null, false, { serviceId: svc.id, home });
+    if (problem) return { kind: problem };
+    end = new Date(start.getTime() + price.minutes * 60_000);
+  }
+  if (!tikka && d.bookings.filter((x) => x.phone === who.phone && x.status === "booked" && new Date(x.startsAt).getTime() > Date.now()).length >= MAX_UPCOMING) return { kind: "too_many" };
+  const b: DemoBooking = {
+    id: `bk_${randomBytes(6).toString("hex")}`, service: svc.name, serviceId: svc.id, minutes: Math.round((end.getTime() - start.getTime()) / 60_000),
+    startsAt: start.toISOString(), endsAt: end.toISOString(), firstName: who.firstName, phone: who.phone || undefined, source: tikka ? "tikka" : "page",
+    status: "booked", code: demoCode(), viewToken: randomBytes(12).toString("hex"), moved: false, createdAt: new Date().toISOString(), futureOffers: false,
+    claimId: tikka ? input.tikka : undefined,
+    priceKobo: price.totalNaira * 100, priceKind: "fixed", depositPaidKobo: price.depositNaira ? price.depositNaira * 100 : undefined, depositCounts: d.setup.deposit?.counts ?? true,
+    homeArea: home ? [input.address?.trim(), input.area?.trim()].filter(Boolean).join(", ").slice(0, 120) || business.city : undefined,
+    detail: [price.detail, input.answers?.trim()].filter(Boolean).join(" · ").slice(0, 200) || undefined,
+  };
+  d.bookings.push(b);
+  return { kind: "booked", token: b.viewToken!, code: b.code, id: b.id };
+}
+
+/* ------------------------------------------------------------ the waitlist (demo store, else the database) */
+
+export interface WaitlistEntry {
+  id: string;
+  /** The WAT day they wanted, "2026-11-28". */
+  day: string;
+  serviceId?: string;
+  service: string;
+  name: string;
+  /** Owners only (rule 4). */
+  phone: string;
+  createdAt: string;
+}
+const waitlists: Map<string, WaitlistEntry[]> = ((globalThis as { __tikkaWaitlists?: Map<string, WaitlistEntry[]> }).__tikkaWaitlists ??= new Map());
+
+/** A customer asks to hear if a full day opens up. One entry per number per day. */
+export async function joinWaitlist(slug: string, input: { serviceId: string; day: string; name: string; phone: string; visitorId?: string }): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const found = await getBusinessBySlug(slug);
+  if (!found) return { ok: false, reason: "not_found" };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.day) || input.day < watParts(new Date()).day) return { ok: false, reason: "closed" };
+  // A real business (docs/DB_MOVE.md step 3): join_waitlist() checks the rest.
+  if (isDbId(found.ownerId)) return dbJoinWaitlist({ businessId: found.business.id, serviceId: input.serviceId, day: input.day, firstName: input.name, phone: input.phone, visitorId: input.visitorId ?? "" });
+  if (!found.business.trades?.length) return { ok: false, reason: "not_found" };
+  const svc = found.business.services.find((s) => s.id === input.serviceId);
+  const list = waitlists.get(found.ownerId) ?? [];
+  if (!list.some((w) => w.day === input.day && w.phone === input.phone)) {
+    if (list.length >= 500) return { ok: false, reason: "slow_down" };
+    list.push({ id: randomBytes(6).toString("hex"), day: input.day, serviceId: svc?.id, service: svc?.name ?? "A booking", name: input.name, phone: input.phone, createdAt: new Date().toISOString() });
+  }
+  waitlists.set(found.ownerId, list);
+  return { ok: true };
+}
+
+/** The owner's waitlist from today on, soonest day first. */
+export async function getWaitlist(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">): Promise<WaitlistEntry[]> {
+  if (user.role !== "owner") return [];
+  if (isDbId(user.id)) {
+    const key = await memberBusinessId(user);
+    return key && isDbId(key) ? dbGetWaitlist(key) : [];
+  }
+  const today = watParts(new Date()).day;
+  return (waitlists.get(user.id) ?? []).filter((w) => w.day >= today).sort((a, b) => a.day.localeCompare(b.day) || a.createdAt.localeCompare(b.createdAt));
+}
+
+export async function removeWaitlist(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, id: string): Promise<void> {
+  if (user.role !== "owner") return;
+  if (isDbId(user.id)) {
+    const key = await memberBusinessId(user);
+    if (key && isDbId(key) && isDbId(id)) await dbRemoveWaitlist(key, id);
+    return;
+  }
+  waitlists.set(user.id, (waitlists.get(user.id) ?? []).filter((w) => w.id !== id));
+}
+
+/** NEW DIRECTION (demo only): the deposit rule the new booking sheet prices with. */
+export function demoDepositRule(ownerKey: string, business: Business): BookingSetup["deposit"] | undefined {
+  if (isDbId(ownerKey)) return undefined;
+  return demoBook(ownerKey, business)?.setup.deposit;
+}
+
+/** The customer moves or cancels from their pass, within the booking rules (demo store, else the database). */
+export async function changeFromPass(token: string, change: { kind: "cancel" } | { kind: "move"; startsAt: string }): Promise<{ ok: true } | { ok: false; reason: string }> {
+  for (const [ownerKey, d] of demo) {
+    const b = d.bookings.find((x) => x.viewToken === token);
+    if (!b) continue;
+    if (b.status !== "booked") return { ok: false, reason: "not_booked" };
+    if (change.kind === "cancel") {
+      b.status = "cancelled";
+      return { ok: true };
+    }
+    // Moving needs 24 hours' notice, as the rules filled in at setup say.
+    const owner = await getBusiness({ id: ownerKey });
+    if (!owner) return { ok: false, reason: "not_found" };
+    const svc = owner.services.find((s) => s.id === b.serviceId);
+    if (new Date(b.startsAt).getTime() - Date.now() < 86_400_000) return { ok: false, reason: "too_late" };
+    const start = new Date(change.startsAt);
+    if (svc?.eventDay) {
+      const day = watParts(start).day;
+      const dayStart = watInstant(day, 0);
+      if (d.bookings.some((x) => x.id !== b.id && x.status !== "cancelled" && new Date(x.startsAt).getTime() < dayStart + 86_400_000 && new Date(x.endsAt).getTime() > dayStart)) return { ok: false, reason: "taken" };
+      b.startsAt = start.toISOString();
+      b.endsAt = new Date(dayStart + 86_400_000).toISOString();
+    } else {
+      const problem = demoProblem(d, owner, start, b.minutes, b.id, false, { serviceId: b.serviceId, home: !!b.homeArea });
+      if (problem) return { ok: false, reason: problem };
+      b.startsAt = start.toISOString();
+      b.endsAt = new Date(start.getTime() + b.minutes * 60_000).toISOString();
+    }
+    b.moved = true;
+    return { ok: true };
+  }
+  // A real booking (docs/DB_MOVE.md step 2): change_from_pass() checks the notice and the free time.
+  return dbChangeFromPass(token, change);
+}
+
+/** The pass's booking, for moving it (its business and service): the demo store, else the database. */
+export async function passBooking(token: string): Promise<{ slug: string; serviceId?: string; minutes: number; gap: number; eventDay: boolean; startsAt: string } | null> {
+  for (const [ownerKey, d] of demo) {
+    const b = d.bookings.find((x) => x.viewToken === token);
+    if (!b) continue;
+    const owner = await getBusiness({ id: ownerKey });
+    if (!owner?.trades?.length) return null;
+    const svc = owner.services.find((s) => s.id === b.serviceId);
+    return { slug: owner.slug, serviceId: b.serviceId, minutes: b.minutes, gap: bookingGap(owner, b), eventDay: !!svc?.eventDay, startsAt: b.startsAt };
+  }
+  return dbPassBooking(token);
+}
+
+/**
+ * NEW DIRECTION (demo only): a sample day so Today has something to show before real customers
+ * book: four customers today (one a home visit, one without a deposit) and three tomorrow.
+ */
+export async function seedDemoDay(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, now: Date): Promise<number> {
+  if (user.role !== "owner") return 0;
+  const w = await who(user);
+  if (!w || isDbId(w.key)) return 0;
+  const d = demoBook(w.key, w.business)!;
+  const services = w.business.services.filter((s) => s.id && !s.eventDay);
+  if (!services.length) return 0;
+  const today = watParts(now).day;
+  const tomorrow = watParts(new Date(now.getTime() + 86_400_000)).day;
+  const dep = d.setup.deposit;
+  // day, first name, minute of day (WAT), phone, home visit, deposit paid
+  const people: [string, string, number, string, boolean, boolean][] = [
+    [today, "Ada", 600, "+2348031110011", false, true],
+    [today, "Funmi", 750, "+2348031110012", true, true],
+    [today, "Kemi", 900, "+2348031110013", false, false],
+    [today, "Tolu", 1020, "+2348031110014", false, true],
+    [tomorrow, "Ngozi", 570, "+2348031110015", false, true],
+    [tomorrow, "Bimpe", 720, "+2348031110016", false, true],
+    [tomorrow, "Chioma", 900, "+2348031110017", false, true],
+  ];
+  let added = 0;
+  people.forEach(([day, first, min, phone, home, paid], i) => {
+    const s = services[i % services.length];
+    const opt = s.options?.[s.options.length - 1];
+    const minutes = opt?.minutes ?? s.minutes ?? DEFAULT_MINUTES;
+    const priceNaira = (opt?.price ?? s.price ?? 0) + (home ? w.business.travelFee ?? 0 : 0);
+    const depositNaira = paid && dep && dep.mode !== "off" ? depositOn(priceNaira, dep.mode === "fixed" ? { mode: "fixed", amount: (dep.fixedKobo ?? 0) / 100 } : { mode: "percent", percent: dep.percent ?? 30 }) : 0;
+    const start = new Date(watInstant(day, min));
+    const id = `bk_sample_${day}_${min}`;
+    if (d.bookings.some((x) => x.id === id)) return;
+    d.bookings.push({
+      id, service: s.name, serviceId: s.id, minutes, startsAt: start.toISOString(), endsAt: new Date(start.getTime() + minutes * 60_000).toISOString(),
+      firstName: first, phone, source: "page", status: "booked", code: demoCode(), viewToken: randomBytes(12).toString("hex"), moved: false,
+      createdAt: new Date(now.getTime() - (2 + i) * 86_400_000).toISOString(), futureOffers: true,
+      priceKobo: priceNaira * 100, priceKind: "fixed", depositPaidKobo: depositNaira ? depositNaira * 100 : undefined, depositCounts: dep?.counts ?? true,
+      homeArea: home ? (w.business.area || w.business.city) : undefined, detail: opt?.label,
+    });
+    added++;
+  });
+  return added;
+}
+
+/** NEW DIRECTION (demo only): the deposit picked at setup. Real accounts set deposits on Get paid. */
+export async function saveDemoDeposit(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, deposit: BookingSetup["deposit"]): Promise<void> {
+  if (user.role !== "owner") throw new Error("Only the owner sets deposits.");
+  const w = await who(user);
+  if (!w || isDbId(w.key)) throw new Error("Demo businesses only.");
+  const d = demoBook(w.key, w.business)!;
+  d.setup = { ...d.setup, deposit };
 }
 
 async function demoFor(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, ownerOnly: boolean) {
@@ -289,7 +545,7 @@ export async function addBooking(
   if (!svc) return { kind: "not_found" };
   const minutes = d.minutes[svc.id!] ?? DEFAULT_MINUTES;
   const start = new Date(b.startsAt);
-  const problem = demoProblem(d, w.business.hours, start, minutes, null, b.force);
+  const problem = demoProblem(d, w.business, start, minutes, null, b.force, { serviceId: svc.id });
   if (problem) return { kind: problem };
   d.bookings.push({
     id: `bk_${randomBytes(6).toString("hex")}`, service: svc.name, serviceId: svc.id, minutes, startsAt: start.toISOString(),
@@ -309,7 +565,7 @@ export async function moveBooking(user: Pick<SessionUser, "id" | "role" | "busin
   if (!b) return { kind: "not_found" };
   if (b.status !== "booked") return { kind: "not_booked" };
   const start = new Date(startsAt);
-  const problem = demoProblem(d, w.business.hours, start, b.minutes, b.id, force);
+  const problem = demoProblem(d, w.business, start, b.minutes, b.id, force, { serviceId: b.serviceId, home: !!b.homeArea });
   if (problem) return { kind: problem };
   b.startsAt = start.toISOString();
   b.endsAt = new Date(start.getTime() + b.minutes * 60_000).toISOString();
@@ -468,11 +724,17 @@ export async function getTikkaForBooking(token: string, ownerKey: string, busine
 }
 
 /** The claimer books a time to use their Tikka. Name and number come from the claim, never the browser. */
-export async function bookForTikka(slug: string, token: string, serviceId: string, startsAt: string): Promise<BookResult> {
+export async function bookForTikka(
+  slug: string,
+  token: string,
+  serviceId: string,
+  startsAt: string,
+  picks?: { choice?: Record<string, unknown>; answers?: string },
+): Promise<BookResult> {
   const found = await getBusinessBySlug(slug);
   if (!found) return { kind: "not_found" };
   const { business, ownerId } = found;
-  if (isDbId(ownerId)) return dbBookForClaim(token, serviceId, startsAt);
+  if (isDbId(ownerId)) return dbBookForClaim(token, serviceId, startsAt, picks);
   const t = demoTikkaForBooking(token);
   const d = demoBook(ownerId, business);
   const svc = business.services.find((s) => s.id === serviceId);
@@ -483,7 +745,7 @@ export async function bookForTikka(slug: string, token: string, serviceId: strin
   const start = new Date(startsAt);
   if (start.getTime() >= new Date(t.expiresAt).getTime()) return { kind: "after_use_by" };
   const minutes = d.minutes[svc.id!] ?? DEFAULT_MINUTES;
-  const problem = demoProblem(d, business.hours, start, minutes, null, false);
+  const problem = demoProblem(d, business, start, minutes, null, false, { serviceId: svc.id });
   if (problem) return { kind: problem };
   const b: DemoBooking = {
     id: `bk_${randomBytes(6).toString("hex")}`, service: svc.name, serviceId: svc.id, minutes, startsAt: start.toISOString(),

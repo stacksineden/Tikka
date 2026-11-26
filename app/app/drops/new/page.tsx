@@ -5,7 +5,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { SimpleBuilder } from "@/components/drops/SimpleBuilder";
 import { getBusiness, getDrop, getDrops, getDropTemplates, getDropTiers, getVouchers } from "@/lib/data";
-import { blankDraft, copyDraft, setTotal, sizeAdvice } from "@/lib/drop";
+import { blankDraft, copyDraft, setTotal, showsCardNudge, sizeAdvice } from "@/lib/drop";
 import { getSessionUser } from "@/lib/session";
 import { sparkState } from "@/lib/studio-db";
 import { templateCategory } from "@/lib/templates";
@@ -42,7 +42,8 @@ async function Builder({ searchParams }: { searchParams: PageProps<"/app/drops/n
     if (found.drop.status !== "draft") redirect(`/app/drops/${draftId}`);
     initial = found.draft;
     editing = true;
-    screen = "offer";
+    // Back from Card look ("Make your card yours"): straight to the check, where they left it.
+    screen = sp.step === "review" ? "review" : "offer";
   } else if (fromId) {
     // "Run it again": the same offer, fresh dates, straight to the check (PRD B5).
     const found = await getDrop(user, fromId, now);
@@ -72,6 +73,7 @@ async function Builder({ searchParams }: { searchParams: PageProps<"/app/drops/n
       editing={editing}
       spark={spark.dismissed.includes("spark_builder") ? null : { onList: spark.onList }}
       pageClaims={claimMode() === "page"}
+      cardNudge={showsCardNudge(drops, business.background)}
     />
   );
 }

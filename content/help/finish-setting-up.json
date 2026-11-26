@@ -1,0 +1,34 @@
+{
+  "slug": "finish-setting-up",
+  "title": "Finish setting up",
+  "section": "start",
+  "order": 1,
+  "minutes": 3,
+  "summary": "Had Tikka before the new version? Three quick answers and your page, bookings and Today are ready.",
+  "app": {
+    "href": "/app/finish",
+    "label": "Finish setting up"
+  },
+  "steps": [
+    {
+      "title": "Open Finish setting up",
+      "body": "Today shows \"Finish setting up\" at the top until it's done. Tap it. Nothing you set up before is lost: your page, services, photos, drops and customers are all still there."
+    },
+    {
+      "title": "Say what you do",
+      "body": "Pick everything you do: hair, makeup, nails, lashes and brows, barbing, spa, gele, photography, videography or content. Customers find you by these in Tikka's search."
+    },
+    {
+      "title": "Say where you work",
+      "body": "At your shop, salon or studio; you go to customers; or both. If you go to customers, set your travel fee and how far you'll go: your area, your city or your whole state."
+    },
+    {
+      "title": "Pick your booking rules",
+      "body": "Customers see these before they book, like how much notice you need to move a booking and what happens to the deposit if they cancel. Tap a rule to change its words, or add your own. Then tap \"Save and open Today\"."
+    }
+  ],
+  "tips": [
+    "You can change all of this later: what you do on Your page, where you work and the rules in Booking settings."
+  ],
+  "published": true
+}

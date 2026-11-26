@@ -4,11 +4,11 @@ import { Logo } from "./Logo";
 import { SiteMenu } from "./SiteMenu";
 
 const NAV = [
-  { href: "/drops", label: "Browse drops" },
-  { href: "/#how-it-works", label: "How it works" },
-  { href: "/#who-its-for", label: "Who it's for" },
-  { href: "/#pricing", label: "Pricing" },
-  { href: "/#faq", label: "FAQs" },
+  { href: "/", label: "Find and book" },
+  { href: "/business#website", label: "How it works" },
+  { href: "/business#pricing", label: "Pricing" },
+  { href: "/business#faq", label: "FAQs" },
+  { href: "/drops", label: "Offers" },
   { href: "/studio", label: "Studio" },
 ];
 
@@ -50,24 +50,26 @@ export function SiteFooter() {
         <div className="max-w-xs">
           <Logo />
           <p className="text-body mt-4 text-ink-muted">
-            Your ticket to something good. Made in Nigeria for businesses that want to know who walked in.
+            Book what makes you look and feel good: salons, barbers, spas, makeup artists, photographers and content studios anywhere in Nigeria. Made in Nigeria.
           </p>
         </div>
         <div>
           <h2 className="text-label text-ink">For businesses</h2>
           <ul className="text-body mt-3 grid gap-2 text-ink-muted">
+            <li><Link className="hover:text-ink" href="/business">Tikka for businesses</Link></li>
             <li><Link className="hover:text-ink" href="/sign-up">Start free</Link></li>
             <li><Link className="hover:text-ink" href="/sign-in">Sign in</Link></li>
-            <li><Link className="hover:text-ink" href="/#pricing">Pricing</Link></li>
+            <li><Link className="hover:text-ink" href="/business#pricing">Pricing</Link></li>
             <li><Link className="hover:text-ink" href="/help">Help</Link></li>
           </ul>
         </div>
         <div>
           <h2 className="text-label text-ink">Tikka</h2>
           <ul className="text-body mt-3 grid gap-2 text-ink-muted">
-            <li><Link className="hover:text-ink" href="/drops">Browse drops</Link></li>
+            <li><Link className="hover:text-ink" href="/">Find and book</Link></li>
+            <li><Link className="hover:text-ink" href="/drops">Offers near you</Link></li>
             <li><Link className="hover:text-ink" href="/studio">Studio</Link></li>
-            <li><Link className="hover:text-ink" href="/#faq">FAQs</Link></li>
+            <li><Link className="hover:text-ink" href="/business#faq">FAQs</Link></li>
             <li><Link className="hover:text-ink" href="/privacy">Privacy policy</Link></li>
             <li><Link className="hover:text-ink" href="/terms">Terms</Link></li>
             <li><Link className="hover:text-ink" href="/acceptable-use">Acceptable use</Link></li>
@@ -75,7 +77,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-line">
-        <p className="text-caption mx-auto max-w-6xl px-5 py-5 text-ink-muted sm:px-6">© 2026 Tikka. All Tikkas are free to claim.</p>
+        <p className="text-caption mx-auto max-w-6xl px-5 py-5 text-ink-muted sm:px-6">© 2026 Tikka. Booking on Tikka is free for customers.</p>
       </div>
     </footer>
   );

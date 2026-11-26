@@ -31,13 +31,17 @@ create function pg_temp.draft(p_slug text, p_total int, p_starts interval) retur
 $$;
 
 -- --------------------------------------------------------------- the tiers
+-- Admin changes prices on the live project, so the prices this test works with are set here
+-- (rolled back with everything else); the shape of the levels is checked as it is.
+update public.drop_tiers set price_kobo = 1000000, founding_price_kobo = 500000, guarantee_min_redemptions = 10 where id = 'medium';
+update public.drop_packs set price_kobo = 2500000, founding_price_kobo = 1200000 where id = 'medium3';
 do $$ begin
-  assert (select label = 'Drop' and max_cards = 1000 and price_kobo = 1000000 and founding_price_kobo = 500000 and guarantee_min_redemptions = 10 and active
-          from public.drop_tiers where id = 'medium'), 'one paid level: Drop, ₦10,000, founding ₦5,000, up to 1,000, guarantee at 10';
+  assert (select label = 'Drop' and max_cards = 1000 and active
+          from public.drop_tiers where id = 'medium'), 'one paid level: Drop, up to 1,000';
   assert (select max_cards from public.drop_tiers where id = 'free') = 1000, 'the free first drop goes up to 1,000';
   assert (select count(*) from public.drop_tiers where id in ('small', 'large') and not active) = 2, 'Small and Large are switched off';
   assert (select count(*) from public.drop_tiers where active and price_kobo > 0) = 1, 'one paid level on sale';
-  assert (select price_kobo = 2500000 and founding_price_kobo = 1200000 and active from public.drop_packs where id = 'medium3'), 'the pack: ₦25,000, founding ₦12,000';
+  assert (select active from public.drop_packs where id = 'medium3'), 'the pack is on sale';
   assert not (select active from public.drop_packs where id = 'small3'), 'the Small pack is off sale';
 end $$;
 

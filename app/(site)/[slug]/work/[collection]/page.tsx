@@ -57,7 +57,8 @@ async function CollectionPage({ params }: { params: Props["params"] }) {
   const bookLabel = c.service ? `Book ${c.service.name}` : "Book on WhatsApp";
   const style = { "--biz": b.brandColor, "--on-biz": b.onBrandColor } as React.CSSProperties;
   const url = `${SITE}/${b.slug}/work/${c.slug}`;
-  if (pageStyle(b) === "photography") {
+  // Collection pages: the gallery for photographers' styles, the editorial page for the rest.
+  if (["photography", "portfolio", "film"].includes(pageStyle(b))) {
     return (
       <div className={bizSerif.variable}>
         <PhotoCollection b={b} c={c} others={others} book={book} bookLabel={bookLabel} url={url} where={showsLocation(b) ? place(b.area, b.city) : whereLine(b)} />

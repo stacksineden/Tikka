@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import {
-  Landmark, ChevronRight, Clock, Film, Globe, Images, Wallet, ListChecks, Palette, Phone, Sparkles, Store, UserRound, UsersRound, type LucideIcon } from "lucide-react";
+  CalendarClock, Landmark, MapPin, ChevronRight, Clock, Film, Globe, Images, Wallet, ListChecks, Palette, Phone, Sparkles, Store, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -11,6 +11,8 @@ import { dropsReady } from "@/lib/vouchers";
 import { place } from "@/lib/format";
 import { getSessionUser } from "@/lib/session";
 import { actionMeta } from "@/lib/setup";
+import { newExperience } from "@/lib/experience";
+import { inListingGrace } from "@/lib/listing";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -60,6 +62,35 @@ async function Hub() {
       </ul>
     </section>
   );
+
+  // NEW DIRECTION: businesses from the new setup run on their page, bookings and money; the Tikka
+  // card is for drops, so it moves under Drops instead of leading the page.
+  if (newExperience(b)) {
+    const business: Row[] = [
+      { href: "/app/page", label: "Your page", meta: "Services, photos, hours and style", Icon: Globe },
+      { href: "/app/bookings?edit=1", label: "Booking settings", meta: "Hours, gaps, deposit and rules", Icon: CalendarClock },
+      { href: "/app/settings/listing", label: "Your Tikka listing", meta: !b.listingTermsAt ? (inListingGrace(b.listingGraceUntil) ? "Accept the terms to stay in search" : "Not listed yet: get listed, free for now") : b.listed === false ? "Hidden from search" : "In Tikka's search · photos, pin, extras", Icon: MapPin },
+      { href: "/app/settings/get-paid", label: "Get paid", meta: "Your ID and bank account", Icon: Landmark },
+      { href: "/app/settings/profile#basics", label: "Name, tagline and location", meta: `${b.name} · ${place(b.area, b.city)}`, Icon: Store },
+    ];
+    const drops: Row[] = [
+      { href: "/app/settings/card", label: "Card look", meta: "The card customers open in drops", Icon: Palette },
+      { href: "/app/settings/payments", label: "Drop payments", meta: ((n) => (n ? `${n} drop${n === 1 ? "" : "s"} ready to publish · season packs` : "Season packs and paying for drops"))(dropsReady(vouchers, new Date())), Icon: Wallet },
+    ];
+    const you: Row[] = [
+      { href: "/app/settings/team", label: "Team", meta: "Staff who check codes", Icon: UsersRound },
+      { href: "/app/settings/account", label: "Account", meta: "Alerts, daily summary, sign-in", Icon: UserRound },
+    ];
+    return (
+      <div className="mx-auto grid max-w-3xl gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <h1 className="text-heading">Settings</h1>
+        {group("Your business", business)}
+        {group("Drops", drops)}
+        {group("Your account", you)}
+        {group("Help", [{ href: "/studio", label: "Get help from Tikka Studio", meta: "We build websites, WhatsApp follow-up and ads, and run drops for you", Icon: Sparkles }])}
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto grid max-w-3xl gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">

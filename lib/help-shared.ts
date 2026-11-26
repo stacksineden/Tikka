@@ -4,10 +4,10 @@
 
 export const HELP_SECTIONS = [
   { id: "start", label: "Getting started" },
-  { id: "drops", label: "Running a drop" },
-  { id: "counter", label: "At the counter" },
-  { id: "followup", label: "After the drop" },
-  { id: "money", label: "Paying for drops" },
+  { id: "bookings", label: "Bookings and your calendar" },
+  { id: "money", label: "Deposits and money" },
+  { id: "customers", label: "Your customers" },
+  { id: "drops", label: "Drops: new customers" },
 ] as const;
 export type HelpSection = (typeof HELP_SECTIONS)[number]["id"];
 

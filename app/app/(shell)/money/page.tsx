@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import { PayLinkActions } from "@/components/payments/PayLinkActions";
 import { SendPayLink } from "@/components/payments/SendPayLink";
 import { StayFresh } from "@/components/payments/StayFresh";
+import { MoneyWeek } from "@/components/today/MoneyWeek";
 import { getBusiness, isDbId } from "@/lib/data";
 import { naira, shortDate, WAT } from "@/lib/format";
 import { dbPayLinks } from "@/lib/paylinks-db";
@@ -16,6 +17,7 @@ import { paystackMode } from "@/lib/paystack";
 import { dbPayoutState, payReady } from "@/lib/payouts-db";
 import { getOwnerUser } from "@/lib/session";
 import { siteUrl } from "@/lib/supabase/env";
+import { newExperience } from "@/lib/experience";
 
 export const metadata: Metadata = { title: "Money" };
 
@@ -35,6 +37,8 @@ async function Money() {
   if (!user) redirect("/app/redeem");
   const b = await getBusiness(user);
   if (!b) redirect("/app/setup");
+  // NEW DIRECTION, stage 2: in, spent and kept for businesses from the new setup (demo only for now).
+  if (newExperience(b)) return <MoneyWeek user={user} />;
   await connection();
   const state = isDbId(b.id) ? await dbPayoutState(b.id) : null;
   const ready = payReady(state, paystackMode());

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canMark, byDay, freeDays, isFull, lengthLabel, needsMarking, nextFree, watInstant, watParts, whenLabel, type Booking, type BookingRules } from "./bookings";
+import { canMark, byDay, freeDays, gapAfter, gapLabel, isFull, lengthLabel, needsMarking, nextFree, watInstant, watParts, whenLabel, type Booking, type BookingRules } from "./bookings";
 
 const ALL_WEEK = {
   weekdays: { open: true, from: "09:00", to: "18:00" },
@@ -97,5 +97,34 @@ describe("labels and marking", () => {
     const g = byDay([b(840), b(600), b(600 + 24 * 60 * 2)]);
     expect(g.map((x) => x.label)).toEqual(["Sat 14 Nov", "Mon 16 Nov"]);
     expect(g[0].items.map((x) => x.id)).toEqual(["600", "840"]);
+  });
+});
+
+describe("gap time", () => {
+  it("takes the service's own gap, else the business's, plus travel after a home visit", () => {
+    const biz = { gapMinutes: 15, homeGapMinutes: 45 };
+    expect(gapAfter(biz)).toBe(15);
+    expect(gapAfter(biz, { gapMinutes: 30 })).toBe(30);
+    expect(gapAfter(biz, { gapMinutes: 0 })).toBe(0); // a wash needs none
+    expect(gapAfter(biz, null, true)).toBe(60);
+    expect(gapAfter({})).toBe(0);
+    expect(gapAfter({ gapMinutes: 500 })).toBe(180);
+    expect(gapLabel(30)).toBe("30 min");
+    expect(gapLabel(75)).toBe("1 hr 15 min");
+  });
+
+  it("keeps the gap after a booking free, and leaves room for the new booking's own gap", () => {
+    // One chair. Ada 10:00–12:00 plus 30 minutes' clean-up: the next free start is 12:30.
+    const one = rules({ capacity: 1, busy: [[at(600), at(750)]] });
+    const s = slotsOn(one, 60);
+    expect(s).not.toContain(720);
+    expect(s).toContain(750);
+    // A 1-hour booking with a 30-minute gap can't start at 9:00 before a 10:30 booking...
+    const next = rules({ capacity: 1, busy: [span(630, 60)] });
+    const withGap = freeDays(next, 60, NOW, undefined, 30).find((d) => d.key === SAT)!.slots;
+    expect(withGap).not.toContain(570);
+    expect(withGap).toContain(540);
+    // ...and the last booking of the day still ends by closing; its gap may run past it.
+    expect(withGap.at(-1)).toBe(1020);
   });
 });
