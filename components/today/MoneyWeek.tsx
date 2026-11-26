@@ -15,6 +15,7 @@ import { AddExpenseButton, HowWeCount } from "./MoneyActions";
 import { PayLinkList, waitingFirst } from "./PayLinkList";
 import { MoneyAlerts } from "./MoneyAlerts";
 import { SourceTag } from "./SourceTag";
+import { SpentList, type SpentItem } from "./SpentList";
 
 // NEW DIRECTION, stage 2 (docs/OWNER_JOURNEYS.md journey 6): "Am I making money?" for businesses
 // from the new setup. This week, Monday to today.
@@ -36,6 +37,17 @@ export async function MoneyWeek({ user }: { user: SessionUser }) {
   const deposits = bookings.filter((b) => b.depositPaidKobo).map((b) => ({ at: b.createdAt, kobo: b.depositPaidKobo!, name: b.firstName, item: b.service }));
   const m = moneyBetween(ledger, deposits, from, to);
   const waiting = links.filter((l) => l.status === "open");
+  // Each thing spent this week, newest first, so a mistake can be taken back.
+  const spentThisWeek: SpentItem[] = ledger.expenses
+    .filter((e) => new Date(e.at) >= from && new Date(e.at) < to)
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .map((e) => ({
+      id: e.id,
+      kind: "once",
+      label: e.kind,
+      sub: new Date(e.at).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Africa/Lagos" }),
+      amount: naira(e.kobo),
+    }));
   const today = todayKey(now);
   const paidIds = new Set(ledger.sales.map((s) => s.bookingId).filter(Boolean));
   const unpaid = bookings.filter((b) => b.status !== "cancelled" && b.status !== "no_show" && new Date(b.startsAt) >= new Date(watInstant(today, 0)) && new Date(b.startsAt) < now && !paidIds.has(b.id)).length;
@@ -90,23 +102,21 @@ export async function MoneyWeek({ user }: { user: SessionUser }) {
       <AddExpenseButton />
       <Section title="Where it came from" lines={m.came} />
       <Section title="What you spent" lines={m.spent} empty="Nothing added this week." />
+      {spentThisWeek.length > 0 && (
+        <section className="grid gap-2.5">
+          <h2 className="text-title">Added this week</h2>
+          <SpentList items={spentThisWeek} empty="Nothing added this week." />
+        </section>
+      )}
       <section className="grid gap-2.5">
         <div className="flex items-baseline justify-between">
           <h2 className="text-title">Regular costs</h2>
           <span className="text-caption text-ink-muted">Counted for you</span>
         </div>
-        <div className="divide-y divide-line rounded-card border border-line bg-surface-raised">
-          {ledger.regular.length === 0 && <p className="text-body px-4 py-3.5 text-ink-muted">Rent, a helper, a shop fee: add them once.</p>}
-          {ledger.regular.map((r) => (
-            <div key={r.id} className="flex items-center justify-between gap-3 px-4 py-3">
-              <span>
-                <b>{r.kind}</b>
-                <span className="text-caption block text-ink-muted">{r.every === "week" ? "Every week" : "Every month"}</span>
-              </span>
-              <b className="text-code">{naira(r.kobo)}</b>
-            </div>
-          ))}
-        </div>
+        <SpentList
+          items={ledger.regular.map((r) => ({ id: r.id, kind: "regular" as const, label: r.kind, sub: r.every === "week" ? "Every week" : "Every month", amount: naira(r.kobo) }))}
+          empty="Rent, a helper, a shop fee: add them once."
+        />
         <AddExpenseButton regular />
       </section>
       {(m.best || m.busiestDay || m.topCustomer) && (

@@ -26,6 +26,8 @@ begin
   assert not b.listed and b.lat is null and b.location_approx, 'not listed, no pin, approximate by default';
 end $$;
 update public.businesses set listed = true, listing_terms_at = now(), listing_terms_version = '2026-11-26' where id = (select v from t where k = 'biz');
+-- Search shows only businesses taking bookings (20261222100000_search_needs_bookings.sql).
+insert into public.booking_settings (business_id, enabled) select v, true from t where k = 'biz' on conflict (business_id) do update set enabled = true;
 
 -- The server's starting pin is approximate.
 set local role service_role;

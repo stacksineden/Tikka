@@ -23,6 +23,8 @@ insert into t select 'mobile', public.create_business('Comes To You', 'comestoyo
 select public.save_services((select v from t where k = 'mobile'), '[{"name":"Home glam","price_kobo":1500000,"price_kind":"fixed","minutes":60}]');
 reset role;
 update public.businesses set work_place = 'home', travel_reach = 'city', travel_fee_kobo = 0 where id = (select v from t where k = 'mobile');
+-- Takes bookings, so it can be listed (20261222100000_search_needs_bookings.sql).
+insert into public.booking_settings (business_id, enabled) select v, true from t where k = 'mobile' on conflict (business_id) do update set enabled = true;
 update public.businesses set hours = '{"weekdays":{"open":true,"from":"09:00","to":"18:00"},"saturday":{"open":true,"from":"09:00","to":"18:00"},"sunday":{"open":true,"from":"09:00","to":"18:00"}}'
 where id = (select v from t where k = 'biz');
 insert into public.business_members (business_id, user_id, role)

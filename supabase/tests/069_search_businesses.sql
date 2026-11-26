@@ -38,6 +38,8 @@ update public.businesses set trades = array['photo'], work_place = 'both', trave
 update public.businesses set is_demo = true where id = (select v from t where k = 'demo');
 -- All of them accepted the listing terms (20261218100000_listing_journey.sql).
 update public.businesses set listed = true, listing_terms_at = now(), listing_terms_version = '2026-11-26' where id in (select v from t);
+-- And take bookings (20261222100000_search_needs_bookings.sql).
+insert into public.booking_settings (business_id, enabled) select v, true from t on conflict (business_id) do update set enabled = true;
 -- Tomorrow is fully blocked at the hair business.
 insert into public.booking_blocks (business_id, starts_at, ends_at)
 values ((select v from t where k = 'hair'),

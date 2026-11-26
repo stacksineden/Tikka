@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { acceptListingAction, saveListingExtrasAction, saveLocationAction, saveSpacePhotosAction, setListedAction } from "@/app/app/listing-actions";
 import { TikkaMap } from "@/components/map/TikkaMap";
-import { EXTRA_GROUPS, LANGUAGES, LISTING_TERMS, MISSING_TEXT, type ListingMissing } from "@/lib/listing";
+import { EXTRA_GROUPS, LANGUAGES, LISTING_TERMS, MISSING_HREF, MISSING_TEXT, type ListingMissing } from "@/lib/listing";
 import { preparePortfolio, uploadPhoto } from "@/lib/media-client";
 
 export interface ListingPhoto {
@@ -342,8 +342,8 @@ function GetListed(p: Props) {
                 {shownMissing.map((m) => (
                   <li key={m} className="text-body flex items-start gap-2.5">
                     <X size={18} className="mt-0.5 shrink-0 text-danger" aria-hidden="true" />
-                    {m === "priced_service" ? (
-                      <Link href="/app/page" className="underline">
+                    {MISSING_HREF[m] ? (
+                      <Link href={MISSING_HREF[m]!} className="underline">
                         {MISSING_TEXT[m]}
                       </Link>
                     ) : (
@@ -406,6 +406,14 @@ function Listed(p: Props) {
 
   return (
     <div className="grid gap-4">
+      {p.missing.includes("bookings_off") && (
+        <p className="text-body rounded-md bg-gold-soft px-4 py-3">
+          <b>You&apos;re hidden from Tikka&apos;s search while bookings are off.</b>{" "}
+          <Link href="/app/bookings?edit=1" className="font-semibold underline">
+            Switch bookings on
+          </Link>
+        </p>
+      )}
       <button type="button" aria-pressed={listed} disabled={pending} onClick={toggle} className="flex min-h-18 items-center gap-4 rounded-card border border-line bg-surface-raised px-4 py-4 text-left">
         <span className="min-w-0 flex-1">
           <b className="block text-[17px]">Show me in Tikka&apos;s search</b>

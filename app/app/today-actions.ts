@@ -7,7 +7,8 @@ import { revalidatePath } from "next/cache";
 import { markBooking, seedDemoDay } from "@/lib/bookings-data";
 import { phoneKey } from "@/lib/clients";
 import { getBusiness, isDbId } from "@/lib/data";
-import { addExpense, getLedger, payBalance, recordSale, seedLedger } from "@/lib/ledger-data";
+import { addExpense,
+  removeExpense, getLedger, payBalance, recordSale, seedLedger } from "@/lib/ledger-data";
 import { createDemoPayLink } from "@/lib/paylinks-demo";
 import { createPayLinkAction } from "./paylink-actions";
 import { siteUrl } from "@/lib/supabase/env";
@@ -102,6 +103,12 @@ export async function addExpenseAction(input: { kind: ExpenseKind; naira: number
   const user = await getOwnerUser();
   if (!user || !EXPENSE_KINDS.includes(input.kind)) return { ok: false as const };
   return (await addExpense(user, input, new Date())) ? done() : { ok: false as const };
+}
+
+export async function removeExpenseAction(kind: "once" | "regular", expenseId: string) {
+  const user = await getOwnerUser();
+  if (!user || (kind !== "once" && kind !== "regular") || typeof expenseId !== "string") return { ok: false as const };
+  return (await removeExpense(user, kind, expenseId)) ? done() : { ok: false as const };
 }
 
 /** DEMO: a sample day of customers and money, so Today and Money can be tried before real bookings. */

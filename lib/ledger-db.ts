@@ -86,6 +86,20 @@ export async function dbAddExpense(businessId: string, kind: ExpenseKind, kobo: 
   return !error && data === true;
 }
 
+/** remove_expense(): something spent, taken back (owners only). */
+export async function dbRemoveExpense(businessId: string, expenseId: string): Promise<boolean> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("remove_expense", { p_business: businessId, p_expense: expenseId });
+  return !error && data === true;
+}
+
+/** stop_regular_cost(): a regular cost no longer counted (owners only). */
+export async function dbStopRegularCost(businessId: string, costId: string): Promise<boolean> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("stop_regular_cost", { p_business: businessId, p_cost: costId });
+  return !error && data === true;
+}
+
 /** receipt_for(): the sale's receipt link, the same every time. */
 export async function dbReceiptFor(businessId: string, saleId: string): Promise<string | null> {
   const sb = await createClient();

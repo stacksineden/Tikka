@@ -80,12 +80,19 @@ export function extrasForPage(amenities: string[] = [], languages: string[] = []
   return out.filter((g) => g.items.length > 0);
 }
 
-export type ListingMissing = "space_photo" | "priced_service";
+export type ListingMissing = "space_photo" | "priced_service" | "bookings_off";
 
 /** The owner's checklist line for each thing still missing. */
 export const MISSING_TEXT: Record<ListingMissing, string> = {
   space_photo: "Add at least one photo of your space",
   priced_service: "Add a price to at least one service on Your page",
+  bookings_off: "Switch bookings on, so customers can pick a free time",
+};
+
+/** Where the owner fixes each missing thing (space photos are fixed in the listing itself). */
+export const MISSING_HREF: Partial<Record<ListingMissing, string>> = {
+  priced_service: "/app/page",
+  bookings_off: "/app/bookings?edit=1",
 };
 
 /** Still inside the 14 days businesses listed before the terms have to accept them. */

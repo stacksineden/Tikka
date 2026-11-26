@@ -58,6 +58,8 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
   // NEW DIRECTION: Booking settings in one place for businesses from the new setup (demo only for now).
   if (editing && newExperience(b)) {
     const dep = setup.deposit;
+    // Deposits only charge customers once payments are on (ID and bank approved in Get paid).
+    const depositsLive = isDbId(b.id) ? payReady(await dbPayoutState(b.id).catch(() => null), paystackMode()).ready : true;
     return (
       <>
         <Link href="/app/bookings" className="text-label inline-flex min-h-11 items-center justify-self-start text-ink-muted">
@@ -83,6 +85,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
             services: b.services.filter((x) => x.id).map((x) => ({ id: x.id!, name: x.name, questions: x.questions ?? [], gapMinutes: x.gapMinutes })),
             gapMinutes: b.gapMinutes ?? 0,
             homeGapMinutes: b.homeGapMinutes ?? 0,
+            depositsLive,
           }}
         />
       </>

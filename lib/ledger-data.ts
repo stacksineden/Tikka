@@ -5,7 +5,7 @@ import "server-only";
 
 import { randomBytes } from "node:crypto";
 import { isDbId, memberBusinessId } from "./data";
-import { dbAddExpense, dbGetLedger, dbPayBalance, dbRecordSale, PAY_LINK_SALE } from "./ledger-db";
+import { dbAddExpense, dbGetLedger, dbPayBalance, dbRecordSale, dbRemoveExpense, dbStopRegularCost, PAY_LINK_SALE } from "./ledger-db";
 import { owedOf, type ExpenseKind, type Ledger, type PayMethod, type Sale } from "./ledger";
 import type { SessionUser } from "./types";
 
@@ -101,6 +101,20 @@ export async function addExpense(user: Pick<SessionUser, "id" | "role">, input: 
   const l = ledgerOf(key);
   if (input.every) l.regular.push({ id: id(), kind: input.kind, kobo: kobo(input.naira), every: input.every, from: now.toISOString() });
   else l.expenses.push({ id: id(), at: now.toISOString(), kind: input.kind, kobo: kobo(input.naira) });
+  return true;
+}
+
+/** Take back something spent, or stop counting a regular cost (a mistake, or a change of mind). */
+export async function removeExpense(user: Pick<SessionUser, "id" | "role">, kind: "once" | "regular", expenseId: string): Promise<boolean> {
+  const biz = await realBusiness(user);
+  if (biz) return isDbId(expenseId) ? (kind === "once" ? dbRemoveExpense(biz, expenseId) : dbStopRegularCost(biz, expenseId)) : false;
+  const key = ownerKey(user);
+  if (!key) return false;
+  const l = ledgerOf(key);
+  const list = kind === "once" ? l.expenses : l.regular;
+  const i = list.findIndex((x) => x.id === expenseId);
+  if (i < 0) return false;
+  list.splice(i, 1);
   return true;
 }
 

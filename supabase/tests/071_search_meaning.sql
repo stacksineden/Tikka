@@ -29,6 +29,8 @@ select public.save_services((select v from t where k = 'nails'), '[{"name":"Shor
 reset role;
 -- All of them accepted the listing terms (20261218100000_listing_journey.sql).
 update public.businesses set listed = true, listing_terms_at = now(), listing_terms_version = '2026-11-26' where id in (select v from t);
+-- And take bookings (20261222100000_search_needs_bookings.sql).
+insert into public.booking_settings (business_id, enabled) select v, true from t on conflict (business_id) do update set enabled = true;
 
 create function pg_temp.found(r jsonb) returns text[] language sql as $$
   select coalesce(array_agg((x ->> 'slug') || ':' || coalesce(x ->> 'match', '-') order by o), '{}')

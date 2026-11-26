@@ -15,6 +15,8 @@ select public.save_services((select v from t where k = 'biz'), '[{"name":"Silk p
 reset role;
 update public.businesses set is_demo = true, listed = true, listing_terms_at = now(), listing_terms_version = '2026-11-26'
 where id = (select v from t where k = 'biz');
+-- Takes bookings, so it would show if it weren't a demo.
+insert into public.booking_settings (business_id, enabled) select v, true from t where k = 'biz' on conflict (business_id) do update set enabled = true;
 
 create function pg_temp.found(p_demo boolean) returns boolean language sql as $$
   select exists (select 1 from jsonb_array_elements(public.search_businesses(p_place => 'Ibadan', p_limit => 48, p_include_demo => p_demo)) x where x ->> 'slug' = 'demoshop76');

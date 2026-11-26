@@ -27,6 +27,8 @@ export interface BookingSettingsData {
   services: { id: string; name: string; questions: string[]; gapMinutes?: number }[];
   gapMinutes: number;
   homeGapMinutes: number;
+  /** Payments are on (ID and bank approved), so a deposit is actually charged. */
+  depositsLive?: boolean;
 }
 
 type Row = "hours" | "capacity" | "timing" | "gap" | "place" | "deposit" | "rules" | "questions" | null;
@@ -87,7 +89,7 @@ export function BookingSettingsV2({ d }: { d: BookingSettingsData }) {
         <SettingRow icon={CalendarClock} title="How soon and how far ahead" value={`${NOTICE.find(([m]) => m === d.noticeMinutes)?.[1] ?? `${d.noticeMinutes} min before`} · up to ${AHEAD.find(([n]) => n === d.aheadDays)?.[1] ?? `${d.aheadDays} days`} ahead`} onClick={() => setOpen("timing")} />
         <SettingRow icon={Timer} title="Time between bookings" value={gapText(d)} onClick={() => setOpen("gap")} />
         <SettingRow icon={Car} title="Where you work" value={d.workPlace === "shop" ? "Customers come to you" : `${d.workPlace === "home" ? "You go to customers" : "Both"} · travel fee ${naira(d.travelFee)}`} onClick={() => setOpen("place")} />
-        <SettingRow icon={Wallet} title="Deposit" value={`${depositText}${d.deposit.mode !== "off" ? (d.deposit.counts ? " · counts towards the bill" : " · on top of the bill") : ""}`} onClick={() => setOpen("deposit")} />
+        <SettingRow icon={Wallet} title="Deposit" value={`${depositText}${d.deposit.mode !== "off" ? (d.depositsLive === false ? " · starts once Get paid is approved" : d.deposit.counts ? " · counts towards the bill" : " · on top of the bill") : ""}`} onClick={() => setOpen("deposit")} />
         <SettingRow icon={ScrollText} title="Booking rules" value={d.rules.length ? `${d.rules.length} rules customers see before they pay` : "No rules yet"} onClick={() => setOpen("rules")} />
         <SettingRow icon={MessageCircleQuestion} title="Questions when booking" value={asked ? `Asked on ${asked} ${asked === 1 ? "service" : "services"}` : "None yet, e.g. “Any allergies?”"} onClick={() => setOpen("questions")} />
       </ul>
@@ -268,6 +270,14 @@ function DepositSheet({ d, pending, onSave, onClose }: { d: BookingSettingsData;
   return (
     <Sheet title="Deposit" onClose={onClose}>
       <p className="text-body text-ink-muted">Customers pay it when they book. If they don&apos;t come, you keep it. Wedding and event days always take 50%.</p>
+      {d.depositsLive === false && (
+        <p className="text-body rounded-md bg-gold-soft px-4 py-3">
+          Customers start paying deposits once your ID and bank account are approved.{" "}
+          <a href="/app/settings/get-paid" className="font-semibold underline">
+            Open Get paid
+          </a>
+        </p>
+      )}
       <div className="flex flex-wrap gap-2">
         {[20, 30, 40, 50].map((p) => (
           <Chip key={p} on={mode === "percent" && percent === p} onClick={() => { setMode("percent"); setPercent(p); }}>

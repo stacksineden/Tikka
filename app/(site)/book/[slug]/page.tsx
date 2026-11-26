@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { BookingFlow } from "@/components/business/BookingFlow";
-import { BookingSheet } from "@/components/business/BookingSheet";
 import { ListingExtras } from "@/components/business/ListingExtras";
 import { HomeHeader } from "@/components/home/HomeHeader";
 import { SiteFooter } from "@/components/site/SiteChrome";
@@ -13,7 +12,7 @@ import { demoDepositRule, getBookingRules } from "@/lib/bookings-data";
 import { getBusinessBySlug, getBusinessReviews, isDbId } from "@/lib/data";
 import { getSpacePhotos } from "@/lib/listing-db";
 import { place } from "@/lib/format";
-import { bookingLink, bookingNumber, pageStyle, priceText } from "@/lib/page";
+import { bookingLink, pageStyle, priceText } from "@/lib/page";
 import { reachLabel, TRADES } from "@/lib/presets";
 import { openLabel, searchHref } from "@/lib/search";
 import { sheetTheme } from "@/lib/sheet-theme";
@@ -74,10 +73,12 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
   // Booking works as on the business's own page: the booking sheet when bookings are on, else a
   // WhatsApp request, or the owner's own booking link.
   const external = b.actions.find((a) => a.kind === "book")?.value.trim() || null;
-  const number = bookingNumber(b);
   const bookable = b.services.filter((s) => s.id);
   const calendar = !external && !!rules && bookable.length > 0;
-  const sheet = calendar || (!external && !!number);
+  // Only real bookings open a sheet here; otherwise Book goes straight to their WhatsApp (or their
+  // own booking link) in a new tab. Search only lists businesses taking bookings, so this is for
+  // listings opened from a shared link.
+  const sheet = calendar;
   const href = external ?? bookingLink(b) ?? undefined;
   const bookAttrs = (s?: ServiceItem) => ({
     href,
@@ -349,8 +350,6 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
           theme={sheetTheme(pageStyle(b), b.page?.galleryTone, b.brandColor, b.onBrandColor)}
           via="search"
         />
-      ) : sheet && number ? (
-        <BookingSheet business={b.name} number={number} hours={b.hours} />
       ) : null}
     </>
   );

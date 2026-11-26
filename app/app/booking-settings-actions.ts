@@ -1,11 +1,13 @@
 "use server";
 
-// NEW DIRECTION: Booking settings in one place (hours, how many at once, how soon and how far
-// ahead, where you work and the travel fee, the deposit, rules and questions). Demo store only:
-// real accounts are refused, so nothing here touches Supabase.
+// Booking settings in one place (hours, how many at once, how soon and how far ahead, where you
+// work and the travel fee, the deposit, rules and questions). Real businesses save to Supabase
+// (save_booking_settings(), save_deposit_settings(), the business and its services); the demo
+// business keeps its demo store. Owners only; the database checks again.
 
 import { revalidatePath } from "next/cache";
 import { getBookingSetup, removeWaitlist, saveBookingSettings, saveDemoDeposit } from "@/lib/bookings-data";
+import { dbSaveDepositSettings } from "@/lib/bookings-db";
 import { MAX_GAP } from "@/lib/bookings";
 import { getBusiness, isDbId, saveBusiness } from "@/lib/data";
 import { getOwnerUser } from "@/lib/session";
@@ -26,10 +28,12 @@ const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export async function saveBookingPatch(p: BookingPatch): Promise<{ ok: true } | { ok: false; error: string }> {
   const user = await getOwnerUser();
-  if (!user || isDbId(user.id)) return { ok: false, error: "This works with the demo for now." };
+  if (!user) return { ok: false, error: "Only the owner changes booking settings." };
   const [b, setup] = await Promise.all([getBusiness(user), getBookingSetup(user)]);
   if (!b || !setup) return { ok: false, error: "Set up your page first." };
+  const real = isDbId(b.id);
   const keep = { enabled: setup.enabled, capacity: setup.capacity, noticeMinutes: setup.noticeMinutes, aheadDays: setup.aheadDays, minutes: setup.minutes };
+  try {
 
   switch (p.kind) {
     case "hours": {
@@ -56,16 +60,29 @@ export async function saveBookingPatch(p: BookingPatch): Promise<{ ok: true } | 
         travelReach: p.workPlace === "shop" ? undefined : p.travelReach,
       });
       break;
-    case "deposit":
+    case "deposit": {
+      const fixedKobo = Math.max(100_000, Math.min(100_000_000, Math.round((p.amount ?? 0) * 100)));
+      const percent = Math.max(10, Math.min(100, Math.round(p.percent ?? 30)));
+      if (real) {
+        // Deposits live on the booking settings: make them first if this is the owner's first change.
+        if (!setup.setUp) await saveBookingSettings(user, keep);
+        const kind = await dbSaveDepositSettings(b.id, {
+          mode: p.mode,
+          percent: p.mode === "percent" ? percent : null,
+          fixedKobo: p.mode === "fixed" ? fixedKobo : null,
+          counts: p.counts,
+          // Each service's own deposit rule stays as it is.
+          services: {},
+        });
+        if (kind !== "saved") return { ok: false, error: kind === "bad_percent" ? "Pick a percentage between 10% and 100%." : "Couldn't save the deposit. Try again." };
+        break;
+      }
       await saveDemoDeposit(
         user,
-        p.mode === "off"
-          ? { mode: "off", counts: p.counts }
-          : p.mode === "fixed"
-            ? { mode: "fixed", fixedKobo: Math.max(100_000, Math.min(100_000_000, Math.round((p.amount ?? 0) * 100))), counts: p.counts }
-            : { mode: "percent", percent: Math.max(10, Math.min(100, Math.round(p.percent ?? 30))), counts: p.counts },
+        p.mode === "off" ? { mode: "off", counts: p.counts } : p.mode === "fixed" ? { mode: "fixed", fixedKobo, counts: p.counts } : { mode: "percent", percent, counts: p.counts },
       );
       break;
+    }
     case "rules":
       await saveBusiness(user, { ...b, bookingRules: p.rules.map((r) => r.trim().slice(0, 240)).filter(Boolean).slice(0, 10) });
       break;
@@ -89,6 +106,9 @@ export async function saveBookingPatch(p: BookingPatch): Promise<{ ok: true } | 
       await saveBusiness(user, { ...b, services: b.services.map((s) => (s.id === p.serviceId ? { ...s, questions: questions.length ? questions : undefined } : s)) });
       break;
     }
+  }
+  } catch {
+    return { ok: false, error: "That didn't save. Try again." };
   }
   revalidatePath("/app", "layout");
   revalidatePath(`/${b.slug}`);
