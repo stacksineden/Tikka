@@ -16,8 +16,16 @@ import { searchBusinesses, type BizCard as Card } from "@/lib/search-db";
 // search first (what, where, when), then the kinds of business, rows of businesses with their next
 // free time, the offers (drops), how it works, and the way in for businesses.
 
-const TITLE = "Tikka · Book local beauty and photo services";
-const DESCRIPTION = "Hair, makeup, nails, lashes and photographers across Nigeria. See who's free, book in a minute, and pay a small deposit to hold your time.";
+// The homepage's words (decided 26 Nov 2026). One open idea, like Fresha's "selfcare": everything on
+// Tikka makes people look good or feel good (salons to med spas, photographers to content studios),
+// so no kind of business reads it as "not for me". It starts with "Book" so it's clear what the site
+// does; the subline shows the range and what only Tikka does in Nigeria (prices and free times
+// upfront, no "How much?" in the DMs). "Stop asking 'How much?'" is kept for ads and posters.
+const TITLE = "Tikka · Book what makes you look and feel good";
+const HEADLINE = "Book what makes you look and feel good";
+const SUBLINE = "Salons, barbers, spas, makeup artists, photographers and content studios across Nigeria, with real prices and free times upfront. No more \u201cHow\u00a0much?\u201d in the\u00a0DMs.";
+// For search engines and link previews: what's on Tikka, in plain words.
+const DESCRIPTION = "Book salons, barbers, spas, makeup artists, photographers and content studios anywhere in Nigeria. See their work, real prices and free times, and book in a minute.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -76,8 +84,8 @@ export default function HomePage() {
       <HomeHeader />
       <main className="overflow-x-clip">
         <div className="mx-auto max-w-6xl px-4 pt-7 pb-2 text-center sm:px-6 md:pt-16">
-          <h1 className="mx-auto max-w-[14ch] text-[clamp(34px,7vw,64px)] leading-[1.02] font-bold tracking-[-0.03em]">Book local beauty and photo services</h1>
-          <p className="mx-auto mt-3.5 max-w-[46ch] text-[clamp(16px,2.2vw,20px)] leading-normal text-ink-muted">{DESCRIPTION}</p>
+          <h1 className="mx-auto max-w-[19ch] text-[clamp(34px,7vw,64px)] leading-[1.02] font-bold tracking-[-0.03em]">{HEADLINE}</h1>
+          <p className="mx-auto mt-3.5 max-w-[46ch] text-[clamp(16px,2.2vw,20px)] leading-normal text-ink-muted">{SUBLINE}</p>
           <SearchBox />
         </div>
 
@@ -104,14 +112,14 @@ export default function HomePage() {
                 Offers near you
               </h2>
               <p className="mt-2.5 text-[16px] leading-normal text-on-night-muted">
-                Some businesses give out a limited batch of gifts and discounts, called a drop. Open one, it lands on your WhatsApp, and you show it at the counter.
+                Limited gifts and discounts from places near you. Claim one in seconds, it lands on your WhatsApp, and you use it when you go.
               </p>
               <Link href="/drops" className="btn mt-5 min-h-12 rounded-pill bg-gold px-6 text-on-gold hover:bg-gold">
                 See offers <ArrowRight size={18} aria-hidden="true" />
               </Link>
             </div>
             {/* The ticket shape, Tikka's signature, kept to this one card on the page. */}
-            <div aria-hidden="true" className="relative hidden aspect-[5/7] w-48 -rotate-6 justify-self-center rounded-card bg-gradient-to-br from-brand to-[#6B4FE0] shadow-card md:block">
+            <div aria-hidden="true" className="relative hidden aspect-[5/7] w-48 -rotate-6 justify-self-center rounded-card bg-brand shadow-card md:block">
               <div className="absolute inset-x-4 top-5 text-[18px] font-bold">20% off any service</div>
               <div className="absolute inset-x-0 top-[72%] border-t-2 border-dashed border-white/40" />
               <div className="text-serial absolute inset-x-4 bottom-4 font-mono text-gold uppercase">23 of 100 left</div>
@@ -120,9 +128,9 @@ export default function HomePage() {
 
           <div aria-label="How it works" className="mt-14 grid gap-3.5 md:grid-cols-3">
             {[
-              ["Find someone good", "Photos of their work, real reviews and prices, near you or coming to you."],
-              ["Book a free time", "Only free times show. A small deposit holds yours, and it goes straight to the business."],
-              ["Show up", "Your booking pass has everything. Need to move it? Do it from the pass."],
+              ["Find your person", "See their work, real reviews and prices, near you or coming to you."],
+              ["Pick a free time", "Only free times show. A small deposit holds your place and goes straight to them."],
+              ["Show up and glow", "Your booking pass has the time, the place and what you've paid. Need to move? Do it from the pass."],
             ].map(([h, p], i) => (
               <div key={h} className="rounded-card border border-line bg-surface-raised p-5.5">
                 <span className="grid size-9 place-items-center rounded-pill bg-brand-soft font-bold text-brand">{i + 1}</span>
@@ -134,8 +142,8 @@ export default function HomePage() {
 
           <section className="mt-14 mb-14 grid gap-4 rounded-[28px] bg-brand-soft p-6 md:grid-cols-[1fr_auto] md:items-center md:p-10">
             <div>
-              <h2 className="text-[clamp(22px,3.5vw,30px)] leading-tight font-bold tracking-tight">Run your business on Tikka</h2>
-              <p className="mt-2 leading-normal text-ink-muted">A free website people book from, deposits that stop no-shows, and knowing what you made each week.</p>
+              <h2 className="text-[clamp(22px,3.5vw,30px)] leading-tight font-bold tracking-tight">Stylist, artist or photographer?</h2>
+              <p className="mt-2 leading-normal text-ink-muted">Turn &ldquo;How much?&rdquo; into paid bookings: a free website people book from, deposits that stop no-shows, and what you made each week.</p>
             </div>
             <Link href="/business" className="btn btn-lg rounded-pill">
               For businesses

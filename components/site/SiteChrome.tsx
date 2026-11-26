@@ -50,7 +50,7 @@ export function SiteFooter() {
         <div className="max-w-xs">
           <Logo />
           <p className="text-body mt-4 text-ink-muted">
-            Book hair, makeup, nails, lashes and photographers near you. For businesses: a free website people book from, deposits and your money in one place. Made in Nigeria.
+            Book what makes you look and feel good: salons, barbers, spas, makeup artists, photographers and content studios anywhere in Nigeria. Made in Nigeria.
           </p>
         </div>
         <div>
