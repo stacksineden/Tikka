@@ -44,9 +44,20 @@ export async function createPayLinkAction(input: { naira: number; note: string; 
   if (!b || !isDbId(b.id) || !mode) return { kind: "not_enabled" };
   const kobo = Math.round(Number(input.naira) * 100);
   if (!Number.isFinite(kobo)) return { kind: "too_small" };
-  const r = await dbCreatePayLink(b.id, { amountKobo: kobo, note: String(input.note ?? ""), name: String(input.name ?? ""), claimId: input.claimId, mode });
+  // A balance's sale and a Tikka bring their own number; anything else needs one (every customer has a WhatsApp number).
+  const phone = phoneKey(input.phone) ?? undefined;
+  if (!phone && !input.saleId && !input.claimId) return { kind: "bad_phone" };
+  const r = await dbCreatePayLink(b.id, {
+    amountKobo: kobo,
+    note: String(input.note ?? ""),
+    name: String(input.name ?? ""),
+    claimId: input.claimId,
+    mode,
+    saleId: input.saleId && isDbId(String(input.saleId)) ? String(input.saleId) : undefined,
+    phone,
+  });
   if (r.kind !== "created") return { kind: String(r.kind), maxKobo: r.max_kobo == null ? undefined : Number(r.max_kobo) };
-  revalidatePath("/app/money");
+  revalidatePath("/app", "layout");
   return { kind: "created", url: `${siteUrl()}/pay/${String(r.token)}` };
 }
 

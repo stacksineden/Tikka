@@ -5,7 +5,7 @@ import { getLedger } from "@/lib/ledger-data";
 import { getClients } from "@/lib/clients-data";
 import { owedList, owedOf, paidOf } from "@/lib/ledger";
 import { isDbId } from "@/lib/data";
-import { demoPayLinks } from "@/lib/paylinks-demo";
+import { ownerPayLinks, payLinkLimit } from "@/lib/paylinks-data";
 import type { Business, SessionUser } from "@/lib/types";
 import { TodayScreen, type TodayData } from "./TodayScreen";
 
@@ -17,7 +17,7 @@ export async function TodayPage({ user, business }: { user: SessionUser; busines
   const today = todayKey(now);
   const start = new Date(watInstant(today, 0));
   const dayAfter = new Date(start.getTime() + 2 * 86_400_000);
-  const [bookings, ledger, clients, links] = await Promise.all([getBookings(user, start, dayAfter), getLedger(user), getClients(user), demoPayLinks(user)]);
+  const [bookings, ledger, clients, links, limit] = await Promise.all([getBookings(user, start, dayAfter), getLedger(user), getClients(user), ownerPayLinks(user), payLinkLimit(user)]);
   // Sales with a pay link sent and not paid yet ("Pay link sent" instead of "Owes").
   const linkWaiting = new Map(links.filter((l) => l.status === "open" && l.for.kind === "balance").map((l) => [(l.for as { saleId: string }).saleId, l.amountKobo]));
   const tomorrowStart = new Date(start.getTime() + 86_400_000);
@@ -28,6 +28,7 @@ export async function TodayPage({ user, business }: { user: SessionUser; busines
   const isToday = (iso: string) => watParts(iso).day === today;
 
   const data: TodayData = {
+    payLinks: limit.ready,
     greetingName: user.name && user.name !== "there" ? user.name : "",
     businessName: business.name,
     slug: business.slug,

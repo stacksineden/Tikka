@@ -24,9 +24,15 @@ export interface PayLink {
   /** The Tikka claimer's number (owners only). */
   phone?: string;
   mode: "test" | "live";
+  /** The sale it settles, or the sale it became once paid, and that sale's receipt (pay_links_sales migration). */
+  saleId?: string;
+  receiptToken?: string;
 }
 
-export async function dbCreatePayLink(businessId: string, input: { amountKobo: number; note: string; name: string; claimId?: string; mode: "test" | "live" }): Promise<Row> {
+export async function dbCreatePayLink(
+  businessId: string,
+  input: { amountKobo: number; note: string; name: string; claimId?: string; mode: "test" | "live"; saleId?: string; phone?: string },
+): Promise<Row> {
   const sb = await createClient();
   const { data, error } = await sb.rpc("create_pay_link", {
     p_business: businessId,
@@ -35,6 +41,8 @@ export async function dbCreatePayLink(businessId: string, input: { amountKobo: n
     p_name: input.name,
     p_claim: input.claimId ?? null,
     p_mode: input.mode,
+    p_sale: input.saleId ?? null,
+    p_phone: input.phone ?? null,
   });
   if (error) return { kind: error.code === "42501" ? "no_access" : "error" };
   return (data ?? { kind: "error" }) as Row;
@@ -58,6 +66,8 @@ export async function dbPayLinks(businessId: string): Promise<PayLink[]> {
     createdAt: String(r.created_at),
     claimId: (r.claim_id as string | null) ?? undefined,
     phone: (r.phone as string | null) ?? undefined,
+    saleId: (r.sale_id as string | null) ?? undefined,
+    receiptToken: (r.receipt_token as string | null) ?? undefined,
     mode: (r.mode as "test" | "live") ?? "live",
   }));
 }
@@ -76,6 +86,8 @@ export interface PayPage {
   status: PayLink["status"];
   paidAt?: string;
   businessSlug: string;
+  /** Once paid: the receipt (pay_links_sales migration). */
+  receiptToken?: string;
 }
 
 /** The public pay page. Never the account. */
@@ -91,6 +103,7 @@ export async function dbPayPage(token: string): Promise<PayPage | null> {
     status: r.status as PayLink["status"],
     paidAt: (r.paid_at as string | null) ?? undefined,
     businessSlug: String(r.business_slug),
+    receiptToken: (r.receipt_token as string | null) ?? undefined,
   };
 }
 

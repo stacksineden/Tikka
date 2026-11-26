@@ -50,6 +50,8 @@ export interface TodayAppt {
 }
 
 export interface TodayData {
+  /** Pay links can be sent (payments are ready for the business). */
+  payLinks: boolean;
   greetingName: string;
   businessName: string;
   slug: string;
@@ -330,7 +332,7 @@ export function TodayScreen({ d }: { d: TodayData }) {
       </div>
       </div>
 
-      {open?.kind === "paid" && <PaidSheet appt={open.appt} businessName={d.businessName} onClose={() => setOpen(null)} />}
+      {open?.kind === "paid" && <PaidSheet appt={open.appt} businessName={d.businessName} payLinks={d.payLinks} onClose={() => setOpen(null)} />}
       {open?.kind === "remind" && (
         <RemindSheet
           first={open.appt.first}
@@ -347,8 +349,8 @@ export function TodayScreen({ d }: { d: TodayData }) {
           onClose={() => setOpen(null)}
         />
       )}
-      {open?.kind === "payOwed" && d.owed[open.i] && <PayOwedSheet o={d.owed[open.i]} businessName={d.businessName} onClose={() => setOpen(null)} />}
-      {open?.kind === "sale" && <SaleSheet services={d.services} customers={d.customers} businessName={d.businessName} onClose={() => setOpen(null)} />}
+      {open?.kind === "payOwed" && d.owed[open.i] && <PayOwedSheet o={d.owed[open.i]} businessName={d.businessName} payLinks={d.payLinks} onClose={() => setOpen(null)} />}
+      {open?.kind === "sale" && <SaleSheet services={d.services} customers={d.customers} businessName={d.businessName} payLinks={d.payLinks} onClose={() => setOpen(null)} />}
       {open?.kind === "expense" && <ExpenseSheet kind={open.expense} onClose={() => setOpen(null)} />}
     </div>
   );
@@ -441,7 +443,7 @@ function Appt({ a, busy, businessName, onArrived, onPaid, onRemind }: { a: Today
   );
 }
 
-function PaidSheet({ appt, businessName, onClose }: { appt: TodayAppt; businessName: string; onClose: () => void }) {
+function PaidSheet({ appt, businessName, payLinks, onClose }: { appt: TodayAppt; businessName: string; payLinks: boolean; onClose: () => void }) {
   const router = useRouter();
   const [amount, setAmount] = useState(Math.round(appt.dueKobo / 100));
   const [part, setPart] = useState(false);
@@ -483,7 +485,7 @@ function PaidSheet({ appt, businessName, onClose }: { appt: TodayAppt; businessN
       )}
       <p className="text-body text-ink-muted">How did they pay?</p>
       <div className="grid gap-2.5">
-        {PAY_CHOICES.map(([m, Icon]) => (
+        {PAY_CHOICES.filter(([m]) => payLinks || m !== "pay_link").map(([m, Icon]) => (
           <button key={m} type="button" disabled={pending} onClick={() => pay(m)} className="flex min-h-15 items-center gap-3.5 rounded-card border-2 border-line bg-surface-raised px-4 py-3 text-left">
             <span className="grid size-11 place-items-center rounded-pill bg-surface-sunken text-ink-muted">
               {pending && m === "pay_link" ? <Loader2 size={22} className="animate-spin" aria-hidden="true" /> : <Icon size={22} aria-hidden="true" />}
@@ -527,7 +529,7 @@ function RemindSheet({ first, phone, text, onClose }: { first: string; phone?: s
   );
 }
 
-function PayOwedSheet({ o, businessName, onClose }: { o: TodayData["owed"][number]; businessName: string; onClose: () => void }) {
+function PayOwedSheet({ o, businessName, payLinks, onClose }: { o: TodayData["owed"][number]; businessName: string; payLinks: boolean; onClose: () => void }) {
   const router = useRouter();
   const [amount, setAmount] = useState(Math.round(o.owedKobo / 100));
   const [pending, start] = useTransition();
@@ -563,7 +565,7 @@ function PayOwedSheet({ o, businessName, onClose }: { o: TodayData["owed"][numbe
         <p className="text-caption mt-1.5 text-ink-muted">They owe {naira(o.owedKobo)}. Less leaves the rest owed.</p>
       </div>
       <div className="flex flex-wrap gap-2">
-        {PAY_CHOICES.map(([m]) => (
+        {PAY_CHOICES.filter(([m]) => payLinks || m !== "pay_link").map(([m]) => (
           <button key={m} type="button" className="btn btn-secondary rounded-pill" disabled={pending || !amount} onClick={() => pay(m)}>
             {m === "pay_link" ? "Send a pay link" : METHOD_LABEL[m]}
           </button>
@@ -578,7 +580,7 @@ function PayOwedSheet({ o, businessName, onClose }: { o: TodayData["owed"][numbe
   );
 }
 
-function SaleSheet({ services, customers, businessName, onClose }: { services: TodayData["services"]; customers: TodayData["customers"]; businessName: string; onClose: () => void }) {
+function SaleSheet({ services, customers, businessName, payLinks, onClose }: { services: TodayData["services"]; customers: TodayData["customers"]; businessName: string; payLinks: boolean; onClose: () => void }) {
   const router = useRouter();
   const [svc, setSvc] = useState<{ label: string; naira: number } | null>(null);
   const [name, setName] = useState("");
@@ -685,7 +687,7 @@ function SaleSheet({ services, customers, businessName, onClose }: { services: T
       </p>
       <NairaInput id="s-paid" value={paid} onChange={setPaid} label={method === "pay_link" ? "Pay link for" : "Amount paid"} />
       <div className="flex flex-wrap gap-2">
-        {(["cash", "transfer", "card", "pay_link"] as PayMethod[]).map((m) => (
+        {(["cash", "transfer", "card", ...(payLinks ? ["pay_link"] : [])] as PayMethod[]).map((m) => (
           <Chip key={m} on={method === m} onClick={() => setMethod(m)}>
             {METHOD_LABEL[m]}
           </Chip>

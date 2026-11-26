@@ -7,7 +7,8 @@ import { StayFresh } from "@/components/payments/StayFresh";
 import { PayLinkSheet } from "@/components/payments/PayLinkSheet";
 import { getBusiness } from "@/lib/data";
 import { getLedger } from "@/lib/ledger-data";
-import { DEMO_MAX_KOBO, demoPayLinks } from "@/lib/paylinks-demo";
+import { ownerPayLinks, payLinkLimit } from "@/lib/paylinks-data";
+import { PayLinksOff } from "@/components/payments/PayLinksOff";
 import { moneyBetween, weekStart, type MoneyLine } from "@/lib/ledger";
 import type { SessionUser } from "@/lib/types";
 import { AddExpenseButton, HowWeCount } from "./MoneyActions";
@@ -25,11 +26,12 @@ export async function MoneyWeek({ user }: { user: SessionUser }) {
   const now = new Date();
   const from = weekStart(now);
   const to = new Date(from.getTime() + 7 * 86_400_000);
-  const [ledger, bookings, links, b] = await Promise.all([
+  const [ledger, bookings, links, b, limit] = await Promise.all([
     getLedger(user),
     getBookings(user, new Date(from.getTime() - 60 * 86_400_000), new Date(now.getTime() + 120 * 86_400_000)),
-    demoPayLinks(user),
+    ownerPayLinks(user),
     getBusiness(user),
+    payLinkLimit(user),
   ]);
   const deposits = bookings.filter((b) => b.depositPaidKobo).map((b) => ({ at: b.createdAt, kobo: b.depositPaidKobo!, name: b.firstName, item: b.service }));
   const m = moneyBetween(ledger, deposits, from, to);
@@ -68,7 +70,11 @@ export async function MoneyWeek({ user }: { user: SessionUser }) {
           </p>
         )}
         <PayLinkList businessName={b?.name ?? ""} links={waitingFirst(links).slice(0, 5)} empty="Send one for a balance, a custom job or paying ahead. You'll see it here as Waiting, then Paid." />
-        <PayLinkSheet businessName={b?.name ?? "us"} maxKobo={DEMO_MAX_KOBO} className="btn btn-secondary btn-lg rounded-pill" />
+        {limit.ready ? (
+          <PayLinkSheet businessName={b?.name ?? "us"} maxKobo={limit.maxKobo} className="btn btn-secondary btn-lg rounded-pill" />
+        ) : (
+          <PayLinksOff why={limit.why} />
+        )}
       </section>
       {unpaid > 0 && (
         <Link href="/app" className="flex items-start gap-3 rounded-md bg-gold-soft px-4 py-3.5">

@@ -1,7 +1,7 @@
 "use server";
 
 // Today and Money (docs/OWNER_JOURNEYS.md journeys 4–6). Sales, balances and expenses save to Supabase
-// for real accounts (docs/DB_MOVE.md step 4); pay links from Today are still the demo until step 6.
+// for real accounts (docs/DB_MOVE.md step 4), and so do pay links from Today (step 6).
 
 import { revalidatePath } from "next/cache";
 import { markBooking, seedDemoDay } from "@/lib/bookings-data";
@@ -9,6 +9,7 @@ import { phoneKey } from "@/lib/clients";
 import { getBusiness, isDbId } from "@/lib/data";
 import { addExpense, getLedger, payBalance, recordSale, seedLedger } from "@/lib/ledger-data";
 import { createDemoPayLink } from "@/lib/paylinks-demo";
+import { createPayLinkAction } from "./paylink-actions";
 import { siteUrl } from "@/lib/supabase/env";
 import { EXPENSE_KINDS, type ExpenseKind, type PayMethod } from "@/lib/ledger";
 import { getOwnerUser } from "@/lib/session";
@@ -50,7 +51,7 @@ export async function payLinkTodayAction(input: {
 }): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
   const user = await getOwnerUser();
   const b = user ? await getBusiness(user) : null;
-  if (!user || !b || isDbId(b.id)) return { ok: false, error: "Pay links from Today only work with the demo for now." };
+  if (!user || !b) return { ok: false, error: "That didn't work. Try again." };
   let saleId = input.saleId ? String(input.saleId) : null;
   let name = "";
   let phone: string | undefined;
@@ -70,6 +71,21 @@ export async function payLinkTodayAction(input: {
     phone = sale.phone;
   }
   if (!saleId) return { ok: false, error: "That didn't work. Try again." };
+  // A real business: a real pay link for that sale (paying it settles the balance, docs/DB_MOVE.md step 6).
+  if (isDbId(b.id)) {
+    const made = await createPayLinkAction({ naira: Number(input.linkNaira), note: String(input.note ?? ""), name, phone: phoneKey(phone) ?? undefined, saleId });
+    if (made.kind !== "created" || !("url" in made)) {
+      const why: Record<string, string> = {
+        too_small: "The smallest pay link is ₦100.",
+        bad_note: "Say what it's for.",
+        too_big: "That's more than one pay link can be for now.",
+        no_account: "Add your bank account on Get paid first.",
+        needs_id: "Add your ID on Get paid first.",
+      };
+      return { ok: false, error: why[made.kind] ?? "Pay links aren't ready for your business yet. Open Get paid in Settings." };
+    }
+    return { ok: true, url: made.url };
+  }
   const r = await createDemoPayLink(user, b.slug, { amountKobo: Math.round(Number(input.linkNaira) * 100), note: String(input.note ?? ""), name, phone: phoneKey(phone) ?? undefined, for: { kind: "balance", saleId } }, now);
   if (r.kind !== "created") return { ok: false, error: r.kind === "too_small" ? "The smallest pay link is ₦100." : r.kind === "bad_note" ? "Say what it's for." : r.kind === "too_big" ? "That's more than one pay link can be for now." : "That didn't work. Try again." };
   revalidatePath("/app", "layout");

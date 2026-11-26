@@ -8,7 +8,8 @@ import { PayLinkSheet } from "@/components/payments/PayLinkSheet";
 import { StayFresh } from "@/components/payments/StayFresh";
 import { PayLinkList } from "@/components/today/PayLinkList";
 import { getBusiness } from "@/lib/data";
-import { DEMO_MAX_KOBO, demoPayLinks, type DemoPayLink } from "@/lib/paylinks-demo";
+import { ownerPayLinks, payLinkLimit, type OwnerPayLink } from "@/lib/paylinks-data";
+import { PayLinksOff } from "@/components/payments/PayLinksOff";
 import { getOwnerUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Pay links" };
@@ -26,11 +27,11 @@ async function Links() {
   if (!b) redirect("/app/setup");
   if (!b.trades?.length) redirect("/app/money");
   await connection();
-  const links = await demoPayLinks(user);
+  const [links, limit] = await Promise.all([ownerPayLinks(user), payLinkLimit(user)]);
   const waiting = links.filter((l) => l.status === "open");
   const paid = links.filter((l) => l.status === "paid");
   // Grouped by the day they were sent, newest first.
-  const days = new Map<string, DemoPayLink[]>();
+  const days = new Map<string, OwnerPayLink[]>();
   for (const l of links) days.set(dayOf(l.createdAt), [...(days.get(dayOf(l.createdAt)) ?? []), l]);
 
   return (
@@ -53,7 +54,7 @@ async function Links() {
           <b className="text-code block text-[16px] text-success">{naira(paid.reduce((n, l) => n + l.amountKobo, 0))}</b>
         </div>
       </div>
-      <PayLinkSheet businessName={b.name} maxKobo={DEMO_MAX_KOBO} />
+      {limit.ready ? <PayLinkSheet businessName={b.name} maxKobo={limit.maxKobo} /> : <PayLinksOff why={limit.why} />}
       {links.length === 0 && <PayLinkList businessName={b.name} links={[]} empty="No pay links yet. Send one from here, from Today or from a customer's page." />}
       {[...days].map(([day, list]) => (
         <section key={day} className="grid gap-2">

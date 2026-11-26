@@ -6,7 +6,7 @@ import { ClientDetail } from "@/components/clients/ClientDetail";
 import { getClient } from "@/lib/clients-data";
 import { possibleMatches } from "@/lib/clients";
 import { getBusiness, isDbId } from "@/lib/data";
-import { DEMO_MAX_KOBO } from "@/lib/paylinks-demo";
+import { payLinkLimit } from "@/lib/paylinks-data";
 import { getOwnerUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Customer" };
@@ -18,11 +18,11 @@ async function Customer({ params }: { params: PageProps<"/app/leads/[key]">["par
   const [{ key }, b] = await Promise.all([params, getBusiness(user)]);
   if (!b) redirect("/app/setup");
   await connection();
-  const found = await getClient(user, decodeURIComponent(key));
+  const [found, limit] = await Promise.all([getClient(user, decodeURIComponent(key)), payLinkLimit(user)]);
   if (!found) notFound();
   const matches = possibleMatches(found.client, found.all).map((m) => ({ key: m.key, name: m.name, phone: m.phone!, visits: m.visits }));
-  // Pay links: the demo store for businesses from the new setup (lib/paylinks-demo.ts).
-  return <ClientDetail client={found.client} matches={matches} businessName={b.name} now={new Date().toISOString()} payMaxKobo={isDbId(b.id) ? undefined : DEMO_MAX_KOBO} />;
+  // Pay links: real once payments are ready (lib/paylinks-data.ts), else the demo store.
+  return <ClientDetail client={found.client} matches={matches} businessName={b.name} now={new Date().toISOString()} payMaxKobo={limit.ready ? limit.maxKobo : undefined} />;
 }
 
 export default function Page(props: PageProps<"/app/leads/[key]">) {
