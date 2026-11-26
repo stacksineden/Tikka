@@ -4,11 +4,11 @@ import { Logo } from "./Logo";
 import { SiteMenu } from "./SiteMenu";
 
 const NAV = [
-  { href: "/drops", label: "Browse drops" },
-  { href: "/business#how-it-works", label: "How it works" },
-  { href: "/business#who-its-for", label: "Who it's for" },
+  { href: "/", label: "Find and book" },
+  { href: "/business#website", label: "How it works" },
   { href: "/business#pricing", label: "Pricing" },
   { href: "/business#faq", label: "FAQs" },
+  { href: "/drops", label: "Offers" },
   { href: "/studio", label: "Studio" },
 ];
 
