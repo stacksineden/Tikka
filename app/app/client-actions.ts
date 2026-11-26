@@ -1,6 +1,8 @@
 "use server";
 
-// NEW DIRECTION: the client book (notes, birthdays, matching walk-ins). Owners only; demo only for now.
+// The client book (notes, birthdays, matching walk-ins). Owners only. Notes save to Supabase for real
+// accounts (docs/DB_MOVE.md step 5); matching a walk-in without a number is demo-only (real customers
+// always have one).
 
 import { revalidatePath } from "next/cache";
 import { moveClientNote, saveClientNote } from "@/lib/clients-data";
