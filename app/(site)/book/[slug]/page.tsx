@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { ArrowUpRight, Check, Clock3, Globe, MapPin, Star } from "lucide-react";
+import { ArrowUpRight, Clock3, Globe, MapPin, Star } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { BookingFlow } from "@/components/business/BookingFlow";
 import { BookingSheet } from "@/components/business/BookingSheet";
+import { ListingExtras } from "@/components/business/ListingExtras";
 import { HomeHeader } from "@/components/home/HomeHeader";
 import { SiteFooter } from "@/components/site/SiteChrome";
 import { demoDepositRule, getBookingRules } from "@/lib/bookings-data";
 import { getBusinessBySlug, getBusinessReviews, isDbId } from "@/lib/data";
-import { extrasForPage } from "@/lib/listing";
 import { getSpacePhotos } from "@/lib/listing-db";
 import { place } from "@/lib/format";
 import { bookingLink, bookingNumber, pageStyle, priceText } from "@/lib/page";
@@ -273,21 +273,10 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
                     </dd>
                   </div>
                 )}
-                {/* What customers compare on (Your Tikka listing, lib/listing.ts). */}
-                {extrasForPage(b.amenities, b.languages).map((g) => (
-                  <div key={g.label}>
-                    <dt className="text-label">{g.label}</dt>
-                    <dd className="text-body mt-1.5 flex flex-wrap gap-1.5">
-                      {g.items.map((t) => (
-                        <span key={t} className="inline-flex items-center gap-1 rounded-pill bg-surface-sunken px-3 py-1 text-[14px]">
-                          <Check size={14} aria-hidden="true" /> {t}
-                        </span>
-                      ))}
-                    </dd>
-                  </div>
-                ))}
               </dl>
             </section>
+
+            <ListingExtras amenities={b.amenities} languages={b.languages} />
           </div>
 
           {/* The booking card: stays in view on a computer. */}
