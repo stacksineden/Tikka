@@ -49,6 +49,14 @@ begin
 end $$;
 update public.businesses set verified = true where id = (select v from t where k = 'biz');
 
+-- Since ID checks (057), a Verified business also needs its owner's ID approved.
+do $$
+begin
+  assert pg_temp.save('ACCT_one') = 'needs_id', 'an approved ID too';
+end $$;
+insert into public.business_kyc (business_id, id_type, id_name, id_photo_path, registered, status, reviewed_at)
+values ((select v from t where k = 'biz'), 'nin', 'Ada Obi', '00000000-0000-4000-c049-000000000001/kyc/id.webp', 'no', 'approved', now());
+
 do $$
 declare
   r jsonb;
@@ -118,12 +126,15 @@ begin
   assert public.payout_state((select v from t where k = 'biz')) -> 'payout' = 'null'::jsonb, 'gone';
 end $$;
 
--- Switched off again: the owner can't add one.
+-- Switched off again: payments stop. (With an ID sent, the owner may still keep an account on
+-- file, as in 057; without one, nothing saves.)
 reset role;
 update public.business_payments set enabled = false where business_id = (select v from t where k = 'biz');
 do $$
 begin
-  assert pg_temp.save('ACCT_four') = 'not_enabled', 'off again';
+  assert private.payments_problem((select v from t where k = 'biz')) = 'not_enabled', 'off again';
+  delete from public.business_kyc where business_id = (select v from t where k = 'biz');
+  assert pg_temp.save('ACCT_four') = 'not_enabled', 'off and no ID: nothing saves';
 end $$;
 
 rollback;

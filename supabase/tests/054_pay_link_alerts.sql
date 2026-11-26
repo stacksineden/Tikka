@@ -17,6 +17,9 @@ reset role;
 insert into public.business_members (business_id, user_id, role)
 values ((select v from t where k = 'biz'), '00000000-0000-4000-c054-000000000002', 'staff');
 update public.businesses set verified = true where id = (select v from t where k = 'biz');
+-- Payments need the owner's ID approved (057).
+insert into public.business_kyc (business_id, id_type, id_name, id_photo_path, registered, status, reviewed_at)
+values ((select v from t where k = 'biz'), 'nin', 'Ada Obi', '00000000-0000-4000-c054-000000000001/kyc/id.webp', 'no', 'approved', now());
 insert into public.business_payments (business_id, enabled, max_kobo) values ((select v from t where k = 'biz'), true, 2000000);
 select public.save_payout((select v from t where k = 'biz'), '00000000-0000-4000-c054-000000000001', '033', 'UBA', '9526', 'ADA OBI', 'ACCT_payalerts54', 'test');
 
