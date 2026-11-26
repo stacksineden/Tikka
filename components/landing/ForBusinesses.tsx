@@ -1,6 +1,8 @@
 import { ArrowRight, CalendarCheck, Car, Check, Clock3, Globe, Layers, QrCode, ReceiptText, Smartphone, Users, Wallet, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { Tick } from "@/components/tikka/glyphs";
+import { CustomerVisual, DepositVisual, TodayVisual, WebsiteVisual } from "./FeatureVisuals";
+import { HeroDemo } from "./HeroDemo";
 import { count } from "@/lib/format";
 import { paidTier, priceLabel, type DropPack, type DropTier } from "@/lib/pricing";
 
@@ -14,38 +16,6 @@ function Eyebrow({ children, onNight = false }: { children: React.ReactNode; onN
 }
 
 /* ---------------------------------------------------------------- Hero */
-
-/** A phone showing a business page with free times (drawn, no photo). */
-function PhoneMock() {
-  const slots = ["9:00am", "10:30am", "1:00pm", "3:30pm"];
-  return (
-    <div aria-hidden="true" className="w-[270px] rounded-[38px] border-[10px] border-night-raised bg-surface p-4 text-ink shadow-card sm:w-[300px]">
-      <div className="flex items-center gap-2.5">
-        <span className="grid size-10 place-items-center rounded-pill bg-[#9C3B5C] text-[15px] font-bold text-white">AB</span>
-        <span>
-          <b className="block text-[15px] leading-tight">Adunni Braids</b>
-          <span className="text-[12px] text-ink-muted">Bodija, Ibadan · ★ 4.9</span>
-        </span>
-      </div>
-      <div className="mt-4 rounded-md border border-line bg-surface-raised p-3">
-        <div className="flex justify-between text-[14px] font-semibold">
-          <span>Knotless braids</span>
-          <span>₦15,000</span>
-        </div>
-        <span className="text-[12px] text-ink-muted">4 hours · ₦4,500 deposit to book</span>
-      </div>
-      <p className="mt-4 text-[12px] font-semibold text-ink-muted">Free tomorrow</p>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        {slots.map((s, i) => (
-          <span key={s} className={`rounded-pill border py-2 text-center text-[13px] font-semibold ${i === 1 ? "border-ink bg-ink text-surface" : "border-line-strong"}`}>
-            {s}
-          </span>
-        ))}
-      </div>
-      <span className="mt-4 block rounded-pill bg-brand py-3 text-center text-[14px] font-semibold text-on-brand">Pay ₦4,500 deposit</span>
-    </div>
-  );
-}
 
 export function BizHero() {
   return (
@@ -74,7 +44,7 @@ export function BizHero() {
         </ul>
       </div>
       <div className="flex justify-center lg:justify-end">
-        <PhoneMock />
+        <HeroDemo />
       </div>
     </section>
   );
@@ -100,6 +70,7 @@ function Feature({
   points,
   small,
   Icon,
+  visual,
   flip = false,
 }: {
   id: string;
@@ -109,11 +80,13 @@ function Feature({
   points: { text: string; Icon: LucideIcon }[];
   small?: string;
   Icon: LucideIcon;
+  /** A drawn screen of the feature (FeatureVisuals.tsx). */
+  visual: React.ReactNode;
   flip?: boolean;
 }) {
   return (
-    <section id={id} className="scroll-mt-6 bg-surface px-5 py-14 sm:px-6 sm:py-20">
-      <div className={`mx-auto grid max-w-6xl items-start gap-8 lg:grid-cols-2 lg:gap-16 ${flip ? "lg:[&>*:first-child]:order-2" : ""}`}>
+    <section id={id} className={`scroll-mt-6 px-5 py-14 sm:px-6 sm:py-20 ${flip ? "bg-surface-sunken" : "bg-surface"}`}>
+      <div className={`mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2 lg:gap-16 ${flip ? "lg:[&>*:first-child]:order-2" : ""}`}>
         <div>
           <span className="grid size-12 place-items-center rounded-card bg-brand-soft text-brand">
             <Icon size={24} aria-hidden="true" />
@@ -123,18 +96,44 @@ function Feature({
           </div>
           <h2 className="mt-3 text-heading sm:text-display-lg">{title}</h2>
           <p className="text-body-lg mt-4 max-w-xl text-ink-muted">{body}</p>
-          {small && <p className="text-caption mt-4 max-w-xl text-ink-muted">{small}</p>}
+          <ul className="mt-6 grid max-w-xl gap-3">
+            {points.map(({ text, Icon: P }) => (
+              <li key={text} className="text-body flex items-start gap-3">
+                <P size={20} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
+                {text}
+              </li>
+            ))}
+          </ul>
+          {small && <p className="text-caption mt-5 max-w-xl text-ink-muted">{small}</p>}
         </div>
-        <ul className="grid gap-3">
-          {points.map(({ text, Icon: P }) => (
-            <li key={text} className="flex items-start gap-3 rounded-card border border-line bg-surface-raised p-4">
-              <span className="grid size-9 shrink-0 place-items-center rounded-pill bg-surface-sunken text-ink">
-                <P size={18} aria-hidden="true" />
-              </span>
-              <span className="text-body pt-1.5">{text}</span>
+        <div className="pt-3">{visual}</div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------------------------------------------------------- How it starts */
+
+export function BizSteps() {
+  const steps = [
+    ["Pick what you do", "Your services and prices come filled in for your trade and your city. Change anything."],
+    ["Share your link", "Put it in your Instagram and WhatsApp bio, and answer “How much?” with it."],
+    ["Get booked and paid", "Customers pick a free time and pay the deposit. You see it on Today."],
+  ];
+  return (
+    <section className="bg-surface px-5 pt-12 pb-2 sm:px-6 sm:pt-16">
+      <div className="mx-auto max-w-6xl">
+        <Eyebrow>How it starts</Eyebrow>
+        <h2 className="mt-3 text-heading sm:text-display-lg">Live in about 10 minutes, from your phone</h2>
+        <ol className="mt-8 grid gap-4 md:grid-cols-3">
+          {steps.map(([t, d], i) => (
+            <li key={t} className="rounded-card border border-line bg-surface-raised p-5">
+              <span className="text-serial grid size-9 place-items-center rounded-pill bg-ink font-mono text-surface">{i + 1}</span>
+              <h3 className="text-title mt-4">{t}</h3>
+              <p className="text-body mt-1.5 text-ink-muted">{d}</p>
             </li>
           ))}
-        </ul>
+        </ol>
       </div>
     </section>
   );
@@ -149,6 +148,7 @@ export function BizFeatures() {
         title="A website people book from, free"
         body="Your page at usetikka.com/yourname: your work, your services and prices, your hours, your reviews. Customers pick a service and a free time, and it's booked. Put the link in your Instagram and WhatsApp bio."
         Icon={Globe}
+        visual={<WebsiteVisual />}
         points={[
           { text: "Only your free times show, so nobody books when you're busy", Icon: CalendarCheck },
           { text: "Choices like short, medium or long, each with its own price and time", Icon: Layers },
@@ -163,6 +163,7 @@ export function BizFeatures() {
         body="Customers pay a small deposit to hold their time. It goes straight to your bank the next working day. If they don't come, the deposit is already yours."
         small="Tikka takes 1% of each payment, and Paystack takes its fee. We check your ID before payments switch on."
         Icon={Wallet}
+        visual={<DepositVisual />}
         flip
         points={[
           { text: "You pick the deposit: a percentage or a fixed amount, at least ₦1,000", Icon: Wallet },
@@ -177,6 +178,7 @@ export function BizFeatures() {
         title="Know who's coming and what you made"
         body="Open Tikka in the morning and see today: who's coming, who paid their deposit, what's left to collect. Tap Paid when they pay you cash or transfer. On Sunday, see what came in, what you spent and what you kept."
         Icon={CalendarCheck}
+        visual={<TodayVisual />}
         points={[
           { text: "Who still owes you, with a reminder you send from your own WhatsApp", Icon: Clock3 },
           { text: "Receipts your customers can keep", Icon: ReceiptText },
@@ -190,6 +192,7 @@ export function BizFeatures() {
         body="Everyone who booked, bought or claimed an offer from you, by their WhatsApp number: their visits, what they spent, your notes and their birthday. When a day is full, they can join your waitlist, and you tell them when a place opens."
         small="Only you see your customers' numbers. Staff who check codes at the counter never do."
         Icon={Users}
+        visual={<CustomerVisual />}
         flip
         points={[
           { text: "Notes like “sensitive scalp” or “likes medium length”, kept with each customer", Icon: Users },
@@ -227,7 +230,7 @@ export function BizDrops() {
           </ul>
         </div>
         {/* The ticket shape, Tikka's signature (design/BRAND.md). */}
-        <div aria-hidden="true" className="relative mx-auto aspect-[5/7] w-52 -rotate-6 rounded-card bg-gradient-to-br from-brand to-[#6B4FE0] shadow-card">
+        <div aria-hidden="true" className="relative mx-auto aspect-[5/7] w-52 -rotate-6 rounded-card bg-brand shadow-card">
           <div className="absolute inset-x-5 top-6 text-[20px] leading-tight font-bold text-white">Free gele tying with any glam</div>
           <div className="absolute inset-x-0 top-[72%] border-t-2 border-dashed border-white/40" />
           <div className="text-serial absolute inset-x-5 bottom-5 font-mono text-gold uppercase">23 of 100 left</div>

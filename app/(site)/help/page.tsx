@@ -8,7 +8,7 @@ import { bySection } from "@/lib/help-shared";
 
 export const metadata: Metadata = {
   title: "Help",
-  description: "Short, step-by-step guides to running Tikka drops: set up your card, create a drop, share it, redeem at the counter and follow up.",
+  description: "Short, step-by-step guides to Tikka: your page, bookings, deposits, money, customers and drops.",
 };
 
 /** The Help centre (/help): every guide, grouped the way an owner's first week goes. */

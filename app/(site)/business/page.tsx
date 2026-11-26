@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BizDrops, BizFaq, BizFeatures, BizFinal, BizHero, BizPricing, BizProblem } from "@/components/landing/ForBusinesses";
+import { BizDrops, BizFaq, BizFeatures, BizFinal, BizHero, BizPricing, BizProblem, BizSteps } from "@/components/landing/ForBusinesses";
 import { StudioStrip } from "@/components/landing/StudioAndSpark";
 import { SiteFooter, SiteHeader } from "@/components/site/SiteChrome";
 import { getDropPacks, getDropTiers } from "@/lib/data";
@@ -29,6 +29,7 @@ export default async function ForBusinessesPage() {
           <BizHero />
         </div>
         <BizProblem />
+        <BizSteps />
         <BizFeatures />
         <BizDrops />
         <BizPricing tiers={tiers} packs={packs} />

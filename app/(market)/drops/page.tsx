@@ -13,8 +13,8 @@ import { CATEGORIES } from "@/lib/nigeria";
 import type { MarketDrop } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "Drops near you",
-  description: "Live Tikka drops from businesses across Nigeria. Tear one open and see what you get.",
+  title: "Offers near you",
+  description: "Gifts and discounts from businesses across Nigeria. Open one, it lands on your WhatsApp, and you use it at the business.",
 };
 
 function Panel({ title, icon, children, action }: { title: string; icon: React.ReactNode; children: React.ReactNode; action?: React.ReactNode }) {
@@ -73,7 +73,7 @@ async function Home({ searchParams }: { searchParams: PageProps<"/drops">["searc
               <span className="counter__dot" aria-hidden="true" />
               Live on Tikka right now
             </p>
-            <h1 className="text-display-lg mt-2 max-w-2xl text-[34px] leading-[38px] sm:text-[44px] sm:leading-[48px]">Tear open something good today.</h1>
+            <h1 className="text-display-lg mt-2 max-w-2xl text-[34px] leading-[38px] sm:text-[44px] sm:leading-[48px]">Offers from businesses near you</h1>
           </div>
           <StatStrip stats={marketStats(all)} />
           {featured.length > 0 && <Featured items={featured} now={now} />}

@@ -71,6 +71,34 @@ Each step is a migration with its database test written first (CLAUDE.md, "How t
 
 ## 7. Before merging to `main`
 
-- **Schedule the money alerts.** Add the hourly pg_cron job for `/api/cron/money` (like `tikka-daily` in `supabase/migrations/20261024200000_scheduler.sql`) in the same release as the merge. Before then production has no such route. It sends at 20:00 WAT and on Sunday at 19:00, and needs the VAPID keys.
+- **Schedule the money alerts.** Written: `supabase/migrations/20261216100000_money_alerts_schedule.sql` (test 072) calls `/api/cron/money` at 19:00 and 20:00 WAT. Push it on merge day, not before (production has no such route until then; early calls only get a 404). Needs the VAPID keys on Vercel.
 - **Step 8 is done in code** (26 Nov 2026): every real business gets the new tabs (`newExperience()` in `lib/experience.ts`), businesses set up the old way see "Finish setting up" on Today (`/app/finish`), new sign-ups skip the old drops welcome tour, and Customers keeps the drop leads tools one tap away (`/app/leads?view=drops`). Nothing reaches owners until the merge.
 - **Test-mode pay links**: local development shares the live database, so a link paid with a Paystack test key becomes a sale in that business's money. Pay links in development are only for test businesses.
+
+## 8. Merge rehearsal (26 Nov 2026)
+
+What was checked, on `new-direction/demo` against the live database:
+
+- `main` has nothing the branch lacks: the merge is clean (39 commits).
+- `pnpm build` (production, with the legal check) passes; `pnpm test` 502 passing; lint and typecheck clean.
+- Every database test passes on the live database (072 inside a rolled-back run, since its migration waits for merge day).
+- No new environment variables: the branch reads the same ones production has.
+- The scheduler works (`tikka-daily` ran each of the last 3 days; the Vault values are set).
+- Demo tools (the demo sign-ins, "Add a sample day", the test phone) stay off in production (`demoAllowed`).
+- Production has been running against the new migrations for days: every one was additive.
+
+What owners see on day one: the new tabs, and "Finish setting up" on Today (trade, where they work, booking rules). All six active businesses have it to do.
+
+### Merge day, in order
+
+1. Check Vercel has `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` for Production.
+2. `supabase db push --linked` (the money alerts schedule), then run test 072.
+3. Merge `new-direction/demo` into `main` and push; wait for Vercel's production deploy.
+4. On usetikka.com: the homepage search, a listing page with its map, `/business`, sign in as an owner (Today, Finish setting up, Calendar, Customers, Money), a booking with a deposit on a test business, and the counter screen as staff.
+5. Message the businesses that the new version is live and to tap "Finish setting up".
+6. That evening at 20:00 WAT, check an owner with alerts on got "Anything you spent today?".
+
+### If something goes wrong
+
+- Code: `git revert -m 1 <merge commit>` on `main` and push; Vercel redeploys the old version. The database stays as it is: the old code already runs on it today.
+- Money alerts: `select cron.unschedule('tikka-money');`.

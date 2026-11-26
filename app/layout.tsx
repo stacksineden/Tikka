@@ -21,11 +21,11 @@ export const metadata: Metadata = {
   // Absolute links for link previews (drop and business page images). https://usetikka.com in production.
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
-    default: "Tikka · Turn your views into customers who show up and pay",
+    default: "Tikka · Book local beauty and photo services",
     template: "%s · Tikka",
   },
   description:
-    "Share a limited reward worth coming in for. People claim it on WhatsApp, and a deposit holds their booking.",
+    "Find hair, makeup, nails, lashes and photographers near you, anywhere in Nigeria. See prices and free times, and book. Businesses get a free website people book from.",
   // Added to an iPhone's home screen, the dashboard opens full screen as "Tikka" (needed for lead alerts there).
   appleWebApp: { capable: true, title: "Tikka", statusBarStyle: "default" },
 };

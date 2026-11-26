@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Tikka",
     short_name: "Tikka",
-    description: "Your Tikka dashboard: drops, leads and the counter.",
+    description: "Your Tikka dashboard: today, bookings, customers and money.",
     start_url: "/app",
     scope: "/",
     display: "standalone",

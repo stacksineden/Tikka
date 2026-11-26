@@ -8,7 +8,7 @@ import { gridFilters } from "@/lib/market-server";
 
 export async function generateMetadata({ params }: PageProps<"/drops/[category]">): Promise<Metadata> {
   const c = categoryFromSlug((await params).category);
-  return c ? { title: `${c} drops`, description: `Limited Tikka drops from ${c.toLowerCase()} businesses across Nigeria.` } : { title: "Drops" };
+  return c ? { title: `${c} drops`, description: `Offers from ${c.toLowerCase()} businesses across Nigeria.` } : { title: "Drops" };
 }
 
 async function Category({ params, searchParams }: PageProps<"/drops/[category]">) {

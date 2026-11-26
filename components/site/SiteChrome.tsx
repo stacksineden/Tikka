@@ -50,7 +50,7 @@ export function SiteFooter() {
         <div className="max-w-xs">
           <Logo />
           <p className="text-body mt-4 text-ink-muted">
-            Your ticket to something good. Made in Nigeria for businesses that want to know who walked in.
+            Book hair, makeup, nails, lashes and photographers near you. For businesses: a free website people book from, deposits and your money in one place. Made in Nigeria.
           </p>
         </div>
         <div>
@@ -77,7 +77,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-line">
-        <p className="text-caption mx-auto max-w-6xl px-5 py-5 text-ink-muted sm:px-6">© 2026 Tikka. All Tikkas are free to claim.</p>
+        <p className="text-caption mx-auto max-w-6xl px-5 py-5 text-ink-muted sm:px-6">© 2026 Tikka. Booking on Tikka is free for customers.</p>
       </div>
     </footer>
   );
