@@ -24,7 +24,8 @@ import { koboToNaira } from "@/lib/pricing";
 import { getSessionUser } from "@/lib/session";
 import { isDbId } from "@/lib/business-db";
 import { dbAdminEarlyAccess, dbAdminEnquiries } from "@/lib/studio-db";
-import { dbAdminCounterChecks } from "@/lib/admin-db";
+import { dbAdminCounterChecks, dbAdminLaunchWeek } from "@/lib/admin-db";
+import { LaunchWeek } from "@/components/admin/LaunchWeek";
 import { collectionLimitKobo, dbAdminMoney, dbAdminPaymentSettings, dbKycQueue } from "@/lib/payouts-db";
 import { KycReview } from "@/components/admin/KycReview";
 import { counterCheckTotals } from "@/lib/counter-checks";
@@ -56,7 +57,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const real = isDbId(user.id);
-  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog, enquiries, early, checks, earlyPay, paySettings, cash, kycRows] = await Promise.all([
+  const [{ overview: o, businesses, payments, reports, drops }, tiers, packs, privacyLog, enquiries, early, checks, earlyPay, paySettings, cash, kycRows, launch] = await Promise.all([
     adminView(user, q),
     getDropTiers(),
     getAllDropPacks(),
@@ -68,6 +69,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
     real ? dbAdminPaymentSettings() : Promise.resolve({} as Awaited<ReturnType<typeof dbAdminPaymentSettings>>),
     real ? dbAdminMoney() : Promise.resolve(null),
     real ? dbKycQueue() : Promise.resolve([]),
+    real ? dbAdminLaunchWeek() : Promise.resolve([]),
   ]);
   const kycWaiting = kycRows.filter((r) => r.kyc?.status === "submitted").length;
   // The Paystack Starter limit (REVENUE_PLAN 5.6): everything collected, live, counts.
@@ -83,6 +85,12 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
 
   return (
     <div className="grid gap-8">
+      {launch.length > 0 && (
+        <Section id="launch-h" title="Launch week" note="Where each business is with the new version. Most to do first; Nudge opens your WhatsApp with a message for what's left.">
+          <LaunchWeek rows={launch} />
+        </Section>
+      )}
+
       <Section id="num-h" title="Today">
         <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[

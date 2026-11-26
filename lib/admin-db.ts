@@ -3,6 +3,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import type { DropPack, DropTier } from "./pricing";
 import { counterCheckFrom, type CounterCheckRow } from "./counter-checks";
+import { launchRowFrom, type LaunchRow } from "./launch-week";
 import { adminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
 
@@ -307,4 +308,12 @@ export async function dbAdminPrivacyLog(): Promise<PrivacyLogEntry[]> {
     createdAt: String(r.created_at),
     doneBy: r.done_by ? String(r.done_by) : undefined,
   }));
+}
+
+/** Launch week: where each real business is with the new version (admin_launch_week(), admins only). */
+export async function dbAdminLaunchWeek(): Promise<LaunchRow[]> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("admin_launch_week");
+  if (error || !Array.isArray(data)) return [];
+  return (data as Record<string, unknown>[]).map(launchRowFrom);
 }
