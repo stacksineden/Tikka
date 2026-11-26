@@ -76,7 +76,8 @@ declare
   biz uuid := (select v from t where k = 'biz');
   row jsonb;
 begin
-  assert (select count(*) from storage.objects where bucket_id = 'kyc') = 3, 'admins read IDs';
+  -- Real businesses' IDs are in the live bucket too, so count only this test's files.
+  assert (select count(*) from storage.objects where bucket_id = 'kyc' and name like '00000000-0000-4000-c057-%') = 3, 'admins read IDs';
   select x into row from jsonb_array_elements(public.admin_kyc_queue()) x where x ->> 'business_id' = biz::text;
   assert row -> 'kyc' ->> 'id_name' = 'Ada Obi' and row -> 'kyc' ->> 'cac_number' = 'RC 1234567', 'the queue shows the details';
   assert row ->> 'account_name' = 'ADA OBI', 'and the bank account name to compare';
