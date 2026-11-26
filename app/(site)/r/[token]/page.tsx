@@ -65,8 +65,20 @@ async function Receipt({ params }: { params: PageProps<"/r/[token]">["params"] }
                   </span>
                 )}
               </span>
-              <b className="shrink-0 font-mono text-[16px]">{naira(r.totalKobo / 100)}</b>
+              <b className="shrink-0 font-mono text-[16px]">{naira((r.totalKobo - (r.added?.kobo ?? 0)) / 100)}</b>
             </div>
+            {r.added && (
+              <>
+                <div className="mt-2 flex items-baseline justify-between gap-3">
+                  <span className="text-body">Added on the day: {r.added.label}</span>
+                  <b className="shrink-0 font-mono text-[16px]">{naira(r.added.kobo / 100)}</b>
+                </div>
+                <div className="mt-2 flex items-baseline justify-between gap-3 border-t border-line pt-2">
+                  <span className="text-body font-semibold">Total</span>
+                  <b className="shrink-0 font-mono text-[16px]">{naira(r.totalKobo / 100)}</b>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="grid gap-1.5 border-t border-line pt-3">

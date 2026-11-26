@@ -24,6 +24,8 @@ export interface Sale {
   /** The booking it settles, if any. */
   bookingId?: string;
   phone?: string;
+  /** Asked for on the day ("Wash and beads"), already in the total. */
+  added?: { label: string; kobo: number };
 }
 
 export const EXPENSE_KINDS = ["Products", "Rent", "Transport", "Helper", "Data", "Light / fuel", "Other"] as const;

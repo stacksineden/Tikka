@@ -20,6 +20,8 @@ export interface ReceiptView {
   item: string;
   detail?: string;
   homeArea?: string;
+  /** Asked for on the day, already in the total: shown as its own line. */
+  added?: { label: string; kobo: number };
   totalKobo: number;
   payments: ReceiptLine[];
   paidKobo: number;
@@ -47,6 +49,7 @@ export function buildReceipt(sale: Sale, booking: Booking | null, n: number): Re
     item: booking?.service ?? sale.item,
     detail: booking?.detail,
     homeArea: booking?.homeArea,
+    added: sale.added,
     totalKobo: sale.totalKobo + (deposit && counts ? deposit : 0),
     payments,
     paidKobo: paid,

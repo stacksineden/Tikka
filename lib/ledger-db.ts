@@ -24,6 +24,7 @@ function saleFrom(r: Row): Sale & { receiptToken?: string } {
     bookingId: (r.booking_id as string | null) ?? undefined,
     phone: (r.phone as string | null) ?? undefined,
     receiptToken: (r.receipt_token as string | null) ?? undefined,
+    added: r.added_label ? { label: String(r.added_label), kobo: Number(r.added_kobo) } : undefined,
   };
 }
 
@@ -83,6 +84,13 @@ export async function dbPayBalance(businessId: string, saleId: string, kobo: num
 export async function dbAddExpense(businessId: string, kind: ExpenseKind, kobo: number, every?: "week" | "month"): Promise<boolean> {
   const sb = await createClient();
   const { data, error } = await sb.rpc("add_expense", { p_business: businessId, p_kind: kind, p_kobo: kobo, p_every: every ?? null });
+  return !error && data === true;
+}
+
+/** note_sale_added(): what a booked customer added on the day, already in the sale's total. */
+export async function dbNoteSaleAdded(businessId: string, saleId: string, label: string, kobo: number): Promise<boolean> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("note_sale_added", { p_business: businessId, p_sale: saleId, p_label: label, p_kobo: kobo });
   return !error && data === true;
 }
 

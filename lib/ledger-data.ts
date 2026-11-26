@@ -5,7 +5,7 @@ import "server-only";
 
 import { randomBytes } from "node:crypto";
 import { isDbId, memberBusinessId } from "./data";
-import { dbAddExpense, dbGetLedger, dbPayBalance, dbRecordSale, dbRemoveExpense, dbStopRegularCost, PAY_LINK_SALE } from "./ledger-db";
+import { dbAddExpense, dbGetLedger, dbNoteSaleAdded, dbPayBalance, dbRecordSale, dbRemoveExpense, dbStopRegularCost, PAY_LINK_SALE } from "./ledger-db";
 import { owedOf, type ExpenseKind, type Ledger, type PayMethod, type Sale } from "./ledger";
 import type { SessionUser } from "./types";
 
@@ -49,14 +49,27 @@ const kobo = (naira: number) => Math.max(0, Math.min(10_000_000, Math.round(nair
 /** A sale: a walk-in, or a booked customer paying what's left. Paying less leaves the rest owed. Returns its id. */
 export async function recordSale(
   user: Pick<SessionUser, "id" | "role">,
-  input: { name: string; item: string; totalNaira: number; paidNaira: number; method: PayMethod; bookingId?: string; phone?: string },
+  input: {
+    name: string;
+    item: string;
+    totalNaira: number;
+    paidNaira: number;
+    method: PayMethod;
+    bookingId?: string;
+    phone?: string;
+    /** Added on the day, already in totalNaira. */
+    added?: { label: string; naira: number };
+  },
   now: Date,
 ): Promise<string | null> {
   const biz = await realBusiness(user);
+  const added = input.added && input.added.label.trim() && input.added.naira > 0 ? { label: input.added.label.trim().slice(0, 60), kobo: kobo(input.added.naira) } : undefined;
   if (biz) {
     if (input.method === "pay_link") return null; // pay links are recorded when they're paid
     const total = kobo(input.totalNaira);
-    return dbRecordSale(biz, { name: input.name, item: input.item, totalKobo: total, paidKobo: Math.min(total, kobo(input.paidNaira)), method: input.method, bookingId: input.bookingId, phone: input.phone });
+    const saleId = await dbRecordSale(biz, { name: input.name, item: input.item, totalKobo: total, paidKobo: Math.min(total, kobo(input.paidNaira)), method: input.method, bookingId: input.bookingId, phone: input.phone });
+    if (saleId && added && added.kobo <= total) await dbNoteSaleAdded(biz, saleId, added.label, added.kobo);
+    return saleId;
   }
   const key = ownerKey(user);
   if (!key) return null;
@@ -74,6 +87,7 @@ export async function recordSale(
     payments: paid ? [{ at: now.toISOString(), kobo: paid, method: input.method }] : [],
     bookingId: input.bookingId,
     phone: input.phone,
+    added: added && added.kobo <= total ? added : undefined,
   };
   l.sales.push(sale);
   return sale.id;

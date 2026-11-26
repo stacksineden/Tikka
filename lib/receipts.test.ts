@@ -35,4 +35,19 @@ describe("receipts", () => {
     expect(receiptNumber(0)).toBe("R-0001");
     expect(receiptMessage("Ngozi", "Glow Studio", "Silk press", "https://x/r/1")).toBe("Hi Ngozi, here's your receipt from Glow Studio for Silk press: https://x/r/1");
   });
+
+  it("shows what was added on the day as its own line, inside the total", () => {
+    // ₦15,000 braids with a ₦4,500 deposit; on the day, a wash and beads for ₦4,500: ₦15,000 paid in cash.
+    const b: Booking = { ...booking, depositPaidKobo: 450_000, priceKobo: 1_500_000, detail: undefined };
+    const sale: Sale = {
+      id: "s4", at: "2026-11-25T15:00:00Z", name: "Ada", item: "Knotless braids", totalKobo: 1_500_000, bookingId: "b1",
+      payments: [{ at: "2026-11-25T15:00:00Z", kobo: 1_500_000, method: "cash" }], added: { label: "Wash and beads", kobo: 450_000 },
+    };
+    const r = buildReceipt(sale, b, 3);
+    expect(r.added).toEqual({ label: "Wash and beads", kobo: 450_000 });
+    expect(r.totalKobo).toBe(1_950_000);
+    expect(r.totalKobo - r.added!.kobo).toBe(1_500_000);
+    expect(r.paidKobo).toBe(1_950_000);
+    expect(r.owedKobo).toBe(0);
+  });
 });

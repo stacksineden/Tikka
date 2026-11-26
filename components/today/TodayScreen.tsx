@@ -447,22 +447,30 @@ function PaidSheet({ appt, businessName, payLinks, onClose }: { appt: TodayAppt;
   const router = useRouter();
   const [amount, setAmount] = useState(Math.round(appt.dueKobo / 100));
   const [part, setPart] = useState(false);
+  // Asked for on the day ("Wash and beads, ₦4,500"): added to this visit, not a separate sale.
+  const [adding, setAdding] = useState(false);
+  const [addLabel, setAddLabel] = useState("");
+  const [addNaira, setAddNaira] = useState(0);
   const [pending, start] = useTransition();
   const [link, setLink] = useState<{ url: string; kobo: number } | null>(null);
   const [error, setError] = useState("");
-  const note = appt.service;
+  const extra = adding && addLabel.trim() && addNaira > 0 ? Math.round(addNaira) : 0;
+  const added = extra ? { label: addLabel.trim(), naira: extra } : undefined;
+  const dueNaira = appt.dueKobo / 100 + extra;
+  const note = extra ? `${appt.service} + ${addLabel.trim()}`.slice(0, 80) : appt.service;
   const pay = (method: PayMethod) =>
     start(async () => {
+      if (adding && !extra) return setError("Say what they added and how much, or tap Remove.");
       if (method === "pay_link") {
         // Saved as owed until they pay the link; the link is for all of it, or the part they'll pay now.
-        const linkNaira = part ? amount : appt.dueKobo / 100;
-        const r = await payLinkTodayAction({ booking: { bookingId: appt.id, name: appt.first, item: appt.service, totalNaira: appt.dueKobo / 100, phone: appt.phone }, linkNaira, note });
+        const linkNaira = part ? amount : dueNaira;
+        const r = await payLinkTodayAction({ booking: { bookingId: appt.id, name: appt.first, item: appt.service, totalNaira: dueNaira, phone: appt.phone, added }, linkNaira, note });
         if (!r.ok) return setError(r.error);
         setLink({ url: r.url, kobo: linkNaira * 100 });
         router.refresh();
         return;
       }
-      await paidAction({ bookingId: appt.id, name: appt.first, item: appt.service, totalNaira: appt.dueKobo / 100, paidNaira: part ? amount : appt.dueKobo / 100, method, phone: appt.phone });
+      await paidAction({ bookingId: appt.id, name: appt.first, item: appt.service, totalNaira: dueNaira, paidNaira: part ? amount : dueNaira, method, phone: appt.phone, added });
       router.refresh();
       onClose();
     });
@@ -473,7 +481,45 @@ function PaidSheet({ appt, businessName, payLinks, onClose }: { appt: TodayAppt;
       </Sheet>
     );
   return (
-    <Sheet title={`${appt.first} paid ${part ? naira(amount * 100) : naira(appt.dueKobo)}`} onClose={onClose}>
+    <Sheet title={`${appt.first} paid ${part ? naira(amount * 100) : naira(dueNaira * 100)}`} onClose={onClose}>
+      {adding ? (
+        <div className="grid gap-2.5 rounded-card border border-line bg-surface-raised p-3.5">
+          <div className="flex items-center justify-between">
+            <b className="text-[15px]">They added something</b>
+            <button
+              type="button"
+              className="text-label min-h-11 px-1 text-ink-muted"
+              onClick={() => {
+                setAdding(false);
+                setAddLabel("");
+                setAddNaira(0);
+                setError("");
+              }}
+            >
+              Remove
+            </button>
+          </div>
+          <label className="grid gap-1.5">
+            <span className="text-label">What did they add?</span>
+            <input className="input" value={addLabel} maxLength={60} placeholder="e.g. Wash and beads" onChange={(e) => setAddLabel(e.target.value)} />
+          </label>
+          <div>
+            <label htmlFor="p-added" className="text-label mb-1.5 block">
+              How much is it?
+            </label>
+            <NairaInput id="p-added" value={addNaira} onChange={setAddNaira} label="Price of what they added" />
+          </div>
+          {extra > 0 && (
+            <p className="text-caption text-ink-muted">
+              {naira(appt.dueKobo)} left on the booking + {naira(extra * 100)} = {naira(dueNaira * 100)}
+            </p>
+          )}
+        </div>
+      ) : (
+        <button type="button" className="text-label inline-flex min-h-11 items-center gap-1.5 justify-self-start text-brand" onClick={() => setAdding(true)}>
+          <Plus size={16} aria-hidden="true" /> They added something
+        </button>
+      )}
       {part && (
         <div>
           <label htmlFor="p-amount" className="text-label mb-1.5 block">

@@ -28,14 +28,32 @@ export async function arrivedAction(bookingId: string) {
   return done();
 }
 
-export async function paidAction(input: { bookingId?: string; name: string; item: string; totalNaira: number; paidNaira: number; method: PayMethod; phone?: string }) {
+/** Something a booked customer added on the day: a short name and an amount, or nothing. */
+function cleanAdded(a: { label: string; naira: number } | undefined): { label: string; naira: number } | undefined {
+  if (!a || typeof a.label !== "string" || !a.label.trim()) return undefined;
+  const naira = Math.round(Number(a.naira));
+  return Number.isFinite(naira) && naira > 0 && naira <= 10_000_000 ? { label: a.label.trim().slice(0, 60), naira } : undefined;
+}
+
+export async function paidAction(input: {
+  bookingId?: string;
+  name: string;
+  item: string;
+  totalNaira: number;
+  paidNaira: number;
+  method: PayMethod;
+  phone?: string;
+  /** Added on the day (a booked visit only), already in totalNaira. */
+  added?: { label: string; naira: number };
+}) {
   const user = await getOwnerUser();
   if (!user || !METHODS.includes(input.method)) return { ok: false as const };
   // Every customer has a WhatsApp number: a booking brings its own; a New sale must give one.
   const phone = phoneKey(input.phone) ?? undefined;
   if (!input.bookingId && (!phone || String(input.name ?? "").trim().length < 2)) return { ok: false as const };
   if (input.bookingId) await markBooking(user, input.bookingId, "arrived");
-  const ok = await recordSale(user, { ...input, phone: phone ?? input.phone }, new Date());
+  const added = input.bookingId ? cleanAdded(input.added) : undefined;
+  const ok = await recordSale(user, { ...input, added, phone: phone ?? input.phone }, new Date());
   return ok ? done() : { ok: false as const };
 }
 
@@ -46,7 +64,7 @@ export async function paidAction(input: { bookingId?: string; name: string; item
 export async function payLinkTodayAction(input: {
   saleId?: string;
   /** A booked customer (with bookingId) or a New sale: saved as owed until the link is paid. */
-  booking?: { bookingId?: string; name: string; item: string; totalNaira: number; paidNaira?: number; method?: PayMethod; phone?: string };
+  booking?: { bookingId?: string; name: string; item: string; totalNaira: number; paidNaira?: number; method?: PayMethod; phone?: string; added?: { label: string; naira: number } };
   linkNaira: number;
   note: string;
 }): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
@@ -62,7 +80,7 @@ export async function payLinkTodayAction(input: {
     if (!bk.bookingId && (!phoneKey(bk.phone) || String(bk.name ?? "").trim().length < 2)) return { ok: false, error: "Add their name and WhatsApp number first." };
     if (bk.bookingId) await markBooking(user, String(bk.bookingId), "arrived");
     const method = bk.method && METHODS.includes(bk.method) && bk.method !== "pay_link" ? bk.method : "cash";
-    saleId = await recordSale(user, { bookingId: bk.bookingId ? String(bk.bookingId) : undefined, name: bk.name.trim(), item: bk.item, totalNaira: bk.totalNaira, paidNaira: Math.max(0, Number(bk.paidNaira) || 0), method, phone: phoneKey(bk.phone) ?? bk.phone }, now);
+    saleId = await recordSale(user, { bookingId: bk.bookingId ? String(bk.bookingId) : undefined, name: bk.name.trim(), item: bk.item, totalNaira: bk.totalNaira, paidNaira: Math.max(0, Number(bk.paidNaira) || 0), method, phone: phoneKey(bk.phone) ?? bk.phone, added: bk.bookingId ? cleanAdded(bk.added) : undefined }, now);
     name = bk.name;
     phone = bk.phone;
   } else if (saleId) {
