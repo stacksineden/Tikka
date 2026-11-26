@@ -1,6 +1,6 @@
 # Moving the new direction onto the real database
 
-Status: **a plan for Samuel to agree. Nothing here has been built or pushed.** Written 26 Nov 2026.
+Status: **steps 1 to 8 built on `new-direction/demo`** (migrations on the live database; the code reaches owners only when merged to `main`). Planned and built 26 Nov 2026.
 
 Everything built on `new-direction/demo` since 25 Nov (the new setup, Today, Calendar, Customers, Money, pay links from New sale, receipts, gap time, the waitlist, the new booking sheet, money alerts) keeps its data in memory and loses it on restart. This plan moves it into Supabase without changing anything the 7 real businesses already have.
 
@@ -72,5 +72,5 @@ Each step is a migration with its database test written first (CLAUDE.md, "How t
 ## 7. Before merging to `main`
 
 - **Schedule the money alerts.** Add the hourly pg_cron job for `/api/cron/money` (like `tikka-daily` in `supabase/migrations/20261024200000_scheduler.sql`) in the same release as the merge. Before then production has no such route. It sends at 20:00 WAT and on Sunday at 19:00, and needs the VAPID keys.
-- **Step 8 done**: every business on the new tabs, "finish setting up" for existing businesses, and new sign-ups skipping the old drops welcome tour.
+- **Step 8 is done in code** (26 Nov 2026): every real business gets the new tabs (`newExperience()` in `lib/experience.ts`), businesses set up the old way see "Finish setting up" on Today (`/app/finish`), new sign-ups skip the old drops welcome tour, and Customers keeps the drop leads tools one tap away (`/app/leads?view=drops`). Nothing reaches owners until the merge.
 - **Test-mode pay links**: local development shares the live database, so a link paid with a Paystack test key becomes a sale in that business's money. Pay links in development are only for test businesses.

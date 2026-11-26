@@ -47,6 +47,7 @@ import { WAT } from "@/lib/format";
 import { pageChecklist } from "@/lib/page";
 import { getSessionUser } from "@/lib/session";
 import type { Business } from "@/lib/types";
+import { newExperience } from "@/lib/experience";
 
 export const metadata: Metadata = { title: "Home" };
 
@@ -65,13 +66,15 @@ async function depositsCardShown(businessId: string, state: PayoutState | null):
 async function Home() {
   const user = await getSessionUser();
   if (!user) redirect("/sign-in");
-  if (user.isNew) redirect("/app/welcome");
+  // Real accounts skip the old drops welcome tour: a new owner goes straight to the new setup.
+  if (user.isNew && !isDbId(user.id)) redirect("/app/welcome");
 
   const [business, drops] = await Promise.all([getBusiness(user), getDrops(user)]);
-  // NEW DIRECTION: a new-setup demo account that hasn't finished setup goes back to it.
-  if (!business && user.id.startsWith("user_demo_new_")) redirect("/app/start");
-  // NEW DIRECTION, stage 2: businesses from the new setup (demo only for now) open on Today.
-  if (business?.trades?.length && user.role === "owner") return <TodayPage user={user} business={business} />;
+  // No business yet: the new setup (real owners, and new-setup demo accounts).
+  const demoNew = String(user.id).startsWith("user_demo_new_");
+  if (!business && user.role === "owner" && (isDbId(user.id) || demoNew)) redirect("/app/start");
+  // The new experience (every real business, docs/DB_MOVE.md step 8): owners open on Today.
+  if (newExperience(business) && business && user.role === "owner") return <TodayPage user={user} business={business} />;
   const today = business && user.role === "owner" ? <TodayBookings user={user} /> : null;
   if (!business || drops.length === 0) return <GettingStarted name={user.name} business={business} today={today} />;
 

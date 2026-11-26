@@ -6,6 +6,7 @@ import { Logo } from "@/components/site/Logo";
 import { getBusiness, getVouchers } from "@/lib/data";
 import { dropsReady } from "@/lib/vouchers";
 import { getSessionUser } from "@/lib/session";
+import { newExperience } from "@/lib/experience";
 
 async function getAccount(): Promise<AccountSummary | null> {
   const user = await getSessionUser();
@@ -25,7 +26,7 @@ async function getAccount(): Promise<AccountSummary | null> {
     dropsReady: dropsReady(vouchers, new Date()),
     admin: !!user.isAdmin,
     staff,
-    newDirection: !!b.trades?.length,
+    newDirection: newExperience(b),
   };
 }
 
@@ -57,7 +58,7 @@ async function MobileChrome() {
 async function SideNavForRole() {
   const user = await getSessionUser();
   const b = user ? await getBusiness(user) : null;
-  return <SideNav staff={user?.role === "staff"} admin={!!user?.isAdmin} newDirection={!!b?.trades?.length} />;
+  return <SideNav staff={user?.role === "staff"} admin={!!user?.isAdmin} newDirection={newExperience(b)} />;
 }
 
 export default function ShellLayout({ children }: LayoutProps<"/app">) {

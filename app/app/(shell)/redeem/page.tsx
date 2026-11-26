@@ -8,6 +8,7 @@ import { todayKey, watInstant } from "@/lib/bookings";
 import { getBookings, getBookingSetup } from "@/lib/bookings-data";
 import { getBusiness, memberBusinessId } from "@/lib/data";
 import { getSessionUser } from "@/lib/session";
+import { newExperience } from "@/lib/experience";
 
 export const metadata: Metadata = { title: "Redeem" };
 
@@ -30,7 +31,7 @@ async function Redeem() {
       <RedeemScreen businessName={b.name} prefix={b.codePrefix} isOwner={user.role === "owner"} />
       {/* Staff can't open Today or Calendar, so they mark who came in here. The owner of a business
           from the new setup does that on Today, so they don't get the list twice. */}
-      {!(user.role === "owner" && b.trades?.length) && (
+      {!(user.role === "owner" && newExperience(b)) && (
         <Suspense>
           <TodayAtCounter user={user} businessName={b.name} />
         </Suspense>

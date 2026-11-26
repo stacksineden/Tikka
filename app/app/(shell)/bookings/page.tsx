@@ -23,6 +23,7 @@ import { START_HOURS } from "@/lib/presets";
 import { getBookingRules, getWaitlist } from "@/lib/bookings-data";
 import { dayLabel, freeDays, openRange, todayKey, watParts, type Booking } from "@/lib/bookings";
 import type { Business } from "@/lib/types";
+import { newExperience } from "@/lib/experience";
 
 /** Each day for the next two months: free times, full or closed, and how many are booked. */
 async function monthDays(ownerKey: string, b: Business, list: Booking[], now: Date): Promise<MonthDay[]> {
@@ -55,7 +56,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
   const editing = sp.edit === "1";
 
   // NEW DIRECTION: Booking settings in one place for businesses from the new setup (demo only for now).
-  if (editing && b.trades?.length) {
+  if (editing && newExperience(b)) {
     const dep = setup.deposit;
     return (
       <>
@@ -116,7 +117,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
   const list = await getBookings(user, new Date(now.getTime() - 30 * 86_400_000), new Date(now.getTime() + (setup.aheadDays + 1) * 86_400_000));
   const lengths = serviceLengths(isDbId(b.id) ? b.id : user.id, b);
   // NEW DIRECTION: "See my calendar" for businesses from the new setup (demo only for now).
-  const month = b.trades?.length ? await monthDays(user.id, b, list, now) : null;
+  const month = newExperience(b) ? await monthDays(user.id, b, list, now) : null;
 
   return (
     <>
@@ -124,7 +125,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
       <StayFresh waiting={false} slow={20_000} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-heading">{b.trades?.length ? "Calendar" : "Bookings"}</h1>
+          <h1 className="text-heading">{newExperience(b) ? "Calendar" : "Bookings"}</h1>
           <p className="text-body mt-1 text-ink-muted">
             {setup.enabled ? "Customers book free times on your page." : "Bookings are off: Book on your page sends a WhatsApp message instead."}
           </p>
@@ -154,7 +155,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
         services={services.map((s) => ({ ...s, minutes: lengths[s.id] ?? 60 }))}
         base={{ capacity: setup.capacity, noticeMinutes: setup.noticeMinutes, aheadDays: setup.aheadDays, hours: b.hours ?? null }}
         businessName={b.name}
-        gaps={b.trades?.length ? bookingGaps(b, list) : undefined}
+        gaps={newExperience(b) ? bookingGaps(b, list) : undefined}
       />
     </>
   );

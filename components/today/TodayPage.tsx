@@ -1,4 +1,7 @@
+import { ChevronRight, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { connection } from "next/server";
+import { finishSetupMissing } from "@/lib/experience";
 import { getBookings } from "@/lib/bookings-data";
 import { dayLabel, timeLabel, todayKey, watInstant, watParts } from "@/lib/bookings";
 import { getLedger } from "@/lib/ledger-data";
@@ -9,7 +12,7 @@ import { ownerPayLinks, payLinkLimit } from "@/lib/paylinks-data";
 import type { Business, SessionUser } from "@/lib/types";
 import { TodayScreen, type TodayData } from "./TodayScreen";
 
-// NEW DIRECTION, stage 2: Home becomes Today for businesses set up with the new setup.
+// Home becomes Today for every real business (docs/DB_MOVE.md step 8) and the new-setup demo ones.
 
 export async function TodayPage({ user, business }: { user: SessionUser; business: Business }) {
   await connection(); // the real clock
@@ -68,5 +71,23 @@ export async function TodayPage({ user, business }: { user: SessionUser; busines
       .sort((a, b) => (b.lastVisit ?? b.next?.at ?? "").localeCompare(a.lastVisit ?? a.next?.at ?? ""))
       .map((c) => ({ name: c.name, phone: c.phone! })),
   };
-  return <TodayScreen d={data} />;
+  const missing = finishSetupMissing(business);
+  return (
+    <>
+      {missing.length > 0 && (
+        // A business set up the old way: three quick questions for the new screens (docs/DB_MOVE.md step 8).
+        <Link href="/app/finish" className="flex items-center gap-3 rounded-card border-2 border-brand bg-brand-soft px-4 py-3.5">
+          <span className="grid size-10 shrink-0 place-items-center rounded-pill bg-brand text-on-brand">
+            <Sparkles size={20} aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <b className="block text-[17px]">Finish setting up</b>
+            <span className="text-caption text-ink-muted">What you do, where you work and your booking rules. Takes a minute.</span>
+          </span>
+          <ChevronRight size={20} className="shrink-0 text-brand" aria-hidden="true" />
+        </Link>
+      )}
+      <TodayScreen d={data} />
+    </>
+  );
 }

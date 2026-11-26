@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Check, Download, Search, ShieldCheck } from "lucide-react";
+import { Check, ChevronRight, Download, Search, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
@@ -30,6 +30,7 @@ import { canSetSpent } from "@/lib/spent";
 import { getOwnerUser } from "@/lib/session";
 import { siteUrl } from "@/lib/supabase/env";
 import type { Source, Tier } from "@/lib/types";
+import { newExperience } from "@/lib/experience";
 
 export const metadata: Metadata = { title: "Customers" };
 
@@ -67,7 +68,7 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
   const [b, all, drops, today, sp, planNow, asks] = await Promise.all([getBusiness(user), getLeads(user), getDrops(user), getFollowups(user), searchParams, leadsNow(user), getReviewAsks(user)]);
   if (!b) redirect("/app/setup");
   // NEW DIRECTION: the client book for businesses from the new setup (demo only for now).
-  if (b.trades?.length) {
+  if (newExperience(b) && sp.view !== "drops") {
     await connection();
     return (
       <>
@@ -76,6 +77,12 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
           <p className="text-body mt-1 text-ink-muted">Everyone who booked, bought or claimed a Tikka, one row each. Tap someone to see every visit.</p>
         </div>
         <ClientList clients={await getClients(user)} now={new Date().toISOString()} />
+        {drops.length > 0 && (
+          // The drop leads tools (Message today, follow-ups, the CSV export, review asks) stay one tap away.
+          <Link href="/app/leads?view=drops" className="text-label inline-flex min-h-11 items-center gap-1 justify-self-start text-brand">
+            Drop leads and follow-ups <ChevronRight size={16} aria-hidden="true" />
+          </Link>
+        )}
       </>
     );
   }

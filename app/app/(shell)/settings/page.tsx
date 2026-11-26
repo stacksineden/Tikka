@@ -11,6 +11,7 @@ import { dropsReady } from "@/lib/vouchers";
 import { place } from "@/lib/format";
 import { getSessionUser } from "@/lib/session";
 import { actionMeta } from "@/lib/setup";
+import { newExperience } from "@/lib/experience";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -63,7 +64,7 @@ async function Hub() {
 
   // NEW DIRECTION: businesses from the new setup run on their page, bookings and money; the Tikka
   // card is for drops, so it moves under Drops instead of leading the page.
-  if (b.trades?.length) {
+  if (newExperience(b)) {
     const business: Row[] = [
       { href: "/app/page", label: "Your page", meta: "Services, photos, hours and style", Icon: Globe },
       { href: "/app/bookings?edit=1", label: "Booking settings", meta: "Hours, gaps, deposit and rules", Icon: CalendarClock },

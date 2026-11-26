@@ -11,6 +11,7 @@ import { getBusiness } from "@/lib/data";
 import { ownerPayLinks, payLinkLimit, type OwnerPayLink } from "@/lib/paylinks-data";
 import { PayLinksOff } from "@/components/payments/PayLinksOff";
 import { getOwnerUser } from "@/lib/session";
+import { newExperience } from "@/lib/experience";
 
 export const metadata: Metadata = { title: "Pay links" };
 
@@ -25,7 +26,7 @@ async function Links() {
   if (!user) redirect("/app/redeem");
   const b = await getBusiness(user);
   if (!b) redirect("/app/setup");
-  if (!b.trades?.length) redirect("/app/money");
+  if (!newExperience(b)) redirect("/app/money");
   await connection();
   const [links, limit] = await Promise.all([ownerPayLinks(user), payLinkLimit(user)]);
   const waiting = links.filter((l) => l.status === "open");

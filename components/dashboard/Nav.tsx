@@ -263,6 +263,7 @@ function MoreSheet({ open, onClose, account, path }: { open: boolean; onClose: (
     { href: "/app/settings/get-paid", label: "Get paid", Icon: Banknote, meta: "Your bank and ID" },
     { href: "/app/settings", label: "Settings", Icon: Settings, meta: "Account and alerts" },
     { href: "/help", label: "Help", Icon: CircleHelp, meta: "Step-by-step guides" },
+    ...(account?.admin ? [{ href: "/admin", label: "Admin", Icon: ShieldCheck, meta: "Tikka team only" }] : []),
   ] : [
     { href: "/app/drops", label: "Drops", Icon: Layers, meta: "Your drops and their results" },
     { href: "/app/money", label: "Money", Icon: Banknote, meta: "Pay links and what came in" },

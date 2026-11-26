@@ -17,6 +17,7 @@ import { paystackMode } from "@/lib/paystack";
 import { dbPayoutState, payReady } from "@/lib/payouts-db";
 import { getOwnerUser } from "@/lib/session";
 import { siteUrl } from "@/lib/supabase/env";
+import { newExperience } from "@/lib/experience";
 
 export const metadata: Metadata = { title: "Money" };
 
@@ -37,7 +38,7 @@ async function Money() {
   const b = await getBusiness(user);
   if (!b) redirect("/app/setup");
   // NEW DIRECTION, stage 2: in, spent and kept for businesses from the new setup (demo only for now).
-  if (b.trades?.length) return <MoneyWeek user={user} />;
+  if (newExperience(b)) return <MoneyWeek user={user} />;
   await connection();
   const state = isDbId(b.id) ? await dbPayoutState(b.id) : null;
   const ready = payReady(state, paystackMode());
