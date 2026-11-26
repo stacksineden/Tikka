@@ -68,3 +68,9 @@ Each step is a migration with its database test written first (CLAUDE.md, "How t
 ## 6. Still open
 
 - **Merging to `main`:** after step 2 (so booking with choices reaches real customers), or only once all 8 steps are done? Since everyone switches, step 8 has to be done before the merge either way.
+
+## 7. Before merging to `main`
+
+- **Schedule the money alerts.** Add the hourly pg_cron job for `/api/cron/money` (like `tikka-daily` in `supabase/migrations/20261024200000_scheduler.sql`) in the same release as the merge. Before then production has no such route. It sends at 20:00 WAT and on Sunday at 19:00, and needs the VAPID keys.
+- **Step 8 done**: every business on the new tabs, "finish setting up" for existing businesses, and new sign-ups skipping the old drops welcome tour.
+- **Test-mode pay links**: local development shares the live database, so a link paid with a Paystack test key becomes a sale in that business's money. Pay links in development are only for test businesses.

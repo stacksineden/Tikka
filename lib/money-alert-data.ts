@@ -1,8 +1,9 @@
 import "server-only";
 
-// NEW DIRECTION: the evening and Sunday money alerts. Worked out from the ledger and bookings;
-// sent by web push to the phones the owner turned alerts on for. Demo store only for now: the
-// phones are kept in memory, and sending needs the VAPID keys (lib/push.ts, docs/LAUNCH.md).
+// The evening and Sunday money alerts. Worked out from the ledger and bookings; sent by web push.
+// Real businesses: the owner's phones in push_subscriptions (the same phones as lead, booking and
+// payment alerts), read with money_alert_data() since the scheduled send has no signed-in owner
+// (docs/DB_MOVE.md step 7). The demo: phones kept in memory. Sending needs the VAPID keys.
 
 import webpush from "web-push";
 import { getBookings } from "./bookings-data";
@@ -13,6 +14,8 @@ import { moneyBetween, weekStart } from "./ledger";
 import { eveningAlertText, weeklyAlertText } from "./money-alert";
 import { payAlertText } from "./lead-alert";
 import { pushConfigured } from "./push";
+import { ledgerFrom } from "./ledger-db";
+import { adminClient } from "./supabase/admin";
 import type { SessionUser } from "./types";
 
 type Sub = { endpoint: string; keys: { p256dh: string; auth: string } };
@@ -47,11 +50,48 @@ export function saveMoneyPhone(user: Pick<SessionUser, "id" | "role">, sub: Sub)
   return true;
 }
 
+type Row = Record<string, unknown>;
+
+/** The alert for one real business, from money_alert_data()'s row (same sums as moneyAlertFor). */
+export function realMoneyAlert(row: Row, kind: "evening" | "weekly", now: Date): MoneyAlert {
+  const ledger = ledgerFrom((row.ledger as Row) ?? {});
+  const deposits = ((row.deposits as Row[] | null) ?? []).map((d) => ({ at: String(d.at), kobo: Number(d.kobo), name: String(d.name), item: String(d.item) }));
+  const businessName = String(row.business_name);
+  if (kind === "weekly") {
+    const from = weekStart(now);
+    const m = moneyBetween(ledger, deposits, from, new Date(from.getTime() + 7 * 86_400_000));
+    return weeklyAlertText({ businessName, inKobo: m.inKobo, spentKobo: m.spentKobo, keptKobo: m.keptKobo, best: m.best?.service });
+  }
+  const start = new Date(watInstant(todayKey(now), 0));
+  const m = moneyBetween(ledger, deposits, start, new Date(start.getTime() + 86_400_000));
+  const paid = new Set(ledger.sales.map((s) => s.bookingId).filter(Boolean));
+  const unpaid = ((row.today as Row[] | null) ?? []).filter(
+    (x) => new Date(String(x.starts_at)) < now && x.status !== "cancelled" && x.status !== "no_show" && !paid.has(String(x.id)),
+  ).length;
+  return eveningAlertText({ businessName, inKobo: m.inKobo, unpaid });
+}
+
 /** The scheduled send: every owner with a phone turned on gets this alert. Returns how many went. */
 export async function sendMoneyAlerts(kind: "evening" | "weekly", now = new Date()): Promise<number> {
   if (!pushConfigured()) return 0;
   webpush.setVapidDetails(process.env.VAPID_SUBJECT!, process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!, process.env.VAPID_PRIVATE_KEY!);
   let sent = 0;
+  // Real businesses.
+  const admin = adminClient();
+  const { data } = await admin.rpc("money_alert_data");
+  for (const row of (data ?? []) as Row[]) {
+    const alert = realMoneyAlert(row, kind, now);
+    for (const s of (row.subscriptions as { endpoint: string; p256dh: string; auth: string }[] | null) ?? []) {
+      try {
+        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify({ ...alert, tag: `money-${kind}` }), { TTL: 6 * 3600 });
+        sent++;
+      } catch (e) {
+        const status = (e as { statusCode?: number }).statusCode;
+        if (status === 404 || status === 410) await admin.rpc("forget_push_endpoint", { p_endpoint: s.endpoint });
+      }
+    }
+  }
+  // The demo (development only).
   for (const [id, subs] of phones) {
     const alert = await moneyAlertFor({ id, role: "owner" }, kind, now).catch(() => null);
     if (!alert) continue;

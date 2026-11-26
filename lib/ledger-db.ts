@@ -32,7 +32,11 @@ export async function dbGetLedger(businessId: string): Promise<Ledger & { receip
   const sb = await createClient();
   const { data, error } = await sb.rpc("get_ledger", { p_business: businessId });
   if (error || !data) return { sales: [], expenses: [], regular: [], receipts: {} };
-  const r = data as Row;
+  return ledgerFrom(data as Row);
+}
+
+/** The ledger as get_ledger() and money_alert_data() give it. */
+export function ledgerFrom(r: Row): Ledger & { receipts: Record<string, string> } {
   const sales = ((r.sales as Row[] | null) ?? []).map(saleFrom);
   const links: Sale[] = ((r.pay_links as Row[] | null) ?? []).map((l) => ({
     id: PAY_LINK_SALE + String(l.id),
