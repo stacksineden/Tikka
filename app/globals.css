@@ -363,22 +363,6 @@ dialog.sheet[open] > div {
   }
 }
 
-/* Landing page live feed: each new line fades up (components/landing/LiveStats.tsx). */
-.live-feed-in {
-  animation: live-feed-in 400ms var(--ease-out);
-}
-@keyframes live-feed-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .live-feed-in {
-    animation: none;
-  }
-}
-
 /* Marketplace ticker: the list is rendered twice and slides left forever (transform only). */
 .ticker {
   display: flex;

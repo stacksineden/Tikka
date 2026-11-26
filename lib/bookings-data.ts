@@ -724,11 +724,17 @@ export async function getTikkaForBooking(token: string, ownerKey: string, busine
 }
 
 /** The claimer books a time to use their Tikka. Name and number come from the claim, never the browser. */
-export async function bookForTikka(slug: string, token: string, serviceId: string, startsAt: string): Promise<BookResult> {
+export async function bookForTikka(
+  slug: string,
+  token: string,
+  serviceId: string,
+  startsAt: string,
+  picks?: { choice?: Record<string, unknown>; answers?: string },
+): Promise<BookResult> {
   const found = await getBusinessBySlug(slug);
   if (!found) return { kind: "not_found" };
   const { business, ownerId } = found;
-  if (isDbId(ownerId)) return dbBookForClaim(token, serviceId, startsAt);
+  if (isDbId(ownerId)) return dbBookForClaim(token, serviceId, startsAt, picks);
   const t = demoTikkaForBooking(token);
   const d = demoBook(ownerId, business);
   const svc = business.services.find((s) => s.id === serviceId);

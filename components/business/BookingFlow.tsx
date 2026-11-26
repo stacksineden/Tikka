@@ -62,13 +62,16 @@ function stepsFor(s: ServiceItem, b: FlowBusiness, forTikka = false): Step[] {
   const out: Step[] = [];
   if (s.eventDay) out.push("date", "call");
   if (s.options && s.options.length > 1 && !s.perPerson) out.push("option");
-  if (b.workPlace !== "shop") out.push("place");
+  // A Tikka is used at the shop, so it never asks where.
+  if (b.workPlace !== "shop" && !forTikka) out.push("place");
   if (s.perPerson) out.push("people");
   if (!s.eventDay) out.push("time");
   if (s.extras?.length) out.push("extras");
   // A Tikka booking: name and number come from the claim, and it never takes a deposit. A real
   // business's deposit is paid on Paystack's own page, so there's no pretend pay step.
-  out.push(...(forTikka ? (["review"] as const) : b.live ? (["details", "review"] as const) : (["details", "review", "pay"] as const)));
+  // With a Tikka, details only asks the service's questions (when it has any).
+  const tikkaSteps: Step[] = s.questions?.length ? ["details", "review"] : ["review"];
+  out.push(...(forTikka ? tikkaSteps : b.live ? (["details", "review"] as const) : (["details", "review", "pay"] as const)));
   return out;
 }
 
@@ -93,6 +96,7 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
+  const [offers, setOffers] = useState(false);
   const [answers, setAnswers] = useState<string[]>([]);
   const [email, setEmail] = useState("");
   const [server, setServer] = useState<ServerPrice | null>(null);
@@ -208,8 +212,7 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
     people: true,
     extras: true,
     details:
-      name.trim().length > 1 &&
-      phone.replace(/\D/g, "").length >= 10 &&
+      (!!tikka || (name.trim().length > 1 && phone.replace(/\D/g, "").length >= 10)) &&
       (svc?.questions ?? []).every((_, i) => (answers[i] ?? "").trim().length > 0) &&
       (!needsEmail || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())),
     // A real booking waits for the server's price before Book or Pay.
@@ -250,7 +253,7 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
           area,
           address,
           answers: [...(svc.questions ?? []).map((q, i) => (answers[i]?.trim() ? `${q} ${answers[i].trim()}` : "")), note.trim()].filter(Boolean).join(" · "),
-          ...(tikka ? { tikka: tikka.token } : { name, phone, email: needsEmail ? email.trim() : undefined }),
+          ...(tikka ? { tikka: tikka.token } : { name, phone, futureOffers: offers, email: needsEmail ? email.trim() : undefined }),
         }),
       });
       const data = (await res.json()) as { ok: boolean; token?: string; pay?: string; reason?: string };
@@ -528,9 +531,13 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
 
             {step === "details" && (
               <>
-                <p className="text-body text-ink-muted">{b.name} uses these to reach you about your booking.</p>
-                <Input id="bf-name" label="Your name" value={name} onChange={setName} placeholder="e.g. Chiamaka" autoComplete="name" />
-                <Input id="bf-phone" label="WhatsApp number" value={phone} onChange={setPhone} placeholder="0803 000 0000" inputMode="tel" autoComplete="tel-national" />
+                {!tikka && (
+                  <>
+                    <p className="text-body text-ink-muted">{b.name} uses these to reach you about your booking.</p>
+                    <Input id="bf-name" label="Your name" value={name} onChange={setName} placeholder="e.g. Chiamaka" autoComplete="name" />
+                    <Input id="bf-phone" label="WhatsApp number" value={phone} onChange={setPhone} placeholder="0803 000 0000" inputMode="tel" autoComplete="tel-national" />
+                  </>
+                )}
                 {(svc.questions ?? []).map((q, i) => (
                   <Input key={q} id={`bf-q-${i}`} label={q} value={answers[i] ?? ""} onChange={(v) => setAnswers((a) => a.map((x, j) => (j === i ? v : x)))} />
                 ))}
@@ -542,6 +549,13 @@ export function BookingFlow({ business: b, services, theme, tikka }: { business:
                 </div>
                 {needsEmail && (
                   <Input id="bf-email" label="Email, for your payment receipt" value={email} onChange={setEmail} placeholder="you@example.com" inputMode="email" autoComplete="email" />
+                )}
+                {/* Unticked: it reaches the business's list only once they come in (rule 12). */}
+                {!tikka && (
+                  <label className="flex min-h-11 items-start gap-3">
+                    <input type="checkbox" className="mt-1 size-5 shrink-0" checked={offers} onChange={(e) => setOffers(e.target.checked)} />
+                    <span className="text-body">Tell me about {b.name}&apos;s offers</span>
+                  </label>
                 )}
                 {!b.live && <p className="text-caption text-center text-ink-muted">Demo: nothing is sent. Any number works.</p>}
               </>

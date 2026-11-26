@@ -115,4 +115,17 @@ begin
 end $$;
 reset role;
 
+-- Back in search, the card leads with the first space photo (its small copy).
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-c070-000000000001","role":"authenticated"}', true);
+update public.businesses set listed = true where id = (select v from t where k = 'biz');
+reset role;
+set local role anon;
+do $$
+declare c jsonb := (select x from jsonb_array_elements(public.search_businesses(p_place => 'Bodija, Ibadan')) x where x ->> 'slug' = 'pinstudio70');
+begin
+  assert c ->> 'cover_path' = 'images/00000000-0000-4000-c070-000000000001/space/a.s-sm.webp', 'space photo leads the card: ' || coalesce(c ->> 'cover_path', 'none');
+end $$;
+reset role;
+
 rollback;

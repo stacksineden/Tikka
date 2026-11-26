@@ -76,8 +76,8 @@ export async function POST(request: Request) {
 
   let r: BookResult;
   if (tikka) {
-    // A Tikka booking takes no deposit and keeps the Tikka's own rules (book_for_claim()).
-    r = await bookForTikka(body.slug, tikka, body.serviceId, startsAt);
+    // A Tikka booking takes no deposit and keeps the Tikka's own rules, with the choice (book_for_claim_v2()).
+    r = await bookForTikka(body.slug, tikka, body.serviceId, startsAt, { choice, answers });
     if (r.kind === "already" && "token" in r) return withVisitor(NextResponse.json({ ok: true, token: r.token, already: true }, { headers: noStore }));
   } else {
     r = await dbBookTimeV2({

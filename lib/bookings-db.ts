@@ -406,9 +406,15 @@ export async function dbTikkaInfo(token: string): Promise<TikkaInfo | null> {
   };
 }
 
-/** book_for_claim(): the claimer books a time to use their Tikka (server only). */
-export async function dbBookForClaim(token: string, serviceId: string, startsAt: string): Promise<BookResult> {
-  const { data, error } = await adminClient().rpc("book_for_claim", { p_view_token: token, p_service: serviceId, p_start: startsAt });
+/** book_for_claim_v2(): the claimer books a time to use their Tikka, with the choice (server only). */
+export async function dbBookForClaim(token: string, serviceId: string, startsAt: string, picks?: { choice?: Record<string, unknown>; answers?: string }): Promise<BookResult> {
+  const { data, error } = await adminClient().rpc("book_for_claim_v2", {
+    p_view_token: token,
+    p_service: serviceId,
+    p_start: startsAt,
+    p_choice: picks?.choice ?? {},
+    p_answers: picks?.answers ?? null,
+  });
   if (error) return { kind: error.code === "P0002" ? "not_found" : "error" };
   return data as BookResult;
 }
