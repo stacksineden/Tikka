@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ArrowLeft, CalendarClock, Check, HeartHandshake, Loader2, Repeat, Sparkles, UserPlus, X, type LucideIcon } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CalendarClock, Check, ChevronRight, HeartHandshake, Loader2, Palette, Repeat, Sparkles, UserPlus, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, useTransition } from "react";
@@ -114,6 +114,7 @@ function Builder({
   editing,
   spark,
   pageClaims = false,
+  cardNudge = false,
 }: {
   initial: DropDraft;
   /** A saved draft reopens on the offer; "Run it again" opens on the last screen. */
@@ -131,6 +132,8 @@ function Builder({
   spark: { onList: boolean } | null;
   /** Page-claim mode (lib/claim-mode.ts): show "Check WhatsApp at the counter". */
   pageClaims?: boolean;
+  /** First drop on a plain-colour card: "Make your card yours" on the check screen (lib/drop.ts showsCardNudge). */
+  cardNudge?: boolean;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<DropDraft>(initial);
@@ -390,6 +393,21 @@ function Builder({
           {screen === "review" && (
             <Heading title="Your drop" body={summary(filled)}>
               <StepReview draft={draft} filled={filled} errors={errors} update={update} patch={patch} opensLabel={opensLabel} face={face} expiry={expiry} />
+              {cardNudge && draft.id && (
+                <Link
+                  href={`/app/settings/card?back=${encodeURIComponent(`/app/drops/new?draft=${draft.id}&step=review`)}`}
+                  className="flex min-h-16 items-center gap-3.5 rounded-card border border-line bg-surface-raised px-4 py-3"
+                >
+                  <span className="grid size-10 shrink-0 place-items-center rounded-pill bg-brand-soft text-brand">
+                    <Palette size={20} aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="text-body block font-semibold">Make your card yours</span>
+                    <span className="text-caption block text-ink-muted">Add a pattern or a photo behind your logo. Your drop stays saved.</span>
+                  </span>
+                  <ChevronRight size={18} className="shrink-0 text-ink-muted" aria-hidden="true" />
+                </Link>
+              )}
               <section className="grid gap-1 rounded-card border border-line bg-surface-raised p-4" aria-label="Price">
                 <p className="text-title text-[17px]">
                   {quote.kind === "voucher" ? coveredBy(quote.voucher) : quote.kind === "paid" ? `${quote.tier.label} · ${priceLabel(quote.amountKobo)}` : "Talk to us"}

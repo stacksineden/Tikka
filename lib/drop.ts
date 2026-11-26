@@ -574,3 +574,16 @@ export function publishWindowProblem(existing: PublishedWindow[], candidate: { i
   }
   return null;
 }
+
+/**
+ * Card look's "Back to your drop" (from the first drop's "Make your card yours"): only a saved draft
+ * in the builder, so the link can't be pointed anywhere else.
+ */
+export function dropReturn(back: string | string[] | undefined): string | null {
+  return typeof back === "string" && /^\/app\/drops\/new\?draft=[\w-]{1,64}(&step=review)?$/.test(back) ? back : null;
+}
+
+/** The first drop's nudge: shown until the business has a drop out, and only on a plain-colour card. */
+export function showsCardNudge(drops: { status: string }[], background: { type: string }): boolean {
+  return background.type === "color" && drops.every((d) => d.status === "draft");
+}
