@@ -7,7 +7,7 @@
 
 import { ArrowRight, ChevronLeft, ChevronRight, LocateFixed, MapPin, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { TRADES, type TradeId } from "@/lib/presets";
 import { matchPlaces, POPULAR, searchHref, watToday, whatLabel, whenLabel, type SearchQuery, type TimeOfDay, type When } from "@/lib/search";
 import { TRADE_ICONS } from "./tradeIcons";
@@ -29,6 +29,22 @@ export function SearchBox({ initial, variant = "hero" }: { initial?: Partial<Sea
   const [sheet, setSheet] = useState(false);
   const [step, setStep] = useState<Step>("what");
   const barRef = useRef<HTMLDivElement>(null);
+  const initialRef = useRef(initial);
+  useEffect(() => {
+    initialRef.current = initial;
+  });
+
+  // Next.js keeps a page alive (hidden) after leaving it, so coming back Home would show the last
+  // search still typed in. Start fresh each time the box is hidden.
+  useLayoutEffect(
+    () => () => {
+      setQ({ when: "any", ...initialRef.current });
+      setSeg(null);
+      setSheet(false);
+      setStep("what");
+    },
+    [],
+  );
 
   const set = (patch: Partial<SearchQuery>, next?: Step | null) => {
     setQ((cur) => ({ ...cur, ...patch }));
