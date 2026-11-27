@@ -85,3 +85,37 @@ export function AskDomain({ sent }: { sent?: { domain?: string } }) {
     </div>
   );
 }
+
+/** "Invite another business": their link, Copy and Share on WhatsApp (from their own phone). */
+export function InviteLink({ url, joined, rewarded }: { url: string; joined: number; rewarded: number }) {
+  const [copied, setCopied] = useState(false);
+  const text = `I take bookings and deposits with Tikka. Get your own booking website free: ${url}`;
+  return (
+    <div className="grid gap-3">
+      <div className="flex items-center gap-2 rounded-pill border border-line bg-surface py-1.5 pr-1.5 pl-4">
+        <span className="text-code min-w-0 flex-1 truncate">{url.replace(/^https?:\/\//, "")}</span>
+        <button
+          type="button"
+          className="btn min-h-10 rounded-pill"
+          onClick={() =>
+            navigator.clipboard
+              ?.writeText(url)
+              .then(() => setCopied(true))
+              .catch(() => undefined)
+          }
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <a href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary min-h-12 justify-self-start rounded-pill">
+        Share on WhatsApp
+      </a>
+      {joined > 0 && (
+        <p className="text-caption text-ink-muted">
+          {joined} {joined === 1 ? "business has" : "businesses have"} joined with your link
+          {rewarded ? ` · ${rewarded} free ${rewarded === 1 ? "month" : "months"} earned` : ""}.
+        </p>
+      )}
+    </div>
+  );
+}

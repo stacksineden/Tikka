@@ -4,7 +4,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { AskDomain, BuyPlus } from "@/components/plus/PlusActions";
+import { AskDomain, BuyPlus, InviteLink } from "@/components/plus/PlusActions";
+import { dbMyReferral } from "@/lib/pilot-db";
+import { siteUrl } from "@/lib/supabase/env";
 import { LoadingGrid } from "@/components/ui/Loading";
 import { isDbId } from "@/lib/data";
 import { shortDate } from "@/lib/format";
@@ -25,7 +27,7 @@ async function Plus({ searchParams }: { searchParams: PageProps<"/app/plus">["se
   if (!user) redirect("/app/redeem");
   const sp = await searchParams;
   const demo = !isDbId(user.id);
-  const state = demo ? null : await dbPlusState();
+  const [state, invite] = demo ? [null, null] : await Promise.all([dbPlusState(), dbMyReferral()]);
   const price = state?.priceKobo ? priceLabel(state.priceKobo) : null;
   const on = !!state?.until;
   const left = plusDaysLeft(state?.until);
@@ -87,6 +89,18 @@ async function Plus({ searchParams }: { searchParams: PageProps<"/app/plus">["se
             <span className="text-caption text-ink-muted">Use it before {shortDate(state.until!)}. Make it now →</span>
           </span>
         </Link>
+      )}
+
+      {invite && (
+        <section className="grid gap-3 rounded-card border border-line bg-surface-raised p-5">
+          <div>
+            <h2 className="text-title">Get Plus free: invite a business</h2>
+            <p className="text-body mt-1 text-ink-muted">
+              Share your link with another business owner. When they sign up and start getting bookings on Tikka, you get a free month of Plus.
+            </p>
+          </div>
+          <InviteLink url={`${siteUrl()}/join/${invite.code}`} joined={invite.joined} rewarded={invite.rewarded} />
+        </section>
       )}
 
       <section className="grid gap-2 rounded-card border border-line bg-surface-raised p-5">

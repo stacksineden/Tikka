@@ -15,7 +15,9 @@ import {
   adminEnquiryStatusAction,
   adminDomainStatusAction,
   adminSavePlusPriceAction,
+  adminBioLinkAction,
 } from "@/app/app/actions";
+import { dbAdminActive } from "@/lib/pilot-db";
 import { dbAdminPlus, dbPlusPrice } from "@/lib/plus-db";
 import { PrivacyRequests } from "@/components/admin/PrivacyRequests";
 import { SaveButton } from "@/components/admin/SaveButton";
@@ -75,7 +77,10 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
     real ? dbKycQueue() : Promise.resolve([]),
     real ? dbAdminLaunchWeek() : Promise.resolve([]),
   ]);
-  const [plus, plusPrice] = real ? await Promise.all([dbAdminPlus(), dbPlusPrice().catch(() => null)]) : [{ businesses: [], requests: [] }, null];
+  const [plus, plusPrice, activeRows] = real
+    ? await Promise.all([dbAdminPlus(), dbPlusPrice().catch(() => null), dbAdminActive()])
+    : [{ businesses: [], requests: [] }, null, []];
+  const activeCount = activeRows.filter((x) => x.active).length;
   const plusNow = plus.businesses.filter((x) => x.active);
   const kycWaiting = kycRows.filter((r) => r.kyc?.status === "submitted").length;
   // The Paystack Starter limit (REVENUE_PLAN 5.6): everything collected, live, counts.
@@ -94,6 +99,50 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
       {launch.length > 0 && (
         <Section id="launch-h" title="Launch week" note="Where each business is with the new version. Most to do first; Nudge opens your WhatsApp with a message for what's left.">
           <LaunchWeek rows={launch} />
+        </Section>
+      )}
+
+      {real && (
+        <Section
+          id="active-h"
+          title={`Active businesses · ${count(activeCount)} of 200`}
+          note="Active = 3+ photos and a price, bookings on, their Tikka link in their bio (tick it after you've looked), and a real customer booking in the last 14 days."
+        >
+          {activeRows.length === 0 ? (
+            <p className="text-body text-ink-muted">No businesses yet.</p>
+          ) : (
+            <ul className="grid gap-2">
+              {activeRows.map((x) => (
+                <li key={x.id} className={`${card} grid gap-2`}>
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <Link href={`/${x.slug}`} className="text-body font-semibold text-brand underline">
+                      {x.name}
+                    </Link>
+                    <span className={`rounded-pill px-2.5 py-0.5 text-[12px] font-semibold ${x.active ? "bg-success-soft text-success" : "bg-surface-sunken text-ink-muted"}`}>
+                      {x.active ? "Active" : "Not yet"}
+                    </span>
+                  </div>
+                  <ul className="flex flex-wrap gap-1.5 text-[12px]">
+                    {(
+                      [
+                        [x.page, "Photos and prices"],
+                        [x.bookings, "Bookings on"],
+                        [x.bio, "Link in bio"],
+                        [x.booked, x.lastBooking ? `Last booking ${shortDate(x.lastBooking)}` : "No booking yet"],
+                      ] as [boolean, string][]
+                    ).map(([ok, label]) => (
+                      <li key={label} className={`rounded-pill px-2.5 py-1 ${ok ? "bg-success-soft text-success" : "bg-gold-soft text-gold-text"}`}>
+                        {ok ? "✓" : "✗"} {label}
+                      </li>
+                    ))}
+                  </ul>
+                  <form action={adminBioLinkAction.bind(null, x.id, !x.bio)}>
+                    <SaveButton className="btn btn-secondary min-h-11 px-4 text-label">{x.bio ? "Untick link in bio" : "Link is in their bio"}</SaveButton>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          )}
         </Section>
       )}
 

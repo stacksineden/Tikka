@@ -65,6 +65,7 @@ import {
 } from "@/lib/presets";
 import { initialsFrom, normalizeNgPhone, suggestPrefix } from "@/lib/setup";
 import type { OpeningHours, PortfolioPhoto, TravelReach, WorkPlace } from "@/lib/types";
+import { SharePage } from "@/components/page/SharePage";
 
 const TRADE_ICONS: Record<TradeId, LucideIcon> = { hair: Scissors, makeup: Sparkles, nails: Hand, lashes: Eye, barber: UserRound, spa: Flower2, gele: Crown, photo: Camera, video: Video, content: Clapperboard };
 const BANKS = ["Access Bank", "First Bank", "GTBank", "Kuda", "Moniepoint", "Opay", "Palmpay", "UBA", "Zenith Bank"];
@@ -669,6 +670,7 @@ export function StartFlow({ real = false, ownerName = "" }: { real?: boolean; ow
             <Link href={`/${slug}`} target="_blank" className="btn btn-secondary btn-lg w-full rounded-pill">
               <ExternalLink aria-hidden="true" /> See your page
             </Link>
+            <SharePage slug={slug} name={name} compact />
             {real ? (
               <Note icon={ShieldCheck}>
                 <b>Next: your booking rules.</b> Customers see them before they book. Deposits come after, once we&apos;ve checked your ID.

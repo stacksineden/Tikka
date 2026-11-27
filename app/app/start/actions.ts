@@ -21,6 +21,8 @@ import { initialsFrom, normalizeNgPhone, prefixAlternatives, suggestPrefix } fro
 import { slugAlternatives, suggestSlug } from "@/lib/slug";
 import { parseSocial } from "@/lib/social";
 import type { Business, OpeningHours, ServiceExtra, ServiceItem, TravelReach, WorkPlace } from "@/lib/types";
+import { cookies } from "next/headers";
+import { dbRecordReferral, REF_COOKIE } from "@/lib/pilot-db";
 
 export interface StartPage {
   trades: string[];
@@ -181,6 +183,15 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
     const saved = await saveBusiness(user, next);
     // A starting map pin from the area and city, after the response (the owner can move it later).
     if (real && isDbId(saved.id)) after(() => ensureStartingPin(saved));
+    // Came through another business's invite (usetikka.com/join/<code>): link them, once.
+    if (real && isDbId(saved.id)) {
+      const jar = await cookies();
+      const ref = jar.get(REF_COOKIE)?.value;
+      if (ref) {
+        await dbRecordReferral(saved.id, ref).catch(() => false);
+        jar.delete(REF_COOKIE);
+      }
+    }
     await saveBookingSettings(user, {
       enabled: true,
       capacity: Math.max(1, Math.min(8, Math.round(input.capacity))),

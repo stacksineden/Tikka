@@ -343,3 +343,80 @@ export async function studioCaseImage(c: { client: string; title: string; label:
   );
   return new ImageResponse(art, { width: 1200, height: 630, fonts: loadedFonts, headers: { "Cache-Control": "public, max-age=3600, s-maxage=86400" } });
 }
+
+/**
+ * "We now take bookings" for a business to post on its WhatsApp status (1080×1920) or Instagram
+ * (1080×1080): its own colour, best photo, name and link. Customer-facing, so it's the business's
+ * own brand, with no Tikka explanation (only a small "Book on usetikka.com" in the link itself).
+ */
+export async function bookingImage(
+  b: { name: string; brandColor: string; onBrandColor: string; category: string; area: string; city: string; slug: string },
+  photo: string | undefined,
+  layout: "status" | "square",
+  download?: string,
+): Promise<ImageResponse> {
+  const loadedFonts = await loadFonts();
+  const tall = layout === "status";
+  const on = b.onBrandColor;
+  const pic = photo ? await toPngData(photo) : null;
+  const art = (
+    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", background: b.brandColor, color: on, fontFamily: "Bricolage", padding: tall ? "110px 80px" : "64px 72px" }}>
+      <div style={{ display: "flex", fontSize: tall ? 34 : 26, fontWeight: 800, letterSpacing: 4, textTransform: "uppercase", color: alpha(on, 0.8) }}>Now taking bookings</div>
+      <div style={{ display: "flex", fontSize: tall ? 104 : 72, fontWeight: 800, lineHeight: 1.02, letterSpacing: -2, marginTop: tall ? 24 : 14 }}>{b.name}</div>
+      <div style={{ display: "flex", fontSize: tall ? 34 : 26, fontWeight: 500, marginTop: tall ? 18 : 10, color: alpha(on, 0.8) }}>
+        {[b.category, place(b.area, b.city)].filter(Boolean).join(" · ")}
+      </div>
+      {pic ? (
+        <div style={{ display: "flex", flex: 1, marginTop: tall ? 60 : 36, borderRadius: 36, overflow: "hidden", background: alpha(on, 0.12) }}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- the image renderer draws plain <img> */}
+          <img src={pic} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        </div>
+      ) : (
+        // No photo yet: the words carry it, centred in the space.
+        <div style={{ display: "flex", flex: 1 }} />
+      )}
+      <div style={{ display: "flex", flexDirection: "column", marginTop: tall ? 60 : 36 }}>
+        <div style={{ display: "flex", fontSize: tall ? 40 : 30, fontWeight: 500 }}>See our prices and pick a free time</div>
+        <div
+          style={{
+            display: "flex",
+            marginTop: tall ? 26 : 16,
+            alignSelf: "flex-start",
+            padding: tall ? "24px 40px" : "16px 30px",
+            borderRadius: 999,
+            background: on,
+            color: b.brandColor,
+            fontSize: tall ? 44 : 32,
+            fontWeight: 800,
+          }}
+        >
+          usetikka.com/{b.slug}
+        </div>
+      </div>
+    </div>
+  );
+  return new ImageResponse(art, {
+    ...SIZES[layout],
+    fonts: loadedFonts,
+    headers: {
+      "Cache-Control": "public, max-age=300, s-maxage=3600",
+      ...(download ? { "Content-Disposition": `attachment; filename="${download}"` } : {}),
+    },
+  });
+}
+
+/** A photo as data the image renderer can draw (it fetches nothing itself and reads PNG and JPEG, not WebP). */
+async function toPngData(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    const type = res.headers.get("content-type") ?? "";
+    if (/png|jpe?g/.test(type)) return `data:${type};base64,${buf.toString("base64")}`;
+    const sharp = (await import("sharp")).default;
+    const png = await sharp(buf).resize({ width: 1080, withoutEnlargement: true }).jpeg({ quality: 82 }).toBuffer();
+    return `data:image/jpeg;base64,${png.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}

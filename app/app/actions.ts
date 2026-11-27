@@ -612,6 +612,15 @@ export async function adminSavePlusPriceAction(_prev: AdminFormState, form: Form
   return { savedAt: Date.now() };
 }
 
+/** "Their Tikka link is in their bio": Tikka's team ticks it after looking (the pilot's third check). */
+export async function adminBioLinkAction(businessId: string, on: boolean): Promise<void> {
+  const admin = await getAdmin();
+  if (!admin || !isDbId(admin.id)) return;
+  const { dbSetBioLink } = await import("@/lib/pilot-db");
+  await dbSetBioLink(businessId, on);
+  revalidatePath("/admin");
+}
+
 /* ------------------------------------------------- privacy requests */
 
 export type PersonLookupState =

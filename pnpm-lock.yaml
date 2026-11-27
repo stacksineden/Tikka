@@ -38,6 +38,9 @@ importers:
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
+      sharp:
+        specifier: 0.35.5
+        version: 0.35.5(@types/node@20.19.43)
       web-push:
         specifier: 3.6.7
         version: 3.6.7
@@ -69,9 +72,6 @@ importers:
       jiti:
         specifier: 2.7.0
         version: 2.7.0
-      sharp:
-        specifier: 0.35.5
-        version: 0.35.5(@types/node@20.19.43)
       tailwindcss:
         specifier: ^4
         version: 4.3.3

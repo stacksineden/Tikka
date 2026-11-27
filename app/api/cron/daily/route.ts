@@ -5,6 +5,7 @@ import { removeOrphanMedia } from "@/lib/media-cleanup";
 import { removeOrphanStreamVideos } from "@/lib/stream";
 import { dbQueueDailySummaries } from "@/lib/summary-db";
 import { processQueue } from "@/lib/whatsapp/send";
+import { dbRewardReferrals } from "@/lib/pilot-db";
 
 // The scheduler (Supabase pg_cron, see the scheduler migration) at 07:00 UTC (8:00 WAT): owner
 // daily summaries with the seasonal "Run it again" line (TECH_PLAN §5). In production only the
@@ -21,5 +22,7 @@ export async function GET(request: Request) {
   const filesRemoved = await removeOrphanMedia().catch(() => -1);
   // And videos on Bunny nothing points at, a day after upload.
   const videosRemoved = await removeOrphanStreamVideos().catch(() => -1);
-  return NextResponse.json({ ok: true, queued, sent, demo, filesRemoved, videosRemoved });
+  // Invites: each invited business now active earns its inviter a free month of Plus.
+  const referralsRewarded = await dbRewardReferrals().catch(() => -1);
+  return NextResponse.json({ ok: true, queued, sent, demo, filesRemoved, videosRemoved, referralsRewarded });
 }

@@ -8,6 +8,7 @@ import { getBusiness, getPortfolioPlan } from "@/lib/data";
 import { pageChecklist } from "@/lib/page";
 import { getOwnerUser } from "@/lib/session";
 import { LoadingGrid } from "@/components/ui/Loading";
+import { SharePage } from "@/components/page/SharePage";
 
 export const metadata: Metadata = { title: "Your page" };
 
@@ -47,6 +48,7 @@ async function Editor() {
           </ul>
         </div>
       )}
+      <SharePage slug={b.slug} name={b.name} />
       <PageEditor key={b.slug} business={b} plan={plan} />
     </>
   );
