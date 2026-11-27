@@ -95,11 +95,25 @@ export async function loadBusinessBySlug(slug: string): Promise<Business | null>
   return data ? loadById(sb, data.id) : null;
 }
 
+/** A changed page address: the business's current one for an old address, else null. */
+export async function dbPageMovedTo(slug: string): Promise<string | null> {
+  if (!/^[a-z0-9-]{3,30}$/i.test(slug)) return null;
+  const sb = await createClient();
+  const { data } = await sb.rpc("page_moved_to", { p_slug: slug.toLowerCase() });
+  return typeof data === "string" && data ? data : null;
+}
+
 /** Page addresses and code prefixes in use by businesses in the database. */
 export async function dbTaken(): Promise<{ slugs: Set<string>; prefixes: Set<string> }> {
   const sb = await createClient();
-  const { data } = await sb.from("businesses").select("slug, code_prefix");
-  return { slugs: new Set((data ?? []).map((r) => r.slug)), prefixes: new Set((data ?? []).map((r) => r.code_prefix)) };
+  const [{ data }, { data: old }] = await Promise.all([
+    sb.from("businesses").select("slug, code_prefix"),
+    // Other businesses' old addresses still redirect to them, so they count as taken.
+    sb.rpc("others_old_addresses"),
+  ]);
+  const slugs = new Set((data ?? []).map((r) => r.slug));
+  for (const slug of (old as string[] | null) ?? []) slugs.add(slug);
+  return { slugs, prefixes: new Set((data ?? []).map((r) => r.code_prefix)) };
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);

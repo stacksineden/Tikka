@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ArrowUpRight, Clock3, Globe, MapPin, Star } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { redirectIfMoved } from "@/lib/moved";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { BookingFlow } from "@/components/business/BookingFlow";
@@ -67,7 +68,10 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
   await connection();
   const { slug } = await params;
   const found = await getBusinessBySlug(slug);
-  if (!found) notFound();
+  if (!found) {
+    await redirectIfMoved(slug, (to) => `/book/${to}`);
+    notFound();
+  }
   const b: Business = found.business;
   const now = new Date();
   const [reviews, rules, space] = await Promise.all([getBusinessReviews(found.ownerId), getBookingRules(found.ownerId, b), isDbId(b.id) ? getSpacePhotos(b.id) : []]);

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ArrowLeft, CalendarDays } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { redirectIfMoved } from "@/lib/moved";
 import { Suspense } from "react";
 import { bizSerif } from "@/components/business/fonts";
 import { Gallery } from "@/components/business/Gallery";
@@ -52,7 +53,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 async function CollectionPage({ params }: { params: Props["params"] }) {
   const found = await find(params);
-  if (!found) notFound();
+  if (!found) {
+    const { slug, collection } = await params;
+    await redirectIfMoved(slug, (to) => `/${to}/work/${encodeURIComponent(collection)}`);
+    notFound();
+  }
   const { b, c, others } = found;
   // The owner's own booking link wins, as on the business page; else WhatsApp with this collection named.
   const book = b.actions.find((a) => a.kind === "book")?.value.trim() || collectionBookingLink(b, c);

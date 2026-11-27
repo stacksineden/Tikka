@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { ArrowUpRight, BadgeCheck, CalendarDays, MapPin, Star } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { redirectIfMoved } from "@/lib/moved";
 import { Fragment, Suspense } from "react";
 import { BookingSheet } from "@/components/business/BookingSheet";
 import { DropBand } from "@/components/business/DropBand";
@@ -144,7 +145,10 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
   const { slug } = await params;
   const sp = await searchParams;
   const found = await getBusinessBySlug(slug);
-  if (!found) notFound();
+  if (!found) {
+    await redirectIfMoved(slug, (to) => `/${to}`, sp);
+    notFound();
+  }
   const b = found.business;
   // The same for every visitor: the public drops, never the signed-in person's own.
   const [drops, reviews, rules] = await Promise.all([getPageDrops(b.slug, found.ownerId), getBusinessReviews(found.ownerId), getBookingRules(found.ownerId, b)]);

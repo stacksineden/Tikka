@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { redirectIfMoved } from "@/lib/moved";
 import { Suspense } from "react";
 import { getBookingRules } from "@/lib/bookings-data";
 import { ClaimFlow } from "@/components/claim/ClaimFlow";
@@ -40,7 +41,10 @@ export async function generateMetadata({ params }: PageProps<"/d/[business]/[dro
 async function Claim({ params, searchParams }: PageProps<"/d/[business]/[drop]">) {
   const [{ business: businessSlug, drop: dropSlug }, query, jar] = await Promise.all([params, searchParams, cookies()]);
   const found = await getPublicDrop(businessSlug, dropSlug);
-  if (!found) notFound();
+  if (!found) {
+    await redirectIfMoved(businessSlug, (to) => `/d/${to}/${encodeURIComponent(dropSlug)}`, query);
+    notFound();
+  }
   const { business: b, drop } = found;
 
   const source = parseSource(query.c);
