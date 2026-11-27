@@ -733,7 +733,13 @@ export function ClaimFlow({
               Book your next visit
             </a>
           ) : beat === "revealed" ? (
-            <button type="button" className="tk-btn tk-btn-gold" onClick={() => share(`I got a Tikka from ${face.name}. Every Tikka holds something: open yours.`)}>
+            <button type="button" className="tk-btn tk-btn-gold" onClick={() =>
+                share(
+                  status === "live"
+                    ? `I got a Tikka from ${face.name}. Every Tikka holds something: open yours.`
+                    : `I got a Tikka from ${face.name}. Catch their next drop:`,
+                )
+              }>
               <ShareIcon />
               Share my Tikka
             </button>
@@ -772,8 +778,13 @@ export function ClaimFlow({
                   ? cardState?.redeemedAt || cardState?.expired
                     ? `Thanks for coming back to ${face.name}`
                     : `Just for you · use it by ${shortDate(card.expiresAt)}`
-                  : beat === "revealed"
+                  : beat === "revealed" && status === "live"
                 ? `${count(drop.left)} of ${count(drop.total)} left for your friends`
+                // Ended or all claimed: friends can't get one any more, so speak about their own card.
+                : beat === "revealed"
+                  ? cardState?.redeemedAt || cardState?.expired || !card
+                    ? `Thanks for coming to ${face.name}`
+                    : `Show it at ${face.name} by ${shortDate(card.expiresAt)}`
                 : beat === "sealed" && status === "live"
                   ? "Free · takes a minute"
                   : status === "live"
