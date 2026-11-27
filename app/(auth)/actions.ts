@@ -107,7 +107,8 @@ export async function signOut() {
   await supabase.auth.signOut();
   await clearDemoSession();
   (await cookies()).delete(STAFF_HINT);
-  redirect("/");
+  // Signing in and out is for businesses: back to the For businesses page, not the customer search.
+  redirect("/business");
 }
 
 export async function finishTour(form: FormData) {

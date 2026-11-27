@@ -315,16 +315,16 @@ export function BizPricing({ tiers, plusKobo }: { tiers: DropTier[]; plusKobo: n
           <li>When customers pay you online, Tikka keeps 1% (plus Paystack&apos;s fee). The rest goes straight to your bank.</li>
           {drop && (
             <li>
-              Want new customers without Plus? A single drop is {priceLabel(drop.priceKobo)}.{" "}
-              <a href="#drops" className="font-semibold text-brand underline underline-offset-4">
-                What&apos;s a drop?
-              </a>
+              Want new customers without Plus? Your first drop is free, then {priceLabel(drop.priceKobo)} each.{" "}
+              <Link href="/sign-up" className="font-semibold text-brand underline underline-offset-4">
+                Create your account
+              </Link>
             </li>
           )}
           <li>
             Want your own web address, like yourbusiness.com?{" "}
-            <Link href="/app/plus#domain" className="font-semibold text-brand underline underline-offset-4">
-              Ask us
+            <Link href="/studio/contact" className="font-semibold text-brand underline underline-offset-4">
+              Talk to us
             </Link>
           </li>
         </ul>
@@ -350,7 +350,7 @@ export function BizFaq({ tiers, plusKobo }: { tiers: DropTier[]; plusKobo: numbe
       `Your website, bookings, deposits and daily tools are free. When customers pay you online, Tikka keeps 1% plus Paystack's fee.${plusKobo ? ` Tikka Plus is ${priceLabel(plusKobo)} a month if you want more customers.` : ""}${drop ? ` A single drop is ${priceLabel(drop.priceKobo)}, and your first one is free.` : ""}`,
     ],
     ["What happens if I stop Tikka Plus?", "Nothing on your page breaks. Your photos, collections, page style, bookings and customers all stay. You leave the top of search, the monthly drop stops and \u201cMade with Tikka\u201d comes back."],
-    ["Can I use my own web address?", "Yes. Ask us from Tikka Plus in your dashboard and we\u2019ll set it up for you, like yourbusiness.com. Your usetikka.com link keeps working too."],
+    ["Can I use my own web address?", "Yes. Talk to us and we\u2019ll set it up for you, like yourbusiness.com. Your usetikka.com link keeps working too."],
   ];
   return (
     <section id="faq" className="scroll-mt-6 bg-surface px-5 py-14 sm:px-6 sm:py-20">

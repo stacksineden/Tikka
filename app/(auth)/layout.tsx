@@ -6,7 +6,8 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1fr_minmax(0,560px)]">
       <div className="flex flex-col px-4 py-6 sm:px-10">
-        <Link href="/" className="self-start" aria-label="Tikka home">
+        {/* Sign in, sign up and passwords are for businesses: the logo goes to For businesses. */}
+        <Link href="/business" className="self-start" aria-label="Tikka for businesses">
           <Logo priority />
         </Link>
         <main className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center py-10">{children}</main>
