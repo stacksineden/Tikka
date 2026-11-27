@@ -5,6 +5,7 @@ import { SettingsPage } from "@/components/settings/SettingsPage";
 import { ProfileEditor } from "@/components/setup/SettingsEditors";
 import { getBusiness } from "@/lib/data";
 import { getSessionUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Business profile" };
 
@@ -19,7 +20,7 @@ async function Editor() {
 export default function ProfilePage() {
   return (
     <SettingsPage title="Business profile" intro="What people see when they open your card: Overview, Services and Video.">
-      <Suspense fallback={<div className="h-96 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Editor />
       </Suspense>
     </SettingsPage>

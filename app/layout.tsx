@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Space_Mono } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
+import { BLUR_SCRIPT } from "@/lib/blur";
 
 // latin-ext carries ₦ (U+20A6).
 const bricolage = Bricolage_Grotesque({
@@ -37,7 +39,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${bricolage.variable} ${spaceMono.variable}`}>
-      <body className="min-h-dvh">{children}</body>
+      <body className="min-h-dvh">
+        {children}
+        {/* Photos sharpen in once loaded (lib/blur.ts). */}
+        <Script id="blur-up" strategy="beforeInteractive">
+          {BLUR_SCRIPT}
+        </Script>
+      </body>
     </html>
   );
 }

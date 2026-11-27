@@ -6,6 +6,7 @@ import { SWATCHES } from "@/lib/color";
 import { getBusiness } from "@/lib/data";
 import { getSessionUser } from "@/lib/session";
 import type { CardDraft } from "@/lib/setup";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Set up your card" };
 
@@ -52,7 +53,7 @@ async function Setup() {
 
 export default function SetupPage() {
   return (
-    <Suspense fallback={<div className="min-h-dvh bg-surface" />}>
+    <Suspense fallback={<LoadingGrid className="mx-auto min-h-dvh max-w-xl px-4 py-6" />}>
       <Setup />
     </Suspense>
   );

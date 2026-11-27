@@ -6,6 +6,7 @@ import { getBusiness } from "@/lib/data";
 import { finishSetupMissing } from "@/lib/experience";
 import { presetRules, travelFeeFor, type TradeId } from "@/lib/presets";
 import { getOwnerUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Finish setting up" };
 
@@ -35,7 +36,7 @@ async function Finish() {
 
 export default function FinishPage() {
   return (
-    <Suspense fallback={<div className="min-h-dvh bg-surface" />}>
+    <Suspense fallback={<LoadingGrid className="mx-auto min-h-dvh max-w-xl px-4 py-6" />}>
       <Finish />
     </Suspense>
   );

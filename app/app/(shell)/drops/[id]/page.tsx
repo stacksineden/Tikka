@@ -23,6 +23,7 @@ import { getOwnerUser } from "@/lib/session";
 import { sparkState } from "@/lib/studio-db";
 import { SparkCard } from "@/components/spark/SparkTeaser";
 import type { Source } from "@/lib/types";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Drop" };
 
@@ -330,7 +331,7 @@ export default function DropPage(props: PageProps<"/app/drops/[id]">) {
         <ChevronLeft size={18} aria-hidden="true" />
         Drops
       </Link>
-      <Suspense fallback={<div className="h-96 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Dashboard params={props.params} searchParams={props.searchParams} />
       </Suspense>
     </div>

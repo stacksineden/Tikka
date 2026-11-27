@@ -31,6 +31,7 @@ import { getOwnerUser } from "@/lib/session";
 import { siteUrl } from "@/lib/supabase/env";
 import type { Source, Tier } from "@/lib/types";
 import { newExperience } from "@/lib/experience";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Customers" };
 
@@ -407,7 +408,7 @@ function BookingLeads({ rows, title, businessName }: { rows: BookingLead[]; titl
 export default function Page(props: PageProps<"/app/leads">) {
   return (
     <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-8">
-      <Suspense fallback={<div className="h-96 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Leads searchParams={props.searchParams} />
       </Suspense>
     </div>

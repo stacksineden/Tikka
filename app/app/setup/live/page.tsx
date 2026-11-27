@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { BioCard } from "@/components/business/BioCard";
 import { getBusiness } from "@/lib/data";
 import { getSessionUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Your page is live" };
 
@@ -40,7 +41,7 @@ async function Live() {
 export default function LivePage() {
   return (
     <main className="mx-auto grid min-h-dvh max-w-xl content-center gap-5 px-4 py-10">
-      <Suspense fallback={<div className="h-96" />}>
+      <Suspense fallback={<LoadingGrid tiles={2} />}>
         <Live />
       </Suspense>
     </main>

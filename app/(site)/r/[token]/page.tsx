@@ -11,6 +11,7 @@ import { whatsappLink } from "@/lib/booking";
 import { naira } from "@/lib/format";
 import { bookingNumber } from "@/lib/page";
 import { receiptPage } from "@/lib/receipts-data";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 // NEW DIRECTION: a receipt the owner sends a customer: the business, what it was for, each payment
 // and how it was made, and what's still owed. Proof of payment, not a tax invoice. Never the
@@ -129,7 +130,7 @@ async function Receipt({ params }: { params: PageProps<"/r/[token]">["params"] }
 export default function Page(props: PageProps<"/r/[token]">) {
   return (
     <main data-theme="light" className="min-h-dvh bg-surface-sunken text-ink">
-      <Suspense fallback={<div className="h-dvh" />}>
+      <Suspense fallback={<LoadingGrid bare tiles={0} rows={4} className="mx-auto max-w-md px-4 py-8" />}>
         <Receipt params={props.params} />
       </Suspense>
     </main>

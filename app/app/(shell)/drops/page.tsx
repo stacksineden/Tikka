@@ -10,6 +10,7 @@ import { getBusiness, getDrops } from "@/lib/data";
 import { clockTime, count, left, nairaShort, percent, shortDate } from "@/lib/format";
 import { getSessionUser } from "@/lib/session";
 import type { Drop } from "@/lib/types";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Drops" };
 
@@ -238,7 +239,7 @@ export default function DropsPage() {
           <CreateButton />
         </Suspense>
       </div>
-      <Suspense fallback={<div className="h-64 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <DropsList />
       </Suspense>
     </div>

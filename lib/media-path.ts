@@ -56,6 +56,16 @@ export function smallOf(url: string | undefined | null): string | null {
   return url && WITH_SMALL.test(url) ? url.replace(WITH_SMALL, SMALL_SUFFIX) : null;
 }
 
+// Blurred copies. Every photo in the images bucket has a tiny copy beside it, "{name}-xs.webp"
+// (about 24px wide), shown blurred in the photo's box until the photo has loaded (lib/blur.ts).
+export const XS_SUFFIX = "-xs.webp";
+
+/** The blurred copy's address: only for photos in Storage (demo and mock photos have none). */
+export function xsOf(url: string | undefined | null): string | null {
+  if (!url || !url.startsWith(publicBase() + "images/") || !url.endsWith(".webp") || url.endsWith(XS_SUFFIX)) return null;
+  return url.slice(0, -".webp".length) + XS_SUFFIX;
+}
+
 /**
  * A srcset offering the phone copy and the full photo. The widths are deliberately low (the copy
  * is 1000px and the full photo 1600px on the long side, whatever the shape), so a browser only

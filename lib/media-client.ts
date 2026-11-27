@@ -1,7 +1,7 @@
 // Browser-only image and video helpers for card setup (TECH_PLAN §14: logo 256px WebP,
 // background 1200×600 WebP, video ≤30 s and ≤20 MB with a poster frame captured here).
 
-import { SMALL_SUFFIX } from "./media-path";
+import { SMALL_SUFFIX, XS_SUFFIX } from "./media-path";
 import { parseExif, toneHex } from "./photo-meta";
 import { LIMITS } from "./setup";
 import { browserClient } from "./supabase/client";
@@ -208,6 +208,26 @@ export async function prepareCropped(file: File, w: number, h: number): Promise<
   return cropTo(await loadImage(file), w, h);
 }
 
+/** The tiny copy shown blurred while the photo loads (lib/blur.ts): 24px wide, a few hundred bytes. */
+async function blurCopy(file: Blob): Promise<Blob | null> {
+  try {
+    const bmp = await createImageBitmap(file);
+    const w = 24;
+    const h = Math.max(1, Math.round((bmp.height / bmp.width) * w));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext("2d")!.drawImage(bmp, 0, 0, w, h);
+    bmp.close();
+    return await new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/webp", 0.6));
+  } catch {
+    return null;
+  }
+}
+
+/** The photos that get a blurred copy: the ones pages show large (not logos, team faces or posters). */
+const BLURRED: string[] = ["portfolio", "hero", "about", "service", "space"];
+
 /** What a file is for: its folder in storage ({user}/{kind}/{file}). */
 export type MediaKind = "logo" | "background" | "video" | "video-poster" | "portfolio" | "hero" | "about" | "service" | "team" | "space";
 
@@ -227,6 +247,12 @@ export async function uploadMedia(file: Blob, kind: MediaKind, name?: string): P
     const path = `${user.id}/${kind}/${name ?? `${crypto.randomUUID()}.${EXT[file.type] ?? "bin"}`}`;
     const { error } = await sb.storage.from(bucket).upload(path, file, { contentType: file.type, cacheControl: "31536000" });
     if (error) throw new Error(/size|large/i.test(error.message) ? "That file is too big. Try a smaller one." : "That upload didn't go through. Try again.");
+    // A photo's blurred copy beside it ("{name}-xs.webp"), only for the photos pages show large; never
+    // for a phone copy. Best effort: the photo works without it.
+    if (bucket === "images" && BLURRED.includes(kind) && path.endsWith(".webp") && !path.endsWith(SMALL_SUFFIX)) {
+      const xs = await blurCopy(file);
+      if (xs) await sb.storage.from(bucket).upload(path.slice(0, -".webp".length) + XS_SUFFIX, xs, { contentType: "image/webp", cacheControl: "31536000", upsert: true }).catch(() => null);
+    }
     return sb.storage.from(bucket).getPublicUrl(path).data.publicUrl;
   }
   const res = await fetch("/api/demo/media", { method: "POST", body: file, headers: { "Content-Type": file.type } });

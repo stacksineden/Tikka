@@ -31,6 +31,8 @@ import { collectionLine, portfolioView } from "@/lib/portfolio";
 import { SITE } from "@/lib/qr";
 import { formatTime } from "@/lib/setup";
 import type { Business, OpeningHours } from "@/lib/types";
+import { LoadingGrid } from "@/components/ui/Loading";
+import { blurProps } from "@/lib/blur";
 
 // The free business page: a one-page website for the business's Instagram and WhatsApp bio
 // (PRD A5). One fixed editorial layout filled with their content and brand colour; empty
@@ -281,7 +283,7 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
         <div className="biz-hero-frame relative isolate flex min-h-[72svh] flex-col overflow-hidden text-on-night sm:min-h-[calc(100svh-40px)] lg:min-h-[calc(100svh-64px)]" style={{ background: b.brandColor }}>
         {page.heroImageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={page.heroImageUrl} alt="" fetchPriority="high" className="biz-hero-img absolute inset-0 -z-10 size-full object-cover" style={{ objectPosition: focalPosition(page.heroFocal) }} />
+          <img src={page.heroImageUrl} alt="" fetchPriority="high" className="biz-hero-img absolute inset-0 -z-10 size-full object-cover" {...blurProps(page.heroImageUrl, { style: { objectPosition: focalPosition(page.heroFocal) } })} />
         ) : (
           <div className="absolute inset-0 -z-10" aria-hidden="true">
             <div className="absolute -right-32 -top-32 size-[520px] rounded-pill bg-on-night/10" />
@@ -390,6 +392,7 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
                   alt=""
                   loading="lazy"
                   decoding="async"
+                  {...blurProps(page.aboutImageUrl)}
                   className="block h-auto max-h-[min(80svh,860px)] w-auto max-w-full"
                 />
               </div>
@@ -436,6 +439,7 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
                         alt=""
                         loading="lazy"
                         decoding="async"
+                        {...blurProps(c.cover.thumbUrl, { tone: c.cover.tone })}
                         className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                       />
                       <span className="biz-cover-cap">
@@ -640,7 +644,7 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
 export default function Page(props: PageProps<"/[slug]">) {
   return (
     <main className="min-h-dvh bg-surface-raised">
-      <Suspense fallback={<div className="h-dvh bg-surface-raised" />}>
+      <Suspense fallback={<LoadingGrid className="mx-auto max-w-5xl px-4 py-8" />}>
         <BusinessPage params={props.params} searchParams={props.searchParams} />
       </Suspense>
     </main>

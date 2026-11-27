@@ -6,6 +6,7 @@ import { ReportButton } from "@/components/reviews/ReportButton";
 import { getBusiness, getBusinessReviews } from "@/lib/data";
 import { count, shortDate } from "@/lib/format";
 import { getOwnerUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Reviews" };
 
@@ -76,7 +77,7 @@ export default function Page() {
   return (
     <div className="mx-auto grid max-w-3xl gap-4 px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-8">
       <h1 className="text-heading">Reviews</h1>
-      <Suspense fallback={<div className="h-64 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Reviews />
       </Suspense>
     </div>

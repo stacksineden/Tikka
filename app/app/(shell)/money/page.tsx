@@ -18,6 +18,7 @@ import { dbPayoutState, payReady } from "@/lib/payouts-db";
 import { getOwnerUser } from "@/lib/session";
 import { siteUrl } from "@/lib/supabase/env";
 import { newExperience } from "@/lib/experience";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Money" };
 
@@ -169,7 +170,7 @@ async function Money() {
 export default function Page() {
   return (
     <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-8">
-      <Suspense fallback={<div className="h-96 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Money />
       </Suspense>
     </div>

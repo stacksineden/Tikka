@@ -11,6 +11,7 @@ import { count } from "@/lib/format";
 import { DEFAULT_HOOK, FORMATS, rewardHook, spacedCode, type PrintFormat } from "@/lib/posters";
 import { qrSvg, SITE } from "@/lib/qr";
 import { getOwnerUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Posters" };
 
@@ -75,7 +76,7 @@ export default function PostersPage() {
         </div>
         <PostersTabs current="posters" />
       </div>
-      <Suspense fallback={<div className="h-96 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Posters />
       </Suspense>
     </div>

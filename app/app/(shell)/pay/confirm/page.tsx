@@ -5,6 +5,7 @@ import { ConfirmPayment } from "@/components/drops/ConfirmPayment";
 import { getPayment } from "@/lib/data";
 import { paymentPlace } from "@/lib/payments";
 import { getOwnerUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Confirming payment" };
 
@@ -21,7 +22,7 @@ async function Confirm({ searchParams }: PageProps<"/app/pay/confirm">) {
 export default function Page(props: PageProps<"/app/pay/confirm">) {
   return (
     <div className="mx-auto grid max-w-xl gap-5 px-4 pb-10 pt-10 sm:px-6">
-      <Suspense fallback={<div className="h-48 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Confirm {...props} />
       </Suspense>
     </div>

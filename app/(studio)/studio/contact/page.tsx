@@ -6,6 +6,7 @@ import { getBusiness, ownerNumber } from "@/lib/data";
 import { getOwnerUser } from "@/lib/session";
 import { formatNgPhone } from "@/lib/setup";
 import { caseStudy, STUDIO_EMAIL } from "@/lib/studio";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = {
   title: { absolute: "Contact · Tikka Studio" },
@@ -43,7 +44,7 @@ export default function ContactPage(props: PageProps<"/studio/contact">) {
           </p>
         </div>
       </div>
-      <Suspense fallback={<div className="h-[640px] rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Form searchParams={props.searchParams} />
       </Suspense>
     </div>

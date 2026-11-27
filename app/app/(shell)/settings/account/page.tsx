@@ -9,6 +9,7 @@ import { LeadAlertsSetting } from "@/components/alerts/LeadAlerts";
 import { pushConfigured } from "@/lib/push";
 import { getBusiness, isDbId, ownerNumber } from "@/lib/data";
 import { getSessionUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Account" };
 
@@ -46,7 +47,7 @@ async function Account() {
 export default function AccountPage() {
   return (
     <SettingsPage title="Account">
-      <Suspense fallback={<div className="h-48 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Account />
       </Suspense>
     </SettingsPage>

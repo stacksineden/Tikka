@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { StartFlow } from "@/components/start/StartFlow";
 import { getBusiness, isDbId } from "@/lib/data";
 import { demoAllowed, getSessionUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Set up your business" };
 
@@ -23,7 +24,7 @@ async function Start() {
 
 export default function StartPage() {
   return (
-    <Suspense fallback={<div className="min-h-dvh bg-surface" />}>
+    <Suspense fallback={<LoadingGrid className="mx-auto min-h-dvh max-w-xl px-4 py-6" />}>
       <Start />
     </Suspense>
   );

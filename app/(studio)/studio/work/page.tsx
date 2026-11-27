@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { WorkCard } from "@/components/studio/WorkCard";
 import { allWork } from "@/lib/studio";
 import { filterWork, parseWorkFilters, STUDIO_CATEGORIES, STUDIO_INDUSTRIES, WORK_FILTER_CATEGORIES, workHref, type WorkFilters } from "@/lib/studio-shared";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = {
   title: { absolute: "Our work · Tikka Studio" },
@@ -112,7 +113,7 @@ export default function WorkPage(props: PageProps<"/studio/work">) {
         <h1 className="text-display-lg text-balance">Our work</h1>
         <p className="text-body-lg max-w-2xl text-ink-muted">Websites, WhatsApp systems, ads and content we&apos;ve made for businesses. Tap a video to play it.</p>
       </div>
-      <Suspense fallback={<div className="h-96 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Work searchParams={props.searchParams} />
       </Suspense>
     </div>

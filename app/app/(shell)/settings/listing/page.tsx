@@ -7,6 +7,7 @@ import { getBusiness, isDbId } from "@/lib/data";
 import { place } from "@/lib/format";
 import { getListingState, getSpacePhotos } from "@/lib/listing-db";
 import { getOwnerUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Your Tikka listing" };
 
@@ -48,7 +49,7 @@ async function Listing() {
 export default function Page() {
   return (
     <SettingsPage title="Your Tikka listing">
-      <Suspense fallback={<div className="h-48 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Listing />
       </Suspense>
     </SettingsPage>

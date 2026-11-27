@@ -13,6 +13,7 @@ import { getSessionUser } from "@/lib/session";
 import { actionMeta } from "@/lib/setup";
 import { newExperience } from "@/lib/experience";
 import { inListingGrace } from "@/lib/listing";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -119,7 +120,7 @@ async function Hub() {
 
 export default function SettingsHub() {
   return (
-    <Suspense fallback={<div className="mx-auto h-96 max-w-3xl" />}>
+    <Suspense fallback={<LoadingGrid className="mx-auto max-w-3xl" />}>
       <Hub />
     </Suspense>
   );

@@ -21,6 +21,7 @@ const payPage = (token: string) => (isDemoToken(token) ? demoPayPage(token) : db
 import { sendPayLinkAlert } from "@/lib/push";
 import { verifyPayment } from "@/lib/paystack";
 import { siteUrl } from "@/lib/supabase/env";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 // A pay link (REVENUE_PLAN 5.3): the business, what it's for and how much, then Paystack. Back from
 // Paystack (?reference=), the payment is checked with Paystack and recorded before the receipt shows;
@@ -122,7 +123,7 @@ async function Pay({ params, searchParams }: { params: PageProps<"/pay/[token]">
 export default function Page(props: PageProps<"/pay/[token]">) {
   return (
     <main data-theme="light" className="min-h-dvh bg-surface-sunken text-ink">
-      <Suspense fallback={<div className="h-dvh" />}>
+      <Suspense fallback={<LoadingGrid bare tiles={0} rows={4} className="mx-auto max-w-md px-4 py-8" />}>
         <Pay params={props.params} searchParams={props.searchParams} />
       </Suspense>
     </main>

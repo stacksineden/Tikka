@@ -7,6 +7,7 @@ import { getPosterForPrint } from "@/lib/data";
 import { BLEED_MM, DEFAULT_HOOK, FORMATS, type PrintFormat } from "@/lib/posters";
 import { qrSvg, SITE } from "@/lib/qr";
 import { getOwnerUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Print kit", robots: { index: false } };
 
@@ -71,7 +72,7 @@ async function Sheet({ params, searchParams }: PageProps<"/app/posters/[id]/prin
 export default function PrintPage(props: PageProps<"/app/posters/[id]/print">) {
   return (
     <div className="min-h-dvh bg-surface-sunken">
-      <Suspense fallback={<div className="h-96" />}>
+      <Suspense fallback={<LoadingGrid tiles={2} />}>
         <Sheet {...props} />
       </Suspense>
     </div>

@@ -7,6 +7,7 @@ import { cardQrColors, contactScanPath } from "@/lib/contact-cards";
 import { getContactCard, getContactCards } from "@/lib/contact-cards-data";
 import { qrSvg, SITE } from "@/lib/qr";
 import { getOwnerUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Design your card" };
 
@@ -28,7 +29,7 @@ export default function CardEditorPage(props: PageProps<"/app/posters/cards/[id]
         <h1 className="text-heading">Design your card</h1>
         <p className="text-body mt-1 text-ink-muted">Tap the card to see the other side.</p>
       </div>
-      <Suspense fallback={<div className="h-96 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Editor {...props} />
       </Suspense>
     </div>

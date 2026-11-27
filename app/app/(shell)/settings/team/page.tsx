@@ -8,6 +8,7 @@ import { InviteStaffForm, RemoveStaffButton } from "@/components/team/TeamForms"
 import { getTeam } from "@/lib/data";
 import { shortDate } from "@/lib/format";
 import { getOwnerUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Team" };
 
@@ -81,7 +82,7 @@ async function Team() {
 export default function Page() {
   return (
     <SettingsPage title="Team" intro="The people who check codes and mark who came. They never see your customers' numbers or your money.">
-      <Suspense fallback={<div className="h-64 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Team />
       </Suspense>
     </SettingsPage>

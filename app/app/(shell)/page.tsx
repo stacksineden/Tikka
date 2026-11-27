@@ -48,6 +48,7 @@ import { pageChecklist } from "@/lib/page";
 import { getSessionUser } from "@/lib/session";
 import type { Business } from "@/lib/types";
 import { newExperience } from "@/lib/experience";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Home" };
 
@@ -292,17 +293,7 @@ function GettingStarted({ name, business, today }: { name: string; business: Bus
 }
 
 function HomeSkeleton() {
-  return (
-    <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8" aria-busy="true">
-      <div className="h-16 w-64 rounded-md bg-surface-sunken" />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-28 rounded-card bg-surface-sunken" />
-        ))}
-      </div>
-      <div className="h-80 rounded-card bg-surface-sunken" />
-    </div>
-  );
+  return <LoadingGrid className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8" />;
 }
 
 export default function DashboardHome() {

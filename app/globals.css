@@ -419,3 +419,29 @@ dialog.sheet[open] > div {
     -webkit-print-color-adjust: exact;
   }
 }
+
+/* Photos that arrive softly (lib/blur.ts): the tiny blurred copy fills the box, and the photo, blurred
+   while it loads, sharpens once it has. clip-path keeps the blur inside the box. */
+img[data-blur] {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(16px);
+  clip-path: inset(0);
+  transition-property: filter, transform;
+  transition-duration: 300ms;
+  transition-timing-function: ease-out;
+}
+img[data-blur][data-loaded] {
+  filter: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  img[data-blur] {
+    transition: none;
+  }
+}
+@media (scripting: none) {
+  img[data-blur] {
+    filter: none;
+  }
+}

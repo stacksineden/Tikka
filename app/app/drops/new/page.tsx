@@ -10,6 +10,7 @@ import { getSessionUser } from "@/lib/session";
 import { sparkState } from "@/lib/studio-db";
 import { templateCategory } from "@/lib/templates";
 import { usable } from "@/lib/vouchers";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Create a drop" };
 
@@ -80,7 +81,7 @@ async function Builder({ searchParams }: { searchParams: PageProps<"/app/drops/n
 
 export default function NewDropPage(props: PageProps<"/app/drops/new">) {
   return (
-    <Suspense fallback={<div className="min-h-dvh bg-surface" />}>
+    <Suspense fallback={<LoadingGrid className="mx-auto min-h-dvh max-w-xl px-4 py-6" />}>
       <Builder searchParams={props.searchParams} />
     </Suspense>
   );

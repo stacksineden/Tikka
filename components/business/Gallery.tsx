@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { smallOf } from "@/lib/media-path";
 import type { PortfolioPhoto } from "@/lib/types";
+import { blurProps } from "@/lib/blur";
 
 /** The masonry's tile shapes, repeated: tall, square and in between, so columns stagger. */
 const RHYTHM = ["3 / 4", "1 / 1", "4 / 5", "2 / 3", "1 / 1", "3 / 4"];
@@ -54,6 +55,7 @@ export function Gallery({ photos, businessName, editorial = false, showAll = fal
                     alt=""
                     loading="lazy"
                     decoding="async"
+                    {...blurProps(p.thumbUrl, { tone: p.tone })}
                     className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                   />
                   {p.kind === "video" && (
@@ -83,7 +85,7 @@ export function Gallery({ photos, businessName, editorial = false, showAll = fal
               aria-label={`Open ${p.kind === "video" ? "video" : "photo"} ${i + 1} of ${photos.length}${p.caption ? `: ${p.caption}` : ""}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.thumbUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
+              <img src={p.thumbUrl} alt="" loading="lazy" decoding="async" {...blurProps(p.thumbUrl, { tone: p.tone })} className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
               {p.kind === "video" && (
                 <span className="absolute left-2 top-2 grid size-9 place-items-center rounded-pill bg-night/70 text-on-night" aria-hidden="true">
                   <Play size={16} className="fill-current" />

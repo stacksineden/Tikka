@@ -11,6 +11,7 @@ import { SiteFooter } from "@/components/site/SiteChrome";
 import { TRADES } from "@/lib/presets";
 import { searchHref } from "@/lib/search";
 import { searchBusinesses, type BizCard as Card } from "@/lib/search-db";
+import { LoadingCards } from "@/components/ui/Loading";
 
 // The customer homepage (docs/HOMEPAGE_PLAN.md, prototype design/prototypes/homepage.html): the
 // search first (what, where, when), then the kinds of business, rows of businesses with their next
@@ -102,7 +103,7 @@ export default function HomePage() {
             })}
           </nav>
 
-          <Suspense fallback={<div className="mt-10 h-72 animate-pulse rounded-card bg-surface-sunken" />}>
+          <Suspense fallback={<LoadingCards className="mt-10" />}>
             <Rows />
           </Suspense>
 

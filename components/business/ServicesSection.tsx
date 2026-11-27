@@ -6,6 +6,7 @@ import { photoSrcSet } from "@/lib/media-path";
 import { focalPosition, priceText } from "@/lib/page";
 import { naira } from "@/lib/format";
 import type { ServiceItem } from "@/lib/types";
+import { blurProps } from "@/lib/blur";
 
 const GLYPHS = ["○", "✕", "◇", "✦", "△", "□"];
 
@@ -64,7 +65,7 @@ export function ServicesSection({
               >
                 {photo && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={photo} alt="" loading="lazy" />
+                  <img src={photo} alt="" loading="lazy" {...blurProps(photo)} />
                 )}
                 <span className="self-end text-[15px] leading-none" aria-hidden="true">
                   {GLYPHS[i % GLYPHS.length]}
@@ -119,7 +120,7 @@ export function ServicesSection({
                       loading="lazy"
                       decoding="async"
                       className="size-full object-cover"
-                      style={{ objectPosition: focalPosition(s.focal ?? { x: 0.5, y: 0.3 }) }}
+                      {...blurProps(s.imageUrl, { style: { objectPosition: focalPosition(s.focal ?? { x: 0.5, y: 0.3 }) } })}
                     />
                   ) : (
                     <span className="biz-serif absolute inset-0 grid place-items-center text-[72px] opacity-30" style={{ color: brand.on }} aria-hidden="true">

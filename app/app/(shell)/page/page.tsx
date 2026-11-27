@@ -7,6 +7,7 @@ import { PageEditor } from "@/components/page/PageEditor";
 import { getBusiness, getPortfolioPlan } from "@/lib/data";
 import { pageChecklist } from "@/lib/page";
 import { getOwnerUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Your page" };
 
@@ -54,7 +55,7 @@ async function Editor() {
 export default function YourPage() {
   return (
     <div className="mx-auto grid max-w-3xl gap-4 px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-8">
-      <Suspense fallback={<div className="h-96 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Editor />
       </Suspense>
     </div>

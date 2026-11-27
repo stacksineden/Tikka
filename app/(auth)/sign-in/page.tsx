@@ -11,7 +11,7 @@ export default function SignInPage() {
   return (
     <>
       <h1 className="text-heading">Welcome back</h1>
-      <p className="text-body mt-2 text-ink-muted">Sign in to see your drops and leads.</p>
+      <p className="text-body mt-2 text-ink-muted">Sign in to see who&apos;s booked, what&apos;s been paid and your customers.</p>
       <div className="mt-8">
         <Suspense>
           <SignInForm />

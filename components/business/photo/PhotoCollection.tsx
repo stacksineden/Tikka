@@ -8,6 +8,7 @@ import { cameraChips } from "@/lib/photo-meta";
 import type { ShownCollection } from "@/lib/portfolio";
 import type { Business } from "@/lib/types";
 import { PhotoStage, type StagePhoto } from "./PhotoStage";
+import { blurBox } from "@/lib/blur";
 
 // One collection on its own page (usetikka.com/<business>/work/<collection>) for the Photography
 // style: an exhibition. A title, then each photo on its own, in its own shape, with its number and
@@ -80,7 +81,7 @@ export function PhotoCollection({ b, c, others, book, bookLabel, url, where }: {
         {c.photos.map((p, i) => (
           <figure key={p.id} data-pg-r>
             <button type="button" className="pg-pic" data-i={i} style={{ "--r": ratio(p) } as React.CSSProperties} aria-label={`Open ${photos[i].title}`}>
-              <div className="pg-ph" data-tone={p.tone} style={p.tone ? ({ "--tone": p.tone } as React.CSSProperties) : undefined}>
+              <div className="pg-ph" data-tone={p.tone} style={blurBox(p.kind === "video" ? p.thumbUrl : p.url, p.tone ? ({ "--tone": p.tone } as React.CSSProperties) : {})}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.kind === "video" ? p.thumbUrl : p.url} srcSet={p.kind === "video" ? undefined : photoSrcSet(p.url)} sizes="(min-width: 900px) 70vw, 100vw" alt={p.caption ?? ""} loading={i < 2 ? "eager" : "lazy"} decoding="async" />
               </div>

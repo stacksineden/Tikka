@@ -12,6 +12,7 @@ import { formatTime } from "@/lib/setup";
 import { isSocial } from "@/lib/social";
 import type { Business, OpeningHours, PortfolioPhoto, Review } from "@/lib/types";
 import { PhotoStage, type StageCollection, type StagePhoto } from "./PhotoStage";
+import { blurBox } from "@/lib/blur";
 
 // The Photography style of the free business page (PRD A5; prototype in
 // design/page-styles/photography.html). The same content and the same booking as the beauty page;
@@ -62,7 +63,7 @@ function nameSize(name: string): string {
 function Ph({ p, sizes, eager = false, className = "" }: { p: PortfolioPhoto; sizes: string; eager?: boolean; className?: string }) {
   const src = p.kind === "video" ? p.thumbUrl : p.url;
   return (
-    <div className={`pg-ph ${className}`} data-tone={p.tone} style={p.tone ? ({ "--tone": p.tone } as React.CSSProperties) : undefined}>
+    <div className={`pg-ph ${className}`} data-tone={p.tone} style={blurBox(p.kind === "video" ? p.thumbUrl : p.url, p.tone ? ({ "--tone": p.tone } as React.CSSProperties) : {})}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} srcSet={p.kind === "video" ? undefined : photoSrcSet(p.url)} sizes={sizes} alt={p.caption ?? ""} loading={eager ? "eager" : "lazy"} decoding="async" />
     </div>
@@ -211,7 +212,7 @@ export function PhotoPage({ b, live, next, reviews, sections, book, bookProps, s
 
       {/* 2. Hero */}
       <section id="top" className="pg-hero" data-pg-hero>
-        <div className="pg-ph" data-tone={heroPhoto?.tone} style={heroPhoto?.tone ? ({ "--tone": heroPhoto.tone } as React.CSSProperties) : { background: b.brandColor }}>
+        <div className="pg-ph" data-tone={heroPhoto?.tone} style={blurBox(heroSrc, heroPhoto?.tone ? ({ "--tone": heroPhoto.tone } as React.CSSProperties) : { backgroundColor: b.brandColor })}>
           {heroSrc && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={heroSrc} alt="" fetchPriority="high" decoding="async" style={{ objectPosition: page.heroImageUrl ? focalPosition(page.heroFocal) : "50% 40%" }} />

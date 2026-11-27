@@ -11,6 +11,7 @@ import type { Payment } from "@/lib/payments";
 import { packLine, paidTier, priceFor, priceLabel, type DropTier } from "@/lib/pricing";
 import { getSessionUser } from "@/lib/session";
 import { PACK_MONTHS, voucherLines } from "@/lib/vouchers";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Payments" };
 
@@ -172,7 +173,7 @@ async function Payments({ searchParams }: { searchParams: PageProps<"/app/settin
 export default function PaymentsPage(props: PageProps<"/app/settings/payments">) {
   return (
     <SettingsPage title="Payments" intro="Drops ready to publish, season packs, and everything you've paid.">
-      <Suspense fallback={<div className="h-48 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Payments searchParams={props.searchParams} />
       </Suspense>
     </SettingsPage>

@@ -8,6 +8,7 @@ import { CARD_BLEED_MM, CARD_MM, cardQrColors, contactScanPath } from "@/lib/con
 import { getContactCard } from "@/lib/contact-cards-data";
 import { qrSvg, SITE } from "@/lib/qr";
 import { getOwnerUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 // The business card print kit (docs/BUSINESS_CARDS.md). Like the poster kit: a page at the exact
 // paper size, so the browser's "Save as PDF" is print-ready.
@@ -153,7 +154,7 @@ async function Kit({ params, searchParams }: PageProps<"/app/posters/cards/[id]/
 export default function CardPrintPage(props: PageProps<"/app/posters/cards/[id]/print">) {
   return (
     <div className="min-h-dvh bg-surface-sunken">
-      <Suspense fallback={<div className="h-96" />}>
+      <Suspense fallback={<LoadingGrid tiles={2} />}>
         <Kit {...props} />
       </Suspense>
     </div>

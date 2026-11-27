@@ -15,6 +15,7 @@ import { getBusiness } from "@/lib/data";
 import { count } from "@/lib/format";
 import { qrSvg, SITE } from "@/lib/qr";
 import { getOwnerUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Business cards" };
 
@@ -87,7 +88,7 @@ export default function BusinessCardsPage() {
         </div>
         <PostersTabs current="cards" />
       </div>
-      <Suspense fallback={<div className="h-96 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Cards />
       </Suspense>
     </div>

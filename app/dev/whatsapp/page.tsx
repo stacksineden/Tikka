@@ -6,6 +6,7 @@ import { clockTime } from "@/lib/format";
 import { devConversation, devWhatsAppAllowed } from "@/lib/whatsapp/dev-outbox";
 import { whatsappConfigured } from "@/lib/whatsapp/send";
 import { sendTestMessage } from "./actions";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 // DEMO (development only): a pretend phone for trying claims, Notify me and STOP before Meta is
 // connected. What you send runs through the real webhook's code; Tikka's replies land here.
@@ -87,7 +88,7 @@ async function Phone({ searchParams }: { searchParams: PageProps<"/dev/whatsapp"
 export default function TestPhonePage(props: PageProps<"/dev/whatsapp">) {
   if (!devWhatsAppAllowed) notFound();
   return (
-    <Suspense fallback={<div className="min-h-dvh bg-surface" />}>
+    <Suspense fallback={<LoadingGrid className="mx-auto min-h-dvh max-w-xl px-4 py-6" />}>
       <Phone searchParams={props.searchParams} />
     </Suspense>
   );

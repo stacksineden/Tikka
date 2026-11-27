@@ -11,6 +11,7 @@ import { paystackConfigured } from "@/lib/paystack";
 import { PACK_MONTHS } from "@/lib/vouchers";
 import { packLine, priceLabel } from "@/lib/pricing";
 import { getSessionUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Pay" };
 
@@ -110,7 +111,7 @@ export default function PayPage(props: PageProps<"/app/pay">) {
         <ChevronLeft size={18} aria-hidden="true" />
         Back
       </Link>
-      <Suspense fallback={<div className="h-80 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Pay searchParams={props.searchParams} />
       </Suspense>
     </div>

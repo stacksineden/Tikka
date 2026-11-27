@@ -8,6 +8,7 @@ import { possibleMatches } from "@/lib/clients";
 import { getBusiness, isDbId } from "@/lib/data";
 import { payLinkLimit } from "@/lib/paylinks-data";
 import { getOwnerUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Customer" };
 
@@ -28,7 +29,7 @@ async function Customer({ params }: { params: PageProps<"/app/leads/[key]">["par
 export default function Page(props: PageProps<"/app/leads/[key]">) {
   return (
     <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-8">
-      <Suspense fallback={<div className="h-96 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Customer params={props.params} />
       </Suspense>
     </div>

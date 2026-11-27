@@ -24,6 +24,7 @@ import { getBookingRules, getWaitlist } from "@/lib/bookings-data";
 import { dayLabel, freeDays, openRange, todayKey, watParts, type Booking } from "@/lib/bookings";
 import type { Business } from "@/lib/types";
 import { newExperience } from "@/lib/experience";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 /** Each day for the next two months: free times, full or closed, and how many are booked. */
 async function monthDays(ownerKey: string, b: Business, list: Booking[], now: Date): Promise<MonthDay[]> {
@@ -195,7 +196,7 @@ async function depositsCard(b: NonNullable<Awaited<ReturnType<typeof getBusiness
 export default function Page(props: PageProps<"/app/bookings">) {
   return (
     <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-8">
-      <Suspense fallback={<div className="h-96 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Bookings searchParams={props.searchParams} />
       </Suspense>
     </div>

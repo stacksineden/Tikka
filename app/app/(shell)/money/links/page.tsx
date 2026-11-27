@@ -12,6 +12,7 @@ import { ownerPayLinks, payLinkLimit, type OwnerPayLink } from "@/lib/paylinks-d
 import { PayLinksOff } from "@/components/payments/PayLinksOff";
 import { getOwnerUser } from "@/lib/session";
 import { newExperience } from "@/lib/experience";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Pay links" };
 
@@ -70,7 +71,7 @@ async function Links() {
 export default function Page() {
   return (
     <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-8">
-      <Suspense fallback={<div className="h-96 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Links />
       </Suspense>
     </div>

@@ -9,6 +9,7 @@ import { getBookings, getBookingSetup } from "@/lib/bookings-data";
 import { getBusiness, memberBusinessId } from "@/lib/data";
 import { getSessionUser } from "@/lib/session";
 import { newExperience } from "@/lib/experience";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Redeem" };
 
@@ -66,7 +67,7 @@ async function TodayAtCounter({ user, businessName }: { user: NonNullable<Awaite
 
 export default function Page() {
   return (
-    <Suspense fallback={<div className="mx-auto h-96 max-w-md" />}>
+    <Suspense fallback={<LoadingGrid tiles={0} className="mx-auto max-w-md" />}>
       <Redeem />
     </Suspense>
   );

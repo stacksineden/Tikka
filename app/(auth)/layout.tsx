@@ -1,6 +1,6 @@
 import { Logo } from "@/components/site/Logo";
 import Link from "next/link";
-import { SoloCard } from "@/components/tikka/SoloCard";
+import { HeroDemo } from "@/components/landing/HeroDemo";
 
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
@@ -13,30 +13,11 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
         <p className="text-caption text-center text-ink-muted">© 2026 Tikka</p>
       </div>
 
-      <aside className="stage relative hidden overflow-hidden bg-night lg:flex lg:flex-col lg:items-center lg:justify-center">
-        <div className="-rotate-6">
-          <SoloCard
-            zoom={1.05}
-            face={{
-              name: "Glow Studio",
-              initials: "GS",
-              category: "Skin & beauty studio",
-              area: "Lekki",
-              city: "Lagos",
-              brandColor: "#9C3B5C",
-              onBrandColor: "#FFFFFF",
-              verified: true,
-              rating: 4.8,
-              reviewCount: 126,
-              tagline: "Facials, peels and glow-ups since 2019.",
-            }}
-            total={600}
-            finish="holo"
-            label="A Glow Studio Tikka"
-          />
-        </div>
-        <p className="text-body-lg mt-12 max-w-[340px] text-center text-on-night-muted">
-          <span className="text-on-night">577 of 600 claimed.</span> Every one of them is a name you can follow up.
+      {/* What Tikka does now, the same story as the For businesses hero: they ask the price, book a free time, pay the deposit, you see your week. */}
+      <aside className="stage relative hidden overflow-hidden bg-night px-8 lg:flex lg:flex-col lg:items-center lg:justify-center">
+        <HeroDemo />
+        <p className="text-body-lg mt-10 max-w-[360px] text-center text-on-night-muted">
+          <span className="text-on-night">From &ldquo;How much?&rdquo; to a paid booking.</span> Your bookings, deposits and customers in one place.
         </p>
       </aside>
     </div>

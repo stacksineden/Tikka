@@ -30,6 +30,7 @@ import { collectionLimitKobo, dbAdminMoney, dbAdminPaymentSettings, dbKycQueue }
 import { KycReview } from "@/components/admin/KycReview";
 import { counterCheckTotals } from "@/lib/counter-checks";
 import { STUDIO_CATEGORIES } from "@/lib/studio-shared";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Admin" };
 
@@ -597,7 +598,7 @@ export default function AdminPage(props: PageProps<"/admin">) {
         </div>
       </header>
       <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
-        <Suspense fallback={<div className="h-80 rounded-card bg-surface-sunken" />}>
+        <Suspense fallback={<LoadingGrid />}>
           <Admin searchParams={props.searchParams} />
         </Suspense>
       </main>

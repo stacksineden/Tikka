@@ -11,6 +11,7 @@ import { freeLabel, parseSearch, searchHref, whatLabel, whenLabel, whenPhrase, t
 import { searchBusinesses, type BizCard as Card } from "@/lib/search-db";
 import { place } from "@/lib/format";
 import { tradesInOrder } from "@/lib/presets";
+import { LoadingCards } from "@/components/ui/Loading";
 
 // Search results (docs/HOMEPAGE_PLAN.md): the businesses that match what, where and when, each with
 // its next free time; filters for people who come to you and no deposit. A city with nobody yet says
@@ -170,7 +171,7 @@ export default function SearchPage({ searchParams }: PageProps<"/search">) {
     <>
       <HomeHeader />
       <main>
-        <Suspense fallback={<div className="mx-auto mt-6 h-72 max-w-6xl animate-pulse rounded-card bg-surface-sunken" />}>
+        <Suspense fallback={<LoadingCards className="mx-auto mt-6 max-w-6xl px-4 sm:px-6" />}>
           <Results searchParams={searchParams} />
         </Suspense>
       </main>

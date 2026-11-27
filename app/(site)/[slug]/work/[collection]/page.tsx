@@ -14,6 +14,7 @@ import { place } from "@/lib/format";
 import { pageStyle, priceText, showsLocation, whereLine } from "@/lib/page";
 import { collectionBookingLink, collectionLine, portfolioView } from "@/lib/portfolio";
 import { SITE } from "@/lib/qr";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 // One portfolio collection on its own page (PRD A5): usetikka.com/<business>/work/<collection>.
 // The link a business shares to show only that work ("our bridal looks"), with a Book button for
@@ -167,7 +168,7 @@ async function CollectionPage({ params }: { params: Props["params"] }) {
 export default function Page(props: Props) {
   return (
     <main className="min-h-dvh bg-surface-raised">
-      <Suspense fallback={<div className="h-dvh bg-surface-raised" />}>
+      <Suspense fallback={<LoadingGrid className="mx-auto max-w-5xl px-4 py-8" />}>
         <CollectionPage params={props.params} />
       </Suspense>
     </main>

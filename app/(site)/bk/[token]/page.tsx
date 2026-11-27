@@ -19,6 +19,7 @@ import { getBookingPass, passBooking } from "@/lib/bookings-data";
 import { PassChange } from "@/components/bookings/PassChange";
 import { place } from "@/lib/format";
 import { bookingNumber } from "@/lib/page";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 // The booking pass (docs/BOOKINGS.md journey 1): the customer's link after booking. The booking,
 // its code and "Message {business}" with the booking written out. Never the phone number. Tikka
@@ -197,7 +198,7 @@ async function Pass({ params, searchParams }: { params: PageProps<"/bk/[token]">
 export default function Page(props: PageProps<"/bk/[token]">) {
   return (
     <main data-theme="light" className="min-h-dvh bg-surface-sunken text-ink">
-      <Suspense fallback={<div className="h-dvh" />}>
+      <Suspense fallback={<LoadingGrid bare tiles={0} rows={4} className="mx-auto max-w-md px-4 py-8" />}>
         <Pass params={props.params} searchParams={props.searchParams} />
       </Suspense>
     </main>

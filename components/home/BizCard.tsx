@@ -3,6 +3,7 @@ import Link from "next/link";
 import { tradeLine } from "@/lib/presets";
 import { freeLabel } from "@/lib/search";
 import type { BizCard as Card } from "@/lib/search-db";
+import { blurProps } from "@/lib/blur";
 
 // One business in the homepage rows and the results (it opens the business's listing, /book/[slug]): its photo, name, place, rating, starting price
 // and, the part a directory can't show, when it's next free.
@@ -16,7 +17,7 @@ export function BizCard({ b, now, wide = false }: { b: Card; now: Date; wide?: b
     <Link href={`/book/${b.slug}`} className={`group block ${wide ? "" : "snap-start"}`}>
       <div className="relative aspect-[4/3] overflow-hidden rounded-card bg-surface-sunken">
         {b.coverUrl ? (
-          <img src={b.coverUrl} alt="" loading="lazy" className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+          <img src={b.coverUrl} alt="" loading="lazy" {...blurProps(b.coverUrl)} className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
         ) : (
           <div className="grid size-full place-items-center text-[44px] font-bold text-on-brand" style={{ background: b.brandColor }} aria-hidden="true">
             {b.name.slice(0, 1)}

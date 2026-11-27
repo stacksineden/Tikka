@@ -18,6 +18,8 @@ import { openLabel, searchHref } from "@/lib/search";
 import { sheetTheme } from "@/lib/sheet-theme";
 import { formatTime } from "@/lib/setup";
 import type { Business, ServiceItem } from "@/lib/types";
+import { LoadingGrid } from "@/components/ui/Loading";
+import { blurProps } from "@/lib/blur";
 
 // A business's listing on Tikka (docs/HOMEPAGE_PLAN.md): what search results open, in one layout for
 // every business so customers can compare (like Fresha's). Photos, rating, open now, services with
@@ -157,9 +159,9 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
         {/* Photos: one big, two beside it on a computer. */}
         {cover && (
           <div className="mt-5 grid gap-3 md:grid-cols-[2fr_1fr] md:grid-rows-2">
-            <img src={cover} alt="" className="aspect-[4/3] w-full rounded-card object-cover md:row-span-2 md:aspect-auto md:h-full md:max-h-[480px]" />
+            <img src={cover} alt="" {...blurProps(cover)} className="aspect-[4/3] w-full rounded-card object-cover md:row-span-2 md:aspect-auto md:h-full md:max-h-[480px]" />
             {side.map((p) => (
-              <img key={p.id} src={p.thumbUrl || p.url} alt="" loading="lazy" className="hidden aspect-[4/3] w-full rounded-card object-cover md:block" />
+              <img key={p.id} src={p.thumbUrl || p.url} alt="" loading="lazy" {...blurProps(p.thumbUrl || p.url)} className="hidden aspect-[4/3] w-full rounded-card object-cover md:block" />
             ))}
           </div>
         )}
@@ -360,7 +362,7 @@ export default function ListingPage({ params }: PageProps<"/book/[slug]">) {
     <>
       <HomeHeader />
       <main>
-        <Suspense fallback={<div className="mx-auto mt-6 h-96 max-w-6xl animate-pulse rounded-card bg-surface-sunken" />}>
+        <Suspense fallback={<LoadingGrid className="mx-auto mt-6 max-w-6xl" />}>
           <Listing params={params} />
         </Suspense>
       </main>

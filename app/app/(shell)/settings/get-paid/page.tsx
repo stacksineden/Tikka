@@ -12,6 +12,7 @@ import { paystackConfigured, paystackMode } from "@/lib/paystack";
 import { bankOpen, dbPayoutState } from "@/lib/payouts-db";
 import { graceDay } from "@/lib/kyc";
 import { getOwnerUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Get paid" };
 
@@ -139,7 +140,7 @@ async function GetPaid() {
 export default function Page() {
   return (
     <SettingsPage title="Get paid">
-      <Suspense fallback={<div className="h-48 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <GetPaid />
       </Suspense>
     </SettingsPage>

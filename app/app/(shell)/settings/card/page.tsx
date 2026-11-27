@@ -8,6 +8,7 @@ import { CardLookEditor } from "@/components/setup/SettingsEditors";
 import { getBusiness } from "@/lib/data";
 import { dropReturn } from "@/lib/drop";
 import { getSessionUser } from "@/lib/session";
+import { LoadingGrid } from "@/components/ui/Loading";
 
 export const metadata: Metadata = { title: "Card look" };
 
@@ -52,7 +53,7 @@ export default function CardLookPage(props: PageProps<"/app/settings/card">) {
         </Suspense>
       }
     >
-      <Suspense fallback={<div className="h-96 rounded-card bg-surface-sunken" />}>
+      <Suspense fallback={<LoadingGrid />}>
         <Editor />
       </Suspense>
       <Suspense fallback={null}>
