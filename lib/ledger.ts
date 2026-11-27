@@ -103,11 +103,26 @@ export interface MoneySummary {
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+export interface DepositIn {
+  at: string;
+  kobo: number;
+  name: string;
+  item: string;
+  /** Unset or "pay_link": paid online. Cash, transfer or card: the owner took it themself. */
+  method?: "cash" | "transfer" | "card" | "pay_link";
+}
+
+/** Bookings' deposits as money in, on the day they were paid. */
+export function depositsOf(bookings: { depositPaidKobo?: number; depositPaidAt?: string; depositMethod?: DepositIn["method"]; createdAt: string; firstName: string; service: string }[]): DepositIn[] {
+  return bookings.filter((b) => b.depositPaidKobo).map((b) => ({ at: b.depositPaidAt ?? b.createdAt, kobo: b.depositPaidKobo!, name: b.firstName, item: b.service, method: b.depositMethod }));
+}
+
 /**
- * The money between two instants. `deposits` are deposits paid through Tikka (from bookings).
+ * The money between two instants. `deposits` are bookings' deposits: online through Tikka, a Tikka's
+ * pay link, or taken by the owner (counted with cash or transfers).
  * Sale payments count on the day they were paid; regular costs on each day they fall on.
  */
-export function moneyBetween(ledger: Ledger, deposits: { at: string; kobo: number; name: string; item: string }[], from: Date, to: Date): MoneySummary {
+export function moneyBetween(ledger: Ledger, deposits: DepositIn[], from: Date, to: Date): MoneySummary {
   const inside = (iso: string) => {
     const t = new Date(iso).getTime();
     return t >= from.getTime() && t < to.getTime();
@@ -130,15 +145,16 @@ export function moneyBetween(ledger: Ledger, deposits: { at: string; kobo: numbe
   let depositKobo = 0;
   for (const d of deposits) {
     if (!inside(d.at)) continue;
-    depositKobo += d.kobo;
+    if (d.method === "cash" || d.method === "transfer" || d.method === "card") byMethod[d.method] += d.kobo;
+    else depositKobo += d.kobo;
     add(perService, d.item, d.kobo);
     add(perCustomer, d.name, d.kobo);
   }
 
   const came: MoneyLine[] = [
     { label: "Deposits and pay links", kobo: depositKobo + byMethod.pay_link, source: "auto", note: "Paid online, straight to your bank" },
-    { label: "Cash", kobo: byMethod.cash, source: "recorded", note: "When you tapped Paid or New sale" },
-    { label: "Transfers and card", kobo: byMethod.transfer + byMethod.card, source: "recorded", note: "When you tapped Paid or New sale" },
+    { label: "Cash", kobo: byMethod.cash, source: "recorded", note: "When you tapped Paid or New sale, or added a deposit" },
+    { label: "Transfers and card", kobo: byMethod.transfer + byMethod.card, source: "recorded", note: "When you tapped Paid or New sale, or added a deposit" },
   ];
 
   const spent: MoneyLine[] = [];

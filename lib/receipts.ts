@@ -32,14 +32,15 @@ export interface ReceiptView {
 export const receiptNumber = (n: number) => `R-${String(Math.max(1, n)).padStart(4, "0")}`;
 
 /**
- * What a receipt shows. A booking's deposit paid online comes first; the total is the deposit plus
+ * What a receipt shows. A booking's deposit (online, or taken by the owner) comes first; the total is the deposit plus
  * what was due at the visit when the deposit counts towards the bill, else just what was due.
  */
 export function buildReceipt(sale: Sale, booking: Booking | null, n: number): ReceiptView {
   const deposit = booking?.depositPaidKobo ?? 0;
   const counts = booking?.depositCounts !== false;
   const payments: ReceiptLine[] = [];
-  if (deposit) payments.push({ label: "Deposit, paid online", at: booking!.createdAt, kobo: deposit });
+  const how = booking?.depositMethod;
+  if (deposit) payments.push({ label: how && how !== "pay_link" ? `Deposit, ${METHOD_LABEL[how].toLowerCase()}` : "Deposit, paid online", at: booking!.depositPaidAt ?? booking!.createdAt, kobo: deposit });
   for (const p of sale.payments) payments.push({ label: METHOD_LABEL[p.method], at: p.at, kobo: p.kobo });
   const paid = deposit + paidOf(sale);
   return {

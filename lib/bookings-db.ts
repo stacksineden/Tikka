@@ -28,6 +28,8 @@ export function bookingFrom(r: Row): Booking {
     moved: r.moved === true,
     createdAt: String(r.created_at),
     depositPaidKobo: r.deposit_paid_kobo == null ? undefined : Number(r.deposit_paid_kobo),
+    depositPaidAt: (r.deposit_paid_at as string | null) ?? undefined,
+    depositMethod: (r.deposit_method as Booking["depositMethod"] | null) ?? undefined,
     priceKobo: r.price_kobo == null ? undefined : Number(r.price_kobo),
     priceKind: (r.price_kind as Booking["priceKind"]) ?? undefined,
     depositCounts: r.deposit_counts == null ? undefined : r.deposit_counts === true,
@@ -335,6 +337,13 @@ async function call(fn: string, args: Record<string, unknown>): Promise<Row> {
   const { data, error } = await sb.rpc(fn, args);
   if (error) return { kind: error.code === "42501" ? "no_access" : error.code === "P0002" ? "not_found" : "error" };
   return (data ?? {}) as Row;
+}
+
+/** record_booking_deposit(): a deposit the owner took themself; 0 clears it. */
+export async function dbRecordBookingDeposit(businessId: string, bookingId: string, kobo: number, method: "cash" | "transfer" | "card"): Promise<string> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("record_booking_deposit", { p_business: businessId, p_booking: bookingId, p_kobo: kobo, p_method: method });
+  return error || !data ? "error" : String(data);
 }
 
 export const dbAddBooking = (businessId: string, b: { serviceId: string; startsAt: string; firstName: string; phone: string | null; force: boolean; claimId?: string }) =>

@@ -3,6 +3,7 @@
 // NEW DIRECTION: Booking settings in one place. Each row says what's set now; tapping it opens one
 // question in a sheet (one decision at a time), and saving updates the page straight away.
 
+import Link from "next/link";
 import { CalendarClock, Car, ChevronRight, CircleCheck, Clock, Loader2, MessageCircleQuestion, Plus, Power, ScrollText, Timer, Trash2, Users, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -273,9 +274,9 @@ function DepositSheet({ d, pending, onSave, onClose }: { d: BookingSettingsData;
       {d.depositsLive === false && (
         <p className="text-body rounded-md bg-gold-soft px-4 py-3">
           Customers start paying deposits once your ID and bank account are approved.{" "}
-          <a href="/app/settings/get-paid" className="font-semibold underline">
+          <Link href="/app/settings/get-paid" className="font-semibold underline">
             Open Get paid
-          </a>
+          </Link>
         </p>
       )}
       <div className="flex flex-wrap gap-2">

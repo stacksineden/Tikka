@@ -64,7 +64,7 @@ export async function TodayPage({ user, business }: { user: SessionUser; busines
     services: business.services.flatMap((s) => (s.options?.length ? s.options.map((o) => ({ label: `${s.name}, ${o.label.toLowerCase()}`, naira: o.price })) : [{ label: s.name, naira: s.price ?? 0 }])),
     takenTodayKobo:
       ledger.sales.reduce((n, s) => n + s.payments.filter((p) => isToday(p.at)).reduce((m, p) => m + p.kobo, 0), 0) +
-      todays.filter((b) => isToday(b.createdAt)).reduce((n, b) => n + (b.depositPaidKobo ?? 0), 0),
+      bookings.filter((b) => isToday(b.depositPaidAt ?? b.createdAt)).reduce((n, b) => n + (b.depositPaidKobo ?? 0), 0),
     demo: !isDbId(user.id),
     customers: clients
       .filter((c) => c.phone)

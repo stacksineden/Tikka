@@ -1,8 +1,8 @@
 "use server";
 
 // The client book (notes, birthdays, matching walk-ins). Owners only. Notes save to Supabase for real
-// accounts (docs/DB_MOVE.md step 5); matching a walk-in without a number is demo-only (real customers
-// always have one).
+// accounts (docs/DB_MOVE.md step 5); a customer saved without a number gets one through
+// set_customer_phone() (real accounts) or the demo store.
 
 import { revalidatePath } from "next/cache";
 import { moveClientNote, saveClientNote } from "@/lib/clients-data";
@@ -23,7 +23,7 @@ export async function matchWalkInAction(walkInKey: string, name: string, phone: 
   const user = await getOwnerUser();
   const p = phoneKey(phone);
   if (!user || !p || walkInKey !== nameKey(name)) return { ok: false as const };
-  await matchWalkIn(user, name, p);
+  if ((await matchWalkIn(user, name, p)) === null) return { ok: false as const };
   await moveClientNote(user, walkInKey, p);
   revalidatePath("/app", "layout");
   return { ok: true as const, key: p };

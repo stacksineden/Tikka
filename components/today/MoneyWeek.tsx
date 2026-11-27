@@ -9,7 +9,7 @@ import { getBusiness } from "@/lib/data";
 import { getLedger } from "@/lib/ledger-data";
 import { ownerPayLinks, payLinkLimit } from "@/lib/paylinks-data";
 import { PayLinksOff } from "@/components/payments/PayLinksOff";
-import { moneyBetween, weekStart, type MoneyLine } from "@/lib/ledger";
+import { depositsOf, moneyBetween, weekStart, type MoneyLine } from "@/lib/ledger";
 import type { SessionUser } from "@/lib/types";
 import { AddExpenseButton, HowWeCount } from "./MoneyActions";
 import { PayLinkList, waitingFirst } from "./PayLinkList";
@@ -34,7 +34,7 @@ export async function MoneyWeek({ user }: { user: SessionUser }) {
     getBusiness(user),
     payLinkLimit(user),
   ]);
-  const deposits = bookings.filter((b) => b.depositPaidKobo).map((b) => ({ at: b.createdAt, kobo: b.depositPaidKobo!, name: b.firstName, item: b.service }));
+  const deposits = depositsOf(bookings);
   const m = moneyBetween(ledger, deposits, from, to);
   const waiting = links.filter((l) => l.status === "open");
   // Each thing spent this week, newest first, so a mistake can be taken back.

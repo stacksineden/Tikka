@@ -50,6 +50,9 @@ export interface Booking {
   createdAt: string;
   /** Deposits (REVENUE_PLAN 5.4): what was paid, and the price when booked (what's left to collect). */
   depositPaidKobo?: number;
+  /** When the deposit was paid, and how: unset is online through Tikka; cash, transfer or card the owner took themself; a pay link paid for the Tikka it was booked with. */
+  depositPaidAt?: string;
+  depositMethod?: DepositMethod;
   priceKobo?: number;
   priceKind?: "fixed" | "from" | "ask";
   depositCounts?: boolean;
@@ -61,6 +64,8 @@ export interface Booking {
   foundVia?: "search";
   foundNew?: boolean;
 }
+
+export type DepositMethod = "cash" | "transfer" | "card" | "pay_link";
 
 export interface BookingBlock {
   id: string;

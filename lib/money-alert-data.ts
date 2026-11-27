@@ -10,7 +10,7 @@ import { getBookings } from "./bookings-data";
 import { todayKey, watInstant, watParts } from "./bookings";
 import { getBusiness, isDbId } from "./data";
 import { getLedger } from "./ledger-data";
-import { moneyBetween, weekStart } from "./ledger";
+import { depositsOf, moneyBetween, weekStart, type DepositIn } from "./ledger";
 import { eveningAlertText, weeklyAlertText } from "./money-alert";
 import { payAlertText } from "./lead-alert";
 import { pushConfigured } from "./push";
@@ -29,7 +29,7 @@ export async function moneyAlertFor(user: Pick<SessionUser, "id" | "role">, kind
   if (!b) return null;
   const owner = { ...user, businessOwnerId: undefined };
   const [ledger, bookings] = await Promise.all([getLedger(user), getBookings(owner, new Date(now.getTime() - 60 * 86_400_000), new Date(now.getTime() + 120 * 86_400_000))]);
-  const deposits = bookings.filter((x) => x.depositPaidKobo).map((x) => ({ at: x.createdAt, kobo: x.depositPaidKobo!, name: x.firstName, item: x.service }));
+  const deposits = depositsOf(bookings);
   if (kind === "weekly") {
     const from = weekStart(now);
     const m = moneyBetween(ledger, deposits, from, new Date(from.getTime() + 7 * 86_400_000));
@@ -55,7 +55,7 @@ type Row = Record<string, unknown>;
 /** The alert for one real business, from money_alert_data()'s row (same sums as moneyAlertFor). */
 export function realMoneyAlert(row: Row, kind: "evening" | "weekly", now: Date): MoneyAlert {
   const ledger = ledgerFrom((row.ledger as Row) ?? {});
-  const deposits = ((row.deposits as Row[] | null) ?? []).map((d) => ({ at: String(d.at), kobo: Number(d.kobo), name: String(d.name), item: String(d.item) }));
+  const deposits: DepositIn[] = ((row.deposits as Row[] | null) ?? []).map((d) => ({ at: String(d.at), kobo: Number(d.kobo), name: String(d.name), item: String(d.item), method: (d.method as DepositIn["method"] | null) ?? undefined }));
   const businessName = String(row.business_name);
   if (kind === "weekly") {
     const from = weekStart(now);

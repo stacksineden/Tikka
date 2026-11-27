@@ -5,7 +5,7 @@ import "server-only";
 
 import { randomBytes } from "node:crypto";
 import { isDbId, memberBusinessId } from "./data";
-import { dbAddExpense, dbGetLedger, dbNoteSaleAdded, dbPayBalance, dbRecordSale, dbRemoveExpense, dbStopRegularCost, PAY_LINK_SALE } from "./ledger-db";
+import { dbAddExpense, dbGetLedger, dbNoteSaleAdded, dbPayBalance, dbRecordSale, dbRemoveExpense, dbSetCustomerPhone, dbStopRegularCost, PAY_LINK_SALE } from "./ledger-db";
 import { owedOf, type ExpenseKind, type Ledger, type PayMethod, type Sale } from "./ledger";
 import type { SessionUser } from "./types";
 
@@ -158,10 +158,12 @@ export async function seedLedger(user: Pick<SessionUser, "id" | "role">, now: Da
   l.regular.push({ id: id(), kind: "Helper", kobo: 500_000, every: "week", from: daysAgo(3, 2) });
 }
 
-/** NEW DIRECTION: a walk-in saved by name only is the same person as a customer with a number. */
-export async function matchWalkIn(user: Pick<SessionUser, "id" | "role">, name: string, phone: string): Promise<number> {
+/** A customer saved by name only gets their number (or is the same person as a customer with one). Null when it failed. */
+export async function matchWalkIn(user: Pick<SessionUser, "id" | "role">, name: string, phone: string): Promise<number | null> {
+  const biz = await realBusiness(user);
+  if (biz) return dbSetCustomerPhone(biz, name, phone);
   const key = ownerKey(user);
-  if (!key) return 0;
+  if (!key) return null;
   const want = name.trim().toLowerCase().replace(/\s+/g, " ");
   let n = 0;
   for (const s of ledgerOf(key).sales) {

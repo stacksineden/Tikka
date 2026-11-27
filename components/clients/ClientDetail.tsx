@@ -46,6 +46,7 @@ export function ClientDetail({
   const [month, setMonth] = useState(c.note.birthday?.slice(0, 2) ?? "");
   const [day, setDay] = useState(c.note.birthday?.slice(3, 5) ?? "");
   const [saved, setSaved] = useState(false);
+  const [matchError, setMatchError] = useState(false);
   const [pending, start] = useTransition();
   const first = c.name.split(" ")[0];
   const message = waLink(c.phone, `Hi ${first}, `);
@@ -120,6 +121,7 @@ export function ClientDetail({
                 start(async () => {
                   const r = await matchWalkInAction(c.key, c.name, m.phone);
                   if (r.ok) router.replace(`/app/leads/${encodeURIComponent(r.key)}`);
+                  else setMatchError(true);
                 })
               }
               className="flex min-h-14 items-center gap-3 rounded-md border border-line bg-surface-raised px-4 text-left"
@@ -133,6 +135,11 @@ export function ClientDetail({
               </span>
             </button>
           ))}
+          {matchError && (
+            <p role="alert" className="text-caption text-danger">
+              That didn&apos;t work. Try again.
+            </p>
+          )}
         </section>
       )}
 

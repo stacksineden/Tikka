@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { moneyBetween, owedList, reminderText, regularDates, waLink, weekStart, type Ledger } from "./ledger";
+import { depositsOf, moneyBetween, owedList, reminderText, regularDates, waLink, weekStart, type Ledger } from "./ledger";
 
 // Wednesday 25 Nov 2026, 10:00 WAT
 const now = new Date("2026-11-25T09:00:00Z");
@@ -36,6 +36,21 @@ describe("ledger", () => {
     expect(m.best?.service).toBe("Knotless braids");
     expect(m.topCustomer?.name).toBe("Ada");
     expect(owedList(ledger)).toEqual([{ sale: ledger.sales[1], owedKobo: 300_000 }]);
+  });
+
+  it("counts a deposit the owner took with cash or transfers, on the day it was paid", () => {
+    const from = weekStart(now);
+    const to = new Date(from.getTime() + 7 * 86_400_000);
+    const deposits = depositsOf([
+      { depositPaidKobo: 1_000_000, depositPaidAt: "2026-11-24T09:00:00Z", depositMethod: "transfer", createdAt: "2026-11-01T09:00:00Z", firstName: "Ada", service: "Makeup" },
+      { depositPaidKobo: 500_000, depositMethod: "pay_link", depositPaidAt: "2026-11-24T10:00:00Z", createdAt: "2026-11-24T10:00:00Z", firstName: "Ayo", service: "Makeup" },
+      { createdAt: "2026-11-24T10:00:00Z", firstName: "None", service: "Makeup" },
+    ]);
+    expect(deposits).toHaveLength(2);
+    const m = moneyBetween({ sales: [], expenses: [], regular: [] }, deposits, from, to);
+    expect(m.came.find((l) => l.label === "Transfers and card")?.kobo).toBe(1_000_000);
+    expect(m.came.find((l) => l.source === "auto")?.kobo).toBe(500_000);
+    expect(m.inKobo).toBe(1_500_000);
   });
 
   it("writes reminders and WhatsApp links", () => {

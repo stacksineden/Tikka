@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { LENGTHS } from "@/lib/bookings";
-import { addBooking, blockTime, cancelBooking, checkBookingCode, markBooking, moveBooking, removeBlock, saveBookingSettings, type Act, type BookingCheck } from "@/lib/bookings-data";
+import { addBooking, recordBookingDeposit, blockTime, cancelBooking, checkBookingCode, markBooking, moveBooking, removeBlock, saveBookingSettings, type Act, type BookingCheck } from "@/lib/bookings-data";
 import { getSessionUser } from "@/lib/session";
 import { dbSaveDepositSettings } from "@/lib/bookings-db";
 import { getBusiness, isDbId } from "@/lib/data";
@@ -54,7 +54,20 @@ export async function saveBookingSettingsAction(input: {
   return { ok: true };
 }
 
-export async function addBookingAction(input: { serviceId: string; startsAt: string; name: string; phone: string; force: boolean; claimId?: string }): Promise<Act> {
+export type DepositMethodIn = "cash" | "transfer" | "card";
+const METHODS: DepositMethodIn[] = ["cash", "transfer", "card"];
+
+export async function addBookingAction(input: {
+  serviceId: string;
+  startsAt: string;
+  name: string;
+  phone: string;
+  force: boolean;
+  claimId?: string;
+  /** A deposit they already paid the owner (naira), and how. */
+  depositNaira?: number;
+  depositMethod?: DepositMethodIn;
+}): Promise<Act> {
   const u = await user();
   if (!isIso(input.startsAt) || typeof input.serviceId !== "string") return { kind: "bad_time" };
   const name = firstName(String(input.name ?? ""));
@@ -63,9 +76,29 @@ export async function addBookingAction(input: { serviceId: string; startsAt: str
   const phone = raw ? normalizeNgPhone(raw) : null;
   if ((raw || !input.claimId) && !phone) return { kind: "bad_phone" };
   if (!name && !input.claimId) return { kind: "bad_name" };
+  const deposit = Math.round(Number(input.depositNaira) || 0);
+  if (deposit < 0 || deposit > 10_000_000 || (deposit > 0 && !METHODS.includes(input.depositMethod as DepositMethodIn))) return { kind: "bad_deposit" };
   const r = await addBooking(u, { serviceId: input.serviceId, startsAt: new Date(input.startsAt).toISOString(), firstName: name, phone, force: input.force === true, claimId: input.claimId });
+  if (r.kind === "booked" && deposit > 0 && typeof r.id === "string") {
+    const d = await recordBookingDeposit(u, r.id, deposit * 100, input.depositMethod as DepositMethodIn);
+    // Booked either way; say so if the deposit didn't save, so the owner adds it on the booking.
+    if (d !== "saved") r.depositNotSaved = true;
+  }
   if (r.kind === "booked") refresh();
   return r;
+}
+
+/** A deposit the owner took themself on a booking (naira; 0 removes it). Owners only. */
+export async function bookingDepositAction(id: string, naira: number, method: DepositMethodIn): Promise<{ kind: string }> {
+  const n = Math.round(Number(naira));
+  if (!Number.isFinite(n) || n < 0 || n > 10_000_000 || !METHODS.includes(method)) return { kind: "bad_amount" };
+  const kind = await recordBookingDeposit(await user(), String(id), n * 100, method);
+  if (kind === "saved" || kind === "cleared") {
+    refresh();
+    revalidatePath("/app/money");
+    revalidatePath("/app/leads", "layout");
+  }
+  return { kind };
 }
 
 export async function moveBookingAction(id: string, startsAt: string, force: boolean): Promise<Act> {

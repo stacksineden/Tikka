@@ -75,6 +75,13 @@ export async function dbRecordSale(
   return error || !data ? null : String(data);
 }
 
+/** set_customer_phone(): sales and pay links saved under this name without a number get it. Null when it failed. */
+export async function dbSetCustomerPhone(businessId: string, name: string, phone: string): Promise<number | null> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("set_customer_phone", { p_business: businessId, p_name: name, p_phone: phone });
+  return error || data == null ? null : Number(data);
+}
+
 export async function dbPayBalance(businessId: string, saleId: string, kobo: number, method: Exclude<PayMethod, "pay_link">): Promise<boolean> {
   const sb = await createClient();
   const { data, error } = await sb.rpc("pay_balance", { p_business: businessId, p_sale: saleId, p_kobo: kobo, p_method: method });
@@ -140,6 +147,8 @@ export async function dbReceiptPage(token: string): Promise<{ businessSlug: stri
           moved: false,
           createdAt: String(b.created_at),
           depositPaidKobo: b.deposit_paid_kobo == null ? undefined : Number(b.deposit_paid_kobo),
+          depositPaidAt: (b.deposit_paid_at as string | null) ?? undefined,
+          depositMethod: (b.deposit_method as Booking["depositMethod"] | null) ?? undefined,
           depositCounts: b.deposit_counts == null ? undefined : b.deposit_counts === true,
           priceKobo: b.price_kobo == null ? undefined : Number(b.price_kobo),
           priceKind: (b.price_kind as Booking["priceKind"]) ?? undefined,

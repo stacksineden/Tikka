@@ -18,9 +18,11 @@ import {
   watInstant,
 } from "./bookings";
 import { depositOn } from "./presets";
+import { getLedger } from "./ledger-data";
 import { priceBooking, type BookingChoice } from "./booking-price";
 import {
   dbAddBooking,
+  dbRecordBookingDeposit,
   dbBlockTime,
   dbBookingPass,
   dbBookingRules,
@@ -553,7 +555,31 @@ export async function addBooking(
     source: b.claimId ? "tikka" : "owner", status: "booked", code: demoCode(), viewToken: randomBytes(12).toString("hex"), moved: false,
     createdAt: new Date().toISOString(), futureOffers: false, claimId: b.claimId,
   });
-  return { kind: "booked" };
+  return { kind: "booked", id: d.bookings[d.bookings.length - 1].id };
+}
+
+/**
+ * A deposit the owner took themself (cash, transfer, card) on a booking; 0 clears it. Owners only.
+ * Never on one paid online, cancelled, or already marked paid (record_booking_deposit()).
+ */
+export async function recordBookingDeposit(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, id: string, kobo: number, method: "cash" | "transfer" | "card"): Promise<string> {
+  const r = await demoFor(user, true);
+  if ("err" in r) return String(r.err!.kind);
+  const { w, d } = r;
+  if (!d) return dbRecordBookingDeposit(w.key, id, kobo, method);
+  const b = d.bookings.find((x) => x.id === id);
+  if (!b) return "not_found";
+  if (b.status === "cancelled") return "cancelled";
+  if (b.depositPaidKobo && !b.depositMethod) return "paid_online";
+  if (b.depositMethod === "pay_link") return "paid_online";
+  if ((await getLedger(user)).sales.some((s) => s.bookingId === id)) return "settled";
+  if (!kobo) {
+    b.depositPaidKobo = b.depositPaidAt = b.depositMethod = undefined;
+    return "cleared";
+  }
+  if (kobo < 0 || kobo > 1_000_000_000) return "bad_amount";
+  Object.assign(b, { depositPaidKobo: kobo, depositPaidAt: new Date().toISOString(), depositMethod: method, depositCounts: true });
+  return "saved";
 }
 
 export async function moveBooking(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, id: string, startsAt: string, force: boolean): Promise<Act> {
