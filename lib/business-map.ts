@@ -51,6 +51,7 @@ export interface BusinessRow {
   amenities?: string[] | null;
   listing_terms_at?: string | null;
   listing_grace_until?: string | null;
+  plus_until?: string | null;
   languages?: string[] | null;
 }
 
@@ -364,6 +365,7 @@ export function businessFrom(
     amenities: b.amenities ?? undefined,
     listingTermsAt: b.listing_terms_at ?? undefined,
     listingGraceUntil: b.listing_grace_until ?? undefined,
+    plusUntil: b.plus_until ?? undefined,
     languages: b.languages ?? undefined,
   };
 }

@@ -15,6 +15,7 @@ import { pageStyle, priceText, showsLocation, whereLine } from "@/lib/page";
 import { collectionBookingLink, collectionLine, portfolioView } from "@/lib/portfolio";
 import { SITE } from "@/lib/qr";
 import { LoadingGrid } from "@/components/ui/Loading";
+import { hasPlus } from "@/lib/plus";
 
 // One portfolio collection on its own page (PRD A5): usetikka.com/<business>/work/<collection>.
 // The link a business shares to show only that work ("our bridal looks"), with a Book button for
@@ -144,11 +145,13 @@ async function CollectionPage({ params }: { params: Props["params"] }) {
           <p className="text-caption text-ink-muted">
             © {b.name} · {showsLocation(b) ? place(b.area, b.city) : whereLine(b)}
           </p>
-          <Link href="/" className="text-caption flex items-center gap-2 text-ink-muted hover:text-ink">
-            Made with
-            <Logo height={18} />
-            <span>· Get a free page for your business</span>
-          </Link>
+          {!hasPlus(b) && (
+            <Link href="/" className="text-caption flex items-center gap-2 text-ink-muted hover:text-ink">
+              Made with
+              <Logo height={18} />
+              <span>· Get a free page for your business</span>
+            </Link>
+          )}
         </div>
       </footer>
 

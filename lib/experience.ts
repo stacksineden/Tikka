@@ -24,18 +24,3 @@ export function finishSetupMissing(b: Pick<Business, "id" | "trades" | "workPlac
   if (!b.bookingRules?.length) missing.push("rules");
   return missing;
 }
-
-/** The three things that make a business page look like theirs (Today's "Finish your page" row). */
-export const PAGE_STEPS = 3;
-
-/**
- * What a business page still needs: a photo at the top, a few words about them, three photos of
- * their work. The row on Today goes away once all three are done (a logo is optional, so it isn't one).
- */
-export function pageMissing(b: Pick<Business, "about" | "portfolio" | "page">): string[] {
-  const missing: string[] = [];
-  if (!b.page?.heroImageUrl) missing.push("a photo at the top");
-  if (!b.about?.trim()) missing.push("a few words about you");
-  if (b.portfolio.length < 3) missing.push(b.portfolio.length ? `${3 - b.portfolio.length} more photos of your work` : "3 photos of your work");
-  return missing;
-}

@@ -19,7 +19,7 @@ export const COLLECTION_NAME_MAX = 30;
 export interface PortfolioPlan {
   open: boolean;
   /** Why it's open: a founding member, a season pack waiting to be used, or a paid drop. */
-  reason?: "founding" | "pack" | "drop";
+  reason?: "founding" | "pack" | "drop" | "plus";
   /** When it closes (a paid drop: 7 days after it ends). None while there's no date yet. */
   until?: string;
   items: number;
@@ -123,6 +123,13 @@ export function collectionBookingLink(b: Pick<Business, "name" | "actions" | "ow
 /** The editor's banner: what the owner has right now, in plain words. */
 export function planMessage(plan: PortfolioPlan, used: { items: number; collections: number }): { tone: "open" | "free" | "locked"; title: string; body: string } {
   if (plan.open) {
+    if (plan.reason === "plus") {
+      return {
+        tone: "open",
+        title: `Room for ${plan.items} photos with Tikka Plus`,
+        body: `${plan.items} photos and ${plan.videos} videos for as long as you have Plus.${plan.until ? ` Plus runs until ${shortDate(plan.until)}.` : ""}`,
+      };
+    }
     const title =
       plan.reason === "founding" ? `Room for ${plan.items} photos` : plan.until ? `Room for ${plan.items} photos till ${shortDate(plan.until)}` : `Room for ${plan.items} photos all season`;
     const body =
@@ -137,12 +144,12 @@ export function planMessage(plan: PortfolioPlan, used: { items: number; collecti
     return {
       tone: "locked",
       title: `Over the free ${plan.items} photos`,
-      body: "Everything stays on your page and you can still sort it into collections. To add more, remove a few or run a drop.",
+      body: "Everything stays on your page and you can still sort it into collections. To add more, remove a few or get Tikka Plus.",
     };
   }
   return {
     tone: "free",
     title: `Free page: ${plan.items} photos and ${plan.videos} videos`,
-    body: `Sort them into collections like Bridal or Gele, each with its own link and Book button. Run a paid drop for room for ${PORTFOLIO_OPEN.items} photos and ${PORTFOLIO_OPEN.videos} videos.`,
+    body: `Sort them into collections like Bridal or Gele, each with its own link and Book button. Tikka Plus gives you room for ${PORTFOLIO_OPEN.items} photos and ${PORTFOLIO_OPEN.videos} videos.`,
   };
 }

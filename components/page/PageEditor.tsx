@@ -4,6 +4,7 @@ import { Check, ChevronDown, ImagePlus, Loader2, Plus, Trash2 } from "lucide-rea
 import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 import { savePageAction, saveServicesAction } from "@/app/app/actions";
+import { StylePreview } from "@/components/page/StylePreview";
 import { UnitFields } from "@/components/page/UnitFields";
 import { PortfolioEditor } from "@/components/setup/PortfolioEditor";
 import { prepareAbout, prepareCropped, prepareHero, prepareService, uploadPhoto, type MediaKind, type Prepared } from "@/lib/media-client";
@@ -334,13 +335,16 @@ function StyleCard({ b }: { b: Business }) {
     [mine === "photography" ? "Made for photographers" : "Made for beauty businesses", PAGE_STYLES.filter((x) => x.for === mine)],
     [mine === "photography" ? "Also available" : "Made for photographers", PAGE_STYLES.filter((x) => x.for !== mine)],
   ];
+  // Tapping a style opens it full screen on the owner's own page; "Use this style" applies it.
+  const [trying, setTrying] = useState<PageStyle | null>(null);
   const pick = (id: PageStyle) => {
     setChoice(id);
+    setTrying(null);
     s.run(() => savePageAction({ styleChoice: id }));
   };
   return (
     <Card title="Page style" status={PAGE_STYLES.find((x) => x.id === current)?.name ?? ""}>
-      <p className="text-caption text-ink-muted">Your services, photos and booking stay the same; only the look changes.</p>
+      <p className="text-caption text-ink-muted">Your services, photos and booking stay the same; only the look changes. Tap a style to see your page in it before you use it.</p>
       {groups.map(([title, list]) => (
         <div key={title} className="grid gap-2">
           <p className="text-label">{title}</p>
@@ -351,21 +355,20 @@ function StyleCard({ b }: { b: Business }) {
                 type="button"
                 role="radio"
                 aria-checked={current === m.id}
-                onClick={() => pick(m.id)}
+                onClick={() => setTrying(m.id)}
                 className={`flex min-h-14 items-center gap-3 rounded-md border p-3 text-left ${current === m.id ? "border-brand bg-brand-soft" : "border-line"}`}
               >
-                <span className="min-w-0">
+                <span className="min-w-0 flex-1">
                   <span className="text-body block font-semibold">{m.name}</span>
                   <span className="text-caption block text-ink-muted">{m.line}</span>
                 </span>
+                <span className={`text-label shrink-0 ${current === m.id ? "text-brand" : "text-ink-muted"}`}>{current === m.id ? "In use" : "Preview"}</span>
               </button>
             ))}
           </div>
         </div>
       ))}
-      <a href={`/${b.slug}`} target="_blank" rel="noopener noreferrer" className="text-label justify-self-start text-brand underline underline-offset-4">
-        See your page in this style
-      </a>
+      {trying && <StylePreview slug={b.slug} start={trying} current={current} pending={s.pending} onUse={pick} onClose={() => setTrying(null)} />}
       {current === "photography" && (
         <div className="grid gap-2">
           <p className="text-label">Gallery background</p>

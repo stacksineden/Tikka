@@ -27,6 +27,7 @@ function what(p: Payment, tiers: DropTier[], dropName: Map<string, string>): { t
   const tier = tiers.find((t) => t.id === p.toTier);
   const size = tier?.label ?? "Drop";
   if (p.kind === "pack") return { title: "Season pack", detail: "3 drops" };
+  if (p.kind === "plus") return { title: "Tikka Plus", detail: "A month" };
   const title = (p.dropId && dropName.get(p.dropId)) || "Drop";
   return { title, detail: p.kind === "upgrade" ? `More Tikkas · ${size}` : size };
 }

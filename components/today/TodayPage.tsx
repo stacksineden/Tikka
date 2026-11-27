@@ -1,7 +1,8 @@
 import { ChevronRight, Globe, MapPin, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { connection } from "next/server";
-import { finishSetupMissing, PAGE_STEPS, pageMissing } from "@/lib/experience";
+import { finishSetupMissing } from "@/lib/experience";
+import { pageChecklist } from "@/lib/page";
 import { getBookings } from "@/lib/bookings-data";
 import { dayLabel, timeLabel, todayKey, watInstant, watParts } from "@/lib/bookings";
 import { getLedger } from "@/lib/ledger-data";
@@ -72,7 +73,9 @@ export async function TodayPage({ user, business }: { user: SessionUser; busines
       .map((c) => ({ name: c.name, phone: c.phone! })),
   };
   const missing = finishSetupMissing(business);
-  const pageTodo = pageMissing(business);
+  // The same four steps as Your page's "Finish your page" (pageChecklist()); the row goes once they're done.
+  const pageSteps = pageChecklist(business);
+  const pageTodo = pageSteps.filter((x) => !x.done);
   const graceDay =
     business.listingGraceUntil && new Date(business.listingGraceUntil).getTime() > now.getTime()
       ? new Date(new Date(business.listingGraceUntil).getTime() - 1).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Africa/Lagos" })
@@ -98,14 +101,14 @@ export async function TodayPage({ user, business }: { user: SessionUser; busines
           </Link>
         )}
         {missing.length === 0 && pageTodo.length > 0 && (
-          // One slim row until the page has a top photo, a few words about them and 3 photos of their work.
+          // One slim row until the four "Finish your page" steps are done.
           <Link href="/app/page" className="flex min-h-12 min-w-0 items-center gap-2.5 rounded-pill border border-line bg-surface-raised px-4 text-[15px]">
             <Globe size={18} className="shrink-0 text-brand" aria-hidden="true" />
             <span className="min-w-0 flex-1 truncate">
-              <b>Finish your page</b> <span className="text-ink-muted">· add {pageTodo[0]}</span>
+              <b>Finish your page</b> <span className="text-ink-muted">· {pageTodo[0].label.toLowerCase()}</span>
             </span>
             <span className="text-caption shrink-0 text-ink-muted">
-              {PAGE_STEPS - pageTodo.length} of {PAGE_STEPS}
+              {pageSteps.length - pageTodo.length} of {pageSteps.length}
             </span>
             <ChevronRight size={18} className="shrink-0 text-ink-muted" aria-hidden="true" />
           </Link>

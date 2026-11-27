@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Reveal } from "@/components/business/Reveal";
 import { collectionLine } from "@/lib/portfolio";
 import { StickyBar } from "./BeautyStyles";
-import { bg, pageData, StyleDropBand, type StylePageProps } from "./data";
+import { bg, longText, pageData, StyleDropBand, type StylePageProps } from "./data";
+import { hasPlus } from "@/lib/plus";
 
 // The two newer photography styles of the business page (prototypes: design/page-styles/
 // photo-minimal.html and photo-film.html). Both sit on the gallery's neutral tones (soft white or
@@ -119,7 +120,7 @@ export function PortfolioPage(props: StylePageProps) {
             {d.page.aboutImageUrl || d.photos[1] ? <div className="pf-photo pf-about-img" style={bg(d.page.aboutImageUrl ?? d.photos[1]?.url)} role="img" aria-label={`${b.name} at work`} /> : null}
             <div>
               <p className="pf-cap">About</p>
-              <p className="pf-big">{b.about}</p>
+              <p className="pf-big" data-long={longText(b.about) || undefined}>{b.about}</p>
             </div>
           </section>
         )}
@@ -151,7 +152,7 @@ export function PortfolioPage(props: StylePageProps) {
                 </li>
               ))}
               <li>
-                <span>{b.address || "Studio"}</span>
+                <span>{b.address || "Where"}</span>
                 <b>{d.where}</b>
               </li>
             </ul>
@@ -162,7 +163,7 @@ export function PortfolioPage(props: StylePageProps) {
           <span>
             {b.name} · {d.where}
           </span>
-          <a href="https://usetikka.com">Made with Tikka</a>
+          {!hasPlus(b) && <a href="https://usetikka.com">Made with Tikka</a>}
         </footer>
       </div>
       <StickyBar cls="pf" book={book} bookProps={bookProps} wa={d.waHref} />
@@ -242,7 +243,7 @@ export function FilmPage(props: StylePageProps) {
         <section className="fm-sec fm-center" id="about">
           <div className="fm-wrap" data-reveal="up">
             <p className="fm-mono fm-mark">About</p>
-            <p className="fm-about">{b.about}</p>
+            <p className="fm-about" data-long={longText(b.about) || undefined}>{b.about}</p>
           </div>
         </section>
       )}
@@ -300,9 +301,11 @@ export function FilmPage(props: StylePageProps) {
             Check my date
           </a>
         )}
-        <a href="https://usetikka.com" className="fm-made">
-          Made with Tikka
-        </a>
+        {!hasPlus(b) && (
+          <a href="https://usetikka.com" className="fm-made">
+            Made with Tikka
+          </a>
+        )}
       </div>
       <StickyBar cls="fm" book={book} bookProps={bookProps} wa={d.waHref} />
     </div>

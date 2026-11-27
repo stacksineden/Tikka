@@ -13,6 +13,7 @@ import { isSocial } from "@/lib/social";
 import type { Business, OpeningHours, PortfolioPhoto, Review } from "@/lib/types";
 import { PhotoStage, type StageCollection, type StagePhoto } from "./PhotoStage";
 import { blurBox } from "@/lib/blur";
+import { hasPlus } from "@/lib/plus";
 
 // The Photography style of the free business page (PRD A5; prototype in
 // design/page-styles/photography.html). The same content and the same booking as the beauty page;
@@ -606,13 +607,15 @@ export function PhotoPage({ b, live, next, reviews, sections, book, bookProps, s
           <span>
             © {b.name} · {where}
           </span>
-          <Link href="/" className="flex items-center gap-2">
-            Made with
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="pg-made-dark" src="/brand/tikka-lockup-reversed.svg" alt="Tikka" width={58} height={17} />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="pg-made-light" src="/brand/tikka-lockup.svg" alt="Tikka" width={58} height={17} />
-          </Link>
+          {!hasPlus(b) && (
+            <Link href="/" className="flex items-center gap-2">
+              Made with
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="pg-made-dark" src="/brand/tikka-lockup-reversed.svg" alt="Tikka" width={58} height={17} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="pg-made-light" src="/brand/tikka-lockup.svg" alt="Tikka" width={58} height={17} />
+            </Link>
+          )}
         </div>
       </footer>
 

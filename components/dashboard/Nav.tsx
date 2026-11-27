@@ -22,6 +22,7 @@ import {
   X,
   type LucideIcon,
   MapPin,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -55,6 +56,7 @@ export const NAV_NEW: Item[] = [
   { href: "/app/drops", label: "Drops", Icon: Layers },
   { href: "/app/reviews", label: "Reviews", Icon: MessageSquareText },
   { href: "/app/posters/cards", label: "Cards & posters", Icon: QrCode },
+  { href: "/app/plus", label: "Tikka Plus", Icon: Sparkles },
   { href: "/app/settings", label: "Settings", Icon: Settings },
   { href: "/help", label: "Help", Icon: CircleHelp },
 ];
@@ -263,6 +265,7 @@ function MoreSheet({ open, onClose, account, path }: { open: boolean; onClose: (
     { href: "/app/posters/cards", label: "Cards & posters", Icon: QrCode, meta: "Free business cards, and QR posters for your drops" },
     { href: "/app/settings/team", label: "Team", Icon: UsersRound, meta: "People who work with you" },
     { href: "/app/settings/get-paid", label: "Get paid", Icon: Banknote, meta: "Your bank and ID" },
+    { href: "/app/plus", label: "Tikka Plus", Icon: Sparkles, meta: "More customers every month" },
     { href: "/app/settings", label: "Settings", Icon: Settings, meta: "Account and alerts" },
     { href: "/help", label: "Help", Icon: CircleHelp, meta: "Step-by-step guides" },
     ...(account?.admin ? [{ href: "/admin", label: "Admin", Icon: ShieldCheck, meta: "Tikka team only" }] : []),

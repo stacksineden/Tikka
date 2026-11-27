@@ -25,7 +25,7 @@ import { demoDepositRule, getBookingDeposits, getBookingRules, getTikkaForBookin
 import { paystackMode } from "@/lib/paystack";
 import { getBusinessBySlug, getBusinessReviews, getPageDrops, isDbId } from "@/lib/data";
 import { count, place } from "@/lib/format";
-import { bookingLink, bookingNumber, focalPosition, priceText, heroHeadline, pageStyle, serviceGroups, showsLocation, visibleSections, whereLine } from "@/lib/page";
+import { bookingLink, bookingNumber, focalPosition, priceText, heroHeadline, isPageStyle, pageStyle, serviceGroups, showsLocation, visibleSections, whereLine } from "@/lib/page";
 import { photoSrcSet } from "@/lib/media-path";
 import { collectionLine, portfolioView } from "@/lib/portfolio";
 import { SITE } from "@/lib/qr";
@@ -33,13 +33,16 @@ import { formatTime } from "@/lib/setup";
 import type { Business, OpeningHours } from "@/lib/types";
 import { LoadingGrid } from "@/components/ui/Loading";
 import { blurProps } from "@/lib/blur";
+import { hasPlus } from "@/lib/plus";
 
 // The free business page: a one-page website for the business's Instagram and WhatsApp bio
 // (PRD A5). One fixed editorial layout filled with their content and brand colour; empty
 // sections hide. Animation is CSS plus one IntersectionObserver (components/business/Reveal).
 
-export async function generateMetadata({ params }: PageProps<"/[slug]">): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps<"/[slug]">): Promise<Metadata> {
   const { slug } = await params;
+  // A style preview (?preview=luxe, from Your page) is never indexed.
+  const preview = isPageStyle((await searchParams).preview);
   const found = await getBusinessBySlug(slug);
   if (!found) return { title: "Page not found" };
   const b = found.business;
@@ -51,7 +54,7 @@ export async function generateMetadata({ params }: PageProps<"/[slug]">): Promis
     description,
     alternates: { canonical: `${SITE}/${b.slug}` },
     openGraph: { title, description, url: `${SITE}/${b.slug}`, type: "website", images: image ? [image] : undefined },
-    robots: { index: true, follow: true },
+    robots: preview ? { index: false, follow: false } : { index: true, follow: true },
   };
 }
 
@@ -148,6 +151,9 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
   const live = drops.find((d) => d.status === "live");
   // A business card scan (/c/[code] → ?c=card): the drop band passes it on to the claim page.
   const fromCard = sp.c === "card";
+  // The page's style (lib/page.ts pageStyle()), or one the owner is trying on before applying it
+  // (?preview=<style>, from Your page; nothing is saved).
+  const look = isPageStyle(sp.preview) ? sp.preview : pageStyle(b);
   const next = drops.find((d) => d.status === "scheduled");
   const sections = new Set(visibleSections(b, { reviews: reviews.length }));
   const page = b.page ?? {};
@@ -206,7 +212,7 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
             live: isDbId(found.ownerId),
           }}
           services={bookable}
-          theme={sheetTheme(pageStyle(b), b.page?.galleryTone, b.brandColor, b.onBrandColor)}
+          theme={sheetTheme(look, b.page?.galleryTone, b.brandColor, b.onBrandColor)}
           tikka={tikka ?? undefined}
         />
       ) : calendar ? (
@@ -223,8 +229,6 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
     </>
   );
 
-  // The page's style (lib/page.ts pageStyle()): the same content and booking, another look.
-  const look = pageStyle(b);
   const styleProps = {
     fromCard,
     b,
@@ -618,11 +622,13 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
           <p className="text-caption text-ink-muted">
             © {b.name} · {showsLocation(b) ? loc : whereLine(b)}
           </p>
-          <Link href="/" className="text-caption flex items-center gap-2 text-ink-muted hover:text-ink">
-            Made with
-            <Logo height={18} />
-            <span>· Get a free page for your business</span>
-          </Link>
+          {!hasPlus(b) && (
+            <Link href="/" className="text-caption flex items-center gap-2 text-ink-muted hover:text-ink">
+              Made with
+              <Logo height={18} />
+              <span>· Get a free page for your business</span>
+            </Link>
+          )}
         </div>
       </footer>
 

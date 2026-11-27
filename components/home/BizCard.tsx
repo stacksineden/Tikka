@@ -23,8 +23,10 @@ export function BizCard({ b, now, wide = false }: { b: Card; now: Date; wide?: b
             {b.name.slice(0, 1)}
           </div>
         )}
-        {(b.isNew || b.comesToYou) && (
-          <span className="absolute top-2.5 left-2.5 rounded-pill bg-surface-raised px-2.5 py-1 text-[12px] font-semibold text-ink shadow-raised">{b.isNew ? "New on Tikka" : "Comes to you"}</span>
+        {(b.featured || b.isNew || b.comesToYou) && (
+          <span className="absolute top-2.5 left-2.5 rounded-pill bg-surface-raised px-2.5 py-1 text-[12px] font-semibold text-ink shadow-raised">
+            {b.featured ? "Featured" : b.isNew ? "New on Tikka" : "Comes to you"}
+          </span>
         )}
         {b.nextFree && <span className="absolute bottom-2.5 left-2.5 rounded-pill bg-success px-2.5 py-1 text-[12px] font-semibold text-on-success">{freeLabel(b.nextFree, now)}</span>}
       </div>

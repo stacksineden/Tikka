@@ -9,6 +9,7 @@ import type { ShownCollection } from "@/lib/portfolio";
 import type { Business } from "@/lib/types";
 import { PhotoStage, type StagePhoto } from "./PhotoStage";
 import { blurBox } from "@/lib/blur";
+import { hasPlus } from "@/lib/plus";
 
 // One collection on its own page (usetikka.com/<business>/work/<collection>) for the Photography
 // style: an exhibition. A title, then each photo on its own, in its own shape, with its number and
@@ -132,13 +133,15 @@ export function PhotoCollection({ b, c, others, book, bookLabel, url, where }: {
           <span>
             © {b.name} · {where}
           </span>
-          <Link href="/" className="flex items-center gap-2">
-            Made with
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="pg-made-dark" src="/brand/tikka-lockup-reversed.svg" alt="Tikka" width={58} height={17} />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="pg-made-light" src="/brand/tikka-lockup.svg" alt="Tikka" width={58} height={17} />
-          </Link>
+          {!hasPlus(b) && (
+            <Link href="/" className="flex items-center gap-2">
+              Made with
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="pg-made-dark" src="/brand/tikka-lockup-reversed.svg" alt="Tikka" width={58} height={17} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="pg-made-light" src="/brand/tikka-lockup.svg" alt="Tikka" width={58} height={17} />
+            </Link>
+          )}
         </div>
       </footer>
 

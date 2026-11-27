@@ -1,10 +1,10 @@
-import { ArrowRight, CalendarCheck, Car, Check, Clock3, Globe, Layers, QrCode, ReceiptText, Smartphone, Users, Wallet, type LucideIcon } from "lucide-react";
+import { CalendarCheck, Car, Check, Clock3, Globe, Layers, QrCode, ReceiptText, Smartphone, Users, Wallet, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { Tick } from "@/components/tikka/glyphs";
 import { CustomerVisual, DepositVisual, TodayVisual, WebsiteVisual } from "./FeatureVisuals";
 import { HeroDemo } from "./HeroDemo";
-import { count } from "@/lib/format";
-import { paidTier, priceLabel, type DropPack, type DropTier } from "@/lib/pricing";
+import { paidTier, priceLabel, type DropTier } from "@/lib/pricing";
+import { PLUS_FEATURES } from "@/lib/plus";
 
 // "For businesses" (usetikka.com/business), the wording agreed in docs/BUSINESS_PAGE_COPY.md: the
 // website people book from, deposits, Today and Money, the customer list, drops for new customers,
@@ -249,62 +249,85 @@ export function BizDrops() {
 
 /* ---------------------------------------------------------------- Pricing */
 
-function cheapestPack(packs: DropPack[]): DropPack | undefined {
-  return [...packs].sort((a, b) => a.priceKobo - b.priceKobo)[0];
-}
-
-export function BizPricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPack[] }) {
+/**
+ * Two choices, in owners' words (agreed 27 Nov 2026): Free, and Tikka Plus. What fees and single
+ * drops cost is small print under both, not a third plan. Prices come from the database
+ * (drop_tiers, plus_prices), so a change in /admin changes this page.
+ */
+export function BizPricing({ tiers, plusKobo }: { tiers: DropTier[]; plusKobo: number | null }) {
   const drop = paidTier(tiers);
-  const pack = cheapestPack(packs);
-  const founding = (normal: number, f?: number | null) => (f && f < normal ? ` (founding members ${priceLabel(f)})` : "");
-  // Two plain lists: what's free, and what you pay for (docs/BUSINESS_PAGE_COPY.md, revised 26 Nov 2026).
   const free = [
-    "Your website at usetikka.com/yourname",
-    "Bookings and your calendar",
-    "Today and Money",
-    "Your customer list",
-    "Receipts and business cards",
-    "Your first drop",
+    "Your own website, with your prices and photos",
+    "Customers book a time with you online",
+    "Take a deposit when they book, so people don\u2019t just disappear",
+    "See who\u2019s coming each day, and what you made each week",
+    "Keep all your customers in one list",
+    "Show up when people search for your service on Tikka",
   ];
-  const paid: [string, string][] = [
-    ["Deposits and pay links", "1% of each payment, plus Paystack's fee"],
-    ...(drop ? ([["Each drop after your first", `${priceLabel(drop.priceKobo)}${founding(drop.priceKobo, drop.foundingPriceKobo)}`]] as [string, string][]) : []),
-    ...(pack ? ([[`${count(pack.drops)} drops at once`, `${priceLabel(pack.priceKobo)}${founding(pack.priceKobo, pack.foundingPriceKobo)}`]] as [string, string][]) : []),
-  ];
+  const Line = ({ children }: { children: React.ReactNode }) => (
+    <li className="text-body flex items-start gap-2.5">
+      <Check size={20} className="mt-0.5 shrink-0 text-success" aria-hidden="true" />
+      {children}
+    </li>
+  );
   return (
     <section id="pricing" className="scroll-mt-6 border-t border-line bg-surface-sunken px-5 py-14 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-5xl">
         <Eyebrow>Pricing</Eyebrow>
-        <h2 className="mt-3 text-heading sm:text-display-lg">What&apos;s free, and what you pay for</h2>
+        <h2 className="mt-3 text-heading sm:text-display-lg">Simple pricing</h2>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
-          <div className="rounded-card border border-line bg-surface-raised p-6">
+          <div className="flex flex-col rounded-card border border-line bg-surface-raised p-6">
             <h3 className="text-title">Free</h3>
-            <p className="text-caption mt-1 text-ink-muted">No monthly fee. No card needed to start.</p>
-            <ul className="mt-5 grid gap-3">
+            <p className="text-body mt-1">
+              <b className="font-mono text-[22px]">₦0</b> <span className="text-ink-muted">forever. No card needed.</span>
+            </p>
+            <ul className="mt-5 grid flex-1 gap-3">
               {free.map((f) => (
-                <li key={f} className="text-body flex items-start gap-2.5">
-                  <Check size={20} className="mt-0.5 shrink-0 text-success" aria-hidden="true" />
-                  {f}
-                </li>
+                <Line key={f}>{f}</Line>
               ))}
             </ul>
+            <Link href="/sign-up" className="btn btn-secondary btn-lg mt-6 rounded-pill">
+              Start free
+            </Link>
           </div>
-          <div className="rounded-card border border-line bg-surface-raised p-6">
-            <h3 className="text-title">Paid</h3>
-            <p className="text-caption mt-1 text-ink-muted">Only when money comes in, or when you want new customers.</p>
-            <dl className="mt-5 grid gap-4">
-              {paid.map(([what, price]) => (
-                <div key={what}>
-                  <dt className="text-body font-semibold">{what}</dt>
-                  <dd className="text-body text-ink-muted">{price}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
+          {plusKobo !== null && (
+            <div className="flex flex-col rounded-card border-2 border-brand bg-surface-raised p-6">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-title">Tikka Plus</h3>
+                <span className="rounded-pill bg-brand-soft px-2.5 py-1 text-[12px] font-semibold text-brand">More customers</span>
+              </div>
+              <p className="text-body mt-1">
+                <b className="font-mono text-[22px]">{priceLabel(plusKobo)}</b> <span className="text-ink-muted">a month. Stop any time.</span>
+              </p>
+              <p className="text-body mt-5 font-semibold">Everything in Free, and we help bring you more customers:</p>
+              <ul className="mt-3 grid flex-1 gap-3">
+                {PLUS_FEATURES.map((f) => (
+                  <Line key={f}>{f}</Line>
+                ))}
+              </ul>
+              <Link href="/app/plus" className="btn btn-lg mt-6 rounded-pill">
+                Get Plus
+              </Link>
+            </div>
+          )}
         </div>
-        <Link href="/sign-up" className="btn btn-lg mt-8">
-          Start free <ArrowRight aria-hidden="true" />
-        </Link>
+        <ul className="text-body mt-6 grid gap-2 text-ink-muted">
+          <li>When customers pay you online, Tikka keeps 1% (plus Paystack&apos;s fee). The rest goes straight to your bank.</li>
+          {drop && (
+            <li>
+              Want new customers without Plus? A single drop is {priceLabel(drop.priceKobo)}.{" "}
+              <a href="#drops" className="font-semibold text-brand underline underline-offset-4">
+                What&apos;s a drop?
+              </a>
+            </li>
+          )}
+          <li>
+            Want your own web address, like yourbusiness.com?{" "}
+            <Link href="/app/plus#domain" className="font-semibold text-brand underline underline-offset-4">
+              Ask us
+            </Link>
+          </li>
+        </ul>
       </div>
     </section>
   );
@@ -312,7 +335,7 @@ export function BizPricing({ tiers, packs }: { tiers: DropTier[]; packs: DropPac
 
 /* ---------------------------------------------------------------- FAQs and final call */
 
-export function BizFaq({ tiers }: { tiers: DropTier[] }) {
+export function BizFaq({ tiers, plusKobo }: { tiers: DropTier[]; plusKobo: number | null }) {
   const drop = paidTier(tiers);
   const faqs: [string, string][] = [
     ["Do my customers need an app?", "No. They book on your page and get a booking pass. Drop offers arrive in WhatsApp."],
@@ -324,8 +347,10 @@ export function BizFaq({ tiers }: { tiers: DropTier[] }) {
     ["Can people in other cities book me?", "Yes. Tikka is for businesses anywhere in Nigeria, and customers search by city and area."],
     [
       "What does it cost?",
-      `The website, bookings and daily tools are free. Payments cost 1% plus Paystack's fee.${drop ? ` Drops are ${priceLabel(drop.priceKobo)} each after your first free one.` : ""}`,
+      `Your website, bookings, deposits and daily tools are free. When customers pay you online, Tikka keeps 1% plus Paystack's fee.${plusKobo ? ` Tikka Plus is ${priceLabel(plusKobo)} a month if you want more customers.` : ""}${drop ? ` A single drop is ${priceLabel(drop.priceKobo)}, and your first one is free.` : ""}`,
     ],
+    ["What happens if I stop Tikka Plus?", "Nothing on your page breaks. Your photos, collections, page style, bookings and customers all stay. You leave the top of search, the monthly drop stops and \u201cMade with Tikka\u201d comes back."],
+    ["Can I use my own web address?", "Yes. Ask us from Tikka Plus in your dashboard and we\u2019ll set it up for you, like yourbusiness.com. Your usetikka.com link keeps working too."],
   ];
   return (
     <section id="faq" className="scroll-mt-6 bg-surface px-5 py-14 sm:px-6 sm:py-20">

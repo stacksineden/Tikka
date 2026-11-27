@@ -30,6 +30,8 @@ export interface BizCard {
   deposit: boolean;
   bookable: boolean;
   isNew: boolean;
+  /** Tikka Plus: shown first among the matches, marked Featured. */
+  featured: boolean;
   /** The next bookable time (ISO), within the search's days. */
   nextFree?: string;
   /** Map pin; none for businesses that only go to customers. */
@@ -86,6 +88,7 @@ export async function searchBusinesses(s: Partial<SearchQuery> & { sort?: "soone
     deposit: r.deposit === true,
     bookable: r.bookable === true,
     isNew: r.is_new === true,
+    featured: r.featured === true,
     nextFree: (r.next_free as string | null) ?? undefined,
     lat: r.lat == null ? undefined : Number(r.lat),
     lng: r.lng == null ? undefined : Number(r.lng),

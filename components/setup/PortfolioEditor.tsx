@@ -222,8 +222,8 @@ export function PortfolioEditor({
           <p className="text-label">{message.title}</p>
           <p className="text-caption text-ink-muted">{message.body}</p>
           {!plan.open && (
-            <Link href="/app/drops/new" className="text-label mt-2 inline-flex min-h-11 items-center text-brand underline">
-              Run a drop
+            <Link href="/app/plus" className="text-label mt-2 inline-flex min-h-11 items-center text-brand underline">
+              See Tikka Plus
             </Link>
           )}
         </div>

@@ -26,7 +26,7 @@
 /* ------------------------------------------------------------------ LUXE */
 .st-luxe { --bg: #0E0C0B; --bg2: #161311; --line: rgba(255,240,225,.12); --paper: #F4ECE4; --muted: rgba(244,236,228,.62); --faint: rgba(244,236,228,.42); --acc: color-mix(in oklab, var(--biz) 50%, var(--paper)); background: var(--bg); color: var(--paper); font-size: 16px; line-height: 1.6; }
 .lx-wrap { width: min(1120px, 100% - 40px); margin-inline: auto; }
-.lx-photo { background: var(--img, none) center/cover, radial-gradient(60% 50% at 40% 35%, color-mix(in oklab, var(--biz) 55%, #d9b8a3) 0, transparent 70%), linear-gradient(160deg, color-mix(in oklab, var(--biz) 40%, #2a1e1a), #0e0b0a); }
+.lx-photo { background: var(--img, none) center/cover, var(--img-xs, none) center/cover, radial-gradient(60% 50% at 40% 35%, color-mix(in oklab, var(--biz) 55%, #d9b8a3) 0, transparent 70%), linear-gradient(160deg, color-mix(in oklab, var(--biz) 40%, #2a1e1a), #0e0b0a); }
 .lx-nav { position: absolute; inset: 0 0 auto; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; }
 .lx-mark { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .lx-logo { width: 40px; height: 40px; flex: none; border-radius: 50%; overflow: hidden; border: 1px solid var(--acc); display: grid; place-items: center; font-family: var(--serif); font-size: 15px; }
@@ -34,7 +34,7 @@
 .lx-pill { min-height: 44px; padding: 0 18px; border: 1px solid var(--paper); border-radius: 999px; display: inline-flex; align-items: center; font-size: 14px; font-weight: 600; }
 .lx-hero { position: relative; min-height: 100svh; display: grid; align-items: end; overflow: hidden; }
 .lx-hero-img { position: absolute; inset: 0; transform: scale(1.08); animation: lx-settle 2.4s var(--ease) forwards; }
-.lx-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,12,11,.35) 0, rgba(14,12,11,.08) 35%, rgba(14,12,11,.94) 88%); }
+.lx-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,12,11,.45) 0, rgba(14,12,11,.1) 28%, rgba(14,12,11,.72) 52%, rgba(14,12,11,.96) 80%); }
 .lx-hero-in { position: relative; z-index: 1; padding: 0 0 48px; }
 .lx-eyebrow { font-size: 11px; letter-spacing: .26em; text-transform: uppercase; color: var(--muted); }
 .lx-h1 { font-family: var(--serif); font-weight: 300; letter-spacing: -0.03em; font-size: clamp(52px, 15vw, 148px); line-height: .92; margin: 14px 0 18px; }
@@ -97,7 +97,7 @@
 /* ----------------------------------------------------------- SOFT STUDIO */
 .st-soft { --bg: color-mix(in oklab, var(--biz) 5%, #FBF8F6); --card: #FFFFFF; --tint: color-mix(in oklab, var(--biz) 12%, #FFF); --ink: #24181D; --muted: #6E5F65; --line: color-mix(in oklab, var(--biz) 14%, #EDE6E3); --deep: color-mix(in oklab, var(--biz) 82%, #000); --r: 24px; background: var(--bg); color: var(--ink); font-size: 16px; line-height: 1.6; }
 .sf-wrap { width: min(1080px, 100% - 32px); margin-inline: auto; display: block; }
-.sf-photo { background: var(--img, none) center/cover, radial-gradient(55% 50% at 50% 40%, color-mix(in oklab, var(--biz) 30%, #fff) 0, transparent 75%), linear-gradient(150deg, color-mix(in oklab, var(--biz) 22%, #fff), color-mix(in oklab, var(--biz) 40%, #f3dfe5)); }
+.sf-photo { background: var(--img, none) center/cover, var(--img-xs, none) center/cover, radial-gradient(55% 50% at 50% 40%, color-mix(in oklab, var(--biz) 30%, #fff) 0, transparent 75%), linear-gradient(150deg, color-mix(in oklab, var(--biz) 22%, #fff), color-mix(in oklab, var(--biz) 40%, #f3dfe5)); }
 .sf-label { font-size: 12px; font-weight: 600; color: var(--deep); background: var(--tint); border-radius: 999px; padding: 4px 12px; display: inline-flex; align-items: center; gap: 6px; }
 .sf-top { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; }
 .sf-chip { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); display: inline-flex; align-items: center; font-size: 14px; font-weight: 600; }
@@ -116,6 +116,7 @@
 .sf-band { margin-top: 22px; border-radius: var(--r); background: var(--card); border: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 12px 12px 18px; }
 .sf-notify { min-height: 44px; padding: 0 18px; border-radius: 999px; background: var(--ink); color: #fff; font-weight: 600; font-size: 14px; white-space: nowrap; border: 0; }
 .sf-sec { padding: 56px 0 8px; }
+.sf-two { display: grid; gap: 40px; }
 .sf-h2 { font-family: var(--serif); font-weight: 400; letter-spacing: -0.02em; font-size: clamp(32px, 8vw, 54px); line-height: 1.05; margin: 10px 0 20px !important; }
 .sf-cards { display: grid; gap: 12px; }
 .sf-svc { display: grid; grid-template-columns: 76px 1fr; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; }
@@ -161,7 +162,7 @@
 /* ------------------------------------------------------ MINIMAL PORTFOLIO */
 .st-portfolio { --bg: #F5F4F1; --ink: #151515; --muted: #6B6966; --line: #DEDBD5; --mark: color-mix(in oklab, var(--biz) 80%, #000); background: var(--bg); color: var(--ink); font-size: 15px; line-height: 1.6; }
 .pf-wrap { width: min(1240px, 100% - 32px); margin-inline: auto; }
-.pf-photo { background: var(--img, none) center/cover, linear-gradient(160deg, #d8d4cc, #b9b3a8); width: 100%; height: 100%; }
+.pf-photo { background: var(--img, none) center/cover, var(--img-xs, none) center/cover, linear-gradient(160deg, #d8d4cc, #b9b3a8); width: 100%; height: 100%; }
 .pf-cap { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
 .pf-brand { color: var(--ink); letter-spacing: .24em; }
 .pf-num { font-family: var(--mono); font-size: 11px; color: var(--mark); letter-spacing: .04em; }
@@ -172,6 +173,9 @@
 .pf-top nav a.pf-book { border: 1px solid var(--ink); border-radius: 999px; padding: 0 16px; font-weight: 600; }
 .pf-hero { padding: 40px 0 28px; }
 .pf-h1 { font-family: var(--serif); font-weight: 200; letter-spacing: -0.045em; font-size: clamp(60px, 19vw, 240px); line-height: .84; overflow-wrap: anywhere; }
+/* Room under the giant name so a letter's tail (the y of "kay") never runs into the line below. */
+.pf-h1 { padding-bottom: .14em; }
+.pf-num { text-align: right; text-wrap: balance; }
 .pf-line { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-top: 22px; border-top: 1px solid var(--ink); padding-top: 12px; }
 .pf-line p { max-width: 30ch; font-size: 14px; color: var(--muted); }
 .pf-band { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-block: 1px solid var(--line); font-size: 13px; }
@@ -221,7 +225,7 @@
 /* ------------------------------------------------------------------ FILM */
 .st-film { --bg: #0C0C0C; --paper: #EDEAE4; --muted: rgba(237,234,228,.62); --line: rgba(237,234,228,.14); --mark: color-mix(in oklab, var(--biz) 45%, #f0e6da); background: var(--bg); color: var(--paper); font-size: 15px; line-height: 1.6; }
 .fm-wrap { width: min(1100px, 100% - 40px); margin-inline: auto; }
-.fm-photo { background: var(--img, none) center/cover, radial-gradient(70% 60% at 50% 40%, #4a4641 0, transparent 70%), linear-gradient(180deg, #2a2724, #0c0c0c); }
+.fm-photo { background: var(--img, none) center/cover, var(--img-xs, none) center/cover, radial-gradient(70% 60% at 50% 40%, #4a4641 0, transparent 70%), linear-gradient(180deg, #2a2724, #0c0c0c); }
 .fm-mono { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
 .fm-mark { color: var(--mark); }
 .fm-muted { color: var(--muted); }
@@ -232,6 +236,8 @@
 @keyframes fm-blink { 50% { opacity: 0; } }
 .fm-open { height: 100svh; display: grid; place-items: center; position: relative; overflow: hidden; }
 .fm-open-img { position: absolute; inset: 12% 0; animation: fm-drift 14s ease-in-out infinite alternate; }
+/* A shade over the opening photo so the name and line read on any photo, bright ones too. */
+.fm-open-img::after { content: ""; position: absolute; inset: 0; background: radial-gradient(80% 60% at 50% 50%, rgba(12,12,12,.62), rgba(12,12,12,.38)); }
 .fm-open::before, .fm-open::after { content: ""; position: absolute; left: 0; right: 0; height: 12%; background: var(--bg); z-index: 1; }
 .fm-open::before { top: 0; } .fm-open::after { bottom: 0; }
 .fm-open-t { position: relative; z-index: 2; text-align: center; padding: 0 20px; text-shadow: 0 2px 30px rgba(0,0,0,.5); }
@@ -240,13 +246,14 @@
 @keyframes fm-drift { from { transform: scale(1.04) translateX(-1%); } to { transform: scale(1.1) translateX(1%); } }
 .fm-band { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; border-block: 1px solid var(--line); font-size: 13px; }
 .fm-chapter { position: relative; }
-.fm-title { position: sticky; top: 0; z-index: 2; height: 0; }
+/* Each chapter's title sits on its first photo and scrolls away with it (pinned titles piled up on short chapters). */
+.fm-title { position: absolute; top: 0; left: 0; right: 0; z-index: 2; }
 .fm-title > div { padding: 70px 20px 0; }
 .fm-h2 { font-family: var(--serif); font-weight: 200; letter-spacing: -0.03em; font-size: clamp(40px, 11vw, 110px); line-height: .92; margin-top: 8px; }
 .fm-title .fm-h2 { text-shadow: 0 2px 30px rgba(0,0,0,.5); }
 .fm-frame { height: 100svh; position: relative; overflow: hidden; }
 .fm-frame .fm-photo { position: absolute; inset: 0; }
-.fm-frame::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(12,12,12,.5) 0, transparent 30%, transparent 62%, rgba(12,12,12,.85) 100%); }
+.fm-frame::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(12,12,12,.62) 0, rgba(12,12,12,.2) 32%, transparent 45%, transparent 62%, rgba(12,12,12,.85) 100%); }
 .fm-sub { position: absolute; z-index: 1; left: 0; right: 0; bottom: 14%; text-align: center; padding: 0 28px; font-family: var(--serif); font-style: italic; font-weight: 300; font-size: 20px; line-height: 1.35; }
 .fm-sec { padding: 80px 0; }
 .fm-center { text-align: center; }
@@ -274,3 +281,6 @@
   .fm-end { padding-bottom: 70px; }
 }
 @media (prefers-reduced-motion: reduce) { .fm-open-img, .fm-rec i { animation: none; } }
+
+/* A long "about" reads as a paragraph, not a headline (data-long, longText() in data.tsx). */
+.lx-statement[data-long], .sf-about[data-long], .pf-big[data-long], .fm-about[data-long] { font-size: clamp(18px, 2.2vw, 22px); line-height: 1.6; letter-spacing: 0; max-width: 60ch; }

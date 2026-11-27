@@ -2,7 +2,8 @@ import "./styles.css";
 import { BadgeCheck, MapPin, Star } from "lucide-react";
 import { Reveal } from "@/components/business/Reveal";
 import { ActionIcon } from "@/components/tikka/ActionIcon";
-import { bg, pageData, StyleDropBand, type StylePageProps } from "./data";
+import { bg, longText, pageData, StyleDropBand, type StylePageProps } from "./data";
+import { hasPlus } from "@/lib/plus";
 
 // The two newer beauty styles of the business page (prototypes: design/page-styles/beauty-luxe.html
 // and beauty-soft.html). Luxe: dark and rich, a full-screen opening, services as a printed menu.
@@ -90,7 +91,7 @@ export function LuxePage(props: StylePageProps) {
           <div className="lx-wrap lx-about">
             <div data-reveal="up">
               <p className="lx-eyebrow">About</p>
-              <p className="lx-statement">{b.about}</p>
+              <p className="lx-statement" data-long={longText(b.about) || undefined}>{b.about}</p>
             </div>
             {d.page.aboutImageUrl || d.photos[1] ? <div data-reveal="up" className="lx-photo lx-about-img" style={bg(d.page.aboutImageUrl ?? d.photos[1]?.url)} role="img" aria-label={`Inside ${b.name}`} /> : null}
           </div>
@@ -194,7 +195,7 @@ export function LuxePage(props: StylePageProps) {
                 ))}
                 <li>
                   <span>
-                    <MapPin size={14} aria-hidden="true" /> {b.address || d.where}
+                    <MapPin size={14} aria-hidden="true" /> {b.address ? b.address : "Where"}
                   </span>
                   <b>{d.where}</b>
                 </li>
@@ -207,9 +208,11 @@ export function LuxePage(props: StylePageProps) {
       <footer className="lx-foot">
         <p className="lx-foot-name">{b.name}</p>
         <p>{d.where}</p>
-        <a href="https://usetikka.com" className="lx-made">
-          Made with Tikka
-        </a>
+        {!hasPlus(b) && (
+          <a href="https://usetikka.com" className="lx-made">
+            Made with Tikka
+          </a>
+        )}
       </footer>
 
       <StickyBar cls="lx" book={book} bookProps={bookProps} wa={d.waHref} />
@@ -323,7 +326,7 @@ export function SoftPage(props: StylePageProps) {
         {sections.has("about") && (
           <section className="sf-sec" id="about">
             <span className="sf-label">About</span>
-            <p className="sf-about" data-reveal="up">
+            <p className="sf-about" data-reveal="up" data-long={longText(b.about) || undefined}>
               {b.about}
             </p>
           </section>
@@ -401,9 +404,11 @@ export function SoftPage(props: StylePageProps) {
       <footer className="sf-foot">
         <p className="sf-foot-name">{b.name}</p>
         <p>{d.where}</p>
-        <a href="https://usetikka.com" className="sf-made">
-          Made with Tikka
-        </a>
+        {!hasPlus(b) && (
+          <a href="https://usetikka.com" className="sf-made">
+            Made with Tikka
+          </a>
+        )}
       </footer>
 
       <StickyBar cls="sf" book={book} bookProps={bookProps} wa={d.waHref} />

@@ -34,10 +34,13 @@ async function Pay({ searchParams }: { searchParams: PageProps<"/app/pay">["sear
     drop: ["Pay and publish", "Your drop stays a draft until the payment goes through."],
     upgrade: ["Pay and add Tikkas", "The extra Tikkas join your drop as soon as the payment goes through."],
     pack: ["Buy a season pack", `Your drops are ready to publish as soon as the payment goes through. Use them within ${PACK_MONTHS} months.`],
+    plus: ["Get Tikka Plus", "Plus starts as soon as the payment goes through, for 30 days. Nothing is charged again unless you pay for another month."],
   }[payment.kind];
 
   const rows: [string, string][] =
-    payment.kind === "pack"
+    payment.kind === "plus"
+      ? [["Tikka Plus", "30 days"]]
+      : payment.kind === "pack"
       ? [["Season pack", pack && tier ? packLine(pack, tier).title : "Season pack"]]
       : payment.kind === "upgrade"
         ? [
@@ -97,7 +100,7 @@ async function Pay({ searchParams }: { searchParams: PageProps<"/app/pay">["sear
           {payment.kind === "drop" ? "The drop is still a draft: open it and publish again to start a new payment." : "Start again to make a new payment."}
         </p>
       )}
-      {payment.kind !== "pack" && (
+      {(payment.kind === "drop" || payment.kind === "upgrade") && (
         <p className="text-caption text-ink-muted">Ending a drop early doesn&apos;t refund it. You can extend it up to 30 days from its start.</p>
       )}
     </>

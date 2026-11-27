@@ -5,6 +5,7 @@ import { actionHref } from "@/components/tikka/ActionIcon";
 import { clockTime, count, naira, place, shortDate } from "@/lib/format";
 import { heroHeadline, priceText, showsLocation, whereLine, type PageDrop } from "@/lib/page";
 import { portfolioView } from "@/lib/portfolio";
+import { xsOf } from "@/lib/media-path";
 import { formatTime } from "@/lib/setup";
 import type { OpeningHours } from "@/lib/types";
 import type { PhotoPageProps } from "@/components/business/photo/PhotoPage";
@@ -66,8 +67,15 @@ function hoursRows(h: OpeningHours): [string, string][] {
   ];
 }
 
-/** A photo as a background layer over the style's own tinted placeholder. */
-export const bg = (url?: string) => (url ? ({ "--img": `url("${url}")` } as React.CSSProperties) : undefined);
+/** A long "about" (over 160 characters) is set at reading size, not as a big statement. */
+export const longText = (t: string | undefined) => (t?.trim().length ?? 0) > 160;
+
+/** A photo as a background layer over its tiny blurred copy (lib/blur.ts) and the style's own tinted placeholder. */
+export const bg = (url?: string) => {
+  if (!url) return undefined;
+  const xs = xsOf(url);
+  return { "--img": `url("${url}")`, ...(xs ? { "--img-xs": `url("${xs}")` } : {}) } as React.CSSProperties;
+};
 
 /**
  * The drop band in the style's own colours: a live drop with the gold Claim button (the one Tikka

@@ -13,7 +13,10 @@ import {
   adminSetPaymentsAction,
   adminSetDropShownAction,
   adminEnquiryStatusAction,
+  adminDomainStatusAction,
+  adminSavePlusPriceAction,
 } from "@/app/app/actions";
+import { dbAdminPlus, dbPlusPrice } from "@/lib/plus-db";
 import { PrivacyRequests } from "@/components/admin/PrivacyRequests";
 import { SaveButton } from "@/components/admin/SaveButton";
 import { ActionForm } from "@/components/admin/ActionForm";
@@ -72,6 +75,8 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
     real ? dbKycQueue() : Promise.resolve([]),
     real ? dbAdminLaunchWeek() : Promise.resolve([]),
   ]);
+  const [plus, plusPrice] = real ? await Promise.all([dbAdminPlus(), dbPlusPrice().catch(() => null)]) : [{ businesses: [], requests: [] }, null];
+  const plusNow = plus.businesses.filter((x) => x.active);
   const kycWaiting = kycRows.filter((r) => r.kyc?.status === "submitted").length;
   // The Paystack Starter limit (REVENUE_PLAN 5.6): everything collected, live, counts.
   const limit = collectionLimitKobo();
@@ -299,6 +304,59 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                     <option value="contacted">Contacted</option>
                     <option value="converted">Converted</option>
                     <option value="closed">Closed</option>
+                  </select>
+                  <SaveButton className="btn btn-secondary min-h-11 px-4 text-label">Save</SaveButton>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
+
+      <Section
+        id="plus-h"
+        title={`Tikka Plus · ${count(plusNow.length)} now`}
+        note="Businesses with Plus (and anyone whose month ended in the last 30 days), and owners asking for their own web address. Message them on WhatsApp, then move each request along."
+      >
+        {plus.businesses.length === 0 ? (
+          <p className="text-body text-ink-muted">No one has Plus yet.</p>
+        ) : (
+          <ul className="grid gap-2">
+            {plus.businesses.map((x) => (
+              <li key={x.id} className={`${card} flex flex-wrap items-baseline justify-between gap-2`}>
+                <Link href={`/${x.slug}`} className="text-body font-semibold text-brand underline">
+                  {x.name}
+                </Link>
+                <span className="text-caption text-ink-muted">
+                  {x.active ? "Until" : "Ended"} {shortDate(x.until)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <h3 className="text-label mt-2">Own web address requests</h3>
+        {plus.requests.length === 0 ? (
+          <p className="text-body text-ink-muted">No requests yet.</p>
+        ) : (
+          <ul className="grid gap-3">
+            {plus.requests.map((r) => (
+              <li key={r.id} className={`${card} grid gap-2`}>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <p className="text-body font-semibold">
+                    {r.business} · <span className="font-mono">{r.domain || "no address yet"}</span>
+                  </p>
+                  <span className="text-caption text-ink-muted">{shortDate(r.at)}</span>
+                </div>
+                {r.note && <p className="text-body rounded-md bg-surface-sunken p-3">{r.note}</p>}
+                <form action={adminDomainStatusAction.bind(null, r.id)} className="flex flex-wrap items-center gap-2">
+                  <label className="sr-only" htmlFor={`domain-${r.id}`}>
+                    Status
+                  </label>
+                  <select id={`domain-${r.id}`} name="status" defaultValue={r.status} className={`${field} w-auto`}>
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="done">Done</option>
+                    <option value="declined">Declined</option>
                   </select>
                   <SaveButton className="btn btn-secondary min-h-11 px-4 text-label">Save</SaveButton>
                 </form>
@@ -539,6 +597,17 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
               </ActionForm>
             </li>
           ))}
+          {plusPrice !== null && (
+            <li className={card}>
+              <ActionForm action={adminSavePlusPriceAction} className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+                <p className="text-body font-semibold sm:col-span-2">Tikka Plus · a month (30 days)</p>
+                <label className="grid gap-1">
+                  <span className="text-caption text-ink-muted">Price (₦)</span>
+                  <input name="price" inputMode="numeric" defaultValue={koboToNaira(plusPrice)} className={field} />
+                </label>
+              </ActionForm>
+            </li>
+          )}
           {salePacks.map((p) => (
             <li key={p.id} className={card}>
               <ActionForm action={adminSavePackAction.bind(null, p.id)} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
@@ -573,7 +642,7 @@ async function Admin({ searchParams }: { searchParams: Promise<Record<string, st
                   <span className="text-body font-semibold tabular-nums">{money(p.amountKobo)}</span>
                 </div>
                 <p className="text-caption text-ink-muted">
-                  {{ drop: "Single drop", upgrade: "Upgrade", pack: "Season pack" }[p.kind]}
+                  {{ drop: "Single drop", upgrade: "Upgrade", pack: "Season pack", plus: "Tikka Plus" }[p.kind]}
                   {p.toTier ? ` · ${p.toTier}` : ""} · {p.status} · {shortDate(p.createdAt)} · <span className="font-mono">{p.reference}</span>
                 </p>
               </li>

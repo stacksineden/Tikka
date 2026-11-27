@@ -584,6 +584,34 @@ export async function adminEnquiryStatusAction(id: string, form: FormData): Prom
   revalidatePath("/admin");
 }
 
+/* ------------------------------------------------- Tikka Plus (admin) */
+
+/** A web-address request moves along: contacted, done or declined. */
+export async function adminDomainStatusAction(id: string, form: FormData): Promise<void> {
+  const admin = await getAdmin();
+  if (!admin || !isDbId(admin.id)) return;
+  const status = String(form.get("status") ?? "");
+  if (status !== "new" && status !== "contacted" && status !== "done" && status !== "declined") return;
+  const { dbAdminDomainRequest } = await import("@/lib/plus-db");
+  await dbAdminDomainRequest(id, status);
+  revalidatePath("/admin");
+}
+
+/** The Plus price (a month). Payments already made keep theirs. */
+export async function adminSavePlusPriceAction(_prev: AdminFormState, form: FormData): Promise<AdminFormState> {
+  const admin = await getAdmin();
+  if (!admin || !isDbId(admin.id)) return { error: "Only Tikka admins can change prices." };
+  const price = naira(form, "price");
+  if (!Number.isFinite(price) || price <= 0) return { error: "Enter a price above \u20a60." };
+  const { createClient } = await import("@/lib/supabase/server");
+  const sb = await createClient();
+  const { error } = await sb.rpc("admin_save_plus_price", { p_price_kobo: Math.round(price * 100) });
+  if (error) return { error: "Couldn't save. Try again." };
+  updateTag(PRICES_TAG);
+  revalidatePath("/admin");
+  return { savedAt: Date.now() };
+}
+
 /* ------------------------------------------------- privacy requests */
 
 export type PersonLookupState =

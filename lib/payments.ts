@@ -4,7 +4,8 @@
 // functions must match.
 
 export type PaymentStatus = "pending" | "paid" | "failed" | "abandoned";
-export type PaymentKind = "drop" | "upgrade" | "pack";
+/** "plus": a month of Tikka Plus (supabase/migrations/20261224140000_tikka_plus.sql). */
+export type PaymentKind = "drop" | "upgrade" | "pack" | "plus";
 
 export interface Payment {
   id: string;
@@ -67,6 +68,7 @@ export function abandonStale(payments: Payment[], now: Date): Payment[] {
 /** Where the owner lands once a payment is paid, and the way back if it isn't. */
 export function paymentPlace(p: Payment): { done: string; back: { href: string; label: string } } {
   if (p.kind === "pack") return { done: "/app/settings/payments?pack=1", back: { href: "/app/settings/payments", label: "Back to payments" } };
+  if (p.kind === "plus") return { done: "/app/plus?paid=1", back: { href: "/app/plus", label: "Back to Tikka Plus" } };
   if (p.kind === "upgrade") return { done: `/app/drops/${p.dropId}?added=${p.extraCards ?? 0}`, back: { href: `/app/drops/${p.dropId}`, label: "Back to the drop" } };
   return { done: `/app/drops/${p.dropId}?published=1`, back: { href: `/app/drops/${p.dropId}`, label: "Back to the drop" } };
 }

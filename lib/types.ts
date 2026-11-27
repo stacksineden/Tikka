@@ -85,6 +85,8 @@ export interface Business {
   /** Tikka's listing terms: when they were agreed, and the 14 days businesses listed before them have. */
   listingTermsAt?: string;
   listingGraceUntil?: string;
+  /** Tikka Plus until (supabase/migrations/20261224140000_tikka_plus.sql); see hasPlus() in lib/plus.ts. */
+  plusUntil?: string;
   languages?: string[];
 }
 

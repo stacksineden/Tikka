@@ -38,7 +38,7 @@ export function isDbId(id: string | undefined): id is string {
 }
 
 const CARD_COLUMNS =
-  "id, name, slug, code_prefix, category, state, city, area, address, tagline, about, brand_color, on_brand_color, background_type, background_value, logo_path, video_path, video_poster_path, hours, actions, serve_mode, verified, suspended, rating_avg, rating_count, is_demo, trades, work_place, travel_fee_kobo, travel_reach, booking_rules, gap_minutes, home_gap_minutes, listed, lat, lng, location_approx, amenities, languages, listing_terms_at, listing_grace_until";
+  "id, name, slug, code_prefix, category, state, city, area, address, tagline, about, brand_color, on_brand_color, background_type, background_value, logo_path, video_path, video_poster_path, hours, actions, serve_mode, verified, suspended, rating_avg, rating_count, is_demo, trades, work_place, travel_fee_kobo, travel_reach, booking_rules, gap_minutes, home_gap_minutes, listed, lat, lng, location_approx, amenities, languages, listing_terms_at, listing_grace_until, plus_until";
 
 export class BusinessSaveError extends Error {
   constructor(

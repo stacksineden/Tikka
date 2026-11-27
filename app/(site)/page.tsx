@@ -51,7 +51,7 @@ function Row({ title, sub, more, cards, now }: { title: string; sub?: string; mo
         )}
       </div>
       {/* Swipe on a phone, four across on a computer. */}
-      <div className="-mx-4 grid snap-x snap-mandatory auto-cols-[72%] grid-flow-col gap-3.5 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:auto-cols-[42%] lg:mx-0 lg:auto-cols-[calc((100%-42px)/4)] lg:px-0">
+      <div className="-mx-4 grid snap-x snap-mandatory scroll-px-4 auto-cols-[72%] grid-flow-col gap-3.5 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:auto-cols-[42%] lg:mx-0 lg:scroll-px-0 lg:auto-cols-[calc((100%-42px)/4)] lg:px-0">
         {cards.map((b) => (
           <BizCard key={b.slug} b={b} now={now} />
         ))}

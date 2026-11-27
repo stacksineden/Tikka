@@ -40,7 +40,7 @@ export interface AdminBusiness {
 
 export interface AdminPayment {
   id: string;
-  kind: "drop" | "upgrade" | "pack";
+  kind: "drop" | "upgrade" | "pack" | "plus";
   amountKobo: number;
   status: string;
   reference: string;
