@@ -6,6 +6,7 @@ import { useMemo, useState, useTransition } from "react";
 import {
   addBookingAction,
   blockTimeAction,
+  depositLinkAction,
   bookingDepositAction,
   type DepositMethodIn,
   cancelBookingAction,
@@ -38,6 +39,8 @@ import {
   type BookingRules,
 } from "@/lib/bookings";
 import { Chip, NairaInput } from "@/components/today/Sheet";
+import { PayLinkReady, payLinkMessage } from "@/components/payments/PayLinkSheet";
+import Link from "next/link";
 import { Sheet } from "./Sheet";
 import { TimePicker } from "./TimePicker";
 
@@ -62,6 +65,19 @@ const DEPOSIT_PROBLEM: Record<string, string> = {
   settled: "This booking is already marked paid, so the deposit can't change.",
   cancelled: "This booking is cancelled.",
 };
+const LINK_PROBLEM: Record<string, string> = {
+  too_small: "The smallest pay link is ₦100.",
+  too_big: "That's more than one pay link can be for now.",
+  no_account: "Add your bank account in Settings → Get paid first.",
+  account_again: "Add your bank account again in Settings → Get paid.",
+  needs_id: "Add your ID in Settings → Get paid first.",
+  not_enabled: "Getting paid online isn't open for your business yet.",
+  not_verified: "Getting paid online needs the Verified badge.",
+  has_deposit: "This booking already has a deposit.",
+  settled: "This booking is already marked paid.",
+  cancelled: "This booking is cancelled.",
+  bad_phone: "This booking has no WhatsApp number.",
+};
 const depositHow = (b: Booking) =>
   b.depositMethod === "pay_link" ? "by pay link" : b.depositMethod ? `by ${b.depositMethod}` : "online";
 /** The owner can add or change a deposit they took themself, until the booking is marked paid. */
@@ -81,7 +97,10 @@ export function BookingsBoard({
   staff = false,
   todayOnly = false,
   gaps = {},
+  payLinks = false,
 }: {
+  /** Pay links can be sent (Get paid is set up): a deposit can be asked for by pay link. */
+  payLinks?: boolean;
   /** NEW DIRECTION: each booking's gap after it (clean-up, travel), by booking id. */
   gaps?: Record<string, number>;
   bookings: Booking[];
@@ -95,7 +114,7 @@ export function BookingsBoard({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState("");
-  const [sheet, setSheet] = useState<null | { kind: "add" } | { kind: "block" } | { kind: "move"; b: Booking } | { kind: "cancel"; b: Booking } | { kind: "deposit"; b: Booking } | { kind: "tell"; title: string; href: string | null; note?: string }>(null);
+  const [sheet, setSheet] = useState<null | { kind: "add" } | { kind: "block" } | { kind: "move"; b: Booking } | { kind: "cancel"; b: Booking } | { kind: "deposit"; b: Booking } | { kind: "tell"; title: string; href: string | null; note?: string } | { kind: "link"; url: string; kobo: number; note: string; first: string; phone?: string; title: string }>(null);
   const now = new Date();
   const today = todayKey(now);
 
@@ -312,18 +331,27 @@ export function BookingsBoard({
               rules={rulesFor()}
               pending={pending}
               error={error}
-              onSubmit={(v) =>
-                act(
-                  () => addBookingAction(v),
-                  "booked",
-                  (r) =>
+              payLinks={payLinks}
+              onSubmit={({ linkNaira, ...v }) => {
+                setError("");
+                start(async () => {
+                  const r = await addBookingAction(v);
+                  if (r.kind !== "booked") return setError(PROBLEM_TEXT[r.kind] ?? DEPOSIT_PROBLEM[r.kind] ?? "That didn't work. Try again.");
+                  const first = v.name.trim();
+                  if (linkNaira && typeof r.id === "string") {
+                    // Booked; now the deposit link, sent from their WhatsApp. Paying it marks the deposit on the booking.
+                    const l = await depositLinkAction(r.id, linkNaira);
                     setSheet(
-                      r.depositNotSaved
-                        ? { kind: "tell", title: "Booked", href: null, note: `The deposit didn't save. Tap Add deposit on ${v.name.trim()}'s booking to add it.` }
-                        : null,
-                    ),
-                )
-              }
+                      l.kind === "created" && "url" in l
+                        ? { kind: "link", title: "Booked. Send the deposit link", url: l.url, kobo: linkNaira * 100, note: l.note || "Deposit", first, phone: normalizeNgPhone(v.phone) ?? undefined }
+                        : { kind: "tell", title: "Booked", href: null, note: `The pay link didn't work: ${LINK_PROBLEM[l.kind] ?? "try again"}. Tap Add deposit on ${first}'s booking to send it.` },
+                    );
+                  } else {
+                    setSheet(r.depositNotSaved ? { kind: "tell", title: "Booked", href: null, note: `The deposit didn't save. Tap Add deposit on ${first}'s booking to add it.` } : null);
+                  }
+                  router.refresh();
+                });
+              }}
             />
           </Sheet>
 
@@ -340,6 +368,17 @@ export function BookingsBoard({
                 pending={pending}
                 error={error}
                 onSubmit={(n, m) => act(() => bookingDepositAction(sheet.b.id, n, m), n ? "saved" : "cleared", () => setSheet(null))}
+                payLinks={payLinks}
+                onLink={(n) => {
+                  const b = sheet.b;
+                  setError("");
+                  start(async () => {
+                    const l = await depositLinkAction(b.id, n);
+                    if (l.kind !== "created" || !("url" in l)) return setError(l.kind === "too_big" && "maxKobo" in l && l.maxKobo ? `For now, one payment can be up to ${naira(l.maxKobo / 100)}.` : (LINK_PROBLEM[l.kind] ?? "That didn't work. Try again."));
+                    setSheet({ kind: "link", title: "Your deposit link is ready", url: l.url, kobo: n * 100, note: l.note || "Deposit", first: b.firstName, phone: b.phone });
+                    router.refresh();
+                  });
+                }}
               />
             )}
           </Sheet>
@@ -420,6 +459,14 @@ export function BookingsBoard({
             />
           </Sheet>
 
+          <Sheet open={sheet?.kind === "link"} onClose={() => setSheet(null)} title={sheet?.kind === "link" ? sheet.title : ""}>
+            {sheet?.kind === "link" && (
+              <div className="mt-4">
+                <PayLinkReady url={sheet.url} message={payLinkMessage(sheet.first, sheet.kobo, businessName, sheet.note, sheet.url)} amountKobo={sheet.kobo} note={sheet.note} first={sheet.first} phone={sheet.phone} after="When they pay, it shows as the deposit on their booking." />
+              </div>
+            )}
+          </Sheet>
+
           <Sheet open={sheet?.kind === "tell"} onClose={() => setSheet(null)} title={sheet?.kind === "tell" ? sheet.title : ""}>
             {sheet?.kind === "tell" && (
               <div className="mt-4 grid gap-3">
@@ -466,23 +513,27 @@ function AddForm({
   rules,
   pending,
   error,
+  payLinks,
   onSubmit,
 }: {
   services: BoardService[];
   rules: BookingRules;
   pending: boolean;
   error: string;
-  onSubmit: (v: { serviceId: string; startsAt: string; name: string; phone: string; force: boolean; depositNaira?: number; depositMethod?: DepositMethodIn }) => void;
+  payLinks: boolean;
+  onSubmit: (v: { serviceId: string; startsAt: string; name: string; phone: string; force: boolean; depositNaira?: number; depositMethod?: DepositMethodIn; linkNaira?: number }) => void;
 }) {
   const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
   const [at, setAt] = useState<string | null>(null);
   const [force, setForce] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [paidAhead, setPaidAhead] = useState(false);
+  // The deposit: none, one they already paid the owner, or a pay link to send them now.
+  const [dep, setDep] = useState<"none" | "paid" | "link">("none");
+  const paidAhead = dep === "paid";
   const [deposit, setDeposit] = useState(0);
   const [method, setMethod] = useState<DepositMethodIn | null>(null);
-  const depositOk = !paidAhead || (deposit > 0 && !!method);
+  const depositOk = dep === "none" || (dep === "paid" ? deposit > 0 && !!method : payLinks && deposit >= 100);
   const svc = services.find((s) => s.id === serviceId);
   if (!svc) return <p className="text-body mt-4">Add your services on your page first.</p>;
   return (
@@ -490,7 +541,7 @@ function AddForm({
       className="mt-4 grid gap-3"
       onSubmit={(e) => {
         e.preventDefault();
-        if (at && depositOk) onSubmit({ serviceId, startsAt: at, name, phone, force, ...(paidAhead ? { depositNaira: deposit, depositMethod: method! } : {}) });
+        if (at && depositOk) onSubmit({ serviceId, startsAt: at, name, phone, force, ...(paidAhead ? { depositNaira: deposit, depositMethod: method! } : dep === "link" ? { linkNaira: deposit } : {}) });
       }}
     >
       <label className="grid gap-1">
@@ -514,13 +565,37 @@ function AddForm({
         <input className="input font-mono" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="0803 123 4567" required />
         <span className="text-caption text-ink-muted">{phone.trim() && !normalizeNgPhone(phone) ? "Type a Nigerian number, like 0803 123 4567." : "So you can remind them and send their pass."}</span>
       </label>
-      <label className="flex min-h-11 cursor-pointer items-center gap-3">
-        <input type="checkbox" className="size-5 accent-brand" checked={paidAhead} onChange={(e) => setPaidAhead(e.target.checked)} />
-        <span className="text-body">They already paid me a deposit</span>
-      </label>
+      <div className="grid gap-2">
+        <span className="text-label">Deposit</span>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Deposit">
+          <Chip on={dep === "none"} onClick={() => setDep("none")}>
+            No deposit
+          </Chip>
+          <Chip on={dep === "link"} onClick={() => setDep("link")}>
+            Send a pay link
+          </Chip>
+          <Chip on={dep === "paid"} onClick={() => setDep("paid")}>
+            They already paid me
+          </Chip>
+        </div>
+      </div>
       {paidAhead && <DepositFields deposit={deposit} setDeposit={setDeposit} method={method} setMethod={setMethod} />}
+      {dep === "link" &&
+        (payLinks ? (
+          <div className="grid gap-2.5 rounded-md bg-surface-sunken p-3">
+            <NairaInput id="bk-link" value={deposit} onChange={setDeposit} label="Deposit to ask for" />
+            <p className="text-caption text-ink-muted">After you book, you send the link from your WhatsApp. When they pay, it shows as the deposit on this booking.</p>
+          </div>
+        ) : (
+          <p className="text-body rounded-md bg-gold-soft px-4 py-3">
+            To send pay links, add your bank account first.{" "}
+            <Link href="/app/settings/get-paid" className="font-semibold underline underline-offset-4">
+              Open Get paid
+            </Link>
+          </p>
+        ))}
       <button type="submit" className="btn min-h-12" disabled={pending || !at || !name.trim() || !normalizeNgPhone(phone) || !depositOk}>
-        {pending ? "Saving…" : at ? `Book ${whenLabel(at)}` : "Pick a time"}
+        {pending ? "Saving…" : !at ? "Pick a time" : dep === "link" && deposit ? `Book and make a ${naira(deposit)} link` : `Book ${whenLabel(at)}`}
       </button>
       <p role="alert" className="text-caption min-h-5 text-danger">
         {error}
@@ -545,7 +620,7 @@ function DepositFields({ deposit, setDeposit, method, setMethod }: { deposit: nu
   );
 }
 
-function DepositForm({ b, pending, error, onSubmit }: { b: Booking; pending: boolean; error: string; onSubmit: (naira: number, method: DepositMethodIn) => void }) {
+function DepositForm({ b, pending, error, onSubmit, payLinks, onLink }: { b: Booking; pending: boolean; error: string; onSubmit: (naira: number, method: DepositMethodIn) => void; payLinks: boolean; onLink: (naira: number) => void }) {
   const had = b.depositPaidKobo ? Math.round(b.depositPaidKobo / 100) : 0;
   const [deposit, setDeposit] = useState(had);
   const [method, setMethod] = useState<DepositMethodIn | null>(b.depositMethod && b.depositMethod !== "pay_link" ? b.depositMethod : null);
@@ -560,6 +635,14 @@ function DepositForm({ b, pending, error, onSubmit }: { b: Booking; pending: boo
         <button type="button" className="btn btn-ghost min-h-12 text-danger" disabled={pending} onClick={() => onSubmit(0, method ?? "cash")}>
           Remove the deposit
         </button>
+      )}
+      {!had && payLinks && b.phone && (
+        <div className="grid gap-1.5 border-t border-line pt-3">
+          <p className="text-body text-ink-muted">Not paid yet? Send them a pay link for it. When they pay, it shows here as the deposit.</p>
+          <button type="button" className="btn btn-secondary min-h-12" disabled={pending || deposit < 100} onClick={() => onLink(deposit)}>
+            {deposit ? `Send a ${naira(deposit)} pay link` : "Type the amount, then send a pay link"}
+          </button>
+        </div>
       )}
       <p role="alert" className="text-caption min-h-5 text-danger">
         {error}

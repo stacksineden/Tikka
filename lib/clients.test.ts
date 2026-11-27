@@ -82,6 +82,20 @@ describe("client book", () => {
     expect(reasons.map(payReasonNote)).toEqual(["Balance for Knotless braids", "20% off braids (your Tikka)", ""]);
   });
 
+  it("offers a pay link for the deposit of a booking that has none", () => {
+    const withDeposit = { ...booking("b3", "+2348031110011", "Ada", "2026-11-28T09:00:00Z", "booked"), depositPaidKobo: 500_000 };
+    const [ada] = buildClients({
+      bookings: [booking("b2", "+2348031110011", "Ada", "2026-11-27T09:00:00Z", "booked"), withDeposit, booking("b4", "+2348031110011", "Ada", "2026-11-29T09:00:00Z", "cancelled")],
+      sales: [],
+      claims: [],
+      notes: {},
+      now,
+    });
+    const reasons = payLinkReasons(ada);
+    expect(reasons.filter((r) => r.kind === "deposit").map((r) => (r as { bookingId: string }).bookingId)).toEqual(["b2"]);
+    expect(payReasonNote(reasons[0])).toMatch(/^Deposit for /);
+  });
+
   it("tells customers with the same name apart by their number, and finds them however it's typed", () => {
     const sales: Sale[] = [
       { id: "a", at: "2026-11-20T10:00:00Z", name: "Chioma", item: "Cornrows", totalKobo: 600_000, payments: [{ at: "2026-11-20T10:00:00Z", kobo: 600_000, method: "cash" }], phone: "0803 111 0017" },

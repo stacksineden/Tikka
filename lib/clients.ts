@@ -21,6 +21,9 @@ export interface ClientVisit {
   saleId?: string;
   /** The Tikka behind it (so a pay link can be connected to it). */
   claimId?: string;
+  /** A booking: its id, and the deposit already on it (a pay link can be its deposit while it has none). */
+  bookingId?: string;
+  depositKobo?: number;
 }
 
 export interface ClientNote {
@@ -95,7 +98,7 @@ export function buildClients(input: { bookings: Booking[]; sales: Sale[]; claims
     const past = new Date(b.startsAt).getTime() < now;
     const came = b.status === "arrived" || !!sale;
     const status: ClientVisit["status"] = b.status === "cancelled" ? "cancelled" : b.status === "no_show" ? "no_show" : came ? "came" : "booked";
-    c.history.push({ at: b.startsAt, kind: "booking", title: b.service, detail: b.detail, paidKobo: paid, owedKobo: owed, status, methods: sale ? [...new Set(sale.payments.map((p) => p.method))] : [], saleId: sale?.id });
+    c.history.push({ at: b.startsAt, kind: "booking", title: b.service, detail: b.detail, paidKobo: paid, owedKobo: owed, status, methods: sale ? [...new Set(sale.payments.map((p) => p.method))] : [], saleId: sale?.id, bookingId: b.id, depositKobo: deposit });
     c.spentKobo += paid;
     c.owedKobo += owed;
     if (status === "no_show") c.noShows++;
@@ -168,12 +171,17 @@ export function relativeDay(iso: string, now: Date): string {
 export type PayReason =
   | { kind: "balance"; saleId: string; title: string; at: string; kobo: number }
   | { kind: "tikka"; claimId?: string; reward: string; at: string }
+  | { kind: "deposit"; bookingId: string; title: string; at: string }
   | { kind: "other" };
 
-/** Balances first (newest first), then Tikkas they haven't used, then anything else. */
+/** Balances first (newest first), then deposits for bookings that have none, then Tikkas they haven't used, then anything else. */
 export function payLinkReasons(c: Client): PayReason[] {
   const out: PayReason[] = [];
   for (const h of c.history) if (h.owedKobo > 0 && h.saleId) out.push({ kind: "balance", saleId: h.saleId, title: h.title, at: h.at, kobo: h.owedKobo });
+  // A booking still to come (or here today, not marked paid) with no deposit: paying the link is its deposit.
+  for (const h of c.history)
+    if (h.kind === "booking" && h.bookingId && (h.status === "booked" || h.status === "came") && !h.saleId && !h.depositKobo)
+      out.push({ kind: "deposit", bookingId: h.bookingId, title: h.title, at: h.at });
   for (const h of c.history) if (h.kind === "tikka" && h.status === "claimed") out.push({ kind: "tikka", claimId: h.claimId, reward: h.title.replace(/^Tikka: /, ""), at: h.at });
   out.push({ kind: "other" });
   return out;
@@ -183,6 +191,7 @@ export function payLinkReasons(c: Client): PayReason[] {
 export function payReasonNote(r: PayReason): string {
   if (r.kind === "balance") return `Balance for ${r.title}`.slice(0, 80);
   if (r.kind === "tikka") return `${r.reward} (your Tikka)`.slice(0, 80);
+  if (r.kind === "deposit") return `Deposit for ${r.title}`.slice(0, 80);
   return "";
 }
 

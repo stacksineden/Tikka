@@ -25,6 +25,7 @@ import { dayLabel, freeDays, openRange, todayKey, watParts, type Booking } from 
 import type { Business } from "@/lib/types";
 import { newExperience } from "@/lib/experience";
 import { LoadingGrid } from "@/components/ui/Loading";
+import { payLinkLimit } from "@/lib/paylinks-data";
 
 /** Each day for the next two months: free times, full or closed, and how many are booked. */
 async function monthDays(ownerKey: string, b: Business, list: Booking[], now: Date): Promise<MonthDay[]> {
@@ -160,6 +161,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
         base={{ capacity: setup.capacity, noticeMinutes: setup.noticeMinutes, aheadDays: setup.aheadDays, hours: b.hours ?? null }}
         businessName={b.name}
         gaps={newExperience(b) ? bookingGaps(b, list) : undefined}
+        payLinks={(await payLinkLimit(user)).ready}
       />
     </>
   );

@@ -8,6 +8,7 @@ import "server-only";
 
 import { randomBytes } from "node:crypto";
 import { isDbId } from "./data";
+import { depositFromDemoLink } from "./bookings-data";
 import { getLedger, payBalance, recordSale } from "./ledger-data";
 import { owedOf } from "./ledger";
 import { receiptFor } from "./receipts-data";
@@ -18,7 +19,7 @@ export const DEMO_TOKEN_PREFIX = "demo-";
 export const DEMO_MAX_KOBO = 50_000_000;
 const MIN_KOBO = 10_000;
 
-export type DemoPayFor = { kind: "balance"; saleId: string } | { kind: "tikka"; claimId?: string } | { kind: "other" };
+export type DemoPayFor = { kind: "balance"; saleId: string } | { kind: "tikka"; claimId?: string } | { kind: "deposit"; bookingId: string } | { kind: "other" };
 
 export interface DemoPayLink {
   id: string;
@@ -108,6 +109,8 @@ export async function payDemoLink(token: string, now: Date): Promise<{ kind: "pa
   const owner = { id: l.owner, role: "owner" as const };
   let rest = l.amountKobo;
   let saleId: string | null = null;
+  // A booking's deposit: it lands on the booking (counted as its deposit, not a sale), if it still has none.
+  if (l.for.kind === "deposit" && (await depositFromDemoLink(l.owner, l.for.bookingId, rest, now))) rest = 0;
   if (l.for.kind === "balance") {
     const id = l.for.saleId;
     const sale = (await getLedger(owner)).sales.find((s) => s.id === id);

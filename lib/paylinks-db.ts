@@ -48,6 +48,14 @@ export async function dbCreatePayLink(
   return (data ?? { kind: "error" }) as Row;
 }
 
+/** create_deposit_link(): a pay link for a booking's deposit, with the booking's name and number. */
+export async function dbCreateDepositLink(businessId: string, bookingId: string, amountKobo: number, mode: "test" | "live"): Promise<Row> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("create_deposit_link", { p_business: businessId, p_booking: bookingId, p_amount_kobo: amountKobo, p_mode: mode });
+  if (error) return { kind: error.code === "42501" ? "no_access" : "error" };
+  return (data ?? { kind: "error" }) as Row;
+}
+
 export async function dbPayLinks(businessId: string): Promise<PayLink[]> {
   const sb = await createClient();
   const { data, error } = await sb.rpc("get_pay_links", { p_business: businessId, p_limit: 200 });

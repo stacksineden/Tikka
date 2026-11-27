@@ -44,6 +44,10 @@ export interface TodayAppt {
   /** What's left to collect at the appointment. */
   dueKobo: number;
   depositKobo: number;
+  /** The full price when booked; null when the booking has none (the Paid sheet asks). */
+  priceKobo: number | null;
+  /** The deposit comes off the price. */
+  depositCounts: boolean;
   status: "booked" | "arrived" | "no_show" | "cancelled" | "held";
   /** Marked paid (or a pay link sent: kobo 0 until they pay); what's still owed on it. */
   paid: { kobo: number; method: PayMethod; owedKobo: number; linkKobo?: number; saleId: string } | null;
@@ -399,7 +403,7 @@ function Appt({ a, busy, businessName, onArrived, onPaid, onRemind }: { a: Today
             ) : (
               <>
                 {a.depositKobo ? <Tag tone="ok">Deposit paid {naira(a.depositKobo)}</Tag> : <Tag tone="gold">No deposit</Tag>}
-                <Tag tone="due">Collect {naira(a.dueKobo)}</Tag>
+                {a.priceKobo == null && !a.dueKobo ? <Tag tone="plain">No price yet</Tag> : <Tag tone="due">Collect {naira(a.dueKobo)}</Tag>}
                 {a.status === "arrived" && <Tag tone="info">Here now</Tag>}
               </>
             )}
@@ -419,7 +423,7 @@ function Appt({ a, busy, businessName, onArrived, onPaid, onRemind }: { a: Today
             </button>
           ) : (
             <button type="button" className={ACT_MAIN} onClick={onPaid}>
-              <Banknote size={16} aria-hidden="true" /> Paid {naira(a.dueKobo)}
+              <Banknote size={16} aria-hidden="true" /> Paid{a.priceKobo == null && !a.dueKobo ? "" : ` ${naira(a.dueKobo)}`}
             </button>
           )}
           {a.status === "booked" && (
@@ -445,6 +449,15 @@ function Appt({ a, busy, businessName, onArrived, onPaid, onRemind }: { a: Today
 
 function PaidSheet({ appt, businessName, payLinks, onClose }: { appt: TodayAppt; businessName: string; payLinks: boolean; onClose: () => void }) {
   const router = useRouter();
+  // What's left to pay: the booking's, or what the owner types. No price on the booking: the full
+  // price ("How much was it?"), less the deposit. A price they agreed (less, or more than a "from"
+  // price): what they pay now, as owners think of it ("we agreed ₦15,000"); nothing stays owed.
+  const noPrice = appt.priceKobo == null && !appt.dueKobo;
+  const [setPrice, setSetPrice] = useState(noPrice);
+  const [priceNaira, setPriceNaira] = useState(0);
+  const [agreedNaira, setAgreedNaira] = useState(Math.round(appt.dueKobo / 100));
+  const counted = appt.depositCounts ? appt.depositKobo / 100 : 0;
+  const baseDue = noPrice ? Math.max(0, priceNaira - counted) : setPrice ? agreedNaira : appt.dueKobo / 100;
   const [amount, setAmount] = useState(Math.round(appt.dueKobo / 100));
   const [part, setPart] = useState(false);
   // Asked for on the day ("Wash and beads, ₦4,500"): added to this visit, not a separate sale.
@@ -456,10 +469,13 @@ function PaidSheet({ appt, businessName, payLinks, onClose }: { appt: TodayAppt;
   const [error, setError] = useState("");
   const extra = adding && addLabel.trim() && addNaira > 0 ? Math.round(addNaira) : 0;
   const added = extra ? { label: addLabel.trim(), naira: extra } : undefined;
-  const dueNaira = appt.dueKobo / 100 + extra;
+  const dueNaira = baseDue + extra;
   const note = extra ? `${appt.service} + ${addLabel.trim()}`.slice(0, 80) : appt.service;
   const pay = (method: PayMethod) =>
     start(async () => {
+      if (noPrice && !(priceNaira > 0)) return setError("Say how much it was.");
+      if (noPrice && priceNaira < counted) return setError(`The price can't be less than the ${naira(counted * 100)} deposit they paid.`);
+      if (setPrice && !noPrice && !(agreedNaira > 0) && !counted) return setError("Say how much you agreed.");
       if (adding && !extra) return setError("Say what they added and how much, or tap Remove.");
       if (method === "pay_link") {
         // Saved as owed until they pay the link; the link is for all of it, or the part they'll pay now.
@@ -481,7 +497,39 @@ function PaidSheet({ appt, businessName, payLinks, onClose }: { appt: TodayAppt;
       </Sheet>
     );
   return (
-    <Sheet title={`${appt.first} paid ${part ? naira(amount * 100) : naira(dueNaira * 100)}`} onClose={onClose}>
+    <Sheet title={noPrice && !priceNaira && !part ? `${appt.first} paid` : `${appt.first} paid ${part ? naira(amount * 100) : naira(dueNaira * 100)}`} onClose={onClose}>
+      {setPrice && (
+        <div className="grid gap-2.5 rounded-card border border-line bg-surface-raised p-3.5">
+          <div className="flex items-center justify-between">
+            <label htmlFor="p-price" className="text-[15px] font-bold">
+              {noPrice ? `How much was ${appt.service.toLowerCase()}?` : "How much did you agree they pay now?"}
+            </label>
+            {!noPrice && (
+              <button
+                type="button"
+                className="text-label min-h-11 px-1 text-ink-muted"
+                onClick={() => {
+                  setSetPrice(false);
+                  setAgreedNaira(Math.round(appt.dueKobo / 100));
+                  setError("");
+                }}
+              >
+                Undo
+              </button>
+            )}
+          </div>
+          {noPrice ? (
+            <NairaInput id="p-price" value={priceNaira} onChange={setPriceNaira} label="Price for this visit" />
+          ) : (
+            <NairaInput id="p-price" value={agreedNaira} onChange={setAgreedNaira} label="What they pay now" />
+          )}
+          <p className="text-caption text-ink-muted">
+            {noPrice
+              ? `The full price, before any deposit.${counted > 0 ? ` ${naira(counted * 100)} deposit already paid · ${naira(baseDue * 100)} left.` : ""}`
+              : `It was ${naira(appt.dueKobo)}${counted > 0 ? ` after the ${naira(counted * 100)} deposit` : ""}. Nothing stays owed.`}
+          </p>
+        </div>
+      )}
       {adding ? (
         <div className="grid gap-2.5 rounded-card border border-line bg-surface-raised p-3.5">
           <div className="flex items-center justify-between">
@@ -511,7 +559,7 @@ function PaidSheet({ appt, businessName, payLinks, onClose }: { appt: TodayAppt;
           </div>
           {extra > 0 && (
             <p className="text-caption text-ink-muted">
-              {naira(appt.dueKobo)} left on the booking + {naira(extra * 100)} = {naira(dueNaira * 100)}
+              {naira(baseDue * 100)} left on the booking + {naira(extra * 100)} = {naira(dueNaira * 100)}
             </p>
           )}
         </div>
@@ -548,10 +596,26 @@ function PaidSheet({ appt, businessName, payLinks, onClose }: { appt: TodayAppt;
           {error}
         </p>
       )}
-      {!part && (
-        <button type="button" className="text-label justify-self-start text-brand underline underline-offset-4" onClick={() => setPart(true)}>
-          They paid only part of it
-        </button>
+      {(!part || !setPrice) && (
+        <div className="grid justify-items-start gap-1">
+          {!setPrice && (
+            <button type="button" className="text-label min-h-11 text-brand underline underline-offset-4" onClick={() => setSetPrice(true)}>
+              You agreed a different price
+            </button>
+          )}
+          {!part && (
+            <button
+              type="button"
+              className="text-label min-h-11 text-brand underline underline-offset-4"
+              onClick={() => {
+                setAmount(Math.round(dueNaira));
+                setPart(true);
+              }}
+            >
+              They paid only part of it
+            </button>
+          )}
+        </div>
       )}
     </Sheet>
   );

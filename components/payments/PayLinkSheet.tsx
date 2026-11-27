@@ -5,9 +5,10 @@
 // else. Then the amount and what it's for (filled in), then the link to send from the owner's own
 // WhatsApp. Real businesses keep SendPayLink; this sheet only shows for businesses from the new setup.
 
-import { Banknote, Check, ChevronRight, Copy, Gift, Loader2, PenLine, Receipt } from "lucide-react";
+import { Banknote, CalendarCheck, Check, ChevronRight, Copy, Gift, Loader2, PenLine, Receipt } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { depositLinkAction } from "@/app/app/bookings-actions";
 import { createPayLinkAction } from "@/app/app/paylink-actions";
 import { Sheet } from "@/components/today/Sheet";
 import { ActionIcon } from "@/components/tikka/ActionIcon";
@@ -26,6 +27,10 @@ const PROBLEM: Record<string, string> = {
   not_enabled: "Getting paid online isn't open for your business yet.",
   not_verified: "Getting paid online needs the Verified badge.",
   not_found: "That Tikka isn't there any more.",
+  needs_id: "Add your ID in Settings → Get paid first.",
+  has_deposit: "That booking already has a deposit.",
+  settled: "That booking is already marked paid.",
+  cancelled: "That booking is cancelled.",
 };
 
 export function PayLinkSheet({
@@ -79,7 +84,8 @@ export function PayLinkSheet({
     if (!reason) return;
     setError("");
     start(async () => {
-      const r = await createPayLinkAction({
+      // A booking's deposit: made from the booking, so paying it marks the deposit on it.
+      const r = reason.kind === "deposit" ? await depositLinkAction(reason.bookingId, amount) : await createPayLinkAction({
         naira: amount,
         note,
         name: customer?.name ?? name,
@@ -92,6 +98,7 @@ export function PayLinkSheet({
         return;
       }
       setUrl(r.url);
+      if ("note" in r && typeof r.note === "string" && r.note) setNote(r.note);
       router.refresh();
     });
   }
@@ -107,17 +114,17 @@ export function PayLinkSheet({
       {open && (
         <Sheet title={title} onClose={() => setOpen(false)}>
           {url ? (
-            <PayLinkReady url={url} message={message} amountKobo={amount * 100} note={note} first={first} phone={customer?.phone ?? (phoneKey(phone) ?? undefined)} />
+            <PayLinkReady url={url} message={message} amountKobo={amount * 100} note={note} first={first} phone={customer?.phone ?? (phoneKey(phone) ?? undefined)} after={reason?.kind === "deposit" ? "When they pay, it shows as the deposit on their booking." : undefined} />
           ) : !reason ? (
             <div className="grid gap-2">
               <p className="text-body text-ink-muted">What&apos;s it for?</p>
               {reasons.map((r, i) => (
                 <button key={i} type="button" onClick={() => pick(r)} className="flex min-h-16 items-center gap-3 rounded-md border border-line bg-surface-raised px-4 text-left">
-                  {r.kind === "balance" ? <Receipt size={20} className="shrink-0 text-ink-muted" aria-hidden="true" /> : r.kind === "tikka" ? <Gift size={20} className="shrink-0 text-ink-muted" aria-hidden="true" /> : <PenLine size={20} className="shrink-0 text-ink-muted" aria-hidden="true" />}
+                  {r.kind === "balance" ? <Receipt size={20} className="shrink-0 text-ink-muted" aria-hidden="true" /> : r.kind === "deposit" ? <CalendarCheck size={20} className="shrink-0 text-ink-muted" aria-hidden="true" /> : r.kind === "tikka" ? <Gift size={20} className="shrink-0 text-ink-muted" aria-hidden="true" /> : <PenLine size={20} className="shrink-0 text-ink-muted" aria-hidden="true" />}
                   <span className="min-w-0 flex-1">
-                    <b className="block">{r.kind === "balance" ? `What they owe: ${naira(r.kobo)}` : r.kind === "tikka" ? `Their Tikka: ${r.reward}` : "Something else"}</b>
+                    <b className="block">{r.kind === "balance" ? `What they owe: ${naira(r.kobo)}` : r.kind === "deposit" ? `Deposit for their booking` : r.kind === "tikka" ? `Their Tikka: ${r.reward}` : "Something else"}</b>
                     <span className="text-caption text-ink-muted">
-                      {r.kind === "balance" ? `${r.title} · ${day(r.at)}` : r.kind === "tikka" ? `Claimed ${day(r.at)} · they pay before they come` : "A custom job, a product, paying ahead"}
+                      {r.kind === "balance" ? `${r.title} · ${day(r.at)}` : r.kind === "deposit" ? `${r.title} · ${day(r.at)} · shows as paid on the booking` : r.kind === "tikka" ? `Claimed ${day(r.at)} · they pay before they come` : "A custom job, a product, paying ahead"}
                     </span>
                   </span>
                   <ChevronRight size={18} className="shrink-0 text-ink-muted" aria-hidden="true" />
@@ -154,10 +161,14 @@ export function PayLinkSheet({
                   {reason.kind === "balance" ? `They owe ${naira(reason.kobo)}. Ask for less to take part of it.` : `Up to ${naira(maxKobo)} for now.`} You get it less Paystack&apos;s fee and Tikka&apos;s 1%.
                 </span>
               </label>
-              <label className="grid gap-1">
-                <span className="text-label">What it&apos;s for</span>
-                <input className="input" value={note} onChange={(e) => setNote(e.target.value.slice(0, 80))} placeholder="e.g. Braids balance" required />
-              </label>
+              {reason.kind === "deposit" ? (
+                <p className="text-caption text-ink-muted">When they pay, it shows as the deposit on their booking, and Today takes it off what&apos;s left to pay.</p>
+              ) : (
+                <label className="grid gap-1">
+                  <span className="text-label">What it&apos;s for</span>
+                  <input className="input" value={note} onChange={(e) => setNote(e.target.value.slice(0, 80))} placeholder="e.g. Braids balance" required />
+                </label>
+              )}
               {!customer && (
                 <>
                   <label className="grid gap-1">
@@ -189,7 +200,7 @@ export function PayLinkSheet({
 }
 
 /** The link is made: send it from the owner's own WhatsApp (to the customer's number when there is one) or copy it. */
-export function PayLinkReady({ url, message, amountKobo, note, first, phone }: { url: string; message: string; amountKobo: number; note: string; first: string; phone?: string }) {
+export function PayLinkReady({ url, message, amountKobo, note, first, phone, after = "When they pay, it shows on Money and clears what they owe." }: { url: string; message: string; amountKobo: number; note: string; first: string; phone?: string; after?: string }) {
   const [copied, setCopied] = useState(false);
   const send = waLink(phone, message) ?? `https://wa.me/?text=${encodeURIComponent(message)}`;
   return (
@@ -215,7 +226,7 @@ export function PayLinkReady({ url, message, amountKobo, note, first, phone }: {
         {copied ? "Copied" : "Copy link"}
       </button>
       <p className="text-caption break-all text-ink-muted">{url}</p>
-      <p className="text-caption text-ink-muted">When they pay, it shows on Money and clears what they owe.</p>
+      <p className="text-caption text-ink-muted">{after}</p>
     </div>
   );
 }

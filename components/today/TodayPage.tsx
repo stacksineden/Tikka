@@ -53,6 +53,8 @@ export async function TodayPage({ user, business }: { user: SessionUser; busines
         homeArea: b.homeArea,
         dueKobo: due,
         depositKobo: deposit,
+        priceKobo: price > 0 ? price : null,
+        depositCounts: b.depositCounts !== false,
         status: b.status,
         paid: sale ? { kobo: paidOf(sale), method: sale.payments[0]?.method ?? "cash", owedKobo: owedOf(sale), linkKobo: linkWaiting.get(sale.id), saleId: sale.id } : null,
       };

@@ -554,6 +554,8 @@ export async function addBooking(
     endsAt: new Date(start.getTime() + minutes * 60_000).toISOString(), firstName: b.firstName, phone: b.phone ?? undefined,
     source: b.claimId ? "tikka" : "owner", status: "booked", code: demoCode(), viewToken: randomBytes(12).toString("hex"), moved: false,
     createdAt: new Date().toISOString(), futureOffers: false, claimId: b.claimId,
+    // The service's price, like a customer booking, so Today knows what's left after a deposit.
+    priceKobo: svc.price != null ? svc.price * 100 : undefined, priceKind: svc.priceKind ?? "fixed",
   });
   return { kind: "booked", id: d.bookings[d.bookings.length - 1].id };
 }
@@ -580,6 +582,25 @@ export async function recordBookingDeposit(user: Pick<SessionUser, "id" | "role"
   if (kobo < 0 || kobo > 1_000_000_000) return "bad_amount";
   Object.assign(b, { depositPaidKobo: kobo, depositPaidAt: new Date().toISOString(), depositMethod: method, depositCounts: true });
   return "saved";
+}
+
+/** DEMO: a paid deposit pay link lands on its booking, if it still has no deposit and isn't marked paid. */
+export async function depositFromDemoLink(owner: string, bookingId: string, kobo: number, now: Date): Promise<boolean> {
+  const user = { id: owner, role: "owner" as const };
+  const r = await demoFor(user, true);
+  if ("err" in r || !r.d) return false;
+  const b = r.d.bookings.find((x) => x.id === bookingId);
+  if (!b || (b.status !== "booked" && b.status !== "arrived") || b.depositPaidKobo) return false;
+  if ((await getLedger(user)).sales.some((s) => s.bookingId === bookingId)) return false;
+  Object.assign(b, { depositPaidKobo: kobo, depositPaidAt: now.toISOString(), depositMethod: "pay_link", depositCounts: true });
+  return true;
+}
+
+/** DEMO: a booking's name and number, for a deposit pay link (owners only). */
+export async function demoBookingFor(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, bookingId: string): Promise<Booking | null> {
+  const r = await demoFor(user, true);
+  if ("err" in r || !r.d) return null;
+  return r.d.bookings.find((x) => x.id === bookingId) ?? null;
 }
 
 export async function moveBooking(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, id: string, startsAt: string, force: boolean): Promise<Act> {

@@ -2,12 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { LENGTHS } from "@/lib/bookings";
-import { addBooking, recordBookingDeposit, blockTime, cancelBooking, checkBookingCode, markBooking, moveBooking, removeBlock, saveBookingSettings, type Act, type BookingCheck } from "@/lib/bookings-data";
+import { addBooking, demoBookingFor, recordBookingDeposit, blockTime, cancelBooking, checkBookingCode, markBooking, moveBooking, removeBlock, saveBookingSettings, type Act, type BookingCheck } from "@/lib/bookings-data";
 import { getSessionUser } from "@/lib/session";
 import { dbSaveDepositSettings } from "@/lib/bookings-db";
 import { getBusiness, isDbId } from "@/lib/data";
 import { normalizeNgPhone } from "@/lib/setup";
 import { firstName } from "@/lib/claim";
+import { dbCreateDepositLink } from "@/lib/paylinks-db";
+import { createDemoPayLink } from "@/lib/paylinks-demo";
+import { paystackMode } from "@/lib/paystack";
+import { siteUrl } from "@/lib/supabase/env";
+import { getOwnerUser } from "@/lib/session";
 
 // Bookings on the dashboard (docs/BOOKINGS.md). Who may do what is checked again in the database:
 // owners move, cancel, add and block; staff only mark Arrived and No-show.
@@ -99,6 +104,39 @@ export async function bookingDepositAction(id: string, naira: number, method: De
     revalidatePath("/app/leads", "layout");
   }
   return { kind };
+}
+
+/**
+ * A pay link for a booking's deposit (owners only): the booking's name and number; paying it records
+ * the deposit on the booking (create_deposit_link()). Returns the link to send from their WhatsApp.
+ */
+export async function depositLinkAction(bookingId: string, naira: number): Promise<{ kind: "created"; url: string; note: string } | { kind: string; maxKobo?: number }> {
+  const owner = await getOwnerUser();
+  const b = owner ? await getBusiness(owner) : null;
+  if (!owner || !b) return { kind: "no_access" };
+  const kobo = Math.round(Number(naira) * 100);
+  if (!Number.isFinite(kobo) || kobo < 10_000) return { kind: "too_small" };
+  const id = String(bookingId);
+  if (!isDbId(b.id)) {
+    const bk = await demoBookingFor(owner, id);
+    if (!bk) return { kind: "not_found" };
+    if (bk.status !== "booked" && bk.status !== "arrived") return { kind: "cancelled" };
+    if (bk.depositPaidKobo) return { kind: "has_deposit" };
+    const note = `Deposit for ${bk.service}`.slice(0, 80);
+    const r = await createDemoPayLink(owner, b.slug, { amountKobo: kobo, note, name: bk.firstName, phone: bk.phone, for: { kind: "deposit", bookingId: id } }, new Date());
+    if (r.kind !== "created") return r;
+    refresh();
+    revalidatePath("/app/money");
+    return { kind: "created", url: `${siteUrl()}/pay/${r.token}`, note };
+  }
+  const mode = paystackMode();
+  if (!mode || !isDbId(id)) return { kind: "not_enabled" };
+  const r = await dbCreateDepositLink(b.id, id, kobo, mode);
+  if (r.kind !== "created") return { kind: String(r.kind), maxKobo: r.max_kobo == null ? undefined : Number(r.max_kobo) };
+  refresh();
+  revalidatePath("/app/money");
+  const link = String(r.token);
+  return { kind: "created", url: `${siteUrl()}/pay/${link}`, note: String(r.note ?? "") };
 }
 
 export async function moveBookingAction(id: string, startsAt: string, force: boolean): Promise<Act> {
