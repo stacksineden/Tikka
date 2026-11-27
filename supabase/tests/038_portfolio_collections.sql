@@ -1,8 +1,8 @@
--- Portfolio collections: the free page has 20 items and no collections; the free first drop
--- doesn't open them; a paid drop does, until 7 days after it ends; a season pack and founding
--- members too. Once closed nothing is hidden or removed, but collections can't be changed or
--- filled and the free limits are back. Removing a photo always works. Only the owner changes
--- them, and never another business's.
+-- Portfolio collections: every page can have up to 8 collections (free since 27 Nov 2026); the
+-- free page has room for 20 items; the free first drop doesn't add room; a paid drop does, until 7
+-- days after it ends; a season pack and founding members too. Once closed nothing is hidden or
+-- removed and collections still change, but the free limits are back. Removing a photo always
+-- works. Only the owner changes them, and never another business's.
 begin;
 
 create temp table t (k text primary key, v uuid);
@@ -43,7 +43,7 @@ declare
   plan jsonb := public.portfolio_plan(biz);
   d uuid;
 begin
-  assert plan = '{"open": false, "reason": null, "until": null, "items": 20, "videos": 3, "collections": 0}', 'free: ' || plan::text;
+  assert plan = '{"open": false, "reason": null, "until": null, "items": 20, "videos": 3, "collections": 8}', 'free: ' || plan::text;
   perform pg_temp.photos(biz, 1, 17);
   insert into public.business_portfolio (business_id, kind, image_path, thumb_path, duration_s, bytes)
   select biz, 'video', 'v' || g || '.mp4', 'v' || g || '.webp', 10, 1000 from generate_series(1, 3) g;
@@ -58,11 +58,10 @@ begin
     raise exception 'a fourth video on the free page';
   exception when check_violation then null;
   end;
-  begin
-    perform public.save_collection(biz, null, 'Bridal');
-    raise exception 'a collection on the free page';
-  exception when check_violation then null;
-  end;
+  -- Collections are free: one made and removed on the free page.
+  d := public.save_collection(biz, null, 'Bridal');
+  perform public.remove_collection(biz, d);
+  d := null;
 
   -- The free first drop doesn't open collections.
   d := public.save_drop_draft(biz, null, pg_temp.draft('first', 150, 5));
@@ -231,31 +230,11 @@ begin
   assert (select count(*) from public.business_portfolio where business_id = biz) = 60, 'every photo stays';
   assert jsonb_array_length(public.get_business_page('worktest') -> 'collections') = 8, 'every collection stays on the page';
 
-  begin
-    perform public.save_collection(biz, null, 'Late');
-    raise exception 'a new collection while closed';
-  exception when check_violation then null;
-  end;
-  begin
-    perform public.save_collection(biz, bridal, 'Renamed');
-    raise exception 'a rename while closed';
-  exception when check_violation then null;
-  end;
-  begin
-    perform public.order_collections(biz, array[bridal, gele]);
-    raise exception 'a reorder while closed';
-  exception when check_violation then null;
-  end;
-  begin
-    perform public.remove_collection(biz, gele);
-    raise exception 'a collection removed while closed';
-  exception when check_violation then null;
-  end;
-  begin
-    perform public.file_portfolio(biz, array[]::uuid[], bridal);
-    raise exception 'photos moved while closed';
-  exception when check_violation then null;
-  end;
+  -- Collections still change while closed (they're free): renamed, reordered, filled.
+  perform public.save_collection(biz, bridal, 'Renamed');
+  assert (select name from public.business_collections where id = bridal) = 'Renamed', 'renamed while closed';
+  perform public.save_collection(biz, bridal, 'Bridal');
+  perform public.file_portfolio(biz, array[]::uuid[], bridal);
   begin
     perform pg_temp.photos(biz, 300, 300);
     raise exception 'an upload over the free limit while closed';
@@ -268,15 +247,12 @@ begin
   delete from public.business_portfolio where id = one;
   assert (select count(*) from public.business_portfolio where collection_id = gele) = 4, 'removed while closed';
 
-  -- Back under the free limit, uploads work again, but never into a collection.
+  -- Back under the free limit, uploads work again, into a collection too.
   delete from public.business_portfolio where business_id = biz and collection_id is null;
   assert (select count(*) from public.business_portfolio where business_id = biz) < 20, 'under the free limit';
   perform pg_temp.photos(biz, 400, 400);
-  begin
-    perform pg_temp.photos(biz, 401, 401, gele);
-    raise exception 'an upload into a collection while closed';
-  exception when check_violation then null;
-  end;
+  perform pg_temp.photos(biz, 401, 401, gele);
+  assert (select count(*) from public.business_portfolio where business_id = biz and image_path = 'w401.webp' and collection_id = gele) = 1, 'into a collection while closed';
 end $$;
 
 -- ------------------------------------------------- a season pack, and founding members

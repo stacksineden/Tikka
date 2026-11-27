@@ -1,7 +1,7 @@
-import { ChevronRight, MapPin, Sparkles } from "lucide-react";
+import { ChevronRight, Globe, MapPin, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { connection } from "next/server";
-import { finishSetupMissing } from "@/lib/experience";
+import { finishSetupMissing, PAGE_STEPS, pageMissing } from "@/lib/experience";
 import { getBookings } from "@/lib/bookings-data";
 import { dayLabel, timeLabel, todayKey, watInstant, watParts } from "@/lib/bookings";
 import { getLedger } from "@/lib/ledger-data";
@@ -72,40 +72,61 @@ export async function TodayPage({ user, business }: { user: SessionUser; busines
       .map((c) => ({ name: c.name, phone: c.phone! })),
   };
   const missing = finishSetupMissing(business);
+  const pageTodo = pageMissing(business);
   const graceDay =
     business.listingGraceUntil && new Date(business.listingGraceUntil).getTime() > now.getTime()
       ? new Date(new Date(business.listingGraceUntil).getTime() - 1).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Africa/Lagos" })
       : null;
+  const listingPrompt = missing.length === 0 && isDbId(business.id) && !business.listingTermsAt;
+  const prompts = missing.length > 0 || pageTodo.length > 0 || listingPrompt;
   return (
     <>
-      {missing.length > 0 && (
-        // A business set up the old way: three quick questions for the new screens (docs/DB_MOVE.md step 8).
-        <Link href="/app/finish" className="flex items-center gap-3 rounded-card border-2 border-brand bg-brand-soft px-4 py-3.5">
-          <span className="grid size-10 shrink-0 place-items-center rounded-pill bg-brand text-on-brand">
-            <Sparkles size={20} aria-hidden="true" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <b className="block text-[17px]">Finish setting up</b>
-            <span className="text-caption text-ink-muted">What you do, where you work and your booking rules. Takes a minute.</span>
-          </span>
-          <ChevronRight size={20} className="shrink-0 text-brand" aria-hidden="true" />
-        </Link>
-      )}
-      {missing.length === 0 && isDbId(business.id) && !business.listingTermsAt && (
-        // Tikka's search (20261218100000_listing_journey.sql): a choice with terms. Businesses listed
-        // before them have until their date; everyone else is invited once setup is done.
-        <Link href="/app/settings/listing" className={`flex items-center gap-3 rounded-card border-2 px-4 py-3.5 ${graceDay ? "border-gold bg-gold-soft" : "border-line bg-surface-raised"}`}>
-          <span className="grid size-10 shrink-0 place-items-center rounded-pill bg-ink text-surface">
-            <MapPin size={20} aria-hidden="true" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <b className="block text-[17px]">{graceDay ? "Stay in Tikka's search" : "Get listed on Tikka"}</b>
-            <span className="text-caption text-ink-muted">
-              {graceDay ? `Accept the listing terms by ${graceDay} and add a photo of your space.` : "Customers searching for a service near them find you, free for now. About 3 minutes."}
+      {prompts && (
+        // Setup prompts above Today, inside the same side margins.
+        <div className="mx-auto grid max-w-6xl gap-3 px-4 pt-5 sm:px-6 lg:px-8">
+        {missing.length > 0 && (
+          // A business set up the old way: three quick questions for the new screens (docs/DB_MOVE.md step 8).
+          <Link href="/app/finish" className="flex items-center gap-3 rounded-card border-2 border-brand bg-brand-soft px-4 py-3.5">
+            <span className="grid size-10 shrink-0 place-items-center rounded-pill bg-brand text-on-brand">
+              <Sparkles size={20} aria-hidden="true" />
             </span>
-          </span>
-          <ChevronRight size={20} className="shrink-0 text-ink-muted" aria-hidden="true" />
-        </Link>
+            <span className="min-w-0 flex-1">
+              <b className="block text-[17px]">Finish setting up</b>
+              <span className="text-caption text-ink-muted">What you do, where you work and your booking rules. Takes a minute.</span>
+            </span>
+            <ChevronRight size={20} className="shrink-0 text-brand" aria-hidden="true" />
+          </Link>
+        )}
+        {missing.length === 0 && pageTodo.length > 0 && (
+          // One slim row until the page has a top photo, a few words about them and 3 photos of their work.
+          <Link href="/app/page" className="flex min-h-12 min-w-0 items-center gap-2.5 rounded-pill border border-line bg-surface-raised px-4 text-[15px]">
+            <Globe size={18} className="shrink-0 text-brand" aria-hidden="true" />
+            <span className="min-w-0 flex-1 truncate">
+              <b>Finish your page</b> <span className="text-ink-muted">· add {pageTodo[0]}</span>
+            </span>
+            <span className="text-caption shrink-0 text-ink-muted">
+              {PAGE_STEPS - pageTodo.length} of {PAGE_STEPS}
+            </span>
+            <ChevronRight size={18} className="shrink-0 text-ink-muted" aria-hidden="true" />
+          </Link>
+        )}
+        {missing.length === 0 && isDbId(business.id) && !business.listingTermsAt && (
+          // Tikka's search (20261218100000_listing_journey.sql): a choice with terms. Businesses listed
+          // before them have until their date; everyone else is invited once setup is done.
+          <Link href="/app/settings/listing" className={`flex items-center gap-3 rounded-card border-2 px-4 py-3.5 ${graceDay ? "border-gold bg-gold-soft" : "border-line bg-surface-raised"}`}>
+            <span className="grid size-10 shrink-0 place-items-center rounded-pill bg-ink text-surface">
+              <MapPin size={20} aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <b className="block text-[17px]">{graceDay ? "Stay in Tikka's search" : "Get listed on Tikka"}</b>
+              <span className="text-caption text-ink-muted">
+                {graceDay ? `Accept the listing terms by ${graceDay} and add a photo of your space.` : "Customers searching for a service near them find you, free for now. About 3 minutes."}
+              </span>
+            </span>
+            <ChevronRight size={20} className="shrink-0 text-ink-muted" aria-hidden="true" />
+          </Link>
+        )}
+        </div>
       )}
       <TodayScreen d={data} />
     </>

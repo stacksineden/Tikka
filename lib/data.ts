@@ -222,7 +222,6 @@ async function getBusinessFresh(user: Pick<SessionUser, "id">): Promise<Business
   return db ? normalize(db) : null;
 }
 
-const COLLECTIONS_LOCKED = "Your collections are locked. Run a drop to add and sort again.";
 
 export async function addPortfolioPhoto(user: Pick<SessionUser, "id">, photo: Omit<PortfolioPhoto, "id">): Promise<PortfolioPhoto[] | null> {
   const b = await getBusiness(user);
@@ -231,7 +230,6 @@ export async function addPortfolioPhoto(user: Pick<SessionUser, "id">, photo: Om
   if (!isDbId(user.id)) {
     const plan = await getPortfolioPlan(user);
     if (b.portfolio.length >= plan.items) return null;
-    if (photo.collectionId && !plan.open) throw new BusinessSaveError(COLLECTIONS_LOCKED);
   }
   const portfolio = [...b.portfolio, { ...photo, id: `ph_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}` }];
   return (await putBusiness(user.id, { ...b, portfolio })).portfolio;
@@ -239,11 +237,10 @@ export async function addPortfolioPhoto(user: Pick<SessionUser, "id">, photo: Om
 
 /* ------------------------------------------------------------ collections */
 
-/** The demo store's guard, as private.collections_guard() does it for real accounts. */
+/** The demo store's guard, as private.collections_guard() does it for real accounts (collections are free for everyone). */
 async function demoCollections(user: Pick<SessionUser, "id">): Promise<Business> {
   const b = await getBusiness(user);
   if (!b) throw new BusinessSaveError("Set up your card first.");
-  if (!(await getPortfolioPlan(user)).open) throw new BusinessSaveError(COLLECTIONS_LOCKED);
   return b;
 }
 
@@ -385,7 +382,6 @@ export async function addPortfolioVideo(user: Pick<SessionUser, "id" | "role">, 
   const plan = await getPortfolioPlan(user);
   const problem = videoProblem(b.portfolio, v.seconds, 0, plan);
   if (problem) return { ok: false, error: problem };
-  if (v.collectionId && !plan.open) return { ok: false, error: COLLECTIONS_LOCKED };
   const portfolio = [...b.portfolio, { id: newId("pf"), kind: "video" as const, url: v.url, thumbUrl: v.thumbUrl, seconds: Math.round(v.seconds), collectionId: v.collectionId }];
   try {
     return { ok: true, portfolio: (await putBusiness(user.id, { ...b, portfolio })).portfolio };

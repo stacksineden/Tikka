@@ -8,9 +8,9 @@ import { bookingNumber, priceText } from "./page";
 import type { Business, Drop, PortfolioCollection, PortfolioPhoto, ServiceItem } from "./types";
 import type { Voucher } from "./vouchers";
 
-/** The free page: one grid. */
-export const PORTFOLIO_FREE = { items: 20, videos: 3, collections: 0 } as const;
-/** With a paid drop. */
+/** The free page: 20 photos and videos, sorted into collections (free for everyone since 27 Nov 2026). */
+export const PORTFOLIO_FREE = { items: 20, videos: 3, collections: 8 } as const;
+/** With a paid drop: more room. */
 export const PORTFOLIO_OPEN = { items: 60, videos: 8, collections: 8 } as const;
 /** Collections stay open this many days after a paid drop ends. */
 export const OPEN_DAYS_AFTER = 7;
@@ -124,25 +124,25 @@ export function collectionBookingLink(b: Pick<Business, "name" | "actions" | "ow
 export function planMessage(plan: PortfolioPlan, used: { items: number; collections: number }): { tone: "open" | "free" | "locked"; title: string; body: string } {
   if (plan.open) {
     const title =
-      plan.reason === "founding" ? "Collections are open" : plan.until ? `Collections are open till ${shortDate(plan.until)}` : "Collections are open all season";
+      plan.reason === "founding" ? `Room for ${plan.items} photos` : plan.until ? `Room for ${plan.items} photos till ${shortDate(plan.until)}` : `Room for ${plan.items} photos all season`;
     const body =
       plan.reason === "founding"
-        ? "A founding member thank-you. Sort your work into collections, each with its own link."
+        ? `A founding member thank-you: ${plan.items} photos and ${plan.videos} videos, sorted into collections, each with its own link.`
         : plan.until
-          ? `Add and sort your work until ${OPEN_DAYS_AFTER} days after your drop ends.`
-          : "Your season pack keeps them open. Add and sort your work any time.";
+          ? `${plan.items} photos and ${plan.videos} videos until ${OPEN_DAYS_AFTER} days after your drop ends. Your collections stay free either way.`
+          : `Your season pack gives you ${plan.items} photos and ${plan.videos} videos. Your collections stay free either way.`;
     return { tone: "open", title, body };
   }
-  if (used.collections > 0 || used.items > plan.items) {
+  if (used.items > plan.items) {
     return {
       tone: "locked",
-      title: "Your collections are locked",
-      body: "Your page stays exactly as it is, and your links still work. Run a drop to add, move and rename again. You can still remove photos.",
+      title: `Over the free ${plan.items} photos`,
+      body: "Everything stays on your page and you can still sort it into collections. To add more, remove a few or run a drop.",
     };
   }
   return {
     tone: "free",
-    title: `Free page: one grid of ${plan.items} photos`,
-    body: `Run a paid drop to get ${PORTFOLIO_OPEN.items} photos and sort them into collections like Bridal or Gele, each with its own link and Book button.`,
+    title: `Free page: ${plan.items} photos and ${plan.videos} videos`,
+    body: `Sort them into collections like Bridal or Gele, each with its own link and Book button. Run a paid drop for room for ${PORTFOLIO_OPEN.items} photos and ${PORTFOLIO_OPEN.videos} videos.`,
   };
 }

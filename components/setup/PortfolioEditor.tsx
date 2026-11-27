@@ -45,7 +45,7 @@ const TONE = {
 
 /**
  * Portfolio photos and short videos for the business page, sorted into collections ("Bridal",
- * "Gele") while a paid drop keeps them open (PRD A5). Each change saves on its own. The server
+ * "Gele"), free for everyone; a paid drop adds room for more (PRD A5). Each change saves on its own. The server
  * decides what's allowed; this only shows it.
  */
 export function PortfolioEditor({
@@ -76,7 +76,8 @@ export function PortfolioEditor({
   const [videoBusy, setVideoBusy] = useState(false);
   const [stage, setStage] = useState<VideoStage>();
 
-  const open = plan.open;
+  // Collections are free for every business (27 Nov 2026); a paid plan only adds room (plan.items, plan.videos).
+  const open = true;
   const current = collections.find((c) => c.id === showing);
   const known = new Set(collections.map((c) => c.id));
   const inNone = (p: PortfolioPhoto) => !p.collectionId || !known.has(p.collectionId);
@@ -220,7 +221,7 @@ export function PortfolioEditor({
         <div className="min-w-0">
           <p className="text-label">{message.title}</p>
           <p className="text-caption text-ink-muted">{message.body}</p>
-          {!open && (
+          {!plan.open && (
             <Link href="/app/drops/new" className="text-label mt-2 inline-flex min-h-11 items-center text-brand underline">
               Run a drop
             </Link>
@@ -402,7 +403,6 @@ export function PortfolioEditor({
         </p>
       )}
 
-      {message.tone === "free" && photos.length >= 2 && <Example photos={photos} services={services} />}
 
       <input ref={input} type="file" accept="image/png,image/jpeg,image/webp" multiple hidden onChange={(e) => upload(e.target.files)} />
       <input ref={videoInput} type="file" accept="video/mp4,video/quicktime" hidden onChange={(e) => uploadVideo(e.target.files?.[0])} />
@@ -529,27 +529,3 @@ function CollectionCard({
   );
 }
 
-/** Free pages: what collections would look like, with the owner's own photos. */
-function Example({ photos, services }: { photos: PortfolioPhoto[]; services: ServiceItem[] }) {
-  const names = [services[0]?.name ?? "Your best work", services[1]?.name ?? "Before and after"];
-  return (
-    <div className="grid gap-2 rounded-md border border-dashed border-line-strong p-3">
-      <p className="text-label">With a paid drop, your page could open like this</p>
-      <div className="grid grid-cols-2 gap-2" aria-hidden="true">
-        {photos.slice(0, 2).map((p, i) => (
-          <span key={p.id} className="relative block aspect-[4/5] overflow-hidden rounded-sm bg-surface-sunken">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={p.thumbUrl} alt="" className="size-full object-cover" />
-            <span className="absolute inset-x-0 bottom-0 bg-linear-to-t from-night/85 to-transparent px-2.5 pb-2 pt-8 text-on-night">
-              <span className="text-label block truncate">{names[i]}</span>
-              <span className="text-caption block opacity-80">Tap to see more</span>
-            </span>
-          </span>
-        ))}
-      </div>
-      <p className="text-caption text-ink-muted">
-        An example with your photos. Customers tap a collection to see only that work and book it. Each one gets its own link to share.
-      </p>
-    </div>
-  );
-}

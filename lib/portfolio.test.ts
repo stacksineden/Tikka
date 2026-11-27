@@ -88,9 +88,10 @@ describe("collections", () => {
   it("tells the owner where they stand", () => {
     const free = { open: false, ...PORTFOLIO_FREE };
     expect(planMessage(free, { items: 5, collections: 0 }).tone).toBe("free");
-    expect(planMessage(free, { items: 5, collections: 2 }).tone).toBe("locked");
+    // Collections are free: having some is never "locked".
+    expect(planMessage(free, { items: 5, collections: 2 }).tone).toBe("free");
     expect(planMessage(free, { items: 34, collections: 0 }).tone).toBe("locked");
-    expect(planMessage({ open: true, reason: "drop", until: "2027-01-07T10:00:00+01:00", ...PORTFOLIO_OPEN }, { items: 5, collections: 0 }).title).toBe("Collections are open till Thu 7 Jan");
+    expect(planMessage({ open: true, reason: "drop", until: "2027-01-07T10:00:00+01:00", ...PORTFOLIO_OPEN }, { items: 5, collections: 0 }).title).toBe("Room for 60 photos till Thu 7 Jan");
     expect(planMessage({ open: true, reason: "pack", ...PORTFOLIO_OPEN }, { items: 0, collections: 0 }).title).toMatch(/all season/);
   });
 });
