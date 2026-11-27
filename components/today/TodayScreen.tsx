@@ -135,20 +135,20 @@ export function TodayScreen({ d }: { d: TodayData }) {
 
       <div className="grid items-start gap-5 lg:grid-cols-[1.35fr_1fr] lg:grid-rows-[auto_1fr]">
       <div className="grid gap-5 lg:col-start-2 lg:row-start-1">
-      <section aria-label="Today in numbers" className="grid gap-3.5 rounded-card bg-brand p-4.5 text-on-brand">
+      <section aria-label="Today in numbers" className="grid gap-4 rounded-card bg-brand p-5 text-on-brand">
         <div>
-          <span className="text-caption opacity-85">
+          <span className="block text-[17px] font-bold">
             {live.length} {live.length === 1 ? "customer" : "customers"} today
           </span>
-          <div className="text-code-lg tracking-normal">{naira(toCollect)}</div>
-          <span className="text-caption opacity-85">still to collect today</span>
+          <div className="mt-1 font-mono text-[40px] leading-none font-bold tracking-normal lg:text-[46px]">{naira(toCollect)}</div>
+          <span className="mt-1.5 block text-[15px] font-semibold opacity-90">still to collect today</span>
         </div>
-        <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-          <span>
-            <b className="text-code block text-[17px]">{naira(deposits)}</b>deposits already paid
+        <div className="grid grid-cols-2 gap-2.5">
+          <span className="rounded-md bg-on-brand/15 px-3.5 py-3 text-[15px] font-semibold">
+            <b className="block font-mono text-[22px] leading-tight font-bold lg:text-[24px]">{naira(deposits)}</b>deposits already paid
           </span>
-          <span>
-            <b className="text-code block text-[17px]">{naira(d.takenTodayKobo)}</b>taken today
+          <span className="rounded-md bg-on-brand/15 px-3.5 py-3 text-[15px] font-semibold">
+            <b className="block font-mono text-[22px] leading-tight font-bold lg:text-[24px]">{naira(d.takenTodayKobo)}</b>taken today
           </span>
         </div>
       </section>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { depositOn, presetRules, presetServices, priceScale, roundNaira, TRADES, tradeCategory, travelFeeFor } from "./presets";
+import { depositOn, presetRules, presetServices, priceScale, reachLabel, roundNaira, tradeLine, TRADES, tradeCategory, travelFeeFor } from "./presets";
 
 describe("presets", () => {
   it("scales prices by place and rounds to ₦500", () => {
@@ -57,5 +57,13 @@ describe("presets", () => {
     expect(tradeCategory(["content", "photo", "video"])).toBe("Photography");
     const { services } = presetServices(["content"], "Lagos");
     expect(services.filter((s) => s.on).map((s) => s.item.name)).toEqual(["Content day", "Product shoot", "Reels package"]);
+  });
+
+  it("shows the owner's main trades first, and how far they travel", () => {
+    expect(tradeLine(["makeup", "hair", "photo"], "Beauty")).toBe("Makeup, hair");
+    expect(tradeLine(["nails"], "Beauty")).toBe("Nails");
+    expect(tradeLine([], "Beauty")).toBe("Beauty");
+    expect(reachLabel("nigeria", { area: "Bodija", city: "Ibadan", state: "Oyo" })).toBe("Anywhere in Nigeria");
+    expect(reachLabel("state", { area: "Bodija", city: "Ibadan", state: "Oyo" })).toBe("Anywhere in Oyo");
   });
 });

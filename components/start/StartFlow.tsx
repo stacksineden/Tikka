@@ -52,6 +52,8 @@ import {
   presetRules,
   presetServices,
   reachLabel,
+  farTripHint,
+  TRAVEL_REACHES,
   START_HOURS,
   SUGGESTED_DEPOSIT_PERCENT,
   TRADES,
@@ -529,14 +531,14 @@ export function StartFlow({ real = false, ownerName = "" }: { real?: boolean; ow
                 <div>
                   <span className="text-label mb-1.5 block">How far will you go?</span>
                   <div className="flex flex-wrap gap-2">
-                    {(["area", "city", "state"] as TravelReach[]).map((r) => (
+                    {TRAVEL_REACHES.map((r) => (
                       <Chip key={r} on={reach === r} onClick={() => setReach(r)}>
                         {reachLabel(r, { area, city, state })}
                       </Chip>
                     ))}
                   </div>
                 </div>
-                <Field id="s-fee" label="Travel fee" hint={`Typical in ${city}. Customers see it before they pay.`}>
+                <Field id="s-fee" label="Travel fee" hint={reach === "nigeria" ? `Typical in ${city}. ${farTripHint(state)}` : `Typical in ${city}. Customers see it before they pay.`}>
                   <Naira id="s-fee" value={travelFee} onChange={setTravelFee} />
                 </Field>
               </div>

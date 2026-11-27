@@ -13,7 +13,7 @@ import { getBusinessBySlug, getBusinessReviews, isDbId } from "@/lib/data";
 import { getSpacePhotos } from "@/lib/listing-db";
 import { place } from "@/lib/format";
 import { bookingLink, pageStyle, priceText } from "@/lib/page";
-import { reachLabel, TRADES } from "@/lib/presets";
+import { reachLabel, tradesInOrder } from "@/lib/presets";
 import { openLabel, searchHref } from "@/lib/search";
 import { sheetTheme } from "@/lib/sheet-theme";
 import { formatTime } from "@/lib/setup";
@@ -87,7 +87,7 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
     ...(sheet ? { "data-book": "", ...(s?.id ? { "data-book-id": s.id } : {}) } : {}),
   });
 
-  const trade = TRADES.find((t) => b.trades?.includes(t.id));
+  const trade = tradesInOrder(b.trades)[0];
   const open = openLabel(b.hours, now);
   const goesToCustomers = b.workPlace === "home" || b.workPlace === "both";
   const where = b.workPlace === "home" ? `Comes to you · ${b.city}` : place(b.area, b.city);

@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { ensureStartingPin } from "@/lib/listing-db";
 import { BusinessSaveError, getBusiness, saveBusiness } from "@/lib/data";
-import { isTrade } from "@/lib/presets";
+import { isTrade, TRAVEL_REACHES } from "@/lib/presets";
 import { getOwnerUser } from "@/lib/session";
 import type { TravelReach, WorkPlace } from "@/lib/types";
 
@@ -21,7 +21,7 @@ export async function finishSetupAction(input: { trades: string[]; workPlace: Wo
   if (!["shop", "home", "both"].includes(input.workPlace)) return { ok: false, error: "Pick where you work." };
   const travels = input.workPlace !== "shop";
   const fee = Math.max(0, Math.min(10_000_000, Math.round(Number(input.travelFee) || 0)));
-  const reach: TravelReach = ["area", "city", "state"].includes(input.travelReach) ? input.travelReach : "city";
+  const reach: TravelReach = TRAVEL_REACHES.includes(input.travelReach) ? input.travelReach : "city";
   const rules = input.rules.map((r) => String(r).trim().slice(0, 240)).filter(Boolean).slice(0, 10);
   try {
     await saveBusiness(user, {

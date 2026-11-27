@@ -1,6 +1,6 @@
 import { Star } from "lucide-react";
 import Link from "next/link";
-import { TRADES } from "@/lib/presets";
+import { tradeLine } from "@/lib/presets";
 import { freeLabel } from "@/lib/search";
 import type { BizCard as Card } from "@/lib/search-db";
 
@@ -10,7 +10,7 @@ import type { BizCard as Card } from "@/lib/search-db";
 const naira = (n: number) => "₦" + Math.round(n).toLocaleString("en-NG");
 
 export function BizCard({ b, now, wide = false }: { b: Card; now: Date; wide?: boolean }) {
-  const trade = TRADES.find((t) => b.trades.includes(t.id))?.name ?? b.category;
+  const trade = tradeLine(b.trades, b.category);
   const place = b.onlyComesToYou ? `Comes to you · ${b.city}` : `${b.area}, ${b.city}`;
   return (
     <Link href={`/book/${b.slug}`} className={`group block ${wide ? "" : "snap-start"}`}>

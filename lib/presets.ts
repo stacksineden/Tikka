@@ -33,6 +33,16 @@ export const TRADES: Trade[] = [
 
 export const isTrade = (id: string): id is TradeId => TRADES.some((t) => t.id === id);
 
+/** The business's trades in the order the owner put them (their main one first). */
+export const tradesInOrder = (ids: readonly string[] | null | undefined): Trade[] =>
+  (ids ?? []).map((id) => TRADES.find((t) => t.id === id)).filter((t): t is Trade => !!t);
+
+/** "Makeup, hair" on a search card: the main two, else the category. */
+export function tradeLine(ids: readonly string[] | null | undefined, category: string): string {
+  const [a, b] = tradesInOrder(ids);
+  return a ? (b ? `${a.name}, ${b.name.toLowerCase()}` : a.name) : category;
+}
+
 interface Preset {
   name: string;
   /** Lagos guide price; other places scale from it. */
@@ -254,10 +264,17 @@ export function tradeCategory(trades: TradeId[]): "Beauty" | "Photography" {
   return trades.length > 0 && trades.every((t) => t === "photo" || t === "video" || t === "content") ? "Photography" : "Beauty";
 }
 
+/** How far a business that goes to customers will travel, nearest first. */
+export const TRAVEL_REACHES: TravelReach[] = ["area", "city", "state", "nigeria"];
+
 /** "Anywhere in Ibadan". */
 export function reachLabel(reach: TravelReach, place: { area: string; city: string; state: string }): string {
+  if (reach === "nigeria") return "Anywhere in Nigeria";
   return reach === "area" ? `Around ${place.area || place.city}` : reach === "city" ? `Anywhere in ${place.city}` : `Anywhere in ${place.state}`;
 }
+
+/** Under the travel fee once they go beyond their state. */
+export const farTripHint = (state: string) => `For trips outside ${state}, agree any extra with the customer on WhatsApp before they book.`;
 
 /** Opening hours from the three rows on the setup screen; Mon–Sat 9am–6pm to start. */
 export const START_HOURS: OpeningHours = {

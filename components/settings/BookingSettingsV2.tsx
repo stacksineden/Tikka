@@ -10,7 +10,7 @@ import { useState, useTransition } from "react";
 import { saveBookingPatch, type BookingPatch } from "@/app/app/booking-settings-actions";
 import { Chip, MIN_DEPOSIT_PERCENT, NairaInput, PercentInput, Sheet } from "@/components/today/Sheet";
 import { GAP_CHOICES, gapLabel } from "@/lib/bookings";
-import { reachLabel } from "@/lib/presets";
+import { farTripHint, reachLabel, TRAVEL_REACHES } from "@/lib/presets";
 import type { OpeningHours, TravelReach, WorkPlace } from "@/lib/types";
 
 export interface BookingSettingsData {
@@ -243,7 +243,7 @@ function PlaceSheet({ d, pending, onSave, onClose }: { d: BookingSettingsData; p
           <div>
             <span className="text-label mb-1.5 block">How far will you go?</span>
             <div className="flex flex-wrap gap-2">
-              {(["area", "city", "state"] as TravelReach[]).map((r) => (
+              {TRAVEL_REACHES.map((r) => (
                 <Chip key={r} on={reach === r} onClick={() => setReach(r)}>
                   {reachLabel(r, d.place)}
                 </Chip>
@@ -255,6 +255,7 @@ function PlaceSheet({ d, pending, onSave, onClose }: { d: BookingSettingsData; p
               Travel fee
             </label>
             <NairaInput id="bs-fee" value={fee} onChange={setFee} label="Travel fee" />
+            {reach === "nigeria" && <p className="text-caption mt-1.5 text-ink-muted">{farTripHint(d.place.state)}</p>}
           </div>
         </>
       )}

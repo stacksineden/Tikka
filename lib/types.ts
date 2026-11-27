@@ -196,7 +196,7 @@ export interface ServiceExtra {
 /** NEW DIRECTION: where the owner works. "shop": customers come; "home": the owner goes to them; "both". */
 export type WorkPlace = "shop" | "home" | "both";
 /** How far the owner travels for home service. */
-export type TravelReach = "area" | "city" | "state";
+export type TravelReach = "area" | "city" | "state" | "nigeria";
 
 export interface TeamMember {
   id: string;

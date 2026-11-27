@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Check, ChevronRight, Download, Search, ShieldCheck } from "lucide-react";
+import { Check, ChevronRight, Download, Layers, Search, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
@@ -76,13 +76,23 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
           <h1 className="text-heading">Customers</h1>
           <p className="text-body mt-1 text-ink-muted">Everyone who booked, bought or claimed a Tikka, one row each. Tap someone to see every visit.</p>
         </div>
-        <ClientList clients={await getClients(user)} now={new Date().toISOString()} />
         {drops.length > 0 && (
-          // The drop leads tools (Message today, follow-ups, the CSV export, review asks) stay one tap away.
-          <Link href="/app/leads?view=drops" className="text-label inline-flex min-h-11 items-center gap-1 justify-self-start text-brand">
-            Drop leads and follow-ups <ChevronRight size={16} aria-hidden="true" />
+          // The drop leads tools (Message today, follow-ups, the CSV export, review asks), above the list so owners see them.
+          <Link href="/app/leads?view=drops" className={`flex items-center gap-3 rounded-card border-2 px-4 py-3.5 ${today.length || asks.size ? "border-gold bg-gold-soft" : "border-line bg-surface-raised"}`}>
+            <span className="grid size-10 shrink-0 place-items-center rounded-pill bg-ink text-surface">
+              <Layers size={20} aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <b className="block text-[17px]">Drop leads and follow-ups</b>
+              <span className="text-caption text-ink-muted">
+                {[today.length ? `${today.length} to message today` : "", asks.size ? `${asks.size} to ask for a review` : ""].filter(Boolean).join(" · ") ||
+                  "Everyone who claimed a Tikka: follow-ups, review asks and the CSV export."}
+              </span>
+            </span>
+            <ChevronRight size={20} className="shrink-0 text-ink-muted" aria-hidden="true" />
           </Link>
         )}
+        <ClientList clients={await getClients(user)} now={new Date().toISOString()} />
       </>
     );
   }

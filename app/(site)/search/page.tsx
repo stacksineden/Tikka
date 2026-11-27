@@ -10,7 +10,7 @@ import { SiteFooter } from "@/components/site/SiteChrome";
 import { freeLabel, parseSearch, searchHref, whatLabel, whenLabel, whenPhrase, type SearchQuery } from "@/lib/search";
 import { searchBusinesses, type BizCard as Card } from "@/lib/search-db";
 import { place } from "@/lib/format";
-import { TRADES } from "@/lib/presets";
+import { tradesInOrder } from "@/lib/presets";
 
 // Search results (docs/HOMEPAGE_PLAN.md): the businesses that match what, where and when, each with
 // its next free time; filters for people who come to you and no deposit. A city with nobody yet says
@@ -59,7 +59,7 @@ function pinsFor(list: Card[], now: Date): ResultPin[] {
       coverUrl: b.coverUrl,
       rating: b.rating,
       reviews: b.reviews,
-      trade: TRADES.find((t) => b.trades.includes(t.id))?.name ?? b.category,
+      trade: tradesInOrder(b.trades)[0]?.name ?? b.category,
       free: b.nextFree ? freeLabel(b.nextFree, now) : undefined,
       price: pinPrice(b.fromNaira),
     }));

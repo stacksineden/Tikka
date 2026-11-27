@@ -30,7 +30,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { finishSetupAction } from "@/app/app/finish/actions";
-import { presetRules, reachLabel, TRADES, type TradeId } from "@/lib/presets";
+import { farTripHint, presetRules, reachLabel, TRADES, TRAVEL_REACHES, type TradeId } from "@/lib/presets";
 import type { TravelReach, WorkPlace } from "@/lib/types";
 
 const TRADE_ICONS: Record<TradeId, LucideIcon> = { hair: Scissors, makeup: Sparkles, nails: Hand, lashes: Eye, barber: UserRound, spa: Flower2, gele: Crown, photo: Camera, video: Video, content: Clapperboard };
@@ -139,7 +139,7 @@ export function FinishSetup({
                 <div>
                   <span className="text-label mb-1.5 block">How far will you go?</span>
                   <div className="flex flex-wrap gap-2">
-                    {(["area", "city", "state"] as TravelReach[]).map((r) => (
+                    {TRAVEL_REACHES.map((r) => (
                       <button
                         key={r}
                         type="button"
@@ -166,7 +166,7 @@ export function FinishSetup({
                       onChange={(e) => setTravelFee(Number(e.target.value.replace(/\D/g, "")) || 0)}
                     />
                   </div>
-                  <p className="text-caption mt-1.5 text-ink-muted">Customers see it before they book.</p>
+                  <p className="text-caption mt-1.5 text-ink-muted">Customers see it before they book.{reach === "nigeria" ? ` ${farTripHint(business.state)}` : ""}</p>
                 </div>
               </div>
             )}
