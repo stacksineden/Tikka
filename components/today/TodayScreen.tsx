@@ -403,7 +403,7 @@ function Appt({ a, busy, businessName, onArrived, onPaid, onRemind }: { a: Today
             ) : (
               <>
                 {a.depositKobo ? <Tag tone="ok">Deposit paid {naira(a.depositKobo)}</Tag> : <Tag tone="gold">No deposit</Tag>}
-                {a.priceKobo == null && !a.dueKobo ? <Tag tone="plain">No price yet</Tag> : <Tag tone="due">Collect {naira(a.dueKobo)}</Tag>}
+                {a.priceKobo == null && !a.dueKobo ? <Tag tone="plain">No price yet</Tag> : <Tag tone="due">Balance to collect {naira(a.dueKobo)}</Tag>}
                 {a.status === "arrived" && <Tag tone="info">Here now</Tag>}
               </>
             )}
@@ -702,6 +702,10 @@ function SaleSheet({ services, customers, businessName, payLinks, onClose }: { s
   const [pending, start] = useTransition();
   const [link, setLink] = useState<{ url: string; kobo: number } | null>(null);
   const [error, setError] = useState("");
+  // "Something else": an extra or anything not on the list, with its own words and price.
+  const [other, setOther] = useState(false);
+  const [otherLabel, setOtherLabel] = useState("");
+  const [otherNaira, setOtherNaira] = useState(0);
 
   if (link && svc) {
     const first = name.trim().split(/\s+/)[0] ?? "";
@@ -711,6 +715,36 @@ function SaleSheet({ services, customers, businessName, payLinks, onClose }: { s
       </Sheet>
     );
   }
+  if (!svc && other)
+    return (
+      <Sheet title="Something else" onClose={onClose}>
+        <label className="grid gap-1.5">
+          <span className="text-label">What was it?</span>
+          <input className="input h-12" value={otherLabel} maxLength={60} placeholder="e.g. Extra edited photos" onChange={(e) => setOtherLabel(e.target.value)} autoComplete="off" />
+        </label>
+        <div>
+          <label htmlFor="s-other" className="text-label mb-1.5 block">
+            How much is it?
+          </label>
+          <NairaInput id="s-other" value={otherNaira} onChange={setOtherNaira} label="Price" />
+        </div>
+        <button
+          type="button"
+          className="btn btn-lg w-full rounded-pill"
+          disabled={otherLabel.trim().length < 2 || !(otherNaira > 0)}
+          onClick={() => {
+            const n = Math.round(otherNaira);
+            setSvc({ label: otherLabel.trim(), naira: n });
+            setPaid(n);
+          }}
+        >
+          Next
+        </button>
+        <button type="button" className="text-label justify-self-start text-ink-muted underline underline-offset-4" onClick={() => setOther(false)}>
+          Back to your services
+        </button>
+      </Sheet>
+    );
   if (!svc)
     return (
       <Sheet title="New sale" onClose={onClose}>
@@ -730,6 +764,13 @@ function SaleSheet({ services, customers, businessName, payLinks, onClose }: { s
               <b className="text-code">₦{s.naira.toLocaleString("en-NG")}</b>
             </button>
           ))}
+          <button type="button" className="flex min-h-14 w-full items-center gap-3 px-4 text-left active:bg-surface-sunken" onClick={() => setOther(true)}>
+            <Plus size={18} className="text-ink-muted" aria-hidden="true" />
+            <span>
+              <span className="block font-semibold">Something else</span>
+              <span className="text-caption text-ink-muted">An extra, a product, anything not on the list</span>
+            </span>
+          </button>
         </div>
       </Sheet>
     );
