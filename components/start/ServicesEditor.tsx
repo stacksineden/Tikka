@@ -5,8 +5,10 @@
 // Each service, and each of its choices, has its own price and how long it takes.
 
 import { Check, Pencil, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
+import { GroupField } from "@/components/page/GroupField";
 import { UnitFields } from "@/components/page/UnitFields";
+import { groupNames, OTHER_GROUP } from "@/lib/page";
 import { durationLabel, type PresetService } from "@/lib/presets";
 import type { ServiceItem, ServiceOption } from "@/lib/types";
 import { perText } from "@/lib/units";
@@ -39,6 +41,7 @@ export function priceSummary(s: ServiceItem): string {
 
 export function ServicesEditor({ services, onChange, city }: { services: PresetService[]; onChange: (next: PresetService[]) => void; city: string }) {
   const [editing, setEditing] = useState<number | null>(null);
+  const groups = groupNames(services.map((x) => x.item));
   const set = (i: number, patch: Partial<ServiceItem>) => onChange(services.map((x, j) => (j === i ? { ...x, item: { ...x.item, ...patch } } : x)));
 
   return (
@@ -46,8 +49,13 @@ export function ServicesEditor({ services, onChange, city }: { services: PresetS
       {services.map((s, i) => {
         const problem = s.on ? serviceProblem(s.item) : null;
         const open = editing === i;
+        // A heading where the group changes, once there's more than one group.
+        const group = s.item.group?.trim() || OTHER_GROUP;
+        const heading = groups.length > 1 && (i === 0 || (services[i - 1].item.group?.trim() || OTHER_GROUP) !== group);
         return (
-          <div key={i} className={`grid gap-3 rounded-card border bg-surface-raised px-4 py-3.5 ${problem && !open ? "border-danger" : "border-line"} ${s.on ? "" : "opacity-60"}`}>
+          <Fragment key={i}>
+          {heading && <h3 className="text-label mt-2 text-ink-muted">{group}</h3>}
+          <div className={`grid gap-3 rounded-card border bg-surface-raised px-4 py-3.5 ${problem && !open ? "border-danger" : "border-line"} ${s.on ? "" : "opacity-60"}`}>
             <div className="flex items-center gap-3">
               <Tick on={s.on} label={`I do ${s.item.name || "this service"}`} onClick={() => onChange(services.map((x, j) => (j === i ? { ...x, on: !x.on } : x)))} />
               <div className="min-w-0 flex-1">
@@ -87,6 +95,7 @@ export function ServicesEditor({ services, onChange, city }: { services: PresetS
                 <Labelled id={`sv-name-${i}`} label="Name">
                   <input id={`sv-name-${i}`} className="input" value={s.item.name} maxLength={40} onChange={(e) => set(i, { name: e.target.value })} placeholder="e.g. Frontal wig install" />
                 </Labelled>
+                <GroupField id={`sv-group-${i}`} value={s.item.group ?? ""} groups={groups} onChange={(v) => set(i, { group: v })} />
 
                 {s.item.options?.length ? (
                   <div className="grid gap-2.5">
@@ -171,13 +180,16 @@ export function ServicesEditor({ services, onChange, city }: { services: PresetS
               </div>
             )}
           </div>
+          </Fragment>
         );
       })}
       <button
         type="button"
         className="btn btn-secondary rounded-pill justify-self-start"
         onClick={() => {
-          onChange([...services, { trade: services[0]?.trade ?? "hair", on: true, item: { name: "", price: 0, priceKind: "fixed", minutes: 60, duration: durationLabel(60) } }]);
+          // A new service starts in the last group used; the owner can change it.
+          const group = services.findLast((x) => x.item.group?.trim())?.item.group;
+          onChange([...services, { trade: services[0]?.trade ?? "hair", on: true, item: { name: "", group, price: 0, priceKind: "fixed", minutes: 60, duration: durationLabel(60) } }]);
           setEditing(services.length);
         }}
       >

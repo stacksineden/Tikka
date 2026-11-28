@@ -13,7 +13,7 @@ import { demoDepositRule, getBookingRules } from "@/lib/bookings-data";
 import { getBusinessBySlug, getBusinessReviews, isDbId } from "@/lib/data";
 import { getSpacePhotos } from "@/lib/listing-db";
 import { place } from "@/lib/format";
-import { bookingLink, needsPrice, pageStyle, priceText } from "@/lib/page";
+import { bookingLink, needsPrice, pageStyle, priceText, withGroups } from "@/lib/page";
 import { reachLabel, tradesInOrder } from "@/lib/presets";
 import { openLabel, searchHref } from "@/lib/search";
 import { sheetTheme } from "@/lib/sheet-theme";
@@ -68,7 +68,7 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
     await redirectIfMoved(slug, (to) => `/book/${to}`);
     notFound();
   }
-  const b: Business = found.business;
+  const b: Business = { ...found.business, services: withGroups(found.business.services) };
   const now = new Date();
   const [reviews, rules, space] = await Promise.all([getBusinessReviews(found.ownerId), getBookingRules(found.ownerId, b), isDbId(b.id) ? getSpacePhotos(b.id) : []]);
 

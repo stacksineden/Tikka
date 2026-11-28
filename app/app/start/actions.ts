@@ -7,6 +7,7 @@
 // demo pretends them here.
 
 import { unitRange } from "@/lib/units";
+import { PAGE_LIMITS } from "@/lib/page";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { ensureStartingPin } from "@/lib/listing-db";
@@ -89,7 +90,7 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
 
   const services: ServiceItem[] = input.services
     .filter((s) => s.name.trim())
-    .slice(0, 30)
+    .slice(0, PAGE_LIMITS.services)
     .map((s, i) => {
       const options = s.options?.filter((o) => o.label.trim()).map((o) => ({ label: o.label.trim().slice(0, 30), price: naira(o.price), minutes: Math.max(15, Math.min(720, Math.round(o.minutes))) }));
       const price = options?.length ? Math.min(...options.map((o) => o.price)) : naira(s.price);
@@ -97,6 +98,7 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
       return {
         id: `svc_${i + 1}`,
         name: s.name.trim().slice(0, 40),
+        group: s.group?.trim().slice(0, PAGE_LIMITS.group) || undefined,
         price,
         // Always exact: prices that move are options, per hour or per item (28 Nov 2026).
         priceKind: "fixed",

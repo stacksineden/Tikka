@@ -221,7 +221,8 @@ export function presetServices(trades: TradeId[], state: string): { services: Pr
       services.push({
         trade: t,
         on: i < 3,
-        item: { name: p.name, price, priceKind: "fixed", minutes, duration: minutes ? durationLabel(minutes) : undefined, options, eventDay: p.eventDay || undefined, perPerson: p.perPerson || undefined },
+        // Grouped by trade from the start ("Makeup", "Photography"), so a long list has tabs.
+        item: { name: p.name, group: TRADES.find((x) => x.id === t)?.name, price, priceKind: "fixed", minutes, duration: minutes ? durationLabel(minutes) : undefined, options, eventDay: p.eventDay || undefined, perPerson: p.perPerson || undefined },
       });
     });
     for (const [name, price] of EXTRAS[t]) if (!extras.some((x) => x.name === name)) extras.push({ name, price: roundNaira(price * k), on: false });

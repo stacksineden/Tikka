@@ -7,7 +7,8 @@ import { normalizeNgPhone } from "./setup";
 import type { Business, BusinessPage, Drop, PageStyle, ServiceItem } from "./types";
 
 export const PAGE_LIMITS = {
-  services: 12,
+  /** No real limit (28 Nov 2026): services are sorted into groups instead. 100 only stops runaway saves. */
+  services: 100,
   /** The free page; a paid drop opens more (lib/portfolio.ts). */
   portfolio: 20,
   videos: 3,
@@ -122,6 +123,23 @@ export function bookingLink(b: Pick<Business, "name" | "actions" | "ownerWhatsap
 }
 
 /** Groups as tabs, only when the business has created more than one. */
+/** Where services without a group go once any service has one. */
+export const OTHER_GROUP = "Other";
+
+/**
+ * Every service sits in a group (28 Nov 2026): once any service has one, the rest show under
+ * "Other". With no groups at all the page is one plain list, as before.
+ */
+export function withGroups<S extends Pick<ServiceItem, "group">>(services: S[]): S[] {
+  if (!services.some((s) => s.group?.trim())) return services;
+  return services.map((s) => (s.group?.trim() ? s : { ...s, group: OTHER_GROUP }));
+}
+
+/** The groups the owner already uses, in order, to pick from in the editors. */
+export function groupNames(services: Pick<ServiceItem, "group">[]): string[] {
+  return [...new Set(services.map((s) => s.group?.trim()).filter((g): g is string => !!g))];
+}
+
 export function serviceGroups(services: ServiceItem[]): string[] {
   const groups = [...new Set(services.map((s) => s.group?.trim()).filter((g): g is string => !!g))];
   return groups.length > 1 ? groups : [];

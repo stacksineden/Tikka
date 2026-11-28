@@ -15,6 +15,11 @@ describe("presets", () => {
     expect(ibadan.priceKind).toBe("fixed");
   });
 
+  it("groups each service under its trade", () => {
+    const groups = new Set(presetServices(["makeup", "photo"], "Lagos").services.map((s) => s.item.group));
+    expect(groups).toEqual(new Set(["Makeup", "Photography"]));
+  });
+
   it("ticks the first three services of each trade and no extras", () => {
     const { services, extras } = presetServices(["hair", "makeup"], "Lagos");
     expect(services.filter((s) => s.on && s.trade === "hair")).toHaveLength(3);

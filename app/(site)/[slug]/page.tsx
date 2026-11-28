@@ -26,7 +26,7 @@ import { demoDepositRule, getBookingDeposits, getBookingRules, getTikkaForBookin
 import { paystackMode } from "@/lib/paystack";
 import { getBusinessBySlug, getBusinessReviews, getPageDrops, isDbId } from "@/lib/data";
 import { count, place } from "@/lib/format";
-import { bookingLink, bookingNumber, focalPosition, needsPrice, priceText, heroHeadline, isPageStyle, pageStyle, serviceGroups, showsLocation, visibleSections, whereLine } from "@/lib/page";
+import { bookingLink, bookingNumber, focalPosition, needsPrice, priceText, heroHeadline, isPageStyle, pageStyle, serviceGroups, showsLocation, visibleSections, whereLine, withGroups } from "@/lib/page";
 import { photoSrcSet } from "@/lib/media-path";
 import { collectionLine, portfolioView } from "@/lib/portfolio";
 import { SITE } from "@/lib/qr";
@@ -149,7 +149,8 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
     await redirectIfMoved(slug, (to) => `/${to}`, sp);
     notFound();
   }
-  const b = found.business;
+  // Services without a group show under "Other" once any has one (withGroups()).
+  const b = { ...found.business, services: withGroups(found.business.services) };
   // The same for every visitor: the public drops, never the signed-in person's own.
   const [drops, reviews, rules] = await Promise.all([getPageDrops(b.slug, found.ownerId), getBusinessReviews(found.ownerId), getBookingRules(found.ownerId, b)]);
   const live = drops.find((d) => d.status === "live");

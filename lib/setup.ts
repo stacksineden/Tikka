@@ -12,7 +12,7 @@ export const LIMITS = {
   nameSaved: 60,
   tagline: 60,
   about: 800,
-  services: 12,
+  services: 100,
   actions: 4,
   videoSeconds: 30,
   videoBytes: 20 * 1024 * 1024,

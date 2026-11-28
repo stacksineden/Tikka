@@ -71,8 +71,8 @@ begin
   exception when check_violation then null;
   end;
   begin
-    perform public.save_services(biz, (select jsonb_agg(jsonb_build_object('name', 'S' || g, 'price_kind', 'ask')) from generate_series(1, 13) g));
-    raise exception 'thirteen services';
+    perform public.save_services(biz, (select jsonb_agg(jsonb_build_object('name', 'S' || g, 'price_kind', 'ask')) from generate_series(1, 101) g));
+    raise exception 'more than 100 services';
   exception when check_violation then null;
   end;
   assert (select count(*) from public.business_services where business_id = biz) = 3, 'a refused save leaves the list as it was';

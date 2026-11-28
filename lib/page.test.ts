@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import glow from "./mock/business.json";
-import { bookingLink, focalPosition, heroHeadline, heroLine, isPageStyle, PAGE_STYLES, whereLine, pageChecklist, pageDropsFrom, needsPrice, pageStyle, priceText, serviceGroups, showsLocation, visibleSections } from "./page";
+import { bookingLink, focalPosition, heroHeadline, heroLine, isPageStyle, PAGE_STYLES, whereLine, pageChecklist, pageDropsFrom, groupNames, needsPrice, pageStyle, priceText, serviceGroups, showsLocation, visibleSections, withGroups } from "./page";
 import type { Business } from "./types";
 
 const base = { ...(glow as unknown as Business), page: undefined, portfolio: [], services: [], about: undefined, hours: undefined, address: undefined };
@@ -141,5 +141,15 @@ describe("pageStyle", () => {
     expect(PAGE_STYLES.filter((x) => x.for === "photography").map((x) => x.id)).toEqual(["photography", "portfolio", "film"]);
     expect(isPageStyle("film")).toBe(true);
     expect(isPageStyle("neon")).toBe(false);
+  });
+});
+
+describe("service groups", () => {
+  it("puts ungrouped services under Other once any service has a group", () => {
+    const list = [{ name: "Bridal glam", group: "Bridal" }, { name: "Lashes" }, { name: "Gele", group: " " }];
+    expect(withGroups(list).map((s) => s.group)).toEqual(["Bridal", "Other", "Other"]);
+    const plain: { name: string; group?: string }[] = [{ name: "Lashes" }];
+    expect(withGroups(plain)).toEqual([{ name: "Lashes" }]);
+    expect(groupNames([{ group: "Bridal" }, { group: "Makeup " }, {}, { group: "Bridal" }])).toEqual(["Bridal", "Makeup"]);
   });
 });

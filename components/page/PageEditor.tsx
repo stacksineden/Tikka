@@ -9,6 +9,7 @@ import { UnitFields } from "@/components/page/UnitFields";
 import { PortfolioEditor } from "@/components/setup/PortfolioEditor";
 import { prepareAbout, prepareCropped, prepareHero, prepareService, uploadPhoto, type MediaKind, type Prepared } from "@/lib/media-client";
 import { focalPosition, heroHeadline, heroLine, needsPrice, PAGE_LIMITS, PAGE_STYLES, priceText } from "@/lib/page";
+import { GroupField } from "./GroupField";
 import type { PortfolioPlan } from "@/lib/portfolio";
 import type { Business, BusinessPage, FaqItem, PageStyle, ServeMode, ServiceItem, TeamMember } from "@/lib/types";
 
@@ -453,7 +454,7 @@ function ServicesCard({ b, bookingsOn }: { b: Business; bookingsOn: boolean }) {
   const patch = (id: string, p: Partial<ServiceItem>) => (setList((l) => l.map((x) => (x.id === id ? { ...x, ...p } : x))), s.dirty());
 
   return (
-    <Card title="Services and prices" status={list.length ? `${list.length} of ${PAGE_LIMITS.services}` : "Add what you offer and what it costs"}>
+    <Card title="Services and prices" status={list.length ? `${list.length} service${list.length === 1 ? "" : "s"}${groups.length > 1 ? ` in ${groups.length} groups` : ""}` : "Add what you offer and what it costs"}>
       <form
         className="grid gap-3"
         onSubmit={(e) => {
@@ -461,12 +462,7 @@ function ServicesCard({ b, bookingsOn }: { b: Business; bookingsOn: boolean }) {
           s.run(() => saveServicesAction(list));
         }}
       >
-        <p className="text-caption text-ink-muted">Each one gets a Book button: customers pick a free time once bookings are on, or message you on WhatsApp. Add a group (like Hair or Nails) to show them in tabs.</p>
-        <datalist id="service-groups">
-          {groups.map((g) => (
-            <option key={g} value={g} />
-          ))}
-        </datalist>
+        <p className="text-caption text-ink-muted">Each one gets a Book button: customers pick a free time once bookings are on, or message you on WhatsApp. Put each one in a group (like Bridal, Makeup or Photography): every group is a tab on your page.</p>
         <ul className="grid gap-2">
           {list.map((x, i) => {
             const isOpen = open === x.id;
@@ -545,14 +541,10 @@ function ServicesCard({ b, bookingsOn }: { b: Business; bookingsOn: boolean }) {
                       )}
                     </div>
                     {x.priceKind !== "ask" && <UnitFields x={x} patch={(p) => patch(x.id!, p)} />}
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <Field label="Group (optional)">
-                        <input className="input" list="service-groups" value={x.group ?? ""} maxLength={PAGE_LIMITS.group} placeholder="e.g. Hair" onChange={(e) => patch(x.id!, { group: e.target.value })} />
-                      </Field>
-                      <Field label="How long (optional)">
-                        <input className="input" value={x.duration ?? ""} maxLength={20} placeholder="e.g. 1 hr" onChange={(e) => patch(x.id!, { duration: e.target.value })} />
-                      </Field>
-                    </div>
+                    <GroupField id={`group-${x.id}`} value={x.group ?? ""} groups={groups} onChange={(v) => patch(x.id!, { group: v })} />
+                    <Field label="How long (optional)">
+                      <input className="input" value={x.duration ?? ""} maxLength={20} placeholder="e.g. 1 hr" onChange={(e) => patch(x.id!, { duration: e.target.value })} />
+                    </Field>
                     <Field label="Short description (optional)" hint={`${(x.description ?? "").length} of ${PAGE_LIMITS.serviceDescription}`}>
                       <textarea
                         className="input min-h-20 resize-y py-2.5 leading-6"
@@ -591,7 +583,8 @@ function ServicesCard({ b, bookingsOn }: { b: Business; bookingsOn: boolean }) {
             className="btn btn-secondary min-h-11 justify-self-start px-4"
             onClick={() => {
               const id = tmpId("sv");
-              setList((l) => [...l, { id, name: "", price: null, priceKind: "fixed" }]);
+              // A new service starts in the last group used; the owner can change it.
+              setList((l) => [...l, { id, name: "", price: null, priceKind: "fixed", group: l.findLast((x) => x.group?.trim())?.group }]);
               setOpen(id);
               s.dirty();
             }}
