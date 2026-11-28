@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { finishSetupMissing } from "@/lib/experience";
 import { pageChecklist } from "@/lib/page";
+import { needsChoice, priceBooking } from "@/lib/booking-price";
 import { getBookings } from "@/lib/bookings-data";
 import { dayLabel, timeLabel, todayKey, watInstant, watParts } from "@/lib/bookings";
 import { getLedger } from "@/lib/ledger-data";
@@ -64,7 +65,16 @@ export async function TodayPage({ user, business }: { user: SessionUser; busines
       .map((s) => ({ id: s.id, time: timeLabel(s.at), name: s.name, item: s.item, paidKobo: paidOf(s), method: s.payments[0]?.method ?? "cash", owedKobo: s.totalKobo - paidOf(s), linkKobo: linkWaiting.get(s.id), phone: s.phone })),
     tomorrow: { count: tomorrows.length, first: tomorrows[0] ? `${timeLabel(tomorrows[0].startsAt)}, ${tomorrows[0].firstName} · ${tomorrows[0].service}` : undefined },
     owed: owedList(ledger).map(({ sale, owedKobo }) => ({ saleId: sale.id, name: sale.name, item: sale.item, owedKobo, phone: sale.phone, since: dayLabel(sale.at), linkKobo: linkWaiting.get(sale.id) })),
-    services: business.services.flatMap((s) => (s.options?.length ? s.options.map((o) => ({ label: `${s.name}, ${o.label.toLowerCase()}`, naira: o.price })) : [{ label: s.name, naira: s.price ?? 0 }])),
+    // Options, per hour, per item, per person: one row, then "which one / how many" on New sale.
+    services: business.services.map((s) =>
+      needsChoice(s)
+        ? {
+            label: s.name,
+            naira: priceBooking(s, {}, 0, undefined).totalNaira,
+            item: { name: s.name, price: s.price, priceKind: s.priceKind, minutes: s.minutes, options: s.options, perPerson: s.perPerson, eventDay: s.eventDay, unit: s.unit, unitLabel: s.unitLabel, unitMin: s.unitMin, unitMax: s.unitMax, unitMinutes: s.unitMinutes },
+          }
+        : { label: s.name, naira: s.options?.[0]?.price ?? s.price ?? 0 },
+    ),
     takenTodayKobo:
       ledger.sales.reduce((n, s) => n + s.payments.filter((p) => isToday(p.at)).reduce((m, p) => m + p.kobo, 0), 0) +
       bookings.filter((b) => isToday(b.depositPaidAt ?? b.createdAt)).reduce((n, b) => n + (b.depositPaidKobo ?? 0), 0),

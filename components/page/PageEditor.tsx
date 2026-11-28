@@ -8,7 +8,7 @@ import { StylePreview } from "@/components/page/StylePreview";
 import { UnitFields } from "@/components/page/UnitFields";
 import { PortfolioEditor } from "@/components/setup/PortfolioEditor";
 import { prepareAbout, prepareCropped, prepareHero, prepareService, uploadPhoto, type MediaKind, type Prepared } from "@/lib/media-client";
-import { focalPosition, heroHeadline, heroLine, PAGE_LIMITS, PAGE_STYLES, priceText } from "@/lib/page";
+import { focalPosition, heroHeadline, heroLine, needsPrice, PAGE_LIMITS, PAGE_STYLES, priceText } from "@/lib/page";
 import type { PortfolioPlan } from "@/lib/portfolio";
 import type { Business, BusinessPage, FaqItem, PageStyle, ServeMode, ServiceItem, TeamMember } from "@/lib/types";
 
@@ -445,7 +445,7 @@ function AboutCard({ b }: { b: Business }) {
 
 /* ------------------------------------------------------------- services */
 
-function ServicesCard({ b }: { b: Business }) {
+function ServicesCard({ b, bookingsOn }: { b: Business; bookingsOn: boolean }) {
   const s = useSave();
   const [list, setList] = useState<ServiceItem[]>(() => b.services.map((x) => ({ ...x, id: x.id ?? tmpId("sv"), priceKind: x.priceKind ?? (x.price === null ? "ask" : "fixed") })));
   const [open, setOpen] = useState<string | null>(null);
@@ -482,7 +482,7 @@ function ServicesCard({ b }: { b: Business }) {
                   <span className="min-w-0 flex-1">
                     <span className="text-body block truncate font-semibold">{x.name || "New service"}</span>
                     <span className="text-caption block text-ink-muted">
-                      {priceText(x)}
+                      {bookingsOn && needsPrice(x) ? <b className="text-danger">Needs a price to be booked</b> : priceText(x)}
                       {x.group ? ` · ${x.group}` : ""}
                     </span>
                   </span>
@@ -500,12 +500,15 @@ function ServicesCard({ b }: { b: Business }) {
                     </Field>
                     <div className="grid gap-1.5">
                       <span className="text-label">Price</span>
-                      <div className="grid grid-cols-3 gap-1 rounded-md bg-surface-sunken p-1" role="radiogroup" aria-label="Price">
+                      {bookingsOn && x.priceKind === "ask" && !x.options?.length && (
+                        <p className="text-caption rounded-md bg-gold-soft px-3 py-2">Customers book and pay a deposit online, so they need the price first. Add one and they can book this.</p>
+                      )}
+                      {!bookingsOn && (
+                      <div className="grid grid-cols-2 gap-1 rounded-md bg-surface-sunken p-1" role="radiogroup" aria-label="Price">
                         {(
                           [
                             ["fixed", "Price"],
-                            ["from", "From"],
-                            ["ask", "Ask"],
+                            ["ask", "Ask for price"],
                           ] as const
                         ).map(([k, l]) => (
                           <button
@@ -520,7 +523,8 @@ function ServicesCard({ b }: { b: Business }) {
                           </button>
                         ))}
                       </div>
-                      {x.priceKind !== "ask" && (
+                      )}
+                      {(bookingsOn || x.priceKind !== "ask") && (
                         <span className="flex items-center rounded-md border border-line-strong/50 bg-surface-raised">
                           <span className="pl-3 text-ink-muted" aria-hidden="true">
                             ₦
@@ -533,7 +537,8 @@ function ServicesCard({ b }: { b: Business }) {
                             value={x.price ?? ""}
                             onChange={(e) => {
                               const d = e.target.value.replace(/\D/g, "").slice(0, 9);
-                              patch(x.id!, { price: d ? Number(d) : null });
+                              // With bookings on there's no "Ask for price": typing a price makes it bookable.
+                              patch(x.id!, { price: d ? Number(d) : null, ...(bookingsOn && d ? { priceKind: "fixed" as const } : {}) });
                             }}
                           />
                         </span>
@@ -715,7 +720,7 @@ function TextCard({ page }: { page: BusinessPage }) {
 
 /* ---------------------------------------------------------------- page */
 
-export function PageEditor({ business: b, plan }: { business: Business; plan: PortfolioPlan }) {
+export function PageEditor({ business: b, plan, bookingsOn = false }: { business: Business; plan: PortfolioPlan; bookingsOn?: boolean }) {
   const page = b.page ?? {};
   const inStore = (b.serveMode ?? "in_store") === "in_store";
   return (
@@ -724,7 +729,7 @@ export function PageEditor({ business: b, plan }: { business: Business; plan: Po
       <StyleCard b={b} />
       <ModeCard b={b} />
       <AboutCard b={b} />
-      <ServicesCard b={b} />
+      <ServicesCard b={b} bookingsOn={bookingsOn} />
       <Card
         title="Portfolio"
         status={

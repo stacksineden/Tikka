@@ -24,6 +24,7 @@ import { getBookingRules, getWaitlist } from "@/lib/bookings-data";
 import { dayLabel, freeDays, openRange, todayKey, watParts, type Booking } from "@/lib/bookings";
 import type { Business } from "@/lib/types";
 import { newExperience } from "@/lib/experience";
+import { needsPrice } from "@/lib/page";
 import { LoadingGrid } from "@/components/ui/Loading";
 import { payLinkLimit } from "@/lib/paylinks-data";
 
@@ -54,8 +55,11 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
   if (!b) redirect("/app/setup");
   if (!setup) redirect("/app");
 
-  const services = b.services.filter((s) => s.id).map((s) => ({ id: s.id!, name: s.name }));
+  const services = b.services.filter((s) => s.id).map((s) => ({ id: s.id!, name: s.name, item: s }));
   const editing = sp.edit === "1";
+  // With bookings on, "Ask for price" services can't be booked online until they have a price.
+  const unpriced = b.services.filter((s) => s.id && needsPrice(s)).map((s) => s.name);
+  const priceNotice = unpriced.length ? <UnpricedNotice names={unpriced} on={setup.enabled} /> : null;
 
   // NEW DIRECTION: Booking settings in one place for businesses from the new setup (demo only for now).
   if (editing && newExperience(b)) {
@@ -71,6 +75,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
           <h1 className="text-heading">Booking settings</h1>
           <p className="text-body mt-1 text-ink-muted">Changes show on your page straight away. Bookings you already have stay as they are.</p>
         </div>
+        {priceNotice}
         <BookingSettingsV2
           d={{
             enabled: setup.enabled,
@@ -105,6 +110,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
               : "Customers pick a free time on your page and it's booked. You see every booking here, with their WhatsApp number. Three quick questions:"}
           </p>
         </div>
+        {priceNotice}
         <BookingSetup first={!setup.setUp} hours={b.hours} services={services} initial={setup} />
         {/* Deposits (REVENUE_PLAN 5.4): once getting paid is ready for the business. */}
         {setup.setUp && isDbId(b.id) && (await depositsCard(b))}
@@ -140,6 +146,7 @@ async function Bookings({ searchParams }: { searchParams: PageProps<"/app/bookin
           <span className="hidden sm:inline">Settings</span>
         </Link>
       </div>
+      {setup.enabled && priceNotice}
       {month && <MonthCalendar days={month} todayKey={todayKey(now)} />}
       {month && (
         <WaitlistList
@@ -192,6 +199,23 @@ async function depositsCard(b: NonNullable<Awaited<ReturnType<typeof getBusiness
       serviceDeposits={setup.serviceDeposits ?? {}}
       maxKobo={pay.maxKobo}
     />
+  );
+}
+
+/** Services that need a price before customers can book them online (exact prices, 28 Nov 2026). */
+function UnpricedNotice({ names, on }: { names: string[]; on: boolean }) {
+  const list = names.length > 3 ? `${names.slice(0, 3).join(", ")} and ${names.length - 3} more` : names.join(names.length === 2 ? " and " : ", ");
+  return (
+    <section className="rounded-card bg-gold-soft p-4">
+      <h2 className="text-label">Add a price to take bookings for {list}</h2>
+      <p className="text-caption mt-1">
+        Customers pay a deposit online, so they need the full price first.{" "}
+        {on ? "Until you add one, customers message you on WhatsApp for these instead." : "Add one before you turn bookings on, or customers will message you for these instead."} If it depends on how many, set the price per hour or per item.
+      </p>
+      <Link href="/app/page#services" className="btn btn-secondary mt-3 min-h-11">
+        Add prices
+      </Link>
+    </section>
   );
 }
 

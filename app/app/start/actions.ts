@@ -98,8 +98,8 @@ export async function saveStartPage(input: StartPage): Promise<Result> {
         id: `svc_${i + 1}`,
         name: s.name.trim().slice(0, 40),
         price,
-        // The owner picks: a fixed price, or a starting price for prices that move.
-        priceKind: s.priceKind === "from" ? "from" : "fixed",
+        // Always exact: prices that move are options, per hour or per item (28 Nov 2026).
+        priceKind: "fixed",
         minutes,
         duration: s.duration,
         options: options && options.length ? options : undefined,

@@ -4,11 +4,15 @@ import { CalendarPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { addBookingAction } from "@/app/app/bookings-actions";
+import { ChoicePicker } from "@/components/bookings/ChoicePicker";
 import { Sheet } from "@/components/bookings/Sheet";
 import { TimePicker } from "@/components/bookings/TimePicker";
 import { ActionIcon } from "@/components/tikka/ActionIcon";
 import { whatsappLink } from "@/lib/booking";
+import { needsChoice, priceBooking, type BookingChoice } from "@/lib/booking-price";
 import { lengthLabel, PROBLEM_TEXT, whenLabel, type BookingRules } from "@/lib/bookings";
+import { priceText } from "@/lib/page";
+import type { ServiceItem } from "@/lib/types";
 
 /**
  * "Book her in" (docs/BOOKINGS.md journey 11a): the claimer said on WhatsApp when they'll come;
@@ -27,12 +31,13 @@ export function BookHerIn({
   name: string;
   phone?: string;
   businessName: string;
-  services: { id: string; name: string; minutes: number }[];
+  services: { id: string; name: string; minutes: number; item?: ServiceItem }[];
   rules: BookingRules;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
+  const [choice, setChoice] = useState<BookingChoice>({});
   const [at, setAt] = useState<string | null>(null);
   const [force, setForce] = useState(false);
   const [error, setError] = useState("");
@@ -40,12 +45,15 @@ export function BookHerIn({
   const [pending, start] = useTransition();
   const svc = services.find((s) => s.id === serviceId);
   if (!services.length) return null;
+  // Options, per hour, per item, per person: which one and how many, priced on the server.
+  const asks = svc?.item && needsChoice(svc.item) ? svc.item : null;
+  const minutes = asks ? priceBooking(asks, choice, 0, undefined).minutes : (svc?.minutes ?? 60);
 
   function book() {
     if (!at || !svc) return;
     setError("");
     start(async () => {
-      const r = await addBookingAction({ claimId, serviceId, startsAt: at, name: "", phone: "", force });
+      const r = await addBookingAction({ claimId, serviceId, startsAt: at, name: "", phone: "", force, ...(asks ? { choice } : {}) });
       if (r.kind !== "booked") return setError(PROBLEM_TEXT[r.kind] ?? "That didn't work. Try again.");
       setDone(at);
       router.refresh();
@@ -81,14 +89,15 @@ export function BookHerIn({
           <div className="mt-4 grid gap-3">
             <label className="grid gap-1">
               <span className="text-label">Service</span>
-              <select className="input" value={serviceId} onChange={(e) => (setServiceId(e.target.value), setAt(null))}>
+              <select className="input" value={serviceId} onChange={(e) => (setServiceId(e.target.value), setChoice({}), setAt(null))}>
                 {services.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.name} · {lengthLabel(s.minutes)}
+                    {s.name} · {s.item && needsChoice(s.item) ? priceText(s.item) : lengthLabel(s.minutes)}
                   </option>
                 ))}
               </select>
             </label>
+            {asks && <ChoicePicker service={asks} choice={choice} onChange={setChoice} />}
             <label className="flex min-h-11 items-start gap-3">
               <input type="checkbox" className="mt-1 size-5 shrink-0" checked={force} onChange={(e) => (setForce(e.target.checked), setAt(null))} />
               <span className="text-body">
@@ -96,7 +105,7 @@ export function BookHerIn({
                 <span className="text-caption block text-ink-muted">Shows every time, even full or closed ones.</span>
               </span>
             </label>
-            {svc && <TimePicker key={`${serviceId}-${force}`} rules={rules} minutes={svc.minutes} force={force} onPick={setAt} />}
+            {svc && <TimePicker key={`${serviceId}-${force}`} rules={rules} minutes={minutes} force={force} onPick={setAt} />}
             <button type="button" className="btn min-h-12" disabled={pending || !at} onClick={book}>
               {pending ? "Booking…" : at ? `Book ${whenLabel(at)}` : "Pick a time"}
             </button>

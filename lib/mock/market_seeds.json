@@ -2099,7 +2099,7 @@
           "id": "svc_imole_5",
           "name": "Family portraits",
           "price": 90000,
-          "priceKind": "from",
+          "priceKind": "fixed",
           "duration": "1 hr",
           "description": "Up to 6 people, 15 edited photos"
         }

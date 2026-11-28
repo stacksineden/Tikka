@@ -1,7 +1,7 @@
 "use client";
 
 // NEW DIRECTION: the services screen in setup. Every ticked service needs a price (deposits are
-// worked out from it): a fixed price, or a starting price ("From ₦15,000") for prices that move.
+// worked out from it): always an exact price; prices that move are choices, per hour or per item.
 // Each service, and each of its choices, has its own price and how long it takes.
 
 import { Check, Pencil, Plus, Trash2 } from "lucide-react";
@@ -27,12 +27,13 @@ export function serviceProblem(s: ServiceItem): string | null {
 }
 
 export function priceSummary(s: ServiceItem): string {
-  const from = s.priceKind === "from";
   if (s.options?.length) {
-    const low = Math.min(...s.options.map((o) => o.price || 0));
-    return `${s.options.length} ${s.perPerson ? "prices" : "choices"} · from ${naira(low)}`;
+    const prices = s.options.map((o) => o.price || 0);
+    const low = Math.min(...prices);
+    const high = Math.max(...prices);
+    return `${s.options.length} ${s.perPerson ? "prices" : "choices"} · ${low === high ? naira(low) : `${naira(low)} – ${naira(high)}`}`;
   }
-  const price = (s.price ?? 0) > 0 ? `${from ? "From " : ""}${naira(s.price!)}${s.unit ? ` ${perText(s)}` : ""}` : "No price yet";
+  const price = (s.price ?? 0) > 0 ? `${naira(s.price!)}${s.unit ? ` ${perText(s)}` : ""}` : "No price yet";
   return s.minutes ? `${price} · ${durationLabel(s.minutes)}` : price;
 }
 
@@ -87,21 +88,6 @@ export function ServicesEditor({ services, onChange, city }: { services: PresetS
                   <input id={`sv-name-${i}`} className="input" value={s.item.name} maxLength={40} onChange={(e) => set(i, { name: e.target.value })} placeholder="e.g. Frontal wig install" />
                 </Labelled>
 
-                <div>
-                  <span className="text-label mb-1.5 block">Your price</span>
-                  <div className="flex flex-wrap gap-2">
-                    <Chip on={s.item.priceKind !== "from"} onClick={() => set(i, { priceKind: "fixed" })}>
-                      Fixed price
-                    </Chip>
-                    <Chip on={s.item.priceKind === "from"} onClick={() => set(i, { priceKind: "from" })}>
-                      Starts from
-                    </Chip>
-                  </div>
-                  <p className="text-caption mt-1.5 text-ink-muted">
-                    {s.item.priceKind === "from" ? `Customers see "From ${naira(s.item.price || 0)}". The deposit is worked out on this starting price.` : "Customers see exactly this price."}
-                  </p>
-                </div>
-
                 {s.item.options?.length ? (
                   <div className="grid gap-2.5">
                     <span className="text-label">{s.item.perPerson ? "Price per person" : "Choices"}</span>
@@ -149,7 +135,7 @@ export function ServicesEditor({ services, onChange, city }: { services: PresetS
                 ) : (
                   <div className="grid gap-2.5">
                     <div className="grid grid-cols-2 gap-2">
-                      <Naira label={s.item.priceKind === "from" ? "Starting price" : "Price"} value={s.item.price ?? 0} onChange={(v) => set(i, { price: v })} />
+                      <Naira label="Price" value={s.item.price ?? 0} onChange={(v) => set(i, { price: v })} />
                       <TimeSelect label="Takes about" value={s.item.minutes ?? 60} onChange={(v) => set(i, { minutes: v, duration: durationLabel(v) })} />
                     </div>
                     <button
@@ -238,14 +224,6 @@ function TimeSelect({ label, value, onChange }: { label: string; value: number; 
         ))}
       </select>
     </label>
-  );
-}
-
-function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button type="button" aria-pressed={on} onClick={onClick} className={`inline-flex min-h-11 items-center rounded-pill border px-4 font-semibold ${on ? "border-brand bg-brand text-on-brand" : "border-line-strong bg-surface-raised"}`}>
-      {children}
-    </button>
   );
 }
 

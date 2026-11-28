@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import glow from "./mock/business.json";
-import { bookingLink, focalPosition, heroHeadline, heroLine, isPageStyle, PAGE_STYLES, whereLine, pageChecklist, pageDropsFrom, pageStyle, priceText, serviceGroups, showsLocation, visibleSections } from "./page";
+import { bookingLink, focalPosition, heroHeadline, heroLine, isPageStyle, PAGE_STYLES, whereLine, pageChecklist, pageDropsFrom, needsPrice, pageStyle, priceText, serviceGroups, showsLocation, visibleSections } from "./page";
 import type { Business } from "./types";
 
 const base = { ...(glow as unknown as Business), page: undefined, portfolio: [], services: [], about: undefined, hours: undefined, address: undefined };
@@ -23,8 +23,15 @@ describe("hero", () => {
 describe("services", () => {
   it("reads prices plainly and books on WhatsApp", () => {
     expect(priceText({ price: 25000, priceKind: "fixed" })).toBe("₦25,000");
-    expect(priceText({ price: 15000, priceKind: "from" })).toBe("From ₦15,000");
+    // Never "From": options show their range, one option its price.
+    expect(priceText({ price: 15000, options: [{ label: "Short", price: 15000, minutes: 60 }, { label: "Long", price: 25000, minutes: 120 }] })).toBe("₦15,000 – ₦25,000");
+    expect(priceText({ price: 15000, options: [{ label: "One", price: 18000, minutes: 60 }] })).toBe("₦18,000");
+    expect(priceText({ price: 25000, perPerson: true, options: [{ label: "Bride", price: 150000, minutes: 180 }, { label: "Each bridesmaid", price: 25000, minutes: 60 }] })).toBe("₦150,000 + ₦25,000 each");
+    expect(priceText({ price: 4000, unit: "item", unitLabel: "photo", options: [{ label: "Edited", price: 4000, minutes: 15 }, { label: "Raw", price: 2000, minutes: 5 }] })).toBe("₦2,000 – ₦4,000 per photo");
     expect(priceText({ price: null })).toBe("Ask for price");
+    expect(needsPrice({ price: null, priceKind: "ask" })).toBe(true);
+    expect(needsPrice({ price: 5000, priceKind: "fixed" })).toBe(false);
+    expect(needsPrice({ price: null, priceKind: "ask", options: [{ label: "Bride", price: 150000, minutes: 180 }] })).toBe(false);
     const b = { ...base, name: "Glow Studio", actions: [{ kind: "whatsapp" as const, value: "0803 774 4521" }] };
     expect(bookingLink(b, { name: "Knotless braids", price: 25000, priceKind: "fixed" })).toBe(
       `https://wa.me/2348037744521?text=${encodeURIComponent("Hi Glow Studio, I'd like to book Knotless braids (₦25,000).")}`,

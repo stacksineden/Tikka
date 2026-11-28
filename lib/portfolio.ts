@@ -107,11 +107,11 @@ export function portfolioView(b: Pick<Business, "portfolio" | "collections" | "s
 /** Under a cover: "14 looks · from ₦150,000". */
 export function collectionLine(c: ShownCollection): string {
   const n = c.photos.length;
-  const price = c.service && c.service.priceKind !== "ask" && c.service.price !== null ? priceText(c.service).replace(/^From /, "from ") : null;
+  const price = c.service && c.service.priceKind !== "ask" && c.service.price !== null ? priceText(c.service) : null;
   return [`${n} ${n === 1 ? "photo" : "photos"}`, price].filter(Boolean).join(" · ");
 }
 
-/** "Hi Maril Kay, I saw your Bridal work on Tikka and I'd like to book Bridal makeup (From ₦150,000)." */
+/** "Hi Maril Kay, I saw your Bridal work on Tikka and I'd like to book Bridal makeup (₦150,000)." */
 export function collectionBookingLink(b: Pick<Business, "name" | "actions" | "ownerWhatsapp">, c: Pick<ShownCollection, "name" | "service">): string | null {
   const n = bookingNumber(b);
   if (!n) return null;

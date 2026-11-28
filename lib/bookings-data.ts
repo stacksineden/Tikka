@@ -537,7 +537,7 @@ async function demoFor(user: Pick<SessionUser, "id" | "role" | "businessOwnerId"
 
 export async function addBooking(
   user: Pick<SessionUser, "id" | "role" | "businessOwnerId">,
-  b: { serviceId: string; startsAt: string; firstName: string; phone: string | null; force: boolean; claimId?: string },
+  b: { serviceId: string; startsAt: string; firstName: string; phone: string | null; force: boolean; claimId?: string; choice?: BookingChoice },
 ): Promise<Act> {
   const r = await demoFor(user, true);
   if ("err" in r) return r.err!;
@@ -545,7 +545,9 @@ export async function addBooking(
   if (!d) return (await dbAddBooking(w.key, b)) as Act;
   const svc = w.business.services.find((s) => s.id === b.serviceId);
   if (!svc) return { kind: "not_found" };
-  const minutes = d.minutes[svc.id!] ?? DEFAULT_MINUTES;
+  // Options, per hour, per item, per person: priced like a customer booking (add_booking() does the same).
+  const priced = svc.priceKind !== "ask" && (svc.options?.length || svc.unit) ? priceBooking(svc, b.choice ?? {}, 0, undefined) : null;
+  const minutes = priced ? priced.minutes : (d.minutes[svc.id!] ?? DEFAULT_MINUTES);
   const start = new Date(b.startsAt);
   const problem = demoProblem(d, w.business, start, minutes, null, b.force, { serviceId: svc.id });
   if (problem) return { kind: problem };
@@ -555,7 +557,8 @@ export async function addBooking(
     source: b.claimId ? "tikka" : "owner", status: "booked", code: demoCode(), viewToken: randomBytes(12).toString("hex"), moved: false,
     createdAt: new Date().toISOString(), futureOffers: false, claimId: b.claimId,
     // The service's price, like a customer booking, so Today knows what's left after a deposit.
-    priceKobo: svc.price != null ? svc.price * 100 : undefined, priceKind: svc.priceKind ?? "fixed",
+    priceKobo: priced ? priced.totalNaira * 100 : svc.price != null ? svc.price * 100 : undefined, priceKind: priced ? "fixed" : (svc.priceKind ?? "fixed"),
+    detail: priced?.detail,
   });
   return { kind: "booked", id: d.bookings[d.bookings.length - 1].id };
 }

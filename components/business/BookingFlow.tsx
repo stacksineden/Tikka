@@ -18,6 +18,7 @@ import { MAX_PEOPLE, priceBooking, type DepositRule } from "@/lib/booking-price"
 import type { SheetTheme } from "@/lib/sheet-theme";
 import type { ServiceItem, WorkPlace } from "@/lib/types";
 import { clampQty, countText, perText, unitRange, unitWord } from "@/lib/units";
+import { needsPrice, priceText } from "@/lib/page";
 
 export interface FlowBusiness {
   slug: string;
@@ -162,9 +163,12 @@ export function BookingFlow({
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const el = (e.target as Element | null)?.closest<HTMLElement>("[data-book]");
       if (!el) return;
+      const id = el.dataset.bookId;
+      const chosen = id ? services.find((s) => s.id === id) : undefined;
+      // A service without a price ("Ask for price") isn't booked online: its link asks on WhatsApp.
+      if (id && !chosen && /^https?:/.test(el.getAttribute("href") ?? "")) return;
       e.preventDefault();
-      const chosen = services.find((s) => s.id === el.dataset.bookId);
-      if (chosen || services.length === 1) {
+      if (chosen || (!id && services.length === 1)) {
         setPicking(false);
         start(chosen ?? services[0]);
       } else {
@@ -360,7 +364,7 @@ export function BookingFlow({
             {step === "option" && (
               <div className="grid gap-2.5">
                 {svc.options!.map((o, i) => (
-                  <Opt key={o.label} on={option === i} onClick={() => setOption(i)} title={o.label} sub={svc.unit ? perText(svc).replace(/^per/, "Price per") : `About ${hours(o.minutes)}`} price={`${svc.priceKind === "from" ? "From " : ""}${naira(o.price)}${svc.unit ? ` ${perText(svc)}` : ""}`} />
+                  <Opt key={o.label} on={option === i} onClick={() => setOption(i)} title={o.label} sub={svc.unit ? perText(svc).replace(/^per/, "Price per") : `About ${hours(o.minutes)}`} price={`${naira(o.price)}${svc.unit ? ` ${perText(svc)}` : ""}`} />
                 ))}
               </div>
             )}
@@ -620,10 +624,9 @@ export function BookingFlow({
                     <Line key={l.label} label={l.label} value={naira(l.naira)} mono />
                   ))}
                   <div className="mt-1 border-t border-line">
-                    <Line label={svc.priceKind === "from" ? "Total from" : "Total"} value={naira(price.totalNaira)} mono strong />
+                    <Line label="Total" value={naira(price.totalNaira)} mono strong />
                   </div>
                 </div>
-                {svc.priceKind === "from" && <p className="text-caption -mt-2 text-ink-muted">This is the starting price. {b.name} confirms the final price with you; the deposit is on the starting price.</p>}
                 {price.depositNaira > 0 ? (
                   <div className="grid gap-1.5 rounded-card bg-ink p-4 text-surface">
                     <span className="text-caption opacity-80">Deposit to pay now{price.depositLabel ? ` (${price.depositLabel})` : ""}</span>
@@ -725,11 +728,7 @@ function hours(m: number) {
 /** A general "Book": every service with its time and price, grouped like the page; picking one starts its booking. */
 function ServicePick({ business, services, onPick, onClose }: { business: string; services: ServiceItem[]; onPick: (s: ServiceItem) => void; onClose: () => void }) {
   const groups = [...new Set(services.map((s) => s.group ?? ""))];
-  const price = (s: ServiceItem) => {
-    const low = s.options?.length ? Math.min(...s.options.map((o) => o.price)) : s.price;
-    if (s.priceKind === "ask" || low === null || low === undefined) return "Ask";
-    return `${s.priceKind === "from" || (s.options?.length ?? 0) > 1 ? "From " : ""}${naira(low)}${s.unit ? ` ${perText(s)}` : ""}`;
-  };
+  const price = (s: ServiceItem) => (needsPrice(s) ? "Ask" : priceText(s));
   return (
     <div className="flex h-full flex-col bg-surface text-ink">
       <div className="flex justify-end border-b border-line px-2 py-2">

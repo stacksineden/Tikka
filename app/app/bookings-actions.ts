@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { LENGTHS } from "@/lib/bookings";
+import { cleanChoice, type BookingChoice } from "@/lib/booking-price";
 import { addBooking, demoBookingFor, recordBookingDeposit, blockTime, cancelBooking, checkBookingCode, markBooking, moveBooking, removeBlock, saveBookingSettings, type Act, type BookingCheck } from "@/lib/bookings-data";
 import { getSessionUser } from "@/lib/session";
 import { dbSaveDepositSettings } from "@/lib/bookings-db";
@@ -69,6 +70,8 @@ export async function addBookingAction(input: {
   phone: string;
   force: boolean;
   claimId?: string;
+  /** Which option, how many, how many people: priced on the server like a customer booking. */
+  choice?: BookingChoice;
   /** A deposit they already paid the owner (naira), and how. */
   depositNaira?: number;
   depositMethod?: DepositMethodIn;
@@ -83,7 +86,7 @@ export async function addBookingAction(input: {
   if (!name && !input.claimId) return { kind: "bad_name" };
   const deposit = Math.round(Number(input.depositNaira) || 0);
   if (deposit < 0 || deposit > 10_000_000 || (deposit > 0 && !METHODS.includes(input.depositMethod as DepositMethodIn))) return { kind: "bad_deposit" };
-  const r = await addBooking(u, { serviceId: input.serviceId, startsAt: new Date(input.startsAt).toISOString(), firstName: name, phone, force: input.force === true, claimId: input.claimId });
+  const r = await addBooking(u, { serviceId: input.serviceId, startsAt: new Date(input.startsAt).toISOString(), firstName: name, phone, force: input.force === true, claimId: input.claimId, choice: cleanChoice(input.choice) });
   if (r.kind === "booked" && deposit > 0 && typeof r.id === "string") {
     const d = await recordBookingDeposit(u, r.id, deposit * 100, input.depositMethod as DepositMethodIn);
     // Booked either way; say so if the deposit didn't save, so the owner adds it on the booking.

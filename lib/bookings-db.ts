@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { BookingChoice } from "./booking-price";
 import type { Booking, BookingRules, BookingSetup, DepositSettings, ServiceDepositMode } from "./bookings";
 import { adminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
@@ -346,7 +347,7 @@ export async function dbRecordBookingDeposit(businessId: string, bookingId: stri
   return error || !data ? "error" : String(data);
 }
 
-export const dbAddBooking = (businessId: string, b: { serviceId: string; startsAt: string; firstName: string; phone: string | null; force: boolean; claimId?: string }) =>
+export const dbAddBooking = (businessId: string, b: { serviceId: string; startsAt: string; firstName: string; phone: string | null; force: boolean; claimId?: string; choice?: BookingChoice }) =>
   call("add_booking", {
     p_business: businessId,
     p_service: b.serviceId,
@@ -355,6 +356,8 @@ export const dbAddBooking = (businessId: string, b: { serviceId: string; startsA
     p_phone: b.phone,
     p_force: b.force,
     p_claim: b.claimId ?? null,
+    // Only sent with a choice, so the call still works before 20261226100000_exact_prices.sql.
+    ...(b.choice ? { p_choice: b.choice } : {}),
   });
 
 export const dbMoveBooking = (businessId: string, id: string, startsAt: string, force: boolean) =>

@@ -6,6 +6,7 @@ import { noteFoundVia } from "@/lib/listing-db";
 import { dbBookTimeV2, type BookResult } from "@/lib/bookings-db";
 import { firstName, VISITOR_COOKIE } from "@/lib/claim";
 import { getBusinessBySlug, isDbId } from "@/lib/data";
+import { needsPrice } from "@/lib/page";
 import { startDepositCheckout } from "@/lib/deposit-checkout";
 import { paystackMode } from "@/lib/paystack";
 import { sendBookingAlert } from "@/lib/push";
@@ -50,6 +51,9 @@ export async function POST(request: Request) {
   if (!found) return fail("not_found", 404);
   const real = isDbId(found.ownerId);
   if (!real && !demoAllowed) return fail("not_found", 404);
+  // "Ask for price" services aren't booked online: the customer must know the price first.
+  const service = found.business.services.find((s) => s.id === body.serviceId);
+  if (!service || needsPrice(service)) return fail("not_found", 404);
 
   const tikka = typeof body.tikka === "string" && /^[\w-]{6,80}$/.test(body.tikka) ? body.tikka : undefined;
   const name = tikka ? "" : firstName(String(body.name ?? ""));

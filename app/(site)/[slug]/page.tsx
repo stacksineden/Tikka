@@ -26,7 +26,7 @@ import { demoDepositRule, getBookingDeposits, getBookingRules, getTikkaForBookin
 import { paystackMode } from "@/lib/paystack";
 import { getBusinessBySlug, getBusinessReviews, getPageDrops, isDbId } from "@/lib/data";
 import { count, place } from "@/lib/format";
-import { bookingLink, bookingNumber, focalPosition, priceText, heroHeadline, isPageStyle, pageStyle, serviceGroups, showsLocation, visibleSections, whereLine } from "@/lib/page";
+import { bookingLink, bookingNumber, focalPosition, needsPrice, priceText, heroHeadline, isPageStyle, pageStyle, serviceGroups, showsLocation, visibleSections, whereLine } from "@/lib/page";
 import { photoSrcSet } from "@/lib/media-path";
 import { collectionLine, portfolioView } from "@/lib/portfolio";
 import { SITE } from "@/lib/qr";
@@ -169,7 +169,8 @@ async function BusinessPage({ params, searchParams }: { params: PageProps<"/[slu
   const number = bookingNumber(b);
   // With bookings set up (docs/BOOKINGS.md), Book opens the calendar: only free times, and picking
   // one books it. Otherwise the WhatsApp request sheet, as before.
-  const bookable = b.services.filter((s) => s.id);
+  // Only priced services are booked online; "Ask for price" ones ask on WhatsApp (needsPrice()).
+  const bookable = b.services.filter((s) => s.id && !needsPrice(s));
   const calendar = !external && !!rules && bookable.length > 0;
   const sheet = calendar || (!external && !!number);
   const book = external ?? bookingLink(b) ?? (calendar ? "#book" : null);

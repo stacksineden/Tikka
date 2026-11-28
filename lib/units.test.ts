@@ -37,9 +37,8 @@ describe("units", () => {
   });
 
   it("shows the price for one on the page", () => {
-    expect(priceText(shoot)).toBe("₦15,000 per hour");
+    expect(priceText(shoot)).toBe("₦15,000 – ₦25,000 per hour");
     expect(priceText(photos)).toBe("₦5,000 per photo");
-    expect(priceText({ ...photos, priceKind: "from" })).toBe("From ₦5,000 per photo");
   });
 });
 

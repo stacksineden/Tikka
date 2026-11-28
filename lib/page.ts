@@ -79,10 +79,30 @@ export function showsLocation(b: Pick<Business, "serveMode">): boolean {
   return (b.serveMode ?? "in_store") === "in_store";
 }
 
-export function priceText(s: Pick<ServiceItem, "price" | "priceKind" | "unit" | "unitLabel">): string {
-  if (s.priceKind === "ask" || s.price === null) return "Ask for price";
+/**
+ * "₦25,000", "₦4,000 per photo", or the range of its options ("₦15,000 – ₦25,000"): never "From",
+ * because every booking ends at an exact price the customer sees before paying (28 Nov 2026).
+ */
+export function priceText(s: Pick<ServiceItem, "price" | "priceKind" | "unit" | "unitLabel" | "options" | "perPerson">): string {
   const per = s.unit ? ` ${perText(s)}` : "";
-  return s.priceKind === "from" ? `From ${naira(s.price)}${per}` : `${naira(s.price)}${per}`;
+  const prices = (s.options ?? []).map((o) => o.price).filter((n) => Number.isFinite(n));
+  // Per person: the first is the main person (the bride), the rest are each extra one.
+  if (s.perPerson && prices.length > 1) {
+    const extra = Math.min(...prices.slice(1));
+    return `${naira(prices[0])} + ${naira(extra)} each`;
+  }
+  if (prices.length) {
+    const low = Math.min(...prices);
+    const high = Math.max(...prices);
+    return low === high ? `${naira(low)}${per}` : `${naira(low)} – ${naira(high)}${per}`;
+  }
+  if (s.priceKind === "ask" || s.price === null) return "Ask for price";
+  return `${naira(s.price)}${per}`;
+}
+
+/** No price to book online: "Ask for price" with no options. With bookings on, it can't be booked until priced. */
+export function needsPrice(s: Pick<ServiceItem, "price" | "priceKind" | "options">): boolean {
+  return !s.options?.length && (s.priceKind === "ask" || s.price === null);
 }
 
 /** The number "Book on WhatsApp" goes to: the Chat on WhatsApp button's, else the owner's. */

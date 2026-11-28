@@ -29,7 +29,7 @@ import { moreTimeUntil } from "@/lib/more-time";
 import { canSetSpent } from "@/lib/spent";
 import { getOwnerUser } from "@/lib/session";
 import { siteUrl } from "@/lib/supabase/env";
-import type { Source, Tier } from "@/lib/types";
+import type { ServiceItem, Source, Tier } from "@/lib/types";
 import { newExperience } from "@/lib/experience";
 import { LoadingGrid } from "@/components/ui/Loading";
 
@@ -118,7 +118,7 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
   const bookingOnly = booked.filter((x) => !claimPhones.has(x.phone));
   const q = f.q?.toLowerCase();
   const bookingRows = (from === "bookings" ? booked : bookingOnly).filter((x) => !q || x.name.toLowerCase().includes(q));
-  let bookIn: { rules: BookingRules; services: { id: string; name: string; minutes: number }[] } | null = null;
+  let bookIn: { rules: BookingRules; services: { id: string; name: string; minutes: number; item?: ServiceItem }[] } | null = null;
   if (setup?.setUp) {
     const upcoming = await getBookings(user, now, new Date(now.getTime() + (setup.aheadDays + 1) * 86_400_000));
     const lengths = serviceLengths(isDbId(b.id) ? b.id : user.id, b);
@@ -131,7 +131,7 @@ async function Leads({ searchParams }: { searchParams: PageProps<"/app/leads">["
         busy: upcoming.filter((x) => x.status !== "cancelled").map((x) => [x.startsAt, x.endsAt]),
         blocked: setup.blocks.map((k) => [k.startsAt, k.endsAt]),
       },
-      services: b.services.filter((x) => x.id).map((x) => ({ id: x.id!, name: x.name, minutes: lengths[x.id!] ?? 60 })),
+      services: b.services.filter((x) => x.id).map((x) => ({ id: x.id!, name: x.name, minutes: lengths[x.id!] ?? 60, item: x })),
     };
   }
 

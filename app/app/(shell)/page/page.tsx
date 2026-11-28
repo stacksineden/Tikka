@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { PageEditor } from "@/components/page/PageEditor";
+import { getBookingSetup } from "@/lib/bookings-data";
 import { getBusiness, getPortfolioPlan } from "@/lib/data";
 import { pageChecklist } from "@/lib/page";
 import { getOwnerUser } from "@/lib/session";
@@ -17,7 +18,7 @@ async function Editor() {
   if (!user) redirect("/app/redeem");
   const b = await getBusiness(user);
   if (!b) redirect("/app/setup");
-  const plan = await getPortfolioPlan(user);
+  const [plan, setup] = await Promise.all([getPortfolioPlan(user), getBookingSetup(user)]);
   const steps = pageChecklist(b);
   const done = steps.filter((x) => x.done).length;
   return (
@@ -49,7 +50,7 @@ async function Editor() {
         </div>
       )}
       <SharePage slug={b.slug} name={b.name} />
-      <PageEditor key={b.slug} business={b} plan={plan} />
+      <PageEditor key={b.slug} business={b} plan={plan} bookingsOn={!!setup?.enabled} />
     </>
   );
 }

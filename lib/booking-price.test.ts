@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { priceBooking } from "./booking-price";
+import { choiceLabel, cleanChoice, needsChoice, priceBooking } from "./booking-price";
 import type { ServiceItem } from "./types";
 
 const braids: ServiceItem = {
@@ -45,5 +45,32 @@ describe("priceBooking", () => {
     const p = priceBooking(braids, { option: 0 }, 0, { mode: "fixed", fixedKobo: 500_000, counts: false });
     expect(p.depositNaira).toBe(5000);
     expect(p.restNaira).toBe(19000);
+  });
+});
+
+describe("the owner's choice (Add a booking, New sale)", () => {
+  const shoot: ServiceItem = { name: "Photo shoot", price: 4000, priceKind: "fixed", minutes: 30, unit: "item", unitLabel: "photo", unitMin: 1, unitMax: 20, unitMinutes: 15 };
+  const facial: ServiceItem = { name: "Facial", price: 10000, priceKind: "fixed", minutes: 60 };
+
+  it("asks for options, per hour, per item and per person, never a plain price", () => {
+    expect(needsChoice(shoot)).toBe(true);
+    expect(needsChoice(braids)).toBe(true);
+    expect(needsChoice(facial)).toBe(false);
+    expect(needsChoice({ ...facial, options: [{ label: "Only", price: 10000, minutes: 60 }] })).toBe(false);
+    expect(needsChoice({ ...shoot, eventDay: true })).toBe(false);
+  });
+
+  it("prices 4 photos at ₦16,000 and names the sale", () => {
+    const p = priceBooking(shoot, { qty: 4 }, 0, undefined);
+    expect(p.totalNaira).toBe(16000);
+    expect(p.minutes).toBe(60);
+    expect(choiceLabel(shoot, p)).toBe("Photo shoot · 4 photos");
+    expect(choiceLabel(facial, priceBooking(facial, {}, 0, undefined))).toBe("Facial");
+  });
+
+  it("keeps a choice from the browser to whole numbers", () => {
+    expect(cleanChoice({ option: 1, qty: 4, people: [1, 2] })).toEqual({ option: 1, qty: 4, people: [1, 2] });
+    expect(cleanChoice({ option: -1, qty: 4.5, people: [1, "x", 99] })).toEqual({ option: undefined, qty: undefined, people: [1, 0, 0] });
+    expect(cleanChoice("nope")).toBeUndefined();
   });
 });

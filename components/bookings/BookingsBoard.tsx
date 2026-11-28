@@ -43,11 +43,17 @@ import { PayLinkReady, payLinkMessage } from "@/components/payments/PayLinkSheet
 import Link from "next/link";
 import { Sheet } from "./Sheet";
 import { TimePicker } from "./TimePicker";
+import { ChoicePicker } from "./ChoicePicker";
+import { needsChoice, priceBooking, type BookingChoice } from "@/lib/booking-price";
+import { priceText } from "@/lib/page";
+import type { ServiceItem } from "@/lib/types";
 
 export interface BoardService {
   id: string;
   name: string;
   minutes: number;
+  /** The whole service, for "which one / how many" (options, per hour, per item, per person). */
+  item?: ServiceItem;
 }
 
 const SOURCE: Record<Booking["source"], string> = { page: "Booked on your page", owner: "Booked by you", tikka: "From a Tikka" };
@@ -155,13 +161,14 @@ export function BookingsBoard({
           <span className="w-16 shrink-0 font-mono text-[15px] font-semibold tabular-nums">{timeLabel(b.startsAt)}</span>
           <div className="min-w-0 flex-1">
             <p className="text-body font-semibold">
-              {b.firstName} <span className="font-normal text-ink-muted">· {b.service}</span>
+              {b.firstName} <span className="font-normal text-ink-muted">· {b.service}{b.detail ? `, ${b.detail}` : ""}</span>
             </p>
             <p className="text-caption flex flex-wrap items-center gap-x-2 gap-y-1 text-ink-muted">
               <span className="inline-flex items-center gap-1">
                 <Clock size={12} aria-hidden="true" />
                 {lengthLabel(b.minutes)}
               </span>
+              {b.priceKobo != null && b.priceKobo > 0 && <span className="font-mono">{naira(b.priceKobo / 100)}</span>}
               {gaps[b.id] && !cancelled ? (
                 <span title="Kept free after this booking, so nobody books into it">
                   then {gapLabel(gaps[b.id])} free{b.homeArea ? " to travel" : ""}
@@ -521,9 +528,10 @@ function AddForm({
   pending: boolean;
   error: string;
   payLinks: boolean;
-  onSubmit: (v: { serviceId: string; startsAt: string; name: string; phone: string; force: boolean; depositNaira?: number; depositMethod?: DepositMethodIn; linkNaira?: number }) => void;
+  onSubmit: (v: { serviceId: string; startsAt: string; name: string; phone: string; force: boolean; choice?: BookingChoice; depositNaira?: number; depositMethod?: DepositMethodIn; linkNaira?: number }) => void;
 }) {
   const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
+  const [choice, setChoice] = useState<BookingChoice>({});
   const [at, setAt] = useState<string | null>(null);
   const [force, setForce] = useState(false);
   const [name, setName] = useState("");
@@ -536,26 +544,29 @@ function AddForm({
   const depositOk = dep === "none" || (dep === "paid" ? deposit > 0 && !!method : payLinks && deposit >= 100);
   const svc = services.find((s) => s.id === serviceId);
   if (!svc) return <p className="text-body mt-4">Add your services on your page first.</p>;
+  const asks = svc.item && needsChoice(svc.item) ? svc.item : null;
+  const minutes = asks ? priceBooking(asks, choice, 0, undefined).minutes : svc.minutes;
   return (
     <form
       className="mt-4 grid gap-3"
       onSubmit={(e) => {
         e.preventDefault();
-        if (at && depositOk) onSubmit({ serviceId, startsAt: at, name, phone, force, ...(paidAhead ? { depositNaira: deposit, depositMethod: method! } : dep === "link" ? { linkNaira: deposit } : {}) });
+        if (at && depositOk) onSubmit({ serviceId, startsAt: at, name, phone, force, ...(asks ? { choice } : {}), ...(paidAhead ? { depositNaira: deposit, depositMethod: method! } : dep === "link" ? { linkNaira: deposit } : {}) });
       }}
     >
       <label className="grid gap-1">
         <span className="text-label">Service</span>
-        <select className="input" value={serviceId} onChange={(e) => (setServiceId(e.target.value), setAt(null))}>
+        <select className="input" value={serviceId} onChange={(e) => (setServiceId(e.target.value), setChoice({}), setAt(null))}>
           {services.map((s) => (
             <option key={s.id} value={s.id}>
-              {s.name} · {lengthLabel(s.minutes)}
+              {s.name} · {s.item && needsChoice(s.item) ? priceText(s.item) : lengthLabel(s.minutes)}
             </option>
           ))}
         </select>
       </label>
+      {asks && <ChoicePicker service={asks} choice={choice} onChange={setChoice} />}
       <ForceToggle force={force} setForce={(v) => (setForce(v), setAt(null))} />
-      <TimePicker key={`${serviceId}-${force}`} rules={rules} minutes={svc.minutes} force={force} onPick={setAt} />
+      <TimePicker key={`${serviceId}-${force}`} rules={rules} minutes={minutes} force={force} onPick={setAt} />
       <label className="grid gap-1">
         <span className="text-label">Their first name</span>
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={30} required />

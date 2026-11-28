@@ -13,7 +13,7 @@ import { demoDepositRule, getBookingRules } from "@/lib/bookings-data";
 import { getBusinessBySlug, getBusinessReviews, isDbId } from "@/lib/data";
 import { getSpacePhotos } from "@/lib/listing-db";
 import { place } from "@/lib/format";
-import { bookingLink, pageStyle, priceText } from "@/lib/page";
+import { bookingLink, needsPrice, pageStyle, priceText } from "@/lib/page";
 import { reachLabel, tradesInOrder } from "@/lib/presets";
 import { openLabel, searchHref } from "@/lib/search";
 import { sheetTheme } from "@/lib/sheet-theme";
@@ -42,10 +42,6 @@ export async function generateMetadata({ params }: PageProps<"/book/[slug]">): P
 const minutesLabel = (m?: number) => (!m ? "" : m < 60 ? `${m} min` : `${Math.floor(m / 60)} hr${m >= 120 ? "s" : ""}${m % 60 ? ` ${m % 60} min` : ""}`);
 
 function servicePrice(s: ServiceItem): string {
-  if (s.options?.length) {
-    const low = Math.min(...s.options.map((o) => o.price));
-    return priceText({ price: low, priceKind: s.options.length > 1 ? "from" : s.priceKind });
-  }
   return priceText(s);
 }
 
@@ -79,7 +75,8 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
   // Booking works as on the business's own page: the booking sheet when bookings are on, else a
   // WhatsApp request, or the owner's own booking link.
   const external = b.actions.find((a) => a.kind === "book")?.value.trim() || null;
-  const bookable = b.services.filter((s) => s.id);
+  // Only priced services are booked online; "Ask for price" ones ask on WhatsApp (needsPrice()).
+  const bookable = b.services.filter((s) => s.id && !needsPrice(s));
   const calendar = !external && !!rules && bookable.length > 0;
   // Only real bookings open a sheet here; otherwise Book goes straight to their WhatsApp (or their
   // own booking link) in a new tab. Search only lists businesses taking bookings, so this is for

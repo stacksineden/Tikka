@@ -86,6 +86,7 @@ export interface ServiceRow {
   name: string;
   description: string | null;
   price_kobo: number | null;
+  /** "from" only in rows saved before 20261226100000_exact_prices.sql; read as fixed. */
   price_kind: "fixed" | "from" | "ask";
   duration: string | null;
   image_path: string | null;
@@ -179,7 +180,7 @@ export function serviceFrom(r: ServiceRow): ServiceItem {
     group: opt(r.group_name),
     description: opt(r.description),
     price: r.price_kobo === null ? null : r.price_kobo / 100,
-    priceKind: r.price_kind,
+    priceKind: r.price_kind === "ask" ? "ask" : "fixed",
     duration: opt(r.duration),
     minutes: r.minutes ?? undefined,
     depositMode: r.deposit_mode ?? undefined,

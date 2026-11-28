@@ -76,7 +76,7 @@
       "group": "Peels",
       "name": "Chemical peel",
       "price": 35000,
-      "priceKind": "from",
+      "priceKind": "fixed",
       "duration": "45 min",
       "description": "For dark spots and uneven tone. Strength chosen after your skin check.",
       "imageUrl": "/mock/glow/service-peel.webp"

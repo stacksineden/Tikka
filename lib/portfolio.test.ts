@@ -45,7 +45,7 @@ describe("collections", () => {
   const b = {
     name: "Maril Kay",
     actions: [{ kind: "whatsapp" as const, value: "0803 123 4567" }],
-    services: [{ name: "Bridal makeup", price: 150000, priceKind: "from" as const }],
+    services: [{ name: "Bridal makeup", price: 150000, priceKind: "fixed" as const }],
     collections: [
       { id: "c1", name: "Bridal", slug: "bridal", serviceName: "bridal makeup", coverId: "p2" },
       { id: "c2", name: "Gele", slug: "gele" },
@@ -75,13 +75,13 @@ describe("collections", () => {
     ]);
     expect(view.rest.map((p) => p.id)).toEqual(["p4", "p5"]);
     expect(view.collections[0].service?.name).toBe("Bridal makeup");
-    expect(collectionLine(view.collections[0])).toBe("2 photos · from ₦150,000");
+    expect(collectionLine(view.collections[0])).toBe("2 photos · ₦150,000");
     expect(collectionLine(view.collections[1])).toBe("1 photo");
     expect(portfolioView({ ...b, collections: undefined }).rest).toHaveLength(5);
   });
   it("books the collection's service on WhatsApp", () => {
     const [bridal, gele] = portfolioView(b).collections;
-    expect(decodeURIComponent(collectionBookingLink(b, bridal)!)).toBe("https://wa.me/2348031234567?text=Hi Maril Kay, I saw your Bridal work on Tikka and I'd like to book Bridal makeup (From ₦150,000).");
+    expect(decodeURIComponent(collectionBookingLink(b, bridal)!)).toBe("https://wa.me/2348031234567?text=Hi Maril Kay, I saw your Bridal work on Tikka and I'd like to book Bridal makeup (₦150,000).");
     expect(decodeURIComponent(collectionBookingLink(b, gele)!)).toMatch(/your Gele work on Tikka and I'd like to book an appointment\.$/);
     expect(collectionBookingLink({ ...b, actions: [] }, gele)).toBeNull();
   });

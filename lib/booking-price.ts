@@ -107,3 +107,27 @@ export function priceBooking(service: ServiceItem, choice: BookingChoice, travel
     depositLabel,
   };
 }
+
+/**
+ * The service asks something before it has a price: which option, how many (per hour, per item) or
+ * how many people. The owner's Add a booking and New sale ask it too, so a photo shoot at ₦4,000
+ * per photo is booked as 4 photos at ₦16,000, not ₦4,000 (28 Nov 2026).
+ */
+export function needsChoice(s: Pick<ServiceItem, "options" | "unit" | "perPerson" | "eventDay">): boolean {
+  const n = s.options?.length ?? 0;
+  return n > 1 || (!!s.unit && !s.perPerson && !s.eventDay);
+}
+
+/** "Photo shoot · 4 photos", "Braids · Long": what the owner's sale or booking is called. */
+export function choiceLabel(s: Pick<ServiceItem, "name">, p: Pick<BookingPrice, "detail">): string {
+  return p.detail ? `${s.name} · ${p.detail}` : s.name;
+}
+
+/** A choice from the browser, kept to whole numbers in range; the server prices it again. */
+export function cleanChoice(c: unknown): BookingChoice | undefined {
+  if (!c || typeof c !== "object") return undefined;
+  const o = c as Record<string, unknown>;
+  const int = (n: unknown, max: number) => (Number.isInteger(n) && (n as number) >= 0 && (n as number) <= max ? (n as number) : undefined);
+  const people = Array.isArray(o.people) ? o.people.slice(0, 20).map((n) => int(n, MAX_PEOPLE) ?? 0) : undefined;
+  return { option: int(o.option, 50), qty: int(o.qty, 50) || undefined, people };
+}

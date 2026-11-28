@@ -146,8 +146,8 @@ export interface ServiceItem {
   name: string;
   /** ₦; null when it's "Ask for price". */
   price: number | null;
-  /** "₦25,000", "From ₦15,000" or "Ask for price". */
-  priceKind?: "fixed" | "from" | "ask";
+  /** "₦25,000" or "Ask for price". Never "from": customers know the full price before paying (28 Nov 2026). */
+  priceKind?: "fixed" | "ask";
   description?: string;
   /** "1 hr", "45 min". */
   duration?: string;

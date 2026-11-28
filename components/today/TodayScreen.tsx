@@ -31,6 +31,10 @@ import { StayFresh } from "@/components/payments/StayFresh";
 import { matchesSearch, phoneKey, phoneTail, repeatedNames } from "@/lib/clients";
 import { METHOD_LABEL, reminderText, waLink, type ExpenseKind, type PayMethod } from "@/lib/ledger";
 import { ExpenseSheet } from "./ExpenseSheet";
+import { ChoicePicker } from "@/components/bookings/ChoicePicker";
+import { choiceLabel, priceBooking, type BookingChoice } from "@/lib/booking-price";
+import { priceText } from "@/lib/page";
+import type { ServiceItem } from "@/lib/types";
 import { Chip, NairaInput, Sheet } from "./Sheet";
 
 export interface TodayAppt {
@@ -66,7 +70,8 @@ export interface TodayData {
   tomorrow: { count: number; first?: string };
   /** linkKobo: a pay link for this much is out and not paid yet. */
   owed: { saleId: string; name: string; item: string; owedKobo: number; phone?: string; since: string; linkKobo?: number }[];
-  services: { label: string; naira: number }[];
+  /** item: the service asks which one or how many before it has a price (needsChoice()). */
+  services: { label: string; naira: number; item?: ServiceItem }[];
   /** Customers with a number, most recent first, for "Who was it?" on New sale. */
   customers: { name: string; phone: string }[];
   takenTodayKobo: number;
@@ -450,7 +455,7 @@ function Appt({ a, busy, businessName, onArrived, onPaid, onRemind }: { a: Today
 function PaidSheet({ appt, businessName, payLinks, onClose }: { appt: TodayAppt; businessName: string; payLinks: boolean; onClose: () => void }) {
   const router = useRouter();
   // What's left to pay: the booking's, or what the owner types. No price on the booking: the full
-  // price ("How much was it?"), less the deposit. A price they agreed (less, or more than a "from"
+  // price ("How much was it?"), less the deposit. A price they agreed (less, or more than the booked
   // price): what they pay now, as owners think of it ("we agreed ₦15,000"); nothing stays owed.
   const noPrice = appt.priceKobo == null && !appt.dueKobo;
   const [setPrice, setSetPrice] = useState(noPrice);
@@ -706,6 +711,9 @@ function SaleSheet({ services, customers, businessName, payLinks, onClose }: { s
   const [other, setOther] = useState(false);
   const [otherLabel, setOtherLabel] = useState("");
   const [otherNaira, setOtherNaira] = useState(0);
+  // A service priced by option, hour, item or person: which one and how many, then the price.
+  const [asking, setAsking] = useState<ServiceItem | null>(null);
+  const [choice, setChoice] = useState<BookingChoice>({});
 
   if (link && svc) {
     const first = name.trim().split(/\s+/)[0] ?? "";
@@ -745,6 +753,26 @@ function SaleSheet({ services, customers, businessName, payLinks, onClose }: { s
         </button>
       </Sheet>
     );
+  if (!svc && asking)
+    return (
+      <Sheet title={asking.name} onClose={onClose}>
+        <ChoicePicker service={asking} choice={choice} onChange={setChoice} />
+        <button
+          type="button"
+          className="btn btn-lg w-full rounded-pill"
+          onClick={() => {
+            const p = priceBooking(asking, choice, 0, undefined);
+            setSvc({ label: choiceLabel(asking, p), naira: p.totalNaira });
+            setPaid(p.totalNaira);
+          }}
+        >
+          Next
+        </button>
+        <button type="button" className="text-label min-h-11 justify-self-start text-ink-muted underline underline-offset-4" onClick={() => setAsking(null)}>
+          Back to your services
+        </button>
+      </Sheet>
+    );
   if (!svc)
     return (
       <Sheet title="New sale" onClose={onClose}>
@@ -756,12 +784,13 @@ function SaleSheet({ services, customers, businessName, payLinks, onClose }: { s
               type="button"
               className="flex min-h-14 w-full items-center justify-between gap-3 px-4 text-left active:bg-surface-sunken"
               onClick={() => {
+                if (s.item) return (setChoice({}), setAsking(s.item));
                 setSvc(s);
                 setPaid(s.naira);
               }}
             >
               <span className="font-semibold">{s.label}</span>
-              <b className="text-code">₦{s.naira.toLocaleString("en-NG")}</b>
+              <b className="text-code">{s.item ? priceText(s.item) : `₦${s.naira.toLocaleString("en-NG")}`}</b>
             </button>
           ))}
           <button type="button" className="flex min-h-14 w-full items-center gap-3 px-4 text-left active:bg-surface-sunken" onClick={() => setOther(true)}>

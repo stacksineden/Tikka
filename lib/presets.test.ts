@@ -12,7 +12,7 @@ describe("presets", () => {
     expect(lagos.options?.[2].price).toBe(35000);
     expect(ibadan.options?.[2].price).toBe(26500);
     expect(ibadan.price).toBe(19000);
-    expect(ibadan.priceKind).toBe("from");
+    expect(ibadan.priceKind).toBe("fixed");
   });
 
   it("ticks the first three services of each trade and no extras", () => {

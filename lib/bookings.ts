@@ -54,7 +54,7 @@ export interface Booking {
   depositPaidAt?: string;
   depositMethod?: DepositMethod;
   priceKobo?: number;
-  priceKind?: "fixed" | "from" | "ask";
+  priceKind?: "fixed" | "ask";
   depositCounts?: boolean;
   /** NEW DIRECTION (demo only for now): a home visit, and the area the owner goes to. */
   homeArea?: string;

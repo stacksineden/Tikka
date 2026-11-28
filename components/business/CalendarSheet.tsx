@@ -114,13 +114,16 @@ export function CalendarSheet({
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const el = (e.target as Element | null)?.closest<HTMLElement>("[data-book]");
       if (!el) return;
+      const id = el.dataset.bookId;
+      // A service without a price ("Ask for price") isn't booked online: its link asks on WhatsApp.
+      if (id && !services.some((s) => s.id === id) && /^https?:/.test(el.getAttribute("href") ?? "")) return;
       e.preventDefault();
       setError("");
       setService(null);
       setStep("service");
       setDays([]);
       ref.current?.showModal();
-      const chosen = services.find((s) => s.id === el.dataset.bookId) ?? (services.length === 1 ? services[0] : undefined);
+      const chosen = services.find((s) => s.id === id) ?? (!id && services.length === 1 ? services[0] : undefined);
       void loadRules().then((r) => chosen && pickService(chosen, r));
     }
     document.addEventListener("click", onClick);
