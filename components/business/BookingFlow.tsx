@@ -18,7 +18,7 @@ import { MAX_PEOPLE, priceBooking, type DepositRule } from "@/lib/booking-price"
 import type { SheetTheme } from "@/lib/sheet-theme";
 import type { ServiceItem, WorkPlace } from "@/lib/types";
 import { clampQty, countText, perText, unitRange, unitWord } from "@/lib/units";
-import { needsPrice, priceText } from "@/lib/page";
+import { groupAnchor, needsPrice, priceText, servicesByGroup } from "@/lib/page";
 
 export interface FlowBusiness {
   slug: string;
@@ -638,6 +638,12 @@ export function BookingFlow({
                 ) : (
                   <p className="text-body rounded-md bg-surface-sunken px-4 py-3">No deposit: pay {naira(price.totalNaira)} on the day.</p>
                 )}
+                {svc.description && (
+                  <div>
+                    <h3 className="biz-serif mb-2 text-[19px]">About {svc.name}</h3>
+                    <p className="text-body rounded-card border border-line bg-surface-raised px-4 py-3 whitespace-pre-line">{svc.description}</p>
+                  </div>
+                )}
                 {b.rules.length > 0 && (
                   <div>
                     <h3 className="biz-serif mb-2 text-[19px]">Booking rules</h3>
@@ -727,7 +733,8 @@ function hours(m: number) {
 
 /** A general "Book": every service with its time and price, grouped like the page; picking one starts its booking. */
 function ServicePick({ business, services, onPick, onClose }: { business: string; services: ServiceItem[]; onPick: (s: ServiceItem) => void; onClose: () => void }) {
-  const groups = [...new Set(services.map((s) => s.group ?? ""))];
+  // Grouped like a menu, with a row of category tabs that jump to each group (28 Nov 2026).
+  const sections = servicesByGroup(services);
   const price = (s: ServiceItem) => (needsPrice(s) ? "Ask" : priceText(s));
   return (
     <div className="flex h-full flex-col bg-surface text-ink">
@@ -743,14 +750,28 @@ function ServicePick({ business, services, onPick, onClose }: { business: string
           </span>
           <h2 className="biz-serif text-[28px] leading-[1.1]">What would you like?</h2>
         </div>
-        {groups.map((g) => (
-          <div key={g || "all"} className="grid gap-2.5">
-            {g && groups.length > 1 && <h3 className="text-label text-ink-muted">{g}</h3>}
-            {services
-              .filter((s) => (s.group ?? "") === g)
-              .map((s) => (
-                <Opt key={s.id} on={false} onClick={() => onPick(s)} title={s.name} sub={s.eventDay ? "A whole day" : s.minutes ? `About ${hours(s.minutes)}` : undefined} price={price(s)} />
+        {sections.length > 1 && (
+          <nav aria-label="Service categories" className="sticky -top-5 z-10 -mx-4 -mt-1 overflow-x-auto bg-surface px-4 py-2 [scrollbar-width:none]">
+            <div className="flex gap-2">
+              {sections.map((g) => (
+                <button
+                  key={g.name}
+                  type="button"
+                  onClick={() => document.getElementById(`pick-${groupAnchor(g.name)}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-pill border border-line-strong bg-surface-raised px-4 text-[15px] font-semibold whitespace-nowrap"
+                >
+                  {g.name}
+                </button>
               ))}
+            </div>
+          </nav>
+        )}
+        {sections.map((g) => (
+          <div key={g.name || "all"} id={`pick-${groupAnchor(g.name)}`} className="grid scroll-mt-16 gap-2.5">
+            {g.name && sections.length > 1 && <h3 className="text-label text-ink-muted">{g.name}</h3>}
+            {g.items.map((s) => (
+              <Opt key={s.id} on={false} onClick={() => onPick(s)} title={s.name} sub={s.eventDay ? "A whole day" : s.minutes ? `About ${hours(s.minutes)}` : undefined} desc={s.description} price={price(s)} />
+            ))}
           </div>
         ))}
       </div>
@@ -758,13 +779,15 @@ function ServicePick({ business, services, onPick, onClose }: { business: string
   );
 }
 
-function Opt({ on, onClick, title, sub, price }: { on: boolean; onClick: () => void; title: string; sub?: string; price?: string }) {
+function Opt({ on, onClick, title, sub, desc, price }: { on: boolean; onClick: () => void; title: string; sub?: string; desc?: string; price?: string }) {
   return (
     <button type="button" aria-pressed={on} onClick={onClick} className={`flex min-h-17 w-full items-center gap-3.5 rounded-card border-2 bg-surface-raised px-4 py-3 text-left ${on ? "border-(--bf-acc)" : "border-line"}`}>
       <span className={`size-6 shrink-0 rounded-pill border-2 ${on ? "border-[7px] border-(--bf-acc)" : "border-line-strong"}`} aria-hidden="true" />
       <span className="min-w-0 flex-1">
         <b className="block text-[17px]">{title}</b>
         {sub && <span className="text-caption text-ink-muted">{sub}</span>}
+        {/* The service's description and terms, so they know what they're booking. */}
+        {desc && <span className="text-caption mt-1 line-clamp-3 block text-ink-muted">{desc}</span>}
       </span>
       {price && <span className="text-code font-bold whitespace-nowrap">{price}</span>}
     </button>

@@ -13,7 +13,7 @@ import { demoDepositRule, getBookingRules } from "@/lib/bookings-data";
 import { getBusinessBySlug, getBusinessReviews, isDbId } from "@/lib/data";
 import { getSpacePhotos } from "@/lib/listing-db";
 import { place } from "@/lib/format";
-import { bookingLink, needsPrice, pageStyle, priceText, withGroups } from "@/lib/page";
+import { bookingLink, groupAnchor, needsPrice, pageStyle, priceText, servicesByGroup, withGroups } from "@/lib/page";
 import { reachLabel, tradesInOrder } from "@/lib/presets";
 import { openLabel, searchHref } from "@/lib/search";
 import { sheetTheme } from "@/lib/sheet-theme";
@@ -77,6 +77,7 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
   const external = b.actions.find((a) => a.kind === "book")?.value.trim() || null;
   // Only priced services are booked online; "Ask for price" ones ask on WhatsApp (needsPrice()).
   const bookable = b.services.filter((s) => s.id && !needsPrice(s));
+  const groups = servicesByGroup(b.services);
   const calendar = !external && !!rules && bookable.length > 0;
   // Only real bookings open a sheet here; otherwise Book goes straight to their WhatsApp (or their
   // own booking link) in a new tab. Search only lists businesses taking bookings, so this is for
@@ -179,24 +180,48 @@ async function Listing({ params }: { params: PageProps<"/book/[slug]">["params"]
               <h2 id="services-h" className="text-[26px] font-bold tracking-tight">
                 Services
               </h2>
-              <ul className="mt-4 grid gap-3">
-                {b.services.map((s) => (
-                  <li key={s.id ?? s.name} className="flex items-center gap-4 rounded-card border border-line bg-surface-raised p-4">
-                    <div className="min-w-0 flex-1">
-                      <b className="block text-[16px]">{s.name}</b>
-                      <span className="text-caption block text-ink-muted">
-                        {[s.eventDay ? "A whole day" : minutesLabel(s.minutes) || s.duration, s.options && s.options.length > 1 ? `${s.options.length} options` : ""].filter(Boolean).join(" · ")}
-                      </span>
-                      <b className="mt-1.5 block text-[15px]">{servicePrice(s)}</b>
-                    </div>
-                    {href || sheet ? (
-                      <a {...bookAttrs(s)} className="btn btn-secondary shrink-0 rounded-pill px-5">
-                        Book
+              {/* Categories like a menu: a row of tabs that jump to each group (28 Nov 2026). */}
+              {groups.length > 1 && (
+                <nav aria-label="Service categories" className="-mx-4 mt-4 overflow-x-auto px-4 [scrollbar-width:none]">
+                  <div className="flex gap-2">
+                    {groups.map((g) => (
+                      <a key={g.name} href={`#${groupAnchor(g.name)}`} className="inline-flex min-h-11 shrink-0 items-center rounded-pill border border-line-strong bg-surface-raised px-4 text-[15px] font-semibold whitespace-nowrap">
+                        {g.name}
                       </a>
-                    ) : null}
-                  </li>
+                    ))}
+                  </div>
+                </nav>
+              )}
+              <div className="mt-4 grid gap-8">
+                {groups.map((g) => (
+                  <div key={g.name || "all"} id={groupAnchor(g.name)} className="grid scroll-mt-4 gap-3">
+                    {groups.length > 1 && <h3 className="text-[19px] font-bold">{g.name}</h3>}
+                    <ul className="grid gap-3">
+                      {g.items.map((s) => (
+                        <li key={s.id ?? s.name} className="grid gap-3 rounded-card border border-line bg-surface-raised p-4">
+                          <div className="flex items-start gap-4">
+                            <div className="min-w-0 flex-1">
+                              <b className="block text-[16px]">{s.name}</b>
+                              <span className="text-caption block text-ink-muted">
+                                {[s.eventDay ? "A whole day" : minutesLabel(s.minutes) || s.duration, s.options && s.options.length > 1 ? `${s.options.length} options` : ""].filter(Boolean).join(" · ")}
+                              </span>
+                            </div>
+                          </div>
+                          {s.description && <p className="text-body line-clamp-3 text-ink-muted">{s.description}</p>}
+                          <div className="flex items-center justify-between gap-3">
+                            <b className="text-[15px]">{servicePrice(s)}</b>
+                            {href || sheet ? (
+                              <a {...bookAttrs(s)} className="btn btn-secondary shrink-0 rounded-pill px-5">
+                                Book
+                              </a>
+                            ) : null}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </section>
 
             {team.length > 0 && (

@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { LENGTHS } from "@/lib/bookings";
+import { LENGTHS, todayKey, watInstant } from "@/lib/bookings";
 import { cleanChoice, type BookingChoice } from "@/lib/booking-price";
-import { addBooking, demoBookingFor, recordBookingDeposit, blockTime, cancelBooking, checkBookingCode, markBooking, moveBooking, removeBlock, saveBookingSettings, type Act, type BookingCheck } from "@/lib/bookings-data";
+import { addBooking, demoBookingFor, depositLinkOptions, payLinkDeposit, recordBookingDeposit, blockTime, cancelBooking, checkBookingCode, markBooking, moveBooking, removeBlock, saveBookingSettings, type Act, type BookingCheck } from "@/lib/bookings-data";
 import { getSessionUser } from "@/lib/session";
 import { dbSaveDepositSettings } from "@/lib/bookings-db";
 import { getBusiness, isDbId } from "@/lib/data";
@@ -61,6 +61,20 @@ export async function saveBookingSettingsAction(input: {
 }
 
 export type DepositMethodIn = "cash" | "transfer" | "card";
+
+/**
+ * "When did they pay?" as a day ("2026-11-26"): noon that day in WAT, or undefined for today (now).
+ * Not in the future, not more than 180 days ago (record_booking_deposit() checks again). null: a bad day.
+ */
+function paidAtFrom(day: unknown): string | undefined | null {
+  if (day == null || day === "") return undefined;
+  if (typeof day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+  const now = new Date();
+  if (day === todayKey(now)) return undefined;
+  const at = watInstant(day, 12 * 60);
+  if (!Number.isFinite(at) || at > now.getTime() || at < now.getTime() - 180 * 86_400_000) return null;
+  return new Date(at).toISOString();
+}
 const METHODS: DepositMethodIn[] = ["cash", "transfer", "card"];
 
 export async function addBookingAction(input: {
@@ -75,6 +89,8 @@ export async function addBookingAction(input: {
   /** A deposit they already paid the owner (naira), and how. */
   depositNaira?: number;
   depositMethod?: DepositMethodIn;
+  /** The day they paid it, when not today. */
+  depositPaidOn?: string;
 }): Promise<Act> {
   const u = await user();
   if (!isIso(input.startsAt) || typeof input.serviceId !== "string") return { kind: "bad_time" };
@@ -86,9 +102,11 @@ export async function addBookingAction(input: {
   if (!name && !input.claimId) return { kind: "bad_name" };
   const deposit = Math.round(Number(input.depositNaira) || 0);
   if (deposit < 0 || deposit > 10_000_000 || (deposit > 0 && !METHODS.includes(input.depositMethod as DepositMethodIn))) return { kind: "bad_deposit" };
+  const paidAt = paidAtFrom(input.depositPaidOn);
+  if (paidAt === null) return { kind: "bad_deposit" };
   const r = await addBooking(u, { serviceId: input.serviceId, startsAt: new Date(input.startsAt).toISOString(), firstName: name, phone, force: input.force === true, claimId: input.claimId, choice: cleanChoice(input.choice) });
   if (r.kind === "booked" && deposit > 0 && typeof r.id === "string") {
-    const d = await recordBookingDeposit(u, r.id, deposit * 100, input.depositMethod as DepositMethodIn);
+    const d = await recordBookingDeposit(u, r.id, deposit * 100, input.depositMethod as DepositMethodIn, paidAt);
     // Booked either way; say so if the deposit didn't save, so the owner adds it on the booking.
     if (d !== "saved") r.depositNotSaved = true;
   }
@@ -97,10 +115,12 @@ export async function addBookingAction(input: {
 }
 
 /** A deposit the owner took themself on a booking (naira; 0 removes it). Owners only. */
-export async function bookingDepositAction(id: string, naira: number, method: DepositMethodIn): Promise<{ kind: string }> {
+export async function bookingDepositAction(id: string, naira: number, method: DepositMethodIn, paidOn?: string): Promise<{ kind: string }> {
   const n = Math.round(Number(naira));
   if (!Number.isFinite(n) || n < 0 || n > 10_000_000 || !METHODS.includes(method)) return { kind: "bad_amount" };
-  const kind = await recordBookingDeposit(await user(), String(id), n * 100, method);
+  const paidAt = paidAtFrom(paidOn);
+  if (paidAt === null) return { kind: "bad_date" };
+  const kind = await recordBookingDeposit(await user(), String(id), n * 100, method, paidAt);
   if (kind === "saved" || kind === "cleared") {
     refresh();
     revalidatePath("/app/money");
@@ -178,6 +198,22 @@ export async function removeBlockAction(id: string): Promise<Act> {
 /** A BK- code typed on Redeem: the booking, never the number. Read-only (owners and staff). */
 export async function checkBookingCodeAction(code: string): Promise<BookingCheck> {
   return checkBookingCode(await user(), String(code ?? "").slice(0, 20));
+}
+
+/** "Already paid with a pay link?": that customer's paid pay links that can be this booking's deposit. */
+export async function depositLinkOptionsAction(bookingId: string) {
+  return depositLinkOptions(await user(), String(bookingId));
+}
+
+/** Uses one of them as the booking's deposit, counted once (use_link_as_deposit()). */
+export async function payLinkDepositAction(bookingId: string, linkId: string): Promise<{ kind: string }> {
+  const kind = await payLinkDeposit(await user(), String(bookingId), String(linkId));
+  if (kind === "saved") {
+    refresh();
+    revalidatePath("/app/money");
+    revalidatePath("/app/leads", "layout");
+  }
+  return { kind };
 }
 
 /**

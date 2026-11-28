@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import glow from "./mock/business.json";
-import { bookingLink, focalPosition, heroHeadline, heroLine, isPageStyle, PAGE_STYLES, whereLine, pageChecklist, pageDropsFrom, groupNames, needsPrice, pageStyle, priceText, serviceGroups, showsLocation, visibleSections, withGroups } from "./page";
+import { bookingLink, focalPosition, heroHeadline, heroLine, isPageStyle, PAGE_STYLES, whereLine, pageChecklist, pageDropsFrom, groupNames, needsPrice, pageStyle, priceText, serviceGroups, servicesByGroup, groupAnchor, showsLocation, visibleSections, withGroups } from "./page";
 import type { Business } from "./types";
 
 const base = { ...(glow as unknown as Business), page: undefined, portfolio: [], services: [], about: undefined, hours: undefined, address: undefined };
@@ -40,7 +40,8 @@ describe("services", () => {
   });
   it("shows group tabs only with more than one group", () => {
     expect(serviceGroups([{ name: "a", price: 1, group: "Hair" }, { name: "b", price: 1, group: "Hair" }])).toEqual([]);
-    expect(serviceGroups([{ name: "a", price: 1, group: "Hair" }, { name: "b", price: 1, group: "Nails" }, { name: "c", price: 1 }])).toEqual(["Hair", "Nails"]);
+    expect(serviceGroups([{ name: "a", price: 1, group: "Hair" }, { name: "b", price: 1, group: "Nails" }, { name: "c", price: 1 }])).toEqual(["Hair", "Nails", "Other"]);
+    expect(serviceGroups([{ name: "a", price: 1, group: "Hair" }, { name: "c", price: 1 }])).toEqual(["Hair", "Other"]);
   });
 });
 
@@ -151,5 +152,15 @@ describe("service groups", () => {
     const plain: { name: string; group?: string }[] = [{ name: "Lashes" }];
     expect(withGroups(plain)).toEqual([{ name: "Lashes" }]);
     expect(groupNames([{ group: "Bridal" }, { group: "Makeup " }, {}, { group: "Bridal" }])).toEqual(["Bridal", "Makeup"]);
+  });
+});
+
+describe("services by group", () => {
+  it("keeps groups in the order they first appear, ungrouped under Other at the end", () => {
+    const g = servicesByGroup([{ name: "A", group: "Bridal" }, { name: "B" }, { name: "C", group: "Makeup" }, { name: "D", group: "Bridal" }]);
+    expect(g.map((x) => [x.name, x.items.map((i) => i.name)])).toEqual([["Bridal", ["A", "D"]], ["Makeup", ["C"]], ["Other", ["B"]]]);
+    const plain: { name: string; group?: string }[] = [{ name: "A" }, { name: "B" }];
+    expect(servicesByGroup(plain)).toEqual([{ name: "", items: plain }]);
+    expect(groupAnchor("Bridal Services!")).toBe("svc-bridal-services");
   });
 });

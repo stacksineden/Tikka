@@ -62,7 +62,7 @@ async function GetPaid() {
                 We&apos;re checking your details
               </p>
               <p className="text-body mt-1 text-ink-muted">
-                Usually within 1 working day. We&apos;ll tell you on WhatsApp.{" "}
+                We check it the same day. We&apos;ll tell you on WhatsApp.{" "}
                 {state?.graceUntil ? "Payments stay on meanwhile." : payout ? "" : "Add your bank account below meanwhile."}
               </p>
             </section>

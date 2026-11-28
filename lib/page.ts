@@ -22,7 +22,7 @@ export const PAGE_LIMITS = {
   textTitle: 40,
   textBody: 600,
   serviceName: 40,
-  serviceDescription: 140,
+  serviceDescription: 300,
   group: 30,
 } as const;
 
@@ -140,8 +140,18 @@ export function groupNames(services: Pick<ServiceItem, "group">[]): string[] {
   return [...new Set(services.map((s) => s.group?.trim()).filter((g): g is string => !!g))];
 }
 
+/** Services in their groups, in the order the groups first appear and "Other" last; one unnamed section when there are none. */
+export function servicesByGroup<S extends Pick<ServiceItem, "group">>(services: S[]): { name: string; items: S[] }[] {
+  const all = withGroups(services);
+  const names = [...new Set(all.map((s) => s.group?.trim() ?? ""))].sort((a, b) => Number(a === OTHER_GROUP) - Number(b === OTHER_GROUP));
+  return names.map((name) => ({ name, items: all.filter((s) => (s.group?.trim() ?? "") === name) }));
+}
+
+/** An anchor for a group's section ("Bridal services" → "svc-bridal-services"). */
+export const groupAnchor = (name: string) => `svc-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "all"}`;
+
 export function serviceGroups(services: ServiceItem[]): string[] {
-  const groups = [...new Set(services.map((s) => s.group?.trim()).filter((g): g is string => !!g))];
+  const groups = servicesByGroup(services).map((g) => g.name).filter(Boolean);
   return groups.length > 1 ? groups : [];
 }
 

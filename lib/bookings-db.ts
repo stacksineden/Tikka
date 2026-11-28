@@ -340,10 +340,34 @@ async function call(fn: string, args: Record<string, unknown>): Promise<Row> {
   return (data ?? {}) as Row;
 }
 
-/** record_booking_deposit(): a deposit the owner took themself; 0 clears it. */
-export async function dbRecordBookingDeposit(businessId: string, bookingId: string, kobo: number, method: "cash" | "transfer" | "card"): Promise<string> {
+/** A paid pay link the owner can use as this booking's deposit (deposit_link_options()). */
+export interface DepositLinkOption {
+  id: string;
+  kobo: number;
+  note: string;
+  paidAt: string;
+}
+
+/** deposit_link_options(): this customer's paid, plain pay links not used anywhere else. Owners only. */
+export async function dbDepositLinkOptions(businessId: string, bookingId: string): Promise<DepositLinkOption[]> {
   const sb = await createClient();
-  const { data, error } = await sb.rpc("record_booking_deposit", { p_business: businessId, p_booking: bookingId, p_kobo: kobo, p_method: method });
+  const { data, error } = await sb.rpc("deposit_link_options", { p_business: businessId, p_booking: bookingId });
+  if (error || !Array.isArray(data)) return [];
+  return (data as Row[]).map((r) => ({ id: String(r.id), kobo: Number(r.kobo), note: String(r.note ?? ""), paidAt: String(r.paid_at) }));
+}
+
+/** use_link_as_deposit(): 'saved', or 'not_found', 'has_deposit', 'not_allowed'. */
+export async function dbPayLinkDeposit(businessId: string, bookingId: string, linkId: string): Promise<string> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc("use_link_as_deposit", { p_business: businessId, p_booking: bookingId, p_link: linkId });
+  return error || !data ? "error" : String(data);
+}
+
+/** record_booking_deposit(): a deposit the owner took themself; 0 clears it. */
+export async function dbRecordBookingDeposit(businessId: string, bookingId: string, kobo: number, method: "cash" | "transfer" | "card", paidAt?: string): Promise<string> {
+  const sb = await createClient();
+  // The day they paid, when it wasn't today (20261226140000_deposit_paid_on.sql); left out otherwise.
+  const { data, error } = await sb.rpc("record_booking_deposit", { p_business: businessId, p_booking: bookingId, p_kobo: kobo, p_method: method, ...(paidAt ? { p_paid_at: paidAt } : {}) });
   return error || !data ? "error" : String(data);
 }
 

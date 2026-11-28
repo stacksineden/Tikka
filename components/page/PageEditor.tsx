@@ -8,7 +8,7 @@ import { StylePreview } from "@/components/page/StylePreview";
 import { UnitFields } from "@/components/page/UnitFields";
 import { PortfolioEditor } from "@/components/setup/PortfolioEditor";
 import { prepareAbout, prepareCropped, prepareHero, prepareService, uploadPhoto, type MediaKind, type Prepared } from "@/lib/media-client";
-import { focalPosition, heroHeadline, heroLine, needsPrice, PAGE_LIMITS, PAGE_STYLES, priceText } from "@/lib/page";
+import { focalPosition, heroHeadline, heroLine, needsPrice, OTHER_GROUP, PAGE_LIMITS, PAGE_STYLES, priceText } from "@/lib/page";
 import { GroupField } from "./GroupField";
 import type { PortfolioPlan } from "@/lib/portfolio";
 import type { Business, BusinessPage, FaqItem, PageStyle, ServeMode, ServiceItem, TeamMember } from "@/lib/types";
@@ -173,7 +173,7 @@ function ServiceFocus({ url, focal, onChange }: { url: string; focal: { x: numbe
       <div className="flex items-end gap-3">
         <button
           type="button"
-          className="relative w-full max-w-[220px] overflow-hidden rounded-md"
+          className="relative min-w-0 max-w-[220px] flex-1 overflow-hidden rounded-md"
           aria-label="Set the focus point"
           onClick={(e) => {
             const r = e.currentTarget.getBoundingClientRect();
@@ -188,7 +188,7 @@ function ServiceFocus({ url, focal, onChange }: { url: string; focal: { x: numbe
             aria-hidden="true"
           />
         </button>
-        <div className="grid gap-1">
+        <div className="grid shrink-0 gap-1">
           <span className="text-caption text-ink-muted">On your page</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={url} alt="" className="aspect-[4/5] w-20 rounded-sm object-cover" style={{ objectPosition: focalPosition(focal) }} />
@@ -452,6 +452,14 @@ function ServicesCard({ b, bookingsOn }: { b: Business; bookingsOn: boolean }) {
   const [open, setOpen] = useState<string | null>(null);
   const groups = [...new Set(list.map((x) => x.group?.trim()).filter(Boolean))] as string[];
   const patch = (id: string, p: Partial<ServiceItem>) => (setList((l) => l.map((x) => (x.id === id ? { ...x, ...p } : x))), s.dirty());
+  // The list in its groups (in the order they first appear), services without one last.
+  const sections = [...groups, ""].map((name) => ({ name, items: list.filter((x) => (x.group?.trim() ?? "") === name) })).filter((g) => g.items.length);
+  const add = (group?: string) => {
+    const id = tmpId("sv");
+    setList((l) => [...l, { id, name: "", price: null, priceKind: "fixed", group }]);
+    setOpen(id);
+    s.dirty();
+  };
 
   return (
     <Card title="Services and prices" status={list.length ? `${list.length} service${list.length === 1 ? "" : "s"}${groups.length > 1 ? ` in ${groups.length} groups` : ""}` : "Add what you offer and what it costs"}>
@@ -463,131 +471,153 @@ function ServicesCard({ b, bookingsOn }: { b: Business; bookingsOn: boolean }) {
         }}
       >
         <p className="text-caption text-ink-muted">Each one gets a Book button: customers pick a free time once bookings are on, or message you on WhatsApp. Put each one in a group (like Bridal, Makeup or Photography): every group is a tab on your page.</p>
-        <ul className="grid gap-2">
-          {list.map((x, i) => {
-            const isOpen = open === x.id;
-            return (
-              <li key={x.id} className="rounded-md border border-line">
-                <button type="button" onClick={() => setOpen(isOpen ? null : x.id!)} className="flex min-h-14 w-full items-center gap-3 px-3 text-left" aria-expanded={isOpen}>
-                  {x.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={x.imageUrl} alt="" className="size-10 shrink-0 rounded-sm object-cover" />
-                  ) : (
-                    <span className="size-10 shrink-0 rounded-sm" style={{ background: b.brandColor }} aria-hidden="true" />
-                  )}
-                  <span className="min-w-0 flex-1">
-                    <span className="text-body block truncate font-semibold">{x.name || "New service"}</span>
-                    <span className="text-caption block text-ink-muted">
-                      {bookingsOn && needsPrice(x) ? <b className="text-danger">Needs a price to be booked</b> : priceText(x)}
-                      {x.group ? ` · ${x.group}` : ""}
-                    </span>
-                  </span>
-                  <ChevronDown size={18} className={`shrink-0 text-ink-muted transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden="true" />
-                </button>
-                {s.errors[`service-${i}`] && (
-                  <p role="alert" className="text-caption px-3 pb-2 font-semibold text-danger">
-                    {s.errors[`service-${i}`]}
-                  </p>
-                )}
-                {isOpen && (
-                  <div className="grid gap-3 border-t border-line p-3">
-                    <Field label="Name">
-                      <input className="input" value={x.name} maxLength={PAGE_LIMITS.serviceName} placeholder="e.g. Knotless braids" onChange={(e) => patch(x.id!, { name: e.target.value })} />
-                    </Field>
-                    <div className="grid gap-1.5">
-                      <span className="text-label">Price</span>
-                      {bookingsOn && x.priceKind === "ask" && !x.options?.length && (
-                        <p className="text-caption rounded-md bg-gold-soft px-3 py-2">Customers book and pay a deposit online, so they need the price first. Add one and they can book this.</p>
+        {sections.map(({ name, items }) => (
+          <section key={name || "all"} className="grid gap-2" aria-label={name || "Services"}>
+            {sections.length > 1 && (
+              <h3 className="text-label mt-1 flex items-baseline justify-between gap-2">
+                <span className="min-w-0 truncate">{name || OTHER_GROUP}</span>
+                <span className="text-caption font-normal text-ink-muted">{items.length}</span>
+              </h3>
+            )}
+            <ul className="grid gap-2">
+              {items.map((x) => {
+                const i = list.indexOf(x);
+                const isOpen = open === x.id;
+                return (
+                  <li key={x.id} className="rounded-md border border-line">
+                    <button type="button" onClick={() => setOpen(isOpen ? null : x.id!)} className="flex min-h-14 w-full items-center gap-3 px-3 text-left" aria-expanded={isOpen}>
+                      {x.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={x.imageUrl} alt="" className="size-10 shrink-0 rounded-sm object-cover" />
+                      ) : (
+                        <span className="size-10 shrink-0 rounded-sm" style={{ background: b.brandColor }} aria-hidden="true" />
                       )}
-                      {!bookingsOn && (
-                      <div className="grid grid-cols-2 gap-1 rounded-md bg-surface-sunken p-1" role="radiogroup" aria-label="Price">
-                        {(
-                          [
-                            ["fixed", "Price"],
-                            ["ask", "Ask for price"],
-                          ] as const
-                        ).map(([k, l]) => (
-                          <button
-                            key={k}
-                            type="button"
-                            role="radio"
-                            aria-checked={x.priceKind === k}
-                            onClick={() => patch(x.id!, { priceKind: k })}
-                            className={`text-label min-h-10 rounded-sm ${x.priceKind === k ? "bg-surface-raised shadow-raised" : "text-ink-muted"}`}
-                          >
-                            {l}
-                          </button>
-                        ))}
-                      </div>
-                      )}
-                      {(bookingsOn || x.priceKind !== "ask") && (
-                        <span className="flex items-center rounded-md border border-line-strong/50 bg-surface-raised">
-                          <span className="pl-3 text-ink-muted" aria-hidden="true">
-                            ₦
-                          </span>
-                          <input
-                            className="h-11 w-0 min-w-0 flex-1 bg-transparent px-2 tabular-nums outline-none"
-                            size={1}
-                            inputMode="numeric"
-                            aria-label="Price in naira"
-                            value={x.price ?? ""}
-                            onChange={(e) => {
-                              const d = e.target.value.replace(/\D/g, "").slice(0, 9);
-                              // With bookings on there's no "Ask for price": typing a price makes it bookable.
-                              patch(x.id!, { price: d ? Number(d) : null, ...(bookingsOn && d ? { priceKind: "fixed" as const } : {}) });
-                            }}
-                          />
+                      <span className="min-w-0 flex-1">
+                        <span className="text-body block truncate font-semibold">{x.name || "New service"}</span>
+                        <span className="text-caption block text-ink-muted">
+                          {bookingsOn && needsPrice(x) ? <b className="text-danger">Needs a price to be booked</b> : priceText(x)}
+                          {sections.length < 2 && x.group ? ` · ${x.group}` : ""}
                         </span>
-                      )}
-                    </div>
-                    {x.priceKind !== "ask" && <UnitFields x={x} patch={(p) => patch(x.id!, p)} />}
-                    <GroupField id={`group-${x.id}`} value={x.group ?? ""} groups={groups} onChange={(v) => patch(x.id!, { group: v })} />
-                    <Field label="How long (optional)">
-                      <input className="input" value={x.duration ?? ""} maxLength={20} placeholder="e.g. 1 hr" onChange={(e) => patch(x.id!, { duration: e.target.value })} />
-                    </Field>
-                    <Field label="Short description (optional)" hint={`${(x.description ?? "").length} of ${PAGE_LIMITS.serviceDescription}`}>
-                      <textarea
-                        className="input min-h-20 resize-y py-2.5 leading-6"
-                        value={x.description ?? ""}
-                        maxLength={PAGE_LIMITS.serviceDescription}
-                        onChange={(e) => patch(x.id!, { description: e.target.value })}
-                      />
-                    </Field>
-                    {x.imageUrl && (
-                      <ServiceFocus url={x.imageUrl} focal={x.focal ?? SERVICE_FOCAL} onChange={(f) => patch(x.id!, { focal: f })} />
+                      </span>
+                      <ChevronDown size={18} className={`shrink-0 text-ink-muted transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+                    </button>
+                    {s.errors[`service-${i}`] && (
+                      <p role="alert" className="text-caption px-3 pb-2 font-semibold text-danger">
+                        {s.errors[`service-${i}`]}
+                      </p>
                     )}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <PhotoPick
-                        label={x.imageUrl ? "Change photo" : "Add a photo"}
-                        kind="service"
-                        prepare={prepareService}
-                        onPick={(u) => patch(x.id!, { imageUrl: u, focal: SERVICE_FOCAL })}
-                      />
-                      <button
-                        type="button"
-                        className="btn btn-ghost min-h-11 px-3 text-label text-danger"
-                        onClick={() => (setList((l) => l.filter((y) => y.id !== x.id)), s.dirty())}
-                      >
-                        <Trash2 /> Remove service
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                    {isOpen && (
+                      <div className="grid gap-3 border-t border-line p-3">
+                        <Field label="Name">
+                          <input className="input" value={x.name} maxLength={PAGE_LIMITS.serviceName} placeholder="e.g. Knotless braids" onChange={(e) => patch(x.id!, { name: e.target.value })} />
+                        </Field>
+                        <div className="grid gap-1.5">
+                          <span className="text-label">Price</span>
+                          {bookingsOn && x.priceKind === "ask" && !x.options?.length && (
+                            <p className="text-caption rounded-md bg-gold-soft px-3 py-2">Customers book and pay a deposit online, so they need the price first. Add one and they can book this.</p>
+                          )}
+                          {!bookingsOn && (
+                          <div className="grid grid-cols-2 gap-1 rounded-md bg-surface-sunken p-1" role="radiogroup" aria-label="Price">
+                            {(
+                              [
+                                ["fixed", "Price"],
+                                ["ask", "Ask for price"],
+                              ] as const
+                            ).map(([k, l]) => (
+                              <button
+                                key={k}
+                                type="button"
+                                role="radio"
+                                aria-checked={x.priceKind === k}
+                                onClick={() => patch(x.id!, { priceKind: k })}
+                                className={`text-label min-h-10 rounded-sm ${x.priceKind === k ? "bg-surface-raised shadow-raised" : "text-ink-muted"}`}
+                              >
+                                {l}
+                              </button>
+                            ))}
+                          </div>
+                          )}
+                          {(bookingsOn || x.priceKind !== "ask") && (
+                            <span className="flex items-center rounded-md border border-line-strong/50 bg-surface-raised">
+                              <span className="pl-3 text-ink-muted" aria-hidden="true">
+                                ₦
+                              </span>
+                              <input
+                                className="h-11 w-0 min-w-0 flex-1 bg-transparent px-2 tabular-nums outline-none"
+                                size={1}
+                                inputMode="numeric"
+                                aria-label="Price in naira"
+                                value={x.price ?? ""}
+                                onChange={(e) => {
+                                  const d = e.target.value.replace(/\D/g, "").slice(0, 9);
+                                  // With bookings on there's no "Ask for price": typing a price makes it bookable.
+                                  patch(x.id!, { price: d ? Number(d) : null, ...(bookingsOn && d ? { priceKind: "fixed" as const } : {}) });
+                                }}
+                              />
+                            </span>
+                          )}
+                        </div>
+                        {x.priceKind !== "ask" && <UnitFields x={x} patch={(p) => patch(x.id!, p)} />}
+                        <GroupField id={`group-${x.id}`} value={x.group ?? ""} groups={groups} onChange={(v) => patch(x.id!, { group: v })} />
+                        <details className="rounded-md border border-line">
+                          <summary className="text-label flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3">
+                            More options
+                            <span className="text-caption font-normal text-ink-muted">{[x.duration && "time", x.description && "terms", x.imageUrl && "photo"].filter(Boolean).join(", ") || "time, terms, photo"}</span>
+                          </summary>
+                          <div className="grid gap-3 border-t border-line p-3">
+                            <Field label="How long (optional)">
+                              <input className="input" value={x.duration ?? ""} maxLength={20} placeholder="e.g. 1 hr" onChange={(e) => patch(x.id!, { duration: e.target.value })} />
+                            </Field>
+                            <Field label="Description and terms (optional)" hint={`What's included and anything they should know. Shows under the service when they book. ${(x.description ?? "").length} of ${PAGE_LIMITS.serviceDescription}`}>
+                              <textarea
+                                className="input min-h-20 resize-y py-2.5 leading-6"
+                                value={x.description ?? ""}
+                                placeholder="e.g. Price is for one look. Lashes are extra. Come with a clean face."
+                                maxLength={PAGE_LIMITS.serviceDescription}
+                                onChange={(e) => patch(x.id!, { description: e.target.value })}
+                              />
+                            </Field>
+                            {x.imageUrl && (
+                              <ServiceFocus url={x.imageUrl} focal={x.focal ?? SERVICE_FOCAL} onChange={(f) => patch(x.id!, { focal: f })} />
+                            )}
+                            <div>
+                              <PhotoPick
+                                label={x.imageUrl ? "Change photo" : "Add a photo"}
+                                kind="service"
+                                prepare={prepareService}
+                                onPick={(u) => patch(x.id!, { imageUrl: u, focal: SERVICE_FOCAL })}
+                              />
+                            </div>
+                          </div>
+                        </details>
+                        <div>
+                          <button
+                            type="button"
+                            className="btn btn-ghost min-h-11 px-3 text-label text-danger"
+                            onClick={() => (setList((l) => l.filter((y) => y.id !== x.id)), s.dirty())}
+                          >
+                            <Trash2 /> Remove service
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            {sections.length > 1 && name && (
+              <button type="button" className="text-label inline-flex min-h-11 items-center gap-1.5 justify-self-start text-brand" onClick={() => add(name)}>
+                <Plus size={16} aria-hidden="true" /> Add to {name}
+              </button>
+            )}
+          </section>
+        ))}
         {list.length < PAGE_LIMITS.services && (
           <button
             type="button"
             className="btn btn-secondary min-h-11 justify-self-start px-4"
-            onClick={() => {
-              const id = tmpId("sv");
-              // A new service starts in the last group used; the owner can change it.
-              setList((l) => [...l, { id, name: "", price: null, priceKind: "fixed", group: l.findLast((x) => x.group?.trim())?.group }]);
-              setOpen(id);
-              s.dirty();
-            }}
+            // A new service starts in the last group used; the owner can change it.
+            onClick={() => add(list.findLast((x) => x.group?.trim())?.group)}
           >
             <Plus /> Add a service
           </button>

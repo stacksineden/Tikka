@@ -22,6 +22,9 @@ import { getLedger } from "./ledger-data";
 import { priceBooking, type BookingChoice } from "./booking-price";
 import {
   dbAddBooking,
+  dbDepositLinkOptions,
+  dbPayLinkDeposit,
+  type DepositLinkOption,
   dbRecordBookingDeposit,
   dbBlockTime,
   dbBookingPass,
@@ -567,11 +570,11 @@ export async function addBooking(
  * A deposit the owner took themself (cash, transfer, card) on a booking; 0 clears it. Owners only.
  * Never on one paid online, cancelled, or already marked paid (record_booking_deposit()).
  */
-export async function recordBookingDeposit(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, id: string, kobo: number, method: "cash" | "transfer" | "card"): Promise<string> {
+export async function recordBookingDeposit(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, id: string, kobo: number, method: "cash" | "transfer" | "card", paidAt?: string): Promise<string> {
   const r = await demoFor(user, true);
   if ("err" in r) return String(r.err!.kind);
   const { w, d } = r;
-  if (!d) return dbRecordBookingDeposit(w.key, id, kobo, method);
+  if (!d) return dbRecordBookingDeposit(w.key, id, kobo, method, paidAt);
   const b = d.bookings.find((x) => x.id === id);
   if (!b) return "not_found";
   if (b.status === "cancelled") return "cancelled";
@@ -583,8 +586,23 @@ export async function recordBookingDeposit(user: Pick<SessionUser, "id" | "role"
     return "cleared";
   }
   if (kobo < 0 || kobo > 1_000_000_000) return "bad_amount";
-  Object.assign(b, { depositPaidKobo: kobo, depositPaidAt: new Date().toISOString(), depositMethod: method, depositCounts: true });
+  Object.assign(b, { depositPaidKobo: kobo, depositPaidAt: paidAt ?? new Date().toISOString(), depositMethod: method, depositCounts: true });
   return "saved";
+}
+
+/** A customer's paid pay links that can be this booking's deposit (owners, real businesses; the demo has none). */
+export async function depositLinkOptions(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, bookingId: string): Promise<DepositLinkOption[]> {
+  const r = await demoFor(user, true);
+  if ("err" in r || r.d) return [];
+  return dbDepositLinkOptions(r.w.key, bookingId);
+}
+
+/** Use one of those payments as the booking's deposit. */
+export async function payLinkDeposit(user: Pick<SessionUser, "id" | "role" | "businessOwnerId">, bookingId: string, linkId: string): Promise<string> {
+  const r = await demoFor(user, true);
+  if ("err" in r) return String(r.err!.kind);
+  if (r.d) return "not_found";
+  return dbPayLinkDeposit(r.w.key, bookingId, linkId);
 }
 
 /** DEMO: a paid deposit pay link lands on its booking, if it still has no deposit and isn't marked paid. */

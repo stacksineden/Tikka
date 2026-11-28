@@ -45,6 +45,7 @@ import { CardPreview } from "@/components/setup/CardPreview";
 import { draftToFace } from "@/components/setup/SetupFlow";
 import { BRAND_SWATCHES, checkBrandColor, colorName, parseColor, SWATCHES } from "@/lib/color";
 import { ServicesEditor, serviceProblem } from "./ServicesEditor";
+import { PAGE_LIMITS } from "@/lib/page";
 import { citiesFor, STATE_NAMES } from "@/lib/nigeria";
 import {
   depositOn,
@@ -571,7 +572,7 @@ export function StartFlow({ real = false, ownerName = "" }: { real?: boolean; ow
 
         {step === "photos" && (
           <>
-            <Title title="Add your work" lead="At least 3 photos. Your best work first: this is what makes people book." />
+            <Title title="Add your work" lead={`At least ${MIN_PHOTOS} photos, and you can add more: up to ${PAGE_LIMITS.portfolio}. Your best work first: this is what makes people book.`} />
             <div className="grid grid-cols-3 gap-1.5">
               {photos.map((p, i) => (
                 // eslint-disable-next-line @next/next/no-img-element -- demo media from memory
@@ -588,7 +589,7 @@ export function StartFlow({ real = false, ownerName = "" }: { real?: boolean; ow
                 <input type="file" accept="image/*" multiple className="absolute inset-0 cursor-pointer opacity-0" onChange={(e) => addPhotos(e.target.files)} />
               </label>
             </div>
-            <p className="text-caption text-ink-muted">{photos.length < MIN_PHOTOS ? `${MIN_PHOTOS - photos.length} more to go.` : `${photos.length} photos. You can add more later.`}</p>
+            <p className="text-caption text-ink-muted">{photos.length < MIN_PHOTOS ? `${MIN_PHOTOS - photos.length} more to go.` : `${photos.length} photos. Add more now or any time later on Your page.`}</p>
             {!real && (
               <button type="button" className="text-label justify-self-start text-brand underline underline-offset-4" onClick={() => go("hours")}>
                 Skip for now (demo)
@@ -660,6 +661,15 @@ export function StartFlow({ real = false, ownerName = "" }: { real?: boolean; ow
               </span>
               <h1 className="text-heading">Your page is live!</h1>
               <p className="text-body-lg text-ink-muted">Customers can see your work and book a time.</p>
+            </div>
+            {/* What they have so far, and that it's a start they can change any time (28 Nov 2026). */}
+            <div className="grid gap-1.5 rounded-card border border-line bg-surface-raised p-4">
+              <p className="text-body">
+                <b>This is your page to start with.</b> Bookings are on, so customers can book a free time inside your hours now.
+              </p>
+              <p className="text-caption text-ink-muted">
+                You can change anything any time on Your page: services, prices, photos and hours. To finish it, add a cover photo and a few lines about you. Your dashboard shows what&apos;s left. To stop bookings for a while, pause them in Calendar → Settings.
+              </p>
             </div>
             <div className="flex items-center gap-2 rounded-pill border border-line bg-surface-raised py-1.5 pr-1.5 pl-4">
               <span className="text-code min-w-0 flex-1 truncate">usetikka.com/{slug}</span>

@@ -2,9 +2,11 @@
 
 import { Ban, CalendarPlus, Check, Clock, MoveRight, Trash2, UserX, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   addBookingAction,
+  depositLinkOptionsAction,
+  payLinkDepositAction,
   blockTimeAction,
   depositLinkAction,
   bookingDepositAction,
@@ -70,6 +72,7 @@ const DEPOSIT_PROBLEM: Record<string, string> = {
   paid_online: "They already paid a deposit online for this booking.",
   settled: "This booking is already marked paid, so the deposit can't change.",
   cancelled: "This booking is cancelled.",
+  bad_date: "Pick a day in the last 6 months, not in the future.",
 };
 const LINK_PROBLEM: Record<string, string> = {
   too_small: "The smallest pay link is ₦100.",
@@ -374,8 +377,12 @@ export function BookingsBoard({
                 b={sheet.b}
                 pending={pending}
                 error={error}
-                onSubmit={(n, m) => act(() => bookingDepositAction(sheet.b.id, n, m), n ? "saved" : "cleared", () => setSheet(null))}
+                onSubmit={(n, m, on) => act(() => bookingDepositAction(sheet.b.id, n, m, on), n ? "saved" : "cleared", () => setSheet(null))}
                 payLinks={payLinks}
+                onDone={() => {
+                  setSheet(null);
+                  router.refresh();
+                }}
                 onLink={(n) => {
                   const b = sheet.b;
                   setError("");
@@ -528,7 +535,7 @@ function AddForm({
   pending: boolean;
   error: string;
   payLinks: boolean;
-  onSubmit: (v: { serviceId: string; startsAt: string; name: string; phone: string; force: boolean; choice?: BookingChoice; depositNaira?: number; depositMethod?: DepositMethodIn; linkNaira?: number }) => void;
+  onSubmit: (v: { serviceId: string; startsAt: string; name: string; phone: string; force: boolean; choice?: BookingChoice; depositNaira?: number; depositMethod?: DepositMethodIn; depositPaidOn?: string; linkNaira?: number }) => void;
 }) {
   const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
   const [choice, setChoice] = useState<BookingChoice>({});
@@ -541,6 +548,7 @@ function AddForm({
   const paidAhead = dep === "paid";
   const [deposit, setDeposit] = useState(0);
   const [method, setMethod] = useState<DepositMethodIn | null>(null);
+  const [paidOn, setPaidOn] = useState(() => todayKey(new Date()));
   const depositOk = dep === "none" || (dep === "paid" ? deposit > 0 && !!method : payLinks && deposit >= 100);
   const svc = services.find((s) => s.id === serviceId);
   if (!svc) return <p className="text-body mt-4">Add your services on your page first.</p>;
@@ -551,7 +559,7 @@ function AddForm({
       className="mt-4 grid gap-3"
       onSubmit={(e) => {
         e.preventDefault();
-        if (at && depositOk) onSubmit({ serviceId, startsAt: at, name, phone, force, ...(asks ? { choice } : {}), ...(paidAhead ? { depositNaira: deposit, depositMethod: method! } : dep === "link" ? { linkNaira: deposit } : {}) });
+        if (at && depositOk) onSubmit({ serviceId, startsAt: at, name, phone, force, ...(asks ? { choice } : {}), ...(paidAhead ? { depositNaira: deposit, depositMethod: method!, depositPaidOn: paidOn } : dep === "link" ? { linkNaira: deposit } : {}) });
       }}
     >
       <label className="grid gap-1">
@@ -590,7 +598,7 @@ function AddForm({
           </Chip>
         </div>
       </div>
-      {paidAhead && <DepositFields deposit={deposit} setDeposit={setDeposit} method={method} setMethod={setMethod} />}
+      {paidAhead && <DepositFields deposit={deposit} setDeposit={setDeposit} method={method} setMethod={setMethod} paidOn={paidOn} setPaidOn={setPaidOn} />}
       {dep === "link" &&
         (payLinks ? (
           <div className="grid gap-2.5 rounded-md bg-surface-sunken p-3">
@@ -615,7 +623,27 @@ function AddForm({
   );
 }
 
-function DepositFields({ deposit, setDeposit, method, setMethod }: { deposit: number; setDeposit: (n: number) => void; method: DepositMethodIn | null; setMethod: (m: DepositMethodIn) => void }) {
+function DepositFields({
+  deposit,
+  setDeposit,
+  method,
+  setMethod,
+  paidOn,
+  setPaidOn,
+  bookedOn,
+}: {
+  deposit: number;
+  setDeposit: (n: number) => void;
+  method: DepositMethodIn | null;
+  setMethod: (m: DepositMethodIn) => void;
+  paidOn: string;
+  setPaidOn: (day: string) => void;
+  /** The day the booking was made, when it wasn't today: deposits are often paid then. */
+  bookedOn?: string;
+}) {
+  // Worked out once when the form opens (the day doesn't change while it's open).
+  const [{ today, earliest }] = useState(() => ({ today: todayKey(new Date()), earliest: todayKey(new Date(Date.now() - 180 * 86_400_000)) }));
+  const [other, setOther] = useState(paidOn !== today && paidOn !== bookedOn);
   return (
     <div className="grid gap-2.5 rounded-md bg-surface-sunken p-3">
       <NairaInput id="bk-deposit" value={deposit} onChange={setDeposit} label="Deposit they paid" />
@@ -626,24 +654,92 @@ function DepositFields({ deposit, setDeposit, method, setMethod }: { deposit: nu
           </Chip>
         ))}
       </div>
-      <p className="text-caption text-ink-muted">It counts towards their bill and shows on Today and in Money, under how they paid.</p>
+      {/* The day they paid, so an old deposit isn't counted as money taken today (28 Nov 2026). */}
+      <span className="text-label mt-1">When did they pay?</span>
+      <div className="flex flex-wrap gap-2" role="group" aria-label="When they paid">
+        <Chip on={!other && paidOn === today} onClick={() => (setOther(false), setPaidOn(today))}>
+          Today
+        </Chip>
+        {bookedOn && bookedOn !== today && (
+          <Chip on={!other && paidOn === bookedOn} onClick={() => (setOther(false), setPaidOn(bookedOn))}>
+            When they booked · {dayLabel(`${bookedOn}T12:00:00+01:00`)}
+          </Chip>
+        )}
+        <Chip on={other} onClick={() => setOther(true)}>
+          Another day
+        </Chip>
+      </div>
+      {other && (
+        <input type="date" className="input" aria-label="The day they paid" value={paidOn} min={earliest} max={today} onChange={(e) => e.target.value && setPaidOn(e.target.value)} />
+      )}
+      <p className="text-caption text-ink-muted">It counts towards their bill and shows on Today and in Money on the day they paid, under how they paid.</p>
     </div>
   );
 }
 
-function DepositForm({ b, pending, error, onSubmit, payLinks, onLink }: { b: Booking; pending: boolean; error: string; onSubmit: (naira: number, method: DepositMethodIn) => void; payLinks: boolean; onLink: (naira: number) => void }) {
+function DepositForm({ b, pending, error, onSubmit, payLinks, onLink, onDone }: { b: Booking; pending: boolean; error: string; onSubmit: (naira: number, method: DepositMethodIn, paidOn: string) => void; payLinks: boolean; onLink: (naira: number) => void; onDone: () => void }) {
   const had = b.depositPaidKobo ? Math.round(b.depositPaidKobo / 100) : 0;
+  const bookedOn = todayKey(new Date(b.createdAt));
+  const [paidOn, setPaidOn] = useState(b.depositPaidAt ? todayKey(new Date(b.depositPaidAt)) : todayKey(new Date()));
   const [deposit, setDeposit] = useState(had);
   const [method, setMethod] = useState<DepositMethodIn | null>(b.depositMethod && b.depositMethod !== "pay_link" ? b.depositMethod : null);
+  // "Already paid with a pay link?": their paid pay links that aren't used anywhere else (28 Nov 2026).
+  const [paid, setPaid] = useState<{ id: string; kobo: number; note: string; paidAt: string }[]>([]);
+  const [linking, startLink] = useTransition();
+  const [linkError, setLinkError] = useState("");
+  useEffect(() => {
+    if (had || !b.phone) return;
+    let live = true;
+    depositLinkOptionsAction(b.id).then((o) => live && setPaid(o)).catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [b.id, b.phone, had]);
   return (
     <div className="mt-4 grid gap-3">
+      {paid.length > 0 && (
+        <div className="grid gap-2 rounded-md bg-surface-sunken p-3">
+          <p className="text-label">Already paid with a pay link?</p>
+          <p className="text-caption text-ink-muted">{b.firstName} paid you these online. Use one as this booking&apos;s deposit: it&apos;s counted once, as the deposit.</p>
+          {paid.map((l) => (
+            <div key={l.id} className="flex items-center gap-3 rounded-md border border-line bg-surface-raised px-3 py-2.5">
+              <span className="min-w-0 flex-1">
+                <b className="block font-mono">{naira(l.kobo / 100)}</b>
+                <span className="text-caption block truncate text-ink-muted">
+                  {l.note} · paid {new Date(l.paidAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Africa/Lagos" })}
+                </span>
+              </span>
+              <button
+                type="button"
+                className="btn btn-secondary min-h-11 shrink-0 px-4"
+                disabled={pending || linking}
+                onClick={() =>
+                  startLink(async () => {
+                    setLinkError("");
+                    const r = await payLinkDepositAction(b.id, l.id);
+                    if (r.kind === "saved") return onDone();
+                    setLinkError(r.kind === "has_deposit" ? "This booking already has a deposit or is marked paid." : "That payment can't be used for this booking. Try again or add the deposit below.");
+                  })
+                }
+              >
+                {linking ? "Saving…" : "Use as deposit"}
+              </button>
+            </div>
+          ))}
+          {linkError && (
+            <p role="alert" className="text-caption font-semibold text-danger">
+              {linkError}
+            </p>
+          )}
+        </div>
+      )}
       <p className="text-body text-ink-muted">Money they sent you or paid you in person for this booking.</p>
-      <DepositFields deposit={deposit} setDeposit={setDeposit} method={method} setMethod={setMethod} />
-      <button type="button" className="btn min-h-12" disabled={pending || !deposit || !method} onClick={() => onSubmit(deposit, method!)}>
+      <DepositFields deposit={deposit} setDeposit={setDeposit} method={method} setMethod={setMethod} paidOn={paidOn} setPaidOn={setPaidOn} bookedOn={bookedOn} />
+      <button type="button" className="btn min-h-12" disabled={pending || !deposit || !method} onClick={() => onSubmit(deposit, method!, paidOn)}>
         {pending ? "Saving…" : `Save ${deposit ? naira(deposit) : ""} deposit`}
       </button>
       {had > 0 && (
-        <button type="button" className="btn btn-ghost min-h-12 text-danger" disabled={pending} onClick={() => onSubmit(0, method ?? "cash")}>
+        <button type="button" className="btn btn-ghost min-h-12 text-danger" disabled={pending} onClick={() => onSubmit(0, method ?? "cash", paidOn)}>
           Remove the deposit
         </button>
       )}
